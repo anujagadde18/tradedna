@@ -1,19 +1,16 @@
-interface ScoresPageProps {
-  searchParams: { event?: string };
-}
+// app/scores/page.tsx
+export const dynamic = "force-dynamic";
 
-export default function ScoresPage({ searchParams }: ScoresPageProps) {
-  const event = searchParams?.event || "Unknown Event";
+type PageProps = {
+  searchParams?: { event?: string };
+};
 
-  const scores = {
-    social: 89,
-    news: 95,
-    technical: 82,
-  };
+export default function ScoresPage({ searchParams }: PageProps) {
+  const event = searchParams?.event ? decodeURIComponent(searchParams.event) : "Unknown Event";
 
-  const overall = Math.round(
-    (scores.social + scores.news + scores.technical) / 3
-  );
+  // demo scores (we’ll calculate later)
+  const scores = { social: 72, news: 61, technical: 68 };
+  const overall = Math.round((scores.social + scores.news + scores.technical) / 3);
 
   return (
     <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff" }}>
@@ -22,9 +19,7 @@ export default function ScoresPage({ searchParams }: ScoresPageProps) {
           ← Back to Event
         </a>
 
-        <h1 style={{ fontSize: 34, marginTop: 18 }}>
-          Confidence Breakdown
-        </h1>
+        <h1 style={{ fontSize: 34, marginTop: 18 }}>Confidence Breakdown</h1>
 
         <div style={{ marginTop: 10, color: "#9CA3AF" }}>
           <b style={{ color: "#fff" }}>Event:</b> {event}
@@ -40,40 +35,4 @@ export default function ScoresPage({ searchParams }: ScoresPageProps) {
           }}
         >
           <h2>Overall Confidence</h2>
-          <div style={{ fontSize: 48, fontWeight: 700, color: "#00D4FF" }}>
-            {overall}%
-          </div>
-        </div>
-
-        <div
-          style={{
-            marginTop: 30,
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 14,
-          }}
-        >
-          <ScoreCard title="Social Score" value={scores.social} />
-          <ScoreCard title="News Score" value={scores.news} />
-          <ScoreCard title="Technical Score" value={scores.technical} />
-        </div>
-      </div>
-    </main>
-  );
-}
-
-function ScoreCard({ title, value }: { title: string; value: number }) {
-  return (
-    <div
-      style={{
-        padding: 18,
-        borderRadius: 18,
-        background: "rgba(255,255,255,0.05)",
-        border: "1px solid rgba(255,255,255,0.1)",
-      }}
-    >
-      <div style={{ fontWeight: 600 }}>{title}</div>
-      <div style={{ fontSize: 36, marginTop: 10 }}>{value}%</div>
-    </div>
-  );
-}
+          <div style={{ fontSize: 48, fontWeight: 700, color:
