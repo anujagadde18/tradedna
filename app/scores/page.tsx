@@ -1,19 +1,12 @@
-"use client";
+export default function ScoresPage({
+  searchParams,
+}: {
+  searchParams: { event?: string };
+}) {
+  const event = searchParams?.event ?? "Unknown Event";
 
-import { useSearchParams } from "next/navigation";
-
-export default function ScoresPage() {
-  const searchParams = useSearchParams();
-  const event = searchParams.get("event") || "Unknown Event";
-
-  const scores = {
-    social: 89,
-    news: 95,
-    technical: 82,
-  };
-
-  const overall =
-    Math.round((scores.social + scores.news + scores.technical) / 3);
+  const scores = { social: 89, news: 95, technical: 82 };
+  const overall = Math.round((scores.social + scores.news + scores.technical) / 3);
 
   return (
     <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff" }}>
@@ -22,16 +15,12 @@ export default function ScoresPage() {
           ← Back to Event
         </a>
 
-        <h1 style={{ fontSize: 34, marginTop: 18 }}>
-          Confidence Breakdown
-        </h1>
+        <h1 style={{ fontSize: 34, marginTop: 18 }}>Confidence Breakdown</h1>
 
-        {/* Event Name */}
         <div style={{ marginTop: 10, color: "#9CA3AF" }}>
           <b style={{ color: "#fff" }}>Event:</b> {event}
         </div>
 
-        {/* Overall */}
         <div
           style={{
             marginTop: 30,
@@ -47,7 +36,6 @@ export default function ScoresPage() {
           </div>
         </div>
 
-        {/* Score Cards */}
         <div
           style={{
             marginTop: 30,
@@ -61,7 +49,6 @@ export default function ScoresPage() {
           <ScoreCard title="Technical Score" value={scores.technical} />
         </div>
 
-        {/* Research Links */}
         <div
           style={{
             marginTop: 40,
