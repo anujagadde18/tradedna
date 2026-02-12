@@ -1,22 +1,19 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+
 export default function ScoresPage() {
-  // 1) Read event from URL: /scores?event=....
-  const params =
-    typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search)
-      : new URLSearchParams();
+  const searchParams = useSearchParams();
+  const event = searchParams.get("event") || "Unknown Event";
 
-  const event = params.get("event") || "Unknown Event";
+  const scores = {
+    social: 89,
+    news: 95,
+    technical: 82,
+  };
 
-  // 2) Generate deterministic scores based on event text
-  const scores = generateScores(event);
-
-  // 3) Overall confidence
-  const overall = Math.round((scores.social + scores.news + scores.technical) / 3);
-
-  // 4) Dynamic research links based on the event text
-  const q = encodeURIComponent(event);
+  const overall =
+    Math.round((scores.social + scores.news + scores.technical) / 3);
 
   return (
     <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff" }}>
@@ -25,19 +22,16 @@ export default function ScoresPage() {
           ← Back to Event
         </a>
 
-        <h1 style={{ fontSize: 34, marginTop: 18 }}>Confidence Breakdown</h1>
+        <h1 style={{ fontSize: 34, marginTop: 18 }}>
+          Confidence Breakdown
+        </h1>
 
-        <div
-          style={{
-            marginTop: 14,
-            color: "#9CA3AF",
-            fontSize: 14,
-            lineHeight: 1.5,
-          }}
-        >
-          <b style={{ color: "#E5E7EB" }}>Event:</b> {event}
+        {/* Event Name */}
+        <div style={{ marginTop: 10, color: "#9CA3AF" }}>
+          <b style={{ color: "#fff" }}>Event:</b> {event}
         </div>
 
+        {/* Overall */}
         <div
           style={{
             marginTop: 30,
@@ -53,6 +47,7 @@ export default function ScoresPage() {
           </div>
         </div>
 
+        {/* Score Cards */}
         <div
           style={{
             marginTop: 30,
@@ -66,6 +61,7 @@ export default function ScoresPage() {
           <ScoreCard title="Technical Score" value={scores.technical} />
         </div>
 
+        {/* Research Links */}
         <div
           style={{
             marginTop: 40,
@@ -79,7 +75,7 @@ export default function ScoresPage() {
           <ul style={{ marginTop: 10, lineHeight: 1.8 }}>
             <li>
               <a
-                href={`https://twitter.com/search?q=${q}`}
+                href={`https://twitter.com/search?q=${encodeURIComponent(event)}`}
                 target="_blank"
                 rel="noreferrer"
                 style={{ color: "#00D4FF" }}
@@ -89,7 +85,7 @@ export default function ScoresPage() {
             </li>
             <li>
               <a
-                href={`https://news.google.com/search?q=${q}`}
+                href={`https://news.google.com/search?q=${encodeURIComponent(event)}`}
                 target="_blank"
                 rel="noreferrer"
                 style={{ color: "#00D4FF" }}
@@ -99,7 +95,7 @@ export default function ScoresPage() {
             </li>
             <li>
               <a
-                href={`https://polymarket.com/search?q=${q}`}
+                href="https://polymarket.com"
                 target="_blank"
                 rel="noreferrer"
                 style={{ color: "#00D4FF" }}
@@ -112,28 +108,6 @@ export default function ScoresPage() {
       </div>
     </main>
   );
-}
-
-function generateScores(seed: string) {
-  // simple deterministic hash
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) {
-    h = (h * 31 + seed.charCodeAt(i)) % 100000;
-  }
-
-  const social = 45 + (h % 56); // 45–100
-  const news = 40 + ((h * 7) % 61); // 40–100
-  const technical = 42 + ((h * 13) % 59); // 42–100
-
-  return {
-    social: clamp(social, 40, 100),
-    news: clamp(news, 40, 100),
-    technical: clamp(technical, 40, 100),
-  };
-}
-
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
 }
 
 function ScoreCard({ title, value }: { title: string; value: number }) {
