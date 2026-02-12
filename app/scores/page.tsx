@@ -7,15 +7,12 @@ export default function ScoresPage({
   searchParams?: { event?: string };
 }) {
   const event = searchParams?.event ?? "Unknown Event";
-
   const scores = {
     social: 72,
     news: 61,
     technical: 68,
   };
-
   const overall = Math.round((scores.social + scores.news + scores.technical) / 3);
-
   const q = encodeURIComponent(event);
 
   return (
@@ -24,13 +21,10 @@ export default function ScoresPage({
         <a href="/event" style={{ color: "#9CA3AF", fontSize: 13 }}>
           ← Back to Event
         </a>
-
         <h1 style={{ fontSize: 34, marginTop: 18 }}>Confidence Breakdown</h1>
-
         <div style={{ marginTop: 10, color: "#9CA3AF" }}>
           <b style={{ color: "#fff" }}>Event:</b> {event}
         </div>
-
         <div
           style={{
             marginTop: 30,
@@ -45,7 +39,6 @@ export default function ScoresPage({
             {overall}%
           </div>
         </div>
-
         <div
           style={{
             marginTop: 30,
@@ -58,7 +51,6 @@ export default function ScoresPage({
           <ScoreCard title="News Score" value={scores.news} />
           <ScoreCard title="Technical Score" value={scores.technical} />
         </div>
-
         <div
           style={{
             marginTop: 40,
@@ -71,7 +63,7 @@ export default function ScoresPage({
           <h3>Suggested Research Links</h3>
           <ul style={{ marginTop: 10, lineHeight: 1.8 }}>
             <li>
-              <a
+              
                 href={`https://x.com/search?q=${q}&src=typed_query`}
                 target="_blank"
                 rel="noreferrer"
@@ -81,7 +73,7 @@ export default function ScoresPage({
               </a>
             </li>
             <li>
-              <a
+              
                 href={`https://news.google.com/search?q=${q}`}
                 target="_blank"
                 rel="noreferrer"
@@ -91,7 +83,7 @@ export default function ScoresPage({
               </a>
             </li>
             <li>
-              <a
+              
                 href={`https://polymarket.com/search?q=${q}`}
                 target="_blank"
                 rel="noreferrer"
