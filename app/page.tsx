@@ -1,65 +1,105 @@
-import Image from "next/image";
-
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff" }}>
+      <div
+        style={{
+          maxWidth: 920,
+          margin: "0 auto",
+          padding: "72px 20px",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: 999,
+              background: "#00D4FF",
+              boxShadow: "0 0 18px rgba(0,212,255,0.8)",
+            }}
+          />
+          <span style={{ color: "#9CA3AF", fontSize: 13 }}>
+            Live MVP • Confidence Engine for Polymarket events
+          </span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+
+        <h1 style={{ fontSize: 44, lineHeight: 1.1, marginTop: 18 }}>
+          TradeDNA
+        </h1>
+
+        <p style={{ color: "#9CA3AF", fontSize: 16, lineHeight: 1.6, marginTop: 12, maxWidth: 720 }}>
+          Pick an event → we compute three scores (Social, News, Technical) → you get a confidence read +
+          resources to research. Goal: help new users build conviction before trading on Polymarket.
+        </p>
+
+        <div style={{ display: "flex", gap: 12, marginTop: 24, flexWrap: "wrap" }}>
           <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/event"
+            style={{
+              background: "#00D4FF",
+              color: "#001018",
+              padding: "12px 18px",
+              borderRadius: 12,
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
+            Start (Demo)
           </a>
+
           <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            href="https://polymarket.com"
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noreferrer"
+            style={{
+              border: "1px solid rgba(255,255,255,0.14)",
+              color: "#fff",
+              padding: "12px 18px",
+              borderRadius: 12,
+              fontWeight: 600,
+              textDecoration: "none",
+              background: "rgba(255,255,255,0.04)",
+            }}
           >
-            Documentation
+            Open Polymarket
           </a>
         </div>
-      </main>
-    </div>
+
+        <div
+          style={{
+            marginTop: 40,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 14,
+          }}
+        >
+          {[
+            { title: "Social Score", desc: "What X / communities are leaning toward." },
+            { title: "News Score", desc: "Signals from headlines & reputable sources." },
+            { title: "Technical Score", desc: "Historical / trend-based confidence inputs." },
+            { title: "Your TradeDNA", desc: "A combined view + resources to learn." },
+          ].map((c) => (
+            <div
+              key={c.title}
+              style={{
+                borderRadius: 16,
+                padding: 16,
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.10)",
+              }}
+            >
+              <div style={{ fontWeight: 700 }}>{c.title}</div>
+              <div style={{ color: "#9CA3AF", fontSize: 13, lineHeight: 1.5, marginTop: 6 }}>
+                {c.desc}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ marginTop: 34, color: "#6B7280", fontSize: 12 }}>
+          Practice-first. No real money. This is an early MVP built for speed.
+        </div>
+      </div>
+    </main>
   );
 }
