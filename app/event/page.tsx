@@ -4,52 +4,51 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function EventPage() {
-  const [event, setEvent] = useState("");
   const router = useRouter();
-
-  const handleSubmit = () => {
-    if (!event.trim()) return;
-    router.push(`/scores?event=${encodeURIComponent(event)}`);
-  };
+  const [event, setEvent] = useState("Will Bitcoin cross $150k in 2026?");
 
   return (
     <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff" }}>
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: "80px 20px" }}>
+      <div style={{ maxWidth: 920, margin: "0 auto", padding: "72px 20px" }}>
         <a href="/" style={{ color: "#9CA3AF", fontSize: 13 }}>
-          ← Back Home
+          ← Back to Home
         </a>
 
-        <h1 style={{ fontSize: 32, marginTop: 18 }}>Select Event</h1>
+        <h1 style={{ fontSize: 34, marginTop: 18 }}>Pick an Event</h1>
 
-        <div style={{ marginTop: 24 }}>
+        <div style={{ marginTop: 18 }}>
+          <label style={{ display: "block", marginBottom: 8, color: "#9CA3AF" }}>
+            Event name
+          </label>
           <input
             value={event}
             onChange={(e) => setEvent(e.target.value)}
-            placeholder="Example: Will Bitcoin cross $150k in 2026?"
             style={{
               width: "100%",
-              padding: 12,
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.16)",
-              background: "rgba(255,255,255,0.05)",
-              color: "#fff",
+              padding: "12px 14px",
+              borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.15)",
+              background: "rgba(255,255,255,0.06)",
+              color: "white",
+              outline: "none",
             }}
           />
         </div>
 
         <button
-          onClick={handleSubmit}
+          onClick={() => router.push(`/scores?event=${encodeURIComponent(event)}`)}
           style={{
             marginTop: 16,
-            padding: "12px 18px",
+            padding: "12px 16px",
             borderRadius: 12,
             background: "#00D4FF",
-            border: "none",
+            color: "#001018",
             fontWeight: 700,
+            border: "none",
             cursor: "pointer",
           }}
         >
-          Analyze Confidence
+          Compute Scores
         </button>
       </div>
     </main>
