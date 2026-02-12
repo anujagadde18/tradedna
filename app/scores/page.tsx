@@ -1,12 +1,22 @@
-export default function ScoresPage() {
-  const scores = {
-    social: 72,
-    news: 61,
-    technical: 68,
-  };
+"use client";
 
-  const overall =
-    Math.round((scores.social + scores.news + scores.technical) / 3);
+export default function ScoresPage() {
+  // 1) Read event from URL: /scores?event=....
+  const params =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : new URLSearchParams();
+
+  const event = params.get("event") || "Unknown Event";
+
+  // 2) Generate deterministic scores based on event text
+  const scores = generateScores(event);
+
+  // 3) Overall confidence
+  const overall = Math.round((scores.social + scores.news + scores.technical) / 3);
+
+  // 4) Dynamic research links based on the event text
+  const q = encodeURIComponent(event);
 
   return (
     <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff" }}>
@@ -15,9 +25,18 @@ export default function ScoresPage() {
           ← Back to Event
         </a>
 
-        <h1 style={{ fontSize: 34, marginTop: 18 }}>
-          Confidence Breakdown
-        </h1>
+        <h1 style={{ fontSize: 34, marginTop: 18 }}>Confidence Breakdown</h1>
+
+        <div
+          style={{
+            marginTop: 14,
+            color: "#9CA3AF",
+            fontSize: 14,
+            lineHeight: 1.5,
+          }}
+        >
+          <b style={{ color: "#E5E7EB" }}>Event:</b> {event}
+        </div>
 
         <div
           style={{
@@ -60,7 +79,7 @@ export default function ScoresPage() {
           <ul style={{ marginTop: 10, lineHeight: 1.8 }}>
             <li>
               <a
-                href="https://twitter.com/search?q=bitcoin"
+                href={`https://twitter.com/search?q=${q}`}
                 target="_blank"
                 rel="noreferrer"
                 style={{ color: "#00D4FF" }}
@@ -70,7 +89,7 @@ export default function ScoresPage() {
             </li>
             <li>
               <a
-                href="https://news.google.com/search?q=bitcoin"
+                href={`https://news.google.com/search?q=${q}`}
                 target="_blank"
                 rel="noreferrer"
                 style={{ color: "#00D4FF" }}
@@ -80,12 +99,12 @@ export default function ScoresPage() {
             </li>
             <li>
               <a
-                href="https://polymarket.com"
+                href={`https://polymarket.com/search?q=${q}`}
                 target="_blank"
                 rel="noreferrer"
                 style={{ color: "#00D4FF" }}
               >
-                View Market on Polymarket
+                Search on Polymarket
               </a>
             </li>
           </ul>
@@ -93,6 +112,28 @@ export default function ScoresPage() {
       </div>
     </main>
   );
+}
+
+function generateScores(seed: string) {
+  // simple deterministic hash
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = (h * 31 + seed.charCodeAt(i)) % 100000;
+  }
+
+  const social = 45 + (h % 56); // 45–100
+  const news = 40 + ((h * 7) % 61); // 40–100
+  const technical = 42 + ((h * 13) % 59); // 42–100
+
+  return {
+    social: clamp(social, 40, 100),
+    news: clamp(news, 40, 100),
+    technical: clamp(technical, 40, 100),
+  };
+}
+
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
 }
 
 function ScoreCard({ title, value }: { title: string; value: number }) {
