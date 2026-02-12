@@ -1,105 +1,121 @@
-export default function Home() {
+"use client";
+
+import { useSearchParams } from "next/navigation";
+
+export default function ScoresPage() {
+  const searchParams = useSearchParams();
+  const event = searchParams.get("event") || "Unknown Event";
+
+  const scores = {
+    social: 72,
+    news: 61,
+    technical: 68,
+  };
+
+  const overall = Math.round((scores.social + scores.news + scores.technical) / 3);
+
   return (
     <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff" }}>
-      <div
-        style={{
-          maxWidth: 920,
-          margin: "0 auto",
-          padding: "72px 20px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              width: 10,
-              height: 10,
-              borderRadius: 999,
-              background: "#00D4FF",
-              boxShadow: "0 0 18px rgba(0,212,255,0.8)",
-            }}
-          />
-          <span style={{ color: "#9CA3AF", fontSize: 13 }}>
-            Live MVP • Confidence Engine for Polymarket events
-          </span>
-        </div>
+      <div style={{ maxWidth: 920, margin: "0 auto", padding: "72px 20px" }}>
+        <a href="/event" style={{ color: "#9CA3AF", fontSize: 13 }}>
+          ← Back to Event
+        </a>
 
-        <h1 style={{ fontSize: 44, lineHeight: 1.1, marginTop: 18 }}>
-          TradeDNA
-        </h1>
+        <h1 style={{ fontSize: 34, marginTop: 18 }}>Confidence Breakdown</h1>
 
-        <p style={{ color: "#9CA3AF", fontSize: 16, lineHeight: 1.6, marginTop: 12, maxWidth: 720 }}>
-          Pick an event → we compute three scores (Social, News, Technical) → you get a confidence read +
-          resources to research. Goal: help new users build conviction before trading on Polymarket.
-        </p>
-
-        <div style={{ display: "flex", gap: 12, marginTop: 24, flexWrap: "wrap" }}>
-          <a
-            href="/event"
-            style={{
-              background: "#00D4FF",
-              color: "#001018",
-              padding: "12px 18px",
-              borderRadius: 12,
-              fontWeight: 600,
-              textDecoration: "none",
-            }}
-          >
-            Start (Demo)
-          </a>
-
-          <a
-            href="https://polymarket.com"
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              border: "1px solid rgba(255,255,255,0.14)",
-              color: "#fff",
-              padding: "12px 18px",
-              borderRadius: 12,
-              fontWeight: 600,
-              textDecoration: "none",
-              background: "rgba(255,255,255,0.04)",
-            }}
-          >
-            Open Polymarket
-          </a>
+        {/* ✅ Event Name */}
+        <div style={{ marginTop: 10, color: "#9CA3AF" }}>
+          <b style={{ color: "#fff" }}>Event:</b> {event}
         </div>
 
         <div
           style={{
-            marginTop: 40,
+            marginTop: 30,
+            padding: 20,
+            borderRadius: 18,
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+          }}
+        >
+          <h2>Overall Confidence</h2>
+          <div style={{ fontSize: 48, fontWeight: 700, color: "#00D4FF" }}>
+            {overall}%
+          </div>
+        </div>
+
+        <div
+          style={{
+            marginTop: 30,
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
             gap: 14,
           }}
         >
-          {[
-            { title: "Social Score", desc: "What X / communities are leaning toward." },
-            { title: "News Score", desc: "Signals from headlines & reputable sources." },
-            { title: "Technical Score", desc: "Historical / trend-based confidence inputs." },
-            { title: "Your TradeDNA", desc: "A combined view + resources to learn." },
-          ].map((c) => (
-            <div
-              key={c.title}
-              style={{
-                borderRadius: 16,
-                padding: 16,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.10)",
-              }}
-            >
-              <div style={{ fontWeight: 700 }}>{c.title}</div>
-              <div style={{ color: "#9CA3AF", fontSize: 13, lineHeight: 1.5, marginTop: 6 }}>
-                {c.desc}
-              </div>
-            </div>
-          ))}
+          <ScoreCard title="Social Score" value={scores.social} />
+          <ScoreCard title="News Score" value={scores.news} />
+          <ScoreCard title="Technical Score" value={scores.technical} />
         </div>
 
-        <div style={{ marginTop: 34, color: "#6B7280", fontSize: 12 }}>
-          Practice-first. No real money. This is an early MVP built for speed.
+        <div
+          style={{
+            marginTop: 40,
+            padding: 18,
+            borderRadius: 16,
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <h3>Suggested Research Links</h3>
+          <ul style={{ marginTop: 10, lineHeight: 1.8 }}>
+            <li>
+              <a
+                href={`https://twitter.com/search?q=${encodeURIComponent(event)}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: "#00D4FF" }}
+              >
+                X Sentiment Search
+              </a>
+            </li>
+            <li>
+              <a
+                href={`https://news.google.com/search?q=${encodeURIComponent(event)}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: "#00D4FF" }}
+              >
+                Google News
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://polymarket.com"
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: "#00D4FF" }}
+              >
+                Search on Polymarket
+              </a>
+            </li>
+          </ul>
         </div>
       </div>
     </main>
+  );
+}
+
+function ScoreCard({ title, value }: { title: string; value: number }) {
+  return (
+    <div
+      style={{
+        padding: 18,
+        borderRadius: 18,
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.1)",
+      }}
+    >
+      <div style={{ fontWeight: 600 }}>{title}</div>
+      <div style={{ fontSize: 36, marginTop: 10 }}>{value}%</div>
+    </div>
   );
 }
