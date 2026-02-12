@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 export default function HomePage() {
   return (
     <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff" }}>
