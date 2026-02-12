@@ -1,12 +1,17 @@
-export default function ScoresPage({
-  searchParams,
-}: {
-  searchParams: { event?: string };
-}) {
-  const event = searchParams?.event ?? "Unknown Event";
+"use client";
 
-  const scores = { social: 89, news: 95, technical: 82 };
+import { useSearchParams } from "next/navigation";
+
+export const dynamic = "force-dynamic";
+
+export default function ScoresPage() {
+  const searchParams = useSearchParams();
+  const event = searchParams.get("event") ?? "Unknown Event";
+
+  const scores = { social: 72, news: 61, technical: 68 };
   const overall = Math.round((scores.social + scores.news + scores.technical) / 3);
+
+  const q = encodeURIComponent(event);
 
   return (
     <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff" }}>
@@ -62,7 +67,7 @@ export default function ScoresPage({
           <ul style={{ marginTop: 10, lineHeight: 1.8 }}>
             <li>
               <a
-                href={`https://twitter.com/search?q=${encodeURIComponent(event)}`}
+                href={`https://x.com/search?q=${q}&src=typed_query`}
                 target="_blank"
                 rel="noreferrer"
                 style={{ color: "#00D4FF" }}
@@ -72,7 +77,7 @@ export default function ScoresPage({
             </li>
             <li>
               <a
-                href={`https://news.google.com/search?q=${encodeURIComponent(event)}`}
+                href={`https://news.google.com/search?q=${q}`}
                 target="_blank"
                 rel="noreferrer"
                 style={{ color: "#00D4FF" }}
@@ -82,7 +87,7 @@ export default function ScoresPage({
             </li>
             <li>
               <a
-                href="https://polymarket.com"
+                href={`https://polymarket.com/search?q=${q}`}
                 target="_blank"
                 rel="noreferrer"
                 style={{ color: "#00D4FF" }}
