@@ -1,17 +1,19 @@
-"use client";
+interface ScoresPageProps {
+  searchParams: { event?: string };
+}
 
-import { useSearchParams } from "next/navigation";
+export default function ScoresPage({ searchParams }: ScoresPageProps) {
+  const event = searchParams?.event || "Unknown Event";
 
-export const dynamic = "force-dynamic";
+  const scores = {
+    social: 89,
+    news: 95,
+    technical: 82,
+  };
 
-export default function ScoresPage() {
-  const searchParams = useSearchParams();
-  const event = searchParams.get("event") ?? "Unknown Event";
-
-  const scores = { social: 72, news: 61, technical: 68 };
-  const overall = Math.round((scores.social + scores.news + scores.technical) / 3);
-
-  const q = encodeURIComponent(event);
+  const overall = Math.round(
+    (scores.social + scores.news + scores.technical) / 3
+  );
 
   return (
     <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff" }}>
@@ -20,7 +22,9 @@ export default function ScoresPage() {
           ← Back to Event
         </a>
 
-        <h1 style={{ fontSize: 34, marginTop: 18 }}>Confidence Breakdown</h1>
+        <h1 style={{ fontSize: 34, marginTop: 18 }}>
+          Confidence Breakdown
+        </h1>
 
         <div style={{ marginTop: 10, color: "#9CA3AF" }}>
           <b style={{ color: "#fff" }}>Event:</b> {event}
@@ -52,50 +56,6 @@ export default function ScoresPage() {
           <ScoreCard title="Social Score" value={scores.social} />
           <ScoreCard title="News Score" value={scores.news} />
           <ScoreCard title="Technical Score" value={scores.technical} />
-        </div>
-
-        <div
-          style={{
-            marginTop: 40,
-            padding: 18,
-            borderRadius: 16,
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          <h3>Suggested Research Links</h3>
-          <ul style={{ marginTop: 10, lineHeight: 1.8 }}>
-            <li>
-              <a
-                href={`https://x.com/search?q=${q}&src=typed_query`}
-                target="_blank"
-                rel="noreferrer"
-                style={{ color: "#00D4FF" }}
-              >
-                X Sentiment Search
-              </a>
-            </li>
-            <li>
-              <a
-                href={`https://news.google.com/search?q=${q}`}
-                target="_blank"
-                rel="noreferrer"
-                style={{ color: "#00D4FF" }}
-              >
-                Google News
-              </a>
-            </li>
-            <li>
-              <a
-                href={`https://polymarket.com/search?q=${q}`}
-                target="_blank"
-                rel="noreferrer"
-                style={{ color: "#00D4FF" }}
-              >
-                Search on Polymarket
-              </a>
-            </li>
-          </ul>
         </div>
       </div>
     </main>
