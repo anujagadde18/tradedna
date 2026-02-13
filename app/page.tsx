@@ -9,37 +9,13 @@ export default function HomePage() {
           TradeDNA
         </h1>
         <p style={{ color: "#9CA3AF", lineHeight: 1.6, maxWidth: 720 }}>
-          Pick an event → we compute three scores (Social, News, Technical) → you get a
-          confidence read + resources to research. Goal: help new users build conviction
-          before trading on Polymarket.
+          Pick an event, we compute three scores (Social, News, Technical), you get a confidence read plus resources to research. Goal: help new users build conviction before trading on Polymarket.
         </p>
         <div style={{ marginTop: 26, display: "flex", gap: 12, flexWrap: "wrap" }}>
-          
-            href="/event"
-            style={{
-              padding: "12px 18px",
-              borderRadius: 12,
-              background: "#00D4FF",
-              color: "#001018",
-              fontWeight: 700,
-              textDecoration: "none",
-            }}
-          >
-            Start (Demo)
+          <a href="/event" style={{ padding: "12px 18px", borderRadius: 12, background: "#00D4FF", color: "#001018", fontWeight: 700, textDecoration: "none" }}>
+            Start Demo
           </a>
-          
-            href="https://polymarket.com"
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              padding: "12px 18px",
-              borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.16)",
-              color: "#fff",
-              textDecoration: "none",
-              fontWeight: 600,
-            }}
-          >
+          <a href="https://polymarket.com" target="_blank" rel="noreferrer" style={{ padding: "12px 18px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.16)", color: "#fff", textDecoration: "none", fontWeight: 600 }}>
             Open Polymarket
           </a>
         </div>
