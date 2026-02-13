@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function ScoresPage() {
+function ScoresContent() {
   const searchParams = useSearchParams();
   const event = searchParams.get("event") || "Unknown Event";
   const base = useMemo(() => generateBaseScores(event), [event]);
@@ -72,6 +72,14 @@ export default function ScoresPage() {
         <a href={`https://polymarket.com/search?q=${q}`} target="_blank" rel="noreferrer" style={{ display: "inline-block", marginTop: 20, padding: "12px 18px", borderRadius: 12, background: "#00D4FF", color: "#001018", fontWeight: 700, textDecoration: "none" }}>Trade on Polymarket →</a>
       </div>
     </main>
+  );
+}
+
+export default function ScoresPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#070B10", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>Loading...</div>}>
+      <ScoresContent />
+    </Suspense>
   );
 }
 
