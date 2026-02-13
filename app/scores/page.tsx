@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic";
 
-export default function ScoresPage({ searchParams }: { searchParams?: { event?: string } }) {
-  const event = searchParams?.event ? decodeURIComponent(searchParams.event) : "Unknown Event";
+export default async function ScoresPage({ searchParams }: { searchParams: Promise<{ event?: string }> }) {
+  const params = await searchParams;
+  const event = params?.event || "Unknown Event";
   const scores = { social: 72, news: 61, technical: 68 };
   const overall = Math.round((scores.social + scores.news + scores.technical) / 3);
   const q = encodeURIComponent(event);
