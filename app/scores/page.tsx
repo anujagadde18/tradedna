@@ -18,6 +18,16 @@ function ScoresContent() {
     return Math.round((base.social * wSocial + base.news * wNews + base.technical * wTech) / total);
   }, [base, wSocial, wNews, wTech]);
   
+  const contributions = useMemo(() => {
+    const total = wSocial + wNews + wTech;
+    if (total === 0) return { social: 0, news: 0, technical: 0 };
+    return {
+      social: Math.round((wSocial / total) * 100),
+      news: Math.round((wNews / total) * 100),
+      technical: Math.round((wTech / total) * 100)
+    };
+  }, [wSocial, wNews, wTech]);
+  
   const q = encodeURIComponent(event);
 
   const handleShare = async () => {
@@ -64,6 +74,16 @@ Powered by TradeDNA`;
             </button>
           </div>
           <div style={{ fontSize: 52, fontWeight: 800, color: "#00D4FF", marginTop: 8 }}>{overall}%</div>
+          
+          <div style={{ marginTop: 16, display: "flex", gap: 8, fontSize: 13, flexWrap: "wrap" }}>
+            <span style={{ color: "#9CA3AF" }}>Based on:</span>
+            <span style={{ color: "#00D4FF", fontWeight: 600 }}>{contributions.social}% Social</span>
+            <span style={{ color: "#9CA3AF" }}>•</span>
+            <span style={{ color: "#00D4FF", fontWeight: 600 }}>{contributions.news}% News</span>
+            <span style={{ color: "#9CA3AF" }}>•</span>
+            <span style={{ color: "#00D4FF", fontWeight: 600 }}>{contributions.technical}% Technical</span>
+          </div>
+          
           <div style={{ marginTop: 20, color: "#9CA3AF", fontSize: 13 }}>Adjust weights below ↓</div>
           
           <div style={{ marginTop: 20, background: "rgba(255,255,255,0.04)", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -92,22 +112,56 @@ Powered by TradeDNA`;
         </div>
 
         <div style={{ marginTop: 18, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
-          <EvidenceCard title="Social Score" value={base.social} evidence={[
-            { label: "X search: event", url: `https://x.com/search?q=${q}&src=typed_query` },
-            { label: 'X search: event + "YES"', url: `https://x.com/search?q=${q}%20YES&src=typed_query` },
-            { label: 'X search: event + "NO"', url: `https://x.com/search?q=${q}%20NO&src=typed_query` }
-          ]} notes="Check community sentiment, influencer takes, and viral threads" />
+          <EvidenceCard 
+            title="Social Score" 
+            value={base.social} 
+            contribution={contributions.social}
+            weight={wSocial}
+            evidence={[
+              { label: "X search: event", url: `https://x.com/search?q=${q}&src=typed_query` },
+              { label: 'X search: event + "YES"', url: `https://x.com/search?q=${q}%20YES&src=typed_query` },
+              { label: 'X search: event + "NO"', url: `https://x.com/search?q=${q}%20NO&src=typed_query` }
+            ]}
+            staticInfo={[
+              "Top accounts to watch:",
+              "• @polymarket (official)",
+              "• @0xSisyphus (analyst)",
+              "• @dontloseyoureth (markets)"
+            ]}
+            notes="Check community sentiment, influencer takes, and viral threads" 
+          />
           
-          <EvidenceCard title="News Score" value={base.news} evidence={[
-            { label: "Google News", url: `https://news.google.com/search?q=${q}` },
-            { label: "Reuters coverage", url: `https://www.google.com/search?q=site:reuters.com+${q}` },
-            { label: "Bloomberg coverage", url: `https://www.google.com/search?q=site:bloomberg.com+${q}` }
-          ]} notes="Look for major headlines, expert analysis, and breaking developments" />
+          <EvidenceCard 
+            title="News Score" 
+            value={base.news} 
+            contribution={contributions.news}
+            weight={wNews}
+            evidence={[
+              { label: "Google News", url: `https://news.google.com/search?q=${q}` },
+              { label: "Reuters coverage", url: `https://www.google.com/search?q=site:reuters.com+${q}` },
+              { label: "Bloomberg coverage", url: `https://www.google.com/search?q=site:bloomberg.com+${q}` }
+            ]}
+            notes="Look for major headlines, expert analysis, and breaking developments" 
+          />
           
-          <EvidenceCard title="Technical Score" value={base.technical} evidence={[
-            { label: "TradingView charts", url: `https://www.tradingview.com/search/?text=${q}` },
-            { label: "CoinMarketCap (crypto)", url: `https://coinmarketcap.com/search?q=${q}` }
-          ]} notes="Key indicators: RSI, trend direction, volume, support/resistance levels" />
+          <EvidenceCard 
+            title="Technical Score" 
+            value={base.technical} 
+            contribution={contributions.technical}
+            weight={wTech}
+            evidence={[
+              { label: "TradingView charts", url: `https://www.tradingview.com/search/?text=${q}` },
+              { label: "CoinMarketCap (crypto)", url: `https://coinmarketcap.com/search?q=${q}` }
+            ]}
+            staticInfo={[
+              "Indicators to check:",
+              "• RSI (overbought/oversold)",
+              "• Trend direction (uptrend/down)",
+              "• Volume (buying/selling pressure)",
+              "• Support/resistance levels"
+            ]}
+            notes="Price action and momentum indicators" 
+          />
         </div>
 
         <div style={{ marginTop: 28, padding: 18, borderRadius: 16, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -129,12 +183,19 @@ Powered by TradeDNA`;
   );
 }
 
-function EvidenceCard({ title, value, evidence, notes }: { title: string; value: number; evidence: Array<{ label: string; url: string }>; notes: string }) {
+function EvidenceCard({ title, value, contribution, weight, evidence, staticInfo, notes }: { title: string; value: number; contribution: number; weight: number; evidence: Array<{ label: string; url: string }>; staticInfo?: string[]; notes: string }) {
+  const opacity = weight === 0 ? 0.4 : 1;
+  
   return (
-    <div style={{ padding: 18, borderRadius: 18, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
-      <div style={{ fontWeight: 700, fontSize: 15 }}>{title}</div>
+    <div style={{ padding: 18, borderRadius: 18, background: "rgba(255,255,255,0.05)", border: `2px solid ${weight > 50 ? "#00D4FF" : "rgba(255,255,255,0.1)"}`, opacity, transition: "all 0.3s ease" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ fontWeight: 700, fontSize: 15 }}>{title}</div>
+        <div style={{ fontSize: 11, color: "#00D4FF", fontWeight: 700, background: "rgba(0,212,255,0.1)", padding: "4px 8px", borderRadius: 6 }}>
+          {contribution}% impact
+        </div>
+      </div>
       <div style={{ fontSize: 38, marginTop: 10, fontWeight: 800 }}>{value}%</div>
-      <div style={{ color: "#9CA3AF", fontSize: 12, marginTop: 6, marginBottom: 14 }}>Base score</div>
+      <div style={{ color: "#9CA3AF", fontSize: 12, marginTop: 6, marginBottom: 14 }}>Base score (from event analysis)</div>
       <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 14 }}>
         <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}>Evidence sources:</div>
         <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.8 }}>
@@ -142,6 +203,13 @@ function EvidenceCard({ title, value, evidence, notes }: { title: string; value:
             <li key={i}><a href={item.url} target="_blank" rel="noreferrer" style={{ color: "#00D4FF" }}>{item.label}</a></li>
           ))}
         </ul>
+        {staticInfo && (
+          <div style={{ marginTop: 12, fontSize: 12, color: "#E5E7EB", lineHeight: 1.6 }}>
+            {staticInfo.map((line, i) => (
+              <div key={i} style={{ color: i === 0 ? "#9CA3AF" : "#E5E7EB" }}>{line}</div>
+            ))}
+          </div>
+        )}
         <div style={{ marginTop: 12, fontSize: 12, color: "#9CA3AF", fontStyle: "italic" }}>{notes}</div>
       </div>
     </div>
@@ -161,26 +229,3 @@ function generateBaseScores(seed: string) {
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
   return { social: Math.min(100, 45 + (h % 56)), news: Math.min(100, 40 + ((h * 7) % 61)), technical: Math.min(100, 42 + ((h * 13) % 59)) };
 }
-```
-
-## What's new:
-
-✅ **Evidence panels** - Each score card now shows specific research links
-✅ **Copy/Share button** - One click copies formatted analysis ready to paste
-✅ **Demo disclaimer** - Shows this is demo data until API
-✅ **Better guidance** - "Next Steps" section guides users on how to research
-✅ **Contextual hints** - Each evidence panel explains what to look for
-
-The share button creates a nicely formatted summary like:
-```
-📊 TradeDNA Analysis: Will Bitcoin cross $150k in 2026?
-
-Overall Confidence: 67%
-- Social: 72% (weight: 40)
-- News: 61% (weight: 35)
-- Technical: 68% (weight: 25)
-
-Research:
-🔍 X: [link]
-📰 News: [link]
-💹 Polymarket: [link]
