@@ -1,16 +1,49 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 function ScoresContent() {
   const searchParams = useSearchParams();
   const event = searchParams.get("event") || "Unknown Event";
   const analysis = useMemo(() => analyzeEvent(event), [event]);
+  
+  // Load weights from localStorage on mount
   const [wSocial, setWSocial] = useState(40);
   const [wNews, setWNews] = useState(35);
   const [wTech, setWTech] = useState(25);
   const [copied, setCopied] = useState(false);
+  const [weightsLoaded, setWeightsLoaded] = useState(false);
+
+  // Load saved weights from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("tradedna_weights");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setWSocial(parsed.social || 40);
+        setWNews(parsed.news || 35);
+        setWTech(parsed.technical || 25);
+      }
+    } catch (err) {
+      console.log("Could not load saved weights");
+    }
+    setWeightsLoaded(true);
+  }, []);
+
+  // Save weights to localStorage whenever they change
+  useEffect(() => {
+    if (!weightsLoaded) return; // Don't save during initial load
+    try {
+      localStorage.setItem("tradedna_weights", JSON.stringify({
+        social: wSocial,
+        news: wNews,
+        technical: wTech
+      }));
+    } catch (err) {
+      console.log("Could not save weights");
+    }
+  }, [wSocial, wNews, wTech, weightsLoaded]);
   
   const overall = useMemo(() => {
     const total = wSocial + wNews + wTech;
@@ -68,6 +101,12 @@ Powered by TradeDNA`;
     }
   };
 
+  const resetWeights = () => {
+    setWSocial(40);
+    setWNews(35);
+    setWTech(25);
+  };
+
   return (
     <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff", padding: "72px 20px" }}>
       <div style={{ maxWidth: 920, margin: "0 auto" }}>
@@ -118,13 +157,18 @@ Powered by TradeDNA`;
         <div style={{ marginTop: 24, padding: 24, borderRadius: 18, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
             <h2 style={{ margin: 0, fontSize: 20 }}>Score Components</h2>
-            <button onClick={handleShare} style={{ padding: "8px 14px", borderRadius: 8, background: copied ? "#10B981" : "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
-              {copied ? "✓ Copied!" : "📋 Share Analysis"}
-            </button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={resetWeights} style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.2)", color: "#9CA3AF", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
+                Reset Weights
+              </button>
+              <button onClick={handleShare} style={{ padding: "8px 14px", borderRadius: 8, background: copied ? "#10B981" : "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
+                {copied ? "✓ Copied!" : "📋 Share"}
+              </button>
+            </div>
           </div>
           
           <div style={{ marginBottom: 20, fontSize: 13, color: "#9CA3AF" }}>
-            Adjust weights to match your research priorities ↓
+            Adjust weights to match your research priorities (saved automatically) ↓
           </div>
           
           <div style={{ marginBottom: 16, display: "flex", gap: 8, fontSize: 13, flexWrap: "wrap" }}>
@@ -370,7 +414,7 @@ function analyzeEvent(event: string) {
     newsBoosts.push("Immediate news cycle (+10)");
   }
 
-  // Randomize slightly
+  // Randomize slightly for variance
   const hash = event.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
   social += (hash % 10);
   news += ((hash * 3) % 10);
@@ -382,10 +426,11 @@ function analyzeEvent(event: string) {
     technical: Math.min(Math.max(technical, 40), 95)
   };
 
-  // Calculate uncertainty
+  // Calculate uncertainty based on score variance
   const highest = Math.max(scores.social, scores.news, scores.technical);
   const lowest = Math.min(scores.social, scores.news, scores.technical);
   const spread = highest - lowest;
+  const average = (scores.social + scores.news + scores.technical) / 3;
   
   let strength: "Strong" | "Moderate" | "Weak";
   if (highest > 75) strength = "Strong";
@@ -393,11 +438,10 @@ function analyzeEvent(event: string) {
   else strength = "Weak";
 
   let stability: "High" | "Medium" | "Low";
-  if (spread < 15) stability = "High";
-  else if (spread < 30) stability = "Medium";
-  else stability = "Low";
+  if (spread < 15) stability = "High";       // Scores are aligned
+  else if (spread < 30) stability = "Medium"; // Moderate disagreement
+  else stability = "Low";                     // High variance between signals
 
-  // Generate explanation
   const explanation = generateExplanation(event, scores, strength, stability);
 
   return {
