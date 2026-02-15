@@ -1,16 +1,17 @@
 // app/scores/page.tsx
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { analyzeEvent, type ComponentKey } from "@/lib/engine/analyzeEvent";
 import { ComponentBreakdownCard, DivergenceBanner, SummaryStats } from "@/components/analysis/Breakdown";
+import { saveAnalysis } from "@/lib/profile/userProfile";
 
 function ScoresContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const event = searchParams.get("event") || "Unknown Event";
 
-  // weights (saved locally for now; later we persist)
   const [weights, setWeights] = useState<Record<ComponentKey, number>>({
     social: 40,
     news: 35,
@@ -19,8 +20,14 @@ function ScoresContent() {
 
   const analysis = useMemo(() => analyzeEvent(event, weights), [event, weights]);
 
+  // Save analysis to history whenever it changes
+  useEffect(() => {
+    if (analysis && event !== "Unknown Event") {
+      saveAnalysis(analysis, weights);
+    }
+  }, [analysis, weights, event]);
+
   function setWeight(key: ComponentKey, value: number) {
-    // keep total = 100 by adjusting the others proportionally
     const next = { ...weights, [key]: value };
     const sum = next.social + next.news + next.technical;
 
@@ -29,7 +36,6 @@ function ScoresContent() {
       return;
     }
 
-    // normalize to 100
     const scale = 100 / sum;
     const scaled = {
       social: Math.round(next.social * scale),
@@ -43,9 +49,26 @@ function ScoresContent() {
   return (
     <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff" }}>
       <div style={{ maxWidth: 980, margin: "0 auto", padding: "56px 20px" }}>
-        <a href="/event" style={{ color: "#9CA3AF", fontSize: 13 }}>
-          ← Back to Event
-        </a>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <a href="/event" style={{ color: "#9CA3AF", fontSize: 13 }}>
+            ← Back to Event
+          </a>
+          <button
+            onClick={() => router.push("/profile")}
+            style={{
+              padding: "6px 12px",
+              borderRadius: 8,
+              background: "rgba(0,212,255,0.1)",
+              border: "1px solid rgba(0,212,255,0.3)",
+              color: "#67e8f9",
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            📊 View Profile
+          </button>
+        </div>
 
         <h1 style={{ fontSize: 34, marginTop: 14 }}>Signal Analysis</h1>
         <div style={{ marginTop: 8, color: "#cbd5e1" }}>
@@ -127,7 +150,7 @@ function ScoresContent() {
         >
           <div style={{ fontWeight: 800 }}>Score Components</div>
           <div style={{ marginTop: 6, color: "#9CA3AF", fontSize: 13 }}>
-            Adjust weights (auto-normalized to 100). This changes the overall + directional confidence.
+            Adjust weights (auto-normalized to 100). Your preferences are saved to your profile.
           </div>
 
           <SliderRow
@@ -195,11 +218,11 @@ function ScoresContent() {
           </div>
         </div>
 
-        {/* Next steps */}
-        <div style={{ marginTop: 18, padding: 16, borderRadius: 14, background: "rgba(0,212,255,0.05)", border: "1px solid rgba(0,212,255,0.15)" }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#67e8f9", marginBottom: 8 }}>Phase 2.5 Complete ✅</div>
+        {/* Profile reminder */}
+        <div style={{ marginTop: 18, padding: 14, borderRadius: 14, background: "rgba(0,212,255,0.05)", border: "1px solid rgba(0,212,255,0.15)" }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#67e8f9", marginBottom: 6 }}>✅ Analysis Saved to Profile</div>
           <div style={{ color: "#cbd5e1", fontSize: 13, lineHeight: 1.6 }}>
-            This engine now features: semantic event classification, per-component contribution tracking, signal divergence detection, volatility-adjusted directional bias, and mathematical stability metrics. Next: wire real data sources (X API, News RSS, Market data) while maintaining this explainability layer.
+            Your weight preferences and signal patterns are being tracked. View your research profile to discover your trading style and behavioral patterns.
           </div>
         </div>
 
