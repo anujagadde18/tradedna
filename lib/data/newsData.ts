@@ -66,10 +66,10 @@ function parseRSSFeed(xmlText: string): NewsArticle[] {
   
   try {
     // Simple XML parsing (extract <item> elements)
-    const itemRegex = /<item>(.*?)<\/item>/gs;
-    const items = xmlText.match(itemRegex) || [];
+    // Use 's' flag separately for better compatibility
+    const itemMatches = xmlText.match(/<item>[\s\S]*?<\/item>/g) || [];
     
-    for (const item of items) {
+    for (const item of itemMatches) {
       const title = extractTag(item, 'title');
       const link = extractTag(item, 'link');
       const pubDate = extractTag(item, 'pubDate');
@@ -92,12 +92,12 @@ function parseRSSFeed(xmlText: string): NewsArticle[] {
 }
 
 function extractTag(xml: string, tagName: string): string {
-  const regex = new RegExp(`<${tagName}[^>]*><!\\[CDATA\\[(.*?)\\]\\]><\/${tagName}>`, 's');
-  const cdataMatch = xml.match(regex);
+  const cdataPattern = new RegExp(`<${tagName}[^>]*><!\\[CDATA\\[(.*?)\\]\\]><\\/${tagName}>`, 's');
+  const cdataMatch = xml.match(cdataPattern);
   if (cdataMatch) return cdataMatch[1];
   
-  const simpleRegex = new RegExp(`<${tagName}[^>]*>(.*?)<\/${tagName}>`, 's');
-  const match = xml.match(simpleRegex);
+  const simplePattern = new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)<\\/${tagName}>`, '');
+  const match = xml.match(simplePattern);
   return match ? match[1] : '';
 }
 
