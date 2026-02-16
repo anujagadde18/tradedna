@@ -23,11 +23,10 @@ export async function fetchNewsData(event: string): Promise<NewsData> {
     // Use Google News RSS feed (free, no API key needed)
     const rssUrl = `https://news.google.com/rss/search?q=${query}&hl=en-US&gl=US&ceid=US:en`;
     
-    const response = await fetch(rssUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; TradeDNA/1.0)',
-      },
-    });
+    // Use proxy to avoid CORS issues
+    const proxyUrl = `/api/proxy?url=${encodeURIComponent(rssUrl)}`;
+    
+    const response = await fetch(proxyUrl);
 
     if (!response.ok) {
       throw new Error(`News fetch failed: ${response.status}`);
