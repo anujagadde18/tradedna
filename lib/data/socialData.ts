@@ -20,12 +20,11 @@ export async function fetchSocialData(event: string): Promise<SocialData> {
     // Use Twitter/X search page (parse result count from HTML)
     const searchUrl = `https://x.com/search?q=${query}&src=typed_query`;
     
-    // Make request with proper headers
-    const response = await fetch(searchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      },
-    });
+    // Use proxy to avoid CORS issues
+    const proxyUrl = `/api/proxy?url=${encodeURIComponent(searchUrl)}`;
+    
+    // Make request through proxy
+    const response = await fetch(proxyUrl);
 
     if (!response.ok) {
       throw new Error(`Social fetch failed: ${response.status}`);
