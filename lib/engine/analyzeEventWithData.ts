@@ -1,5 +1,4 @@
 // lib/engine/analyzeEventWithData.ts
-
 import { analyzeEvent as analyzeEventBase, type AnalysisOutput, type ComponentKey } from "./analyzeEvent";
 import type { NewsData } from "@/lib/data/newsData";
 import type { SocialData } from "@/lib/data/socialData";
