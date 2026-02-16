@@ -11,6 +11,7 @@ import { getCachedNewsData, type NewsData } from "@/lib/data/newsData";
 import { getCachedSocialData, type SocialData } from "@/lib/data/socialData";
 import { EvidenceCards } from "@/components/evidence/EvidenceCards";
 import { PlainEnglishSummary, ConfidenceMeter, SimplifiedMetrics } from "@/components/ui/EnhancedUI";
+import { DecisionSummaryCard, TradeRecommendation } from "@/components/ui/DecisionSummary";
 
 function ScoresContent() {
   const searchParams = useSearchParams();
@@ -113,6 +114,9 @@ function ScoresContent() {
           <b>Event:</b> {analysis.event}
         </div>
 
+        {/* Decision Summary Card - Top Priority */}
+        <DecisionSummaryCard analysis={analysis} />
+
         {/* Plain English Summary */}
         <PlainEnglishSummary analysis={analysis} />
 
@@ -207,6 +211,9 @@ function ScoresContent() {
           socialData={socialData}
           isLoading={isLoadingData}
         />
+
+        {/* Trade Recommendation */}
+        <TradeRecommendation analysis={analysis} />
 
         {/* Profile reminder */}
         <div style={{ marginTop: 18, padding: 14, borderRadius: 14, background: "rgba(0,212,255,0.05)", border: "1px solid rgba(0,212,255,0.15)" }}>
