@@ -34,36 +34,44 @@ function HomeContent() {
             borderRadius: 999,
             background: "rgba(59, 130, 246, 0.15)",
             border: "1px solid rgba(59, 130, 246, 0.3)",
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: 600,
             color: "#60a5fa",
-            marginBottom: 20
+            marginBottom: 20,
+            letterSpacing: "0.5px"
           }}>
-            🔵 Explainable Conviction Modeling
+            Powered by TradeDNA™ Engine
           </div>
 
           <h1 style={{ 
-            fontSize: 56, 
+            fontSize: 64, 
             fontWeight: 900, 
             lineHeight: 1.1,
-            marginBottom: 20,
+            marginBottom: 16,
             background: "linear-gradient(135deg, #fff 0%, #60a5fa 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
           }}>
-            Build Conviction with
-            <br />
-            Transparent AI
+            PlayPicks AI
           </h1>
 
+          <h2 style={{ 
+            fontSize: 28, 
+            fontWeight: 600, 
+            color: "#9ca3af",
+            marginBottom: 24
+          }}>
+            Build Conviction with Transparent AI
+          </h2>
+
           <p style={{ 
-            fontSize: 20, 
+            fontSize: 18, 
             color: "#9ca3af", 
             maxWidth: 650,
             margin: "0 auto 40px",
             lineHeight: 1.6
           }}>
-            Unlike black-box predictions, TradeDNA shows exactly why each signal matters. 
+            Unlike black-box predictions, PlayPicks shows exactly why each signal matters. 
             Track your research patterns. Make informed decisions.
           </p>
 
@@ -116,7 +124,7 @@ function HomeContent() {
               🚀 Try Instant Demo
             </h2>
             <p style={{ fontSize: 16, color: "#9ca3af" }}>
-              Click any event below to see TradeDNA in action
+              Click any event below to see PlayPicks AI in action
             </p>
           </div>
 
@@ -168,12 +176,12 @@ function HomeContent() {
         {/* Features Grid */}
         <div style={{ marginTop: 80 }}>
           <h2 style={{ fontSize: 32, fontWeight: 800, textAlign: "center", marginBottom: 40 }}>
-            Why TradeDNA?
+            Why PlayPicks AI?
           </h2>
 
           <div style={{ 
             display: "grid", 
-            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", 
             gap: 24 
           }}>
             <FeatureCard
@@ -198,8 +206,8 @@ function HomeContent() {
             />
             <FeatureCard
               emoji="🎯"
-              title="Reliability Scoring"
-              description="Model confidence in its own predictions. Trust scores from 🟢 High to 🔴 Low uncertainty."
+              title="TradeDNA™ Engine"
+              description="Powered by our proprietary conviction modeling system. Reliability scoring from 🟢 High to 🔴 Low."
             />
             <FeatureCard
               emoji="💪"
@@ -222,7 +230,7 @@ function HomeContent() {
             Ready to Build Conviction?
           </h2>
           <p style={{ fontSize: 18, color: "#9ca3af", marginBottom: 32 }}>
-            Start analyzing events with transparent AI - not a black box
+            Start analyzing events with PlayPicks AI - powered by transparent conviction modeling
           </p>
           <button
             onClick={handleCustomEvent}
@@ -255,7 +263,7 @@ function HomeContent() {
             Built for <a href="https://polymarket.com" target="_blank" rel="noreferrer" style={{ color: "#60a5fa", textDecoration: "none" }}>Polymarket</a> traders who value transparency
           </p>
           <p style={{ marginTop: 10 }}>
-            TradeDNA • Explainable Conviction Modeling • 2026
+            PlayPicks AI • Powered by TradeDNA™ Engine • 2026
           </p>
         </div>
       </div>
