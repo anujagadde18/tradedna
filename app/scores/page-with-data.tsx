@@ -1,6 +1,5 @@
 // app/scores/page-with-data.tsx
 "use client";
-
 import { Suspense, useMemo, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { analyzeEventWithData } from "@/lib/engine/analyzeEventWithData";
