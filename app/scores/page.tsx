@@ -1,5 +1,6 @@
 // app/scores/page-with-data.tsx
 "use client";
+
 import { Suspense, useMemo, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { analyzeEventWithData } from "@/lib/engine/analyzeEventWithData";
@@ -9,6 +10,7 @@ import { saveAnalysis } from "@/lib/profile/userProfile";
 import { getCachedNewsData, type NewsData } from "@/lib/data/newsData";
 import { getCachedSocialData, type SocialData } from "@/lib/data/socialData";
 import { EvidenceCards } from "@/components/evidence/EvidenceCards";
+import { PlainEnglishSummary, ConfidenceMeter, SimplifiedMetrics } from "@/components/ui/EnhancedUI";
 
 function ScoresContent() {
   const searchParams = useSearchParams();
@@ -111,9 +113,17 @@ function ScoresContent() {
           <b>Event:</b> {analysis.event}
         </div>
 
+        {/* Plain English Summary */}
+        <PlainEnglishSummary analysis={analysis} />
+
+        {/* Simplified Metrics */}
+        <SimplifiedMetrics analysis={analysis} />
+
+        <DivergenceBanner warnings={analysis.warnings} />
+
         {/* Real Data Status Banner */}
         {!isLoadingData && (analysis.dataIntegration.news.realDataUsed || analysis.dataIntegration.social.realDataUsed) && (
-          <div style={{ marginTop: 12, padding: 12, borderRadius: 10, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
+          <div style={{ marginTop: 14, padding: 12, borderRadius: 10, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
             <div style={{ fontSize: 13, color: "#10b981", fontWeight: 600 }}>
               ✅ Real Data Integrated:{" "}
               {analysis.dataIntegration.news.realDataUsed && `${analysis.dataIntegration.news.articleCount} news articles`}
@@ -123,53 +133,8 @@ function ScoresContent() {
           </div>
         )}
 
-        <SummaryStats a={analysis} />
-
-        <DivergenceBanner warnings={analysis.warnings} />
-
-        {/* Directional cards */}
-        <div
-          style={{
-            marginTop: 18,
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              padding: 18,
-              borderRadius: 18,
-              background: "rgba(0, 255, 170, 0.08)",
-              border: "1px solid rgba(0, 255, 170, 0.18)",
-            }}
-          >
-            <div style={{ fontSize: 12, color: "#a7f3d0" }}>YES Confidence</div>
-            <div style={{ fontSize: 44, fontWeight: 900, marginTop: 6, color: "#6ee7b7" }}>
-              {analysis.directional.yes}%
-            </div>
-            <div style={{ marginTop: 8, color: "#cbd5e1", fontSize: 13 }}>
-              Strength: <b>{analysis.directional.strengthLabel}</b> • Conviction: <b>{analysis.directional.convictionTier}</b>
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: 18,
-              borderRadius: 18,
-              background: "rgba(255, 80, 80, 0.08)",
-              border: "1px solid rgba(255, 80, 80, 0.18)",
-            }}
-          >
-            <div style={{ fontSize: 12, color: "#fecaca" }}>NO Confidence</div>
-            <div style={{ fontSize: 44, fontWeight: 900, marginTop: 6, color: "#fb7185" }}>
-              {analysis.directional.no}%
-            </div>
-            <div style={{ marginTop: 8, color: "#cbd5e1", fontSize: 13 }}>
-              Stability: <b>{analysis.directional.stabilityLabel}</b> • Volatility: <b>{analysis.directional.volatilityLabel}</b>
-            </div>
-          </div>
-        </div>
+        {/* Confidence Meter */}
+        <ConfidenceMeter yesPercent={analysis.directional.yes} noPercent={analysis.directional.no} />
 
         {/* Engine explanation */}
         <div
