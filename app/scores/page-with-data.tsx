@@ -3,7 +3,8 @@
 
 import { Suspense, useMemo, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { analyzeEventWithData, type ComponentKey } from "@/lib/engine/analyzeEventWithData";
+import { analyzeEventWithData } from "@/lib/engine/analyzeEventWithData";
+import { type ComponentKey } from "@/lib/engine/analyzeEvent";
 import { ComponentBreakdownCard, DivergenceBanner, SummaryStats } from "@/components/analysis/Breakdown";
 import { saveAnalysis } from "@/lib/profile/userProfile";
 import { getCachedNewsData, type NewsData } from "@/lib/data/newsData";
