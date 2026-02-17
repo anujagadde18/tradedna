@@ -1,17 +1,20 @@
-// app/scores/page-with-data.tsx
+// app/scores/page.tsx
 "use client";
 
 import { Suspense, useMemo, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { analyzeEventWithData } from "@/lib/engine/analyzeEventWithData";
 import { type ComponentKey } from "@/lib/engine/analyzeEvent";
-import { ComponentBreakdownCard, DivergenceBanner, SummaryStats } from "@/components/analysis/Breakdown";
+import { ComponentBreakdownCard, DivergenceBanner } from "@/components/analysis/Breakdown";
 import { saveAnalysis } from "@/lib/profile/userProfile";
 import { getCachedNewsData, type NewsData } from "@/lib/data/newsData";
 import { getCachedSocialData, type SocialData } from "@/lib/data/socialData";
 import { EvidenceCards } from "@/components/evidence/EvidenceCards";
 import { PlainEnglishSummary, ConfidenceMeter, SimplifiedMetrics } from "@/components/ui/EnhancedUI";
-import { DecisionSummaryCard, TradeRecommendation } from "@/components/ui/DecisionSummary";
+import { DecisionSummaryCard, TradeRecommendation, calculateReliability } from "@/components/ui/DecisionSummary";
+import { ShareAnalysisButton } from "@/components/share/ShareAnalysis";
+import { trackEventAnalysis } from "@/lib/storage/popularEvents";
+import { track, saveAnalysis as saveAnalyticAnalysis } from "@/lib/analytics";
 
 function ScoresContent() {
   const searchParams = useSearchParams();
@@ -32,16 +35,16 @@ function ScoresContent() {
   useEffect(() => {
     if (event === "Unknown Event") return;
 
+    // Track analysis started
+    track("analyze_started", { event });
+
     async function fetchData() {
       setIsLoadingData(true);
-      
       try {
-        // Fetch news and social data in parallel
         const [news, social] = await Promise.all([
           getCachedNewsData(event),
           getCachedSocialData(event),
         ]);
-        
         setNewsData(news);
         setSocialData(social);
       } catch (error) {
@@ -54,15 +57,32 @@ function ScoresContent() {
     fetchData();
   }, [event]);
 
-  const analysis = useMemo(() => 
+  const analysis = useMemo(() =>
     analyzeEventWithData(event, weights, newsData, socialData),
     [event, weights, newsData, socialData]
   );
 
-  // Save analysis to history
+  // Save analysis to profile + analytics DB
   useEffect(() => {
     if (analysis && event !== "Unknown Event" && !isLoadingData) {
+      // Save to localStorage profile
       saveAnalysis(analysis, weights);
+
+      // Track to popular events
+      trackEventAnalysis(event, analysis.category.name, analysis.directional.yes);
+
+      // Save to Vercel Postgres
+      const reliability = calculateReliability(analysis);
+      saveAnalyticAnalysis({
+        event_text: event,
+        category: analysis.category.name,
+        yes_conf: analysis.directional.yes,
+        no_conf: analysis.directional.no,
+        reliability: reliability.score,
+        conviction: analysis.directional.convictionTier,
+        stability: analysis.stats.stability,
+        weights: weights,
+      });
     }
   }, [analysis, weights, event, isLoadingData]);
 
@@ -88,6 +108,8 @@ function ScoresContent() {
   return (
     <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff" }}>
       <div style={{ maxWidth: 980, margin: "0 auto", padding: "56px 20px" }}>
+
+        {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <a href="/event" style={{ color: "#9CA3AF", fontSize: 13 }}>
             ← Back to Event
@@ -114,7 +136,7 @@ function ScoresContent() {
           <b>Event:</b> {analysis.event}
         </div>
 
-        {/* Decision Summary Card - Top Priority */}
+        {/* Decision Summary Card */}
         <DecisionSummaryCard analysis={analysis} />
 
         {/* Plain English Summary */}
@@ -125,7 +147,7 @@ function ScoresContent() {
 
         <DivergenceBanner warnings={analysis.warnings} />
 
-        {/* Real Data Status Banner */}
+        {/* Real Data Banner */}
         {!isLoadingData && (analysis.dataIntegration.news.realDataUsed || analysis.dataIntegration.social.realDataUsed) && (
           <div style={{ marginTop: 14, padding: 12, borderRadius: 10, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
             <div style={{ fontSize: 13, color: "#10b981", fontWeight: 600 }}>
@@ -141,70 +163,48 @@ function ScoresContent() {
         <ConfidenceMeter yesPercent={analysis.directional.yes} noPercent={analysis.directional.no} />
 
         {/* Engine explanation */}
-        <div
-          style={{
-            marginTop: 14,
-            padding: 14,
-            borderRadius: 14,
-            background: "rgba(80, 200, 255, 0.10)",
-            border: "1px solid rgba(80, 200, 255, 0.20)",
-            color: "#cbd5e1",
-            lineHeight: 1.55,
-          }}
-        >
+        <div style={{
+          marginTop: 14,
+          padding: 14,
+          borderRadius: 14,
+          background: "rgba(80, 200, 255, 0.10)",
+          border: "1px solid rgba(80, 200, 255, 0.20)",
+          color: "#cbd5e1",
+          lineHeight: 1.55,
+        }}>
           <b style={{ color: "#67e8f9" }}>Model note:</b> {analysis.explanation}
         </div>
 
         {/* Weight controls */}
-        <div
-          style={{
-            marginTop: 18,
-            padding: 16,
-            borderRadius: 16,
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
+        <div style={{
+          marginTop: 18,
+          padding: 16,
+          borderRadius: 16,
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}>
           <div style={{ fontWeight: 800 }}>Score Components</div>
           <div style={{ marginTop: 6, color: "#9CA3AF", fontSize: 13 }}>
             Adjust weights (auto-normalized to 100). Your preferences are saved to your profile.
           </div>
-
-          <SliderRow
-            label="Social weight"
-            sub="X / community sentiment"
-            value={weights.social}
-            onChange={(v) => setWeight("social", v)}
-          />
-          <SliderRow
-            label="News weight"
-            sub="headlines / narratives"
-            value={weights.news}
-            onChange={(v) => setWeight("news", v)}
-          />
-          <SliderRow
-            label="Technical weight"
-            sub="price action / indicators"
-            value={weights.technical}
-            onChange={(v) => setWeight("technical", v)}
-          />
+          <SliderRow label="Social weight" sub="X / community sentiment" value={weights.social} onChange={(v) => setWeight("social", v)} />
+          <SliderRow label="News weight" sub="headlines / narratives" value={weights.news} onChange={(v) => setWeight("news", v)} />
+          <SliderRow label="Technical weight" sub="price action / indicators" value={weights.technical} onChange={(v) => setWeight("technical", v)} />
         </div>
 
         {/* Contribution breakdown */}
-        <div
-          style={{
-            marginTop: 18,
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: 12,
-          }}
-        >
+        <div style={{
+          marginTop: 18,
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: 12,
+        }}>
           <ComponentBreakdownCard component={analysis.components.social} />
           <ComponentBreakdownCard component={analysis.components.news} />
           <ComponentBreakdownCard component={analysis.components.technical} />
         </div>
 
-        {/* Evidence Cards with Real Data */}
+        {/* Evidence Cards */}
         <EvidenceCards
           event={event}
           newsData={newsData}
@@ -215,6 +215,9 @@ function ScoresContent() {
         {/* Trade Recommendation */}
         <TradeRecommendation analysis={analysis} />
 
+        {/* Share */}
+        <ShareAnalysisButton analysis={analysis} />
+
         {/* Profile reminder */}
         <div style={{ marginTop: 18, padding: 14, borderRadius: 14, background: "rgba(0,212,255,0.05)", border: "1px solid rgba(0,212,255,0.15)" }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: "#67e8f9", marginBottom: 6 }}>
@@ -222,31 +225,43 @@ function ScoresContent() {
             {!isLoadingData && (analysis.dataIntegration.news.realDataUsed || analysis.dataIntegration.social.realDataUsed) && " • Real Data Integrated"}
           </div>
           <div style={{ color: "#cbd5e1", fontSize: 13, lineHeight: 1.6 }}>
-            Your weight preferences and signal patterns are being tracked. 
+            Your weight preferences and signal patterns are being tracked.
             {!isLoadingData && (analysis.dataIntegration.news.realDataUsed || analysis.dataIntegration.social.realDataUsed) && (
               <> This analysis includes real-time data from news sources and social platforms.</>
             )}
           </div>
         </div>
 
-        <a href={`https://polymarket.com/search?q=${encodeURIComponent(event)}`} target="_blank" rel="noreferrer" style={{ display: "inline-block", marginTop: 20, padding: "14px 20px", borderRadius: 12, background: "#00D4FF", color: "#001018", fontWeight: 700, textDecoration: "none", fontSize: 15 }}>
+        {/* Polymarket CTA - with click tracking */}
+        
+          href={`https://polymarket.com/search?q=${encodeURIComponent(event)}`}
+          target="_blank"
+          rel="noreferrer"
+          onClick={() => track("click_polymarket", { event })}
+          style={{
+            display: "inline-block",
+            marginTop: 20,
+            padding: "14px 20px",
+            borderRadius: 12,
+            background: "#00D4FF",
+            color: "#001018",
+            fontWeight: 700,
+            textDecoration: "none",
+            fontSize: 15,
+          }}
+        >
           Trade on Polymarket →
         </a>
+
       </div>
     </main>
   );
 }
 
 function SliderRow({
-  label,
-  sub,
-  value,
-  onChange,
+  label, sub, value, onChange,
 }: {
-  label: string;
-  sub: string;
-  value: number;
-  onChange: (v: number) => void;
+  label: string; sub: string; value: number; onChange: (v: number) => void;
 }) {
   return (
     <div style={{ marginTop: 12 }}>
@@ -257,7 +272,6 @@ function SliderRow({
         </div>
         <div style={{ fontWeight: 900, color: "#67e8f9" }}>{value}</div>
       </div>
-
       <input
         type="range"
         min={5}
