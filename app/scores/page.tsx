@@ -1,3 +1,4 @@
+// app/scores/page.tsx
 "use client";
 
 import { Suspense, useMemo, useState, useEffect } from "react";
@@ -30,11 +31,9 @@ function ScoresContent() {
   const [socialData, setSocialData] = useState<SocialData | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
-  // Fetch real data on mount
   useEffect(() => {
     if (event === "Unknown Event") return;
 
-    // Track analysis started
     track("analyze_started", { event });
 
     async function fetchData() {
@@ -61,16 +60,11 @@ function ScoresContent() {
     [event, weights, newsData, socialData]
   );
 
-  // Save analysis to profile + analytics DB
   useEffect(() => {
     if (analysis && event !== "Unknown Event" && !isLoadingData) {
-      // Save to localStorage profile
       saveAnalysis(analysis, weights);
-
-      // Track to popular events
       trackEventAnalysis(event, analysis.category.name, analysis.directional.yes);
 
-      // Save to Vercel Postgres
       const reliability = calculateReliability(analysis);
       saveAnalyticAnalysis({
         event_text: event,
@@ -108,10 +102,9 @@ function ScoresContent() {
     <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff" }}>
       <div style={{ maxWidth: 980, margin: "0 auto", padding: "56px 20px" }}>
 
-        {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <a href="/event" style={{ color: "#9CA3AF", fontSize: 13 }}>
-            ← Back to Event
+            Back to Event
           </a>
           <button
             onClick={() => router.push("/profile")}
@@ -126,7 +119,7 @@ function ScoresContent() {
               fontWeight: 600,
             }}
           >
-            📊 View Profile
+            View Profile
           </button>
         </div>
 
@@ -135,22 +128,18 @@ function ScoresContent() {
           <b>Event:</b> {analysis.event}
         </div>
 
-        {/* Decision Summary Card */}
         <DecisionSummaryCard analysis={analysis} />
 
-        {/* Plain English Summary */}
         <PlainEnglishSummary analysis={analysis} />
 
-        {/* Simplified Metrics */}
         <SimplifiedMetrics analysis={analysis} />
 
         <DivergenceBanner warnings={analysis.warnings} />
 
-        {/* Real Data Banner */}
         {!isLoadingData && (analysis.dataIntegration.news.realDataUsed || analysis.dataIntegration.social.realDataUsed) && (
           <div style={{ marginTop: 14, padding: 12, borderRadius: 10, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
             <div style={{ fontSize: 13, color: "#10b981", fontWeight: 600 }}>
-              ✅ Real Data Integrated:{" "}
+              Real Data Integrated:{" "}
               {analysis.dataIntegration.news.realDataUsed && `${analysis.dataIntegration.news.articleCount} news articles`}
               {analysis.dataIntegration.news.realDataUsed && analysis.dataIntegration.social.realDataUsed && " • "}
               {analysis.dataIntegration.social.realDataUsed && `~${analysis.dataIntegration.social.estimatedVolume?.toLocaleString()} social mentions`}
@@ -158,10 +147,8 @@ function ScoresContent() {
           </div>
         )}
 
-        {/* Confidence Meter */}
         <ConfidenceMeter yesPercent={analysis.directional.yes} noPercent={analysis.directional.no} />
 
-        {/* Engine explanation */}
         <div style={{
           marginTop: 14,
           padding: 14,
@@ -174,7 +161,6 @@ function ScoresContent() {
           <b style={{ color: "#67e8f9" }}>Model note:</b> {analysis.explanation}
         </div>
 
-        {/* Weight controls */}
         <div style={{
           marginTop: 18,
           padding: 16,
@@ -186,12 +172,26 @@ function ScoresContent() {
           <div style={{ marginTop: 6, color: "#9CA3AF", fontSize: 13 }}>
             Adjust weights (auto-normalized to 100). Your preferences are saved to your profile.
           </div>
-          <SliderRow label="Social weight" sub="X / community sentiment" value={weights.social} onChange={(v) => setWeight("social", v)} />
-          <SliderRow label="News weight" sub="headlines / narratives" value={weights.news} onChange={(v) => setWeight("news", v)} />
-          <SliderRow label="Technical weight" sub="price action / indicators" value={weights.technical} onChange={(v) => setWeight("technical", v)} />
+          <SliderRow
+            label="Social weight"
+            sub="X / community sentiment"
+            value={weights.social}
+            onChange={(v) => setWeight("social", v)}
+          />
+          <SliderRow
+            label="News weight"
+            sub="headlines / narratives"
+            value={weights.news}
+            onChange={(v) => setWeight("news", v)}
+          />
+          <SliderRow
+            label="Technical weight"
+            sub="price action / indicators"
+            value={weights.technical}
+            onChange={(v) => setWeight("technical", v)}
+          />
         </div>
 
-        {/* Contribution breakdown */}
         <div style={{
           marginTop: 18,
           display: "grid",
@@ -203,7 +203,6 @@ function ScoresContent() {
           <ComponentBreakdownCard component={analysis.components.technical} />
         </div>
 
-        {/* Evidence Cards */}
         <EvidenceCards
           event={event}
           newsData={newsData}
@@ -211,16 +210,13 @@ function ScoresContent() {
           isLoading={isLoadingData}
         />
 
-        {/* Trade Recommendation */}
         <TradeRecommendation analysis={analysis} />
 
-        {/* Share */}
         <ShareAnalysisButton analysis={analysis} />
 
-        {/* Profile reminder */}
         <div style={{ marginTop: 18, padding: 14, borderRadius: 14, background: "rgba(0,212,255,0.05)", border: "1px solid rgba(0,212,255,0.15)" }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: "#67e8f9", marginBottom: 6 }}>
-            ✅ Analysis Saved to Profile
+            Analysis Saved to Profile
             {!isLoadingData && (analysis.dataIntegration.news.realDataUsed || analysis.dataIntegration.social.realDataUsed) && " • Real Data Integrated"}
           </div>
           <div style={{ color: "#cbd5e1", fontSize: 13, lineHeight: 1.6 }}>
@@ -231,7 +227,6 @@ function ScoresContent() {
           </div>
         </div>
 
-        {/* Polymarket CTA - with click tracking */}
         
           href={`https://polymarket.com/search?q=${encodeURIComponent(event)}`}
           target="_blank"
@@ -249,7 +244,7 @@ function ScoresContent() {
             fontSize: 15,
           }}
         >
-          Trade on Polymarket →
+          Trade on Polymarket
         </a>
 
       </div>
@@ -258,9 +253,15 @@ function ScoresContent() {
 }
 
 function SliderRow({
-  label, sub, value, onChange,
+  label,
+  sub,
+  value,
+  onChange,
 }: {
-  label: string; sub: string; value: number; onChange: (v: number) => void;
+  label: string;
+  sub: string;
+  value: number;
+  onChange: (v: number) => void;
 }) {
   return (
     <div style={{ marginTop: 12 }}>
@@ -285,7 +286,11 @@ function SliderRow({
 
 export default function ScoresPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#070B10", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>Loading...</div>}>
+    <Suspense fallback={
+      <div style={{ minHeight: "100vh", background: "#070B10", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        Loading...
+      </div>
+    }>
       <ScoresContent />
     </Suspense>
   );
