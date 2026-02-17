@@ -1,4 +1,3 @@
-// app/scores/page.tsx
 "use client";
 
 import { Suspense, useMemo, useState, useEffect } from "react";
