@@ -97,7 +97,7 @@ function ScoresContent() {
   const polymarketUrl = "https://polymarket.com/search?q=" + encodeURIComponent(event);
 
   return (
-    <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff" }}>
+    <main style={{ minHeight: "100vh", background: "#0f1419", color: "#fff" }}>
       <div style={{ maxWidth: 980, margin: "0 auto", padding: "56px 20px" }}>
 
         {/* Header */}
@@ -226,7 +226,7 @@ function SliderRow({ label, sub, value, onChange }: { label: string; sub: string
 export default function ScoresPage() {
   return (
     <Suspense fallback={
-      <div style={{ minHeight: "100vh", background: "#070B10", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ minHeight: "100vh", background: "#0f1419", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>🔵</div>
           <div>Analyzing event...</div>
