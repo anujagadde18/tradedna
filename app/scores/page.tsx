@@ -147,9 +147,9 @@ function ScoresContent() {
         </div>
 
         <div style={{ marginTop: 18, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
-          <ComponentBreakdownCard component={analysis.components.social} />
-          <ComponentBreakdownCard component={analysis.components.news} />
-          <ComponentBreakdownCard component={analysis.components.technical} />
+          <ComponentBreakdownCard component={analysis.components.social} category={analysis.category.name} />
+          <ComponentBreakdownCard component={analysis.components.news} category={analysis.category.name} />
+          <ComponentBreakdownCard component={analysis.components.technical} category={analysis.category.name} />
         </div>
 
         <EvidenceCards event={event} newsData={newsData} socialData={socialData} isLoading={isLoadingData} />
