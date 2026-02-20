@@ -38,7 +38,7 @@ export default function EventPage() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: "#070B10", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <main style={{ minHeight: "100vh", background: "#0f1419", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div style={{ maxWidth: 600, width: "100%" }}>
         
         {/* Back Link */}
