@@ -7,6 +7,7 @@ import type {
   DivergenceWarning,
   ComponentKey,
 } from "@/lib/engine/analyzeEvent";
+import { getComponentAccuracy } from "@/lib/data/historicalAccuracy";
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
@@ -80,7 +81,11 @@ function ContributionRow({ reason, impact, tag }: { reason: string; impact: numb
   );
 }
 
-export function ComponentBreakdownCard({ component }: { component: ComponentBreakdown }) {
+export function ComponentBreakdownCard({ component, category }: { component: ComponentBreakdown; category?: string }) {
+  // Get historical accuracy for this component type
+  const componentType = component.key as "social" | "news" | "technical";
+  const accuracy = category ? getComponentAccuracy(category, componentType) : null;
+
   return (
     <div
       style={{
@@ -95,33 +100,41 @@ export function ComponentBreakdownCard({ component }: { component: ComponentBrea
         <div style={{ fontWeight: 900, fontSize: 18 }}>{component.final}%</div>
       </div>
 
+      {/* Historical Accuracy Badge */}
+      {accuracy && (
+        <div style={{ marginTop: 10, padding: 8, background: accuracy.winRate >= 65 ? "rgba(16, 185, 129, 0.1)" : "rgba(245, 158, 11, 0.1)", borderRadius: 8, border: accuracy.winRate >= 65 ? "1px solid rgba(16, 185, 129, 0.3)" : "1px solid rgba(245, 158, 11, 0.3)" }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: accuracy.winRate >= 65 ? "#10b981" : "#f59e0b", marginBottom: 3 }}>
+            📊 Historical Win Rate: {accuracy.winRate}%
+          </div>
+          <div style={{ fontSize: 10, color: "#9ca3af" }}>
+            Based on {accuracy.sampleSize} past {category} events
+          </div>
+        </div>
+      )}
+
       <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
         <Badge>Base: {component.base}</Badge>
         <Badge>
-          Adj: {component.contributions.reduce((s, c) => s + c.impact, 0) >= 0 ? "+" : ""}
-          {component.contributions.reduce((s, c) => s + c.impact, 0)}
+          Adj: {component.adjustments >= 0 ? "+" : ""}
+          {component.adjustments}
         </Badge>
         <Badge>Final: {component.final}</Badge>
       </div>
 
-      <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
-        {component.contributions.length === 0 ? (
-          <div style={{ color: "#9ca3af", fontSize: 13 }}>
-            No contributions matched (neutral score).
-          </div>
-        ) : (
-          component.contributions.map((c, i) => (
+      {component.contributions && component.contributions.length > 0 && (
+        <div style={{ marginTop: 14, display: "grid", gap: 6 }}>
+          {component.contributions.map((c, i) => (
             <ContributionRow key={i} reason={c.reason} impact={c.impact} tag={c.tag} />
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 export function SummaryStats({ a }: { a: AnalysisOutput }) {
   return (
-    <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
+    <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
       <Badge>Category: {a.category.name} ({a.category.confidence}%)</Badge>
       <Badge>Overall: {a.overall}%</Badge>
       <Badge>Std Dev: {a.stats.stdDev}</Badge>
