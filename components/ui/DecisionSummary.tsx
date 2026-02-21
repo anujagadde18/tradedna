@@ -4,7 +4,7 @@
 import { useState } from "react";
 import type { EnhancedAnalysisOutput } from "@/lib/engine/analyzeEventWithData";
 
-export function calculateReliability(analysis: EnhancedAnalysisOutput): {
+export function calculateReliability(analysis: analyzeEventWithData): {
   score: number;
   level: "High" | "Moderate" | "Low";
   color: string;
