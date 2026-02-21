@@ -162,7 +162,7 @@ function ScoresContent() {
             marginBottom: 20
           }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: reliability.score >= 70 ? "#22c55e" : reliability.score >= 50 ? "#fb923c" : "#ef4444" }}>
-              {reliability.level} Reliability • {reliability.score}%
+              {reliability.label} Reliability • {reliability.score}%
             </div>
           </div>
 
