@@ -2,10 +2,10 @@
 "use client";
 
 import { useState } from "react";
-import type { EnhancedAnalysisOutput } from "@/lib/engine/analyzeEventWithData";
+import type { AnalysisOutput } from "@/lib/engine/analyzeEvent";
 import { calculateReliability } from "@/components/ui/DecisionSummary";
 
-export function ShareAnalysisButton({ analysis }: { analysis: EnhancedAnalysisOutput }) {
+export function ShareAnalysisButton({ analysis }: { analysis: AnalysisOutput }) {
   const [isSharing, setIsSharing] = useState(false);
   const [copied, setCopied] = useState(false);
 
