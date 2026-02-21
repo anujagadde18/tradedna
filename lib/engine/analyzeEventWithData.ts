@@ -1,4 +1,5 @@
 // lib/engine/analyzeEventWithData.ts
+
 import { analyzeEvent as analyzeEventBase, type AnalysisOutput, type ComponentKey } from "./analyzeEvent";
 import type { NewsData } from "@/lib/data/newsData";
 import type { SocialData } from "@/lib/data/socialData";
@@ -99,14 +100,7 @@ export function analyzeEventWithData(
   const divergence = Math.max(...values) - Math.min(...values);
   const stability = Math.min(100, Math.max(0, 100 - (stdDev / 25) * 100));
 
-  // Update explanation to mention real data
-  let dataNote = "";
-  if (newsData && !newsData.error && newsData.totalCount > 0) {
-    dataNote += ` Integrated ${newsData.totalCount} real news articles.`;
-  }
-  if (socialData && !socialData.error && socialData.estimatedVolume > 0) {
-    dataNote += ` Social volume: ~${socialData.estimatedVolume.toLocaleString()} mentions.`;
-  }
+  // Data integration note (removed from explanation - already clear from context)
 
   return {
     ...baseAnalysis,
@@ -119,7 +113,7 @@ export function analyzeEventWithData(
       stability: Math.round(stability),
       divergence: Math.round(divergence),
     },
-    explanation: baseAnalysis.explanation + dataNote,
+    explanation: baseAnalysis.explanation,
     dataIntegration: {
       news: {
         realDataUsed: !!(newsData && !newsData.error && newsData.totalCount > 0),
