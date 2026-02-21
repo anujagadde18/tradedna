@@ -149,17 +149,31 @@ function ScoresContent() {
           </div>
 
           {/* Reliability */}
-          <div style={{ 
-            display: "inline-block",
-            padding: "10px 18px", 
-            borderRadius: 8, 
-            background: reliability.score >= 70 ? "rgba(34,197,94,0.12)" : reliability.score >= 50 ? "rgba(251,146,60,0.12)" : "rgba(239,68,68,0.12)",
-            border: reliability.score >= 70 ? "1px solid rgba(34,197,94,0.25)" : reliability.score >= 50 ? "1px solid rgba(251,146,60,0.25)" : "1px solid rgba(239,68,68,0.25)",
-            marginBottom: 20
-          }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: reliability.score >= 70 ? "#22c55e" : reliability.score >= 50 ? "#fb923c" : "#ef4444" }}>
-              {reliability.level} Trust Level • {reliability.score}%
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ 
+              display: "inline-block",
+              padding: "10px 18px", 
+              borderRadius: 8, 
+              background: reliability.score >= 70 ? "rgba(34,197,94,0.12)" : reliability.score >= 50 ? "rgba(251,146,60,0.12)" : "rgba(239,68,68,0.12)",
+              border: reliability.score >= 70 ? "1px solid rgba(34,197,94,0.25)" : reliability.score >= 50 ? "1px solid rgba(251,146,60,0.25)" : "1px solid rgba(239,68,68,0.25)",
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: reliability.score >= 70 ? "#22c55e" : reliability.score >= 50 ? "#fb923c" : "#ef4444" }}>
+                {reliability.level} Trust Level • {reliability.score}%
+              </div>
             </div>
+            <details style={{ marginTop: 10 }}>
+              <summary style={{ fontSize: 12, color: "#9ca3af", cursor: "pointer", listStyle: "none", display: "flex", alignItems: "center", gap: 6 }}>
+                <span>❓</span>
+                <span style={{ textDecoration: "underline" }}>What does this mean?</span>
+              </summary>
+              <div style={{ marginTop: 8, padding: 12, borderRadius: 8, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)", fontSize: 13, color: "#d4d4d8", lineHeight: 1.6 }}>
+                {reliability.score >= 70 
+                  ? "High trust means our signals strongly agree and we have good data quality. This prediction is more reliable."
+                  : reliability.score >= 50
+                  ? "Medium trust means signals moderately agree. This prediction is decent but not as strong."
+                  : "Low trust means signals disagree or we lack quality data. Be extra careful with this prediction."}
+              </div>
+            </details>
           </div>
 
           {/* Plain English Explanation */}
