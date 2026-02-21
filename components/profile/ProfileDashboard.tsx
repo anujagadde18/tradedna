@@ -17,7 +17,7 @@ export function ProfileDashboard() {
   function loadProfile() {
     const p = computeUserProfile();
     const i = generateInsights(p);
-    const r = getRecentAnalyses(5);
+    const r = getRecentAnalyses(10);
     setProfile(p);
     setInsights(i);
     setRecentAnalyses(r);
@@ -30,38 +30,54 @@ export function ProfileDashboard() {
   }
 
   if (!profile) {
-    return <div style={{ color: "#9ca3af" }}>Loading profile...</div>;
+    return <div style={{ color: "#9ca3af" }}>Loading your profile...</div>;
   }
 
   if (profile.totalAnalyses === 0) {
     return (
-      <div style={{ padding: 20, borderRadius: 16, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", textAlign: "center" }}>
-        <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>No Analysis History Yet</div>
-        <div style={{ color: "#9ca3af", fontSize: 14 }}>
-          Start analyzing events to build your research profile and discover your trading patterns.
+      <div style={{ padding: 32, borderRadius: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", textAlign: "center" }}>
+        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 10, color: "#e4e4e7" }}>
+          No Predictions Yet
+        </div>
+        <div style={{ color: "#9ca3af", fontSize: 15, lineHeight: 1.6 }}>
+          Start analyzing events to see your prediction history and discover your research patterns.
         </div>
       </div>
     );
   }
 
+  // Calculate trust preferences in plain English
+  const trustPreferences = [
+    { source: "Community Buzz", value: profile.avgWeights.social, color: "#3b82f6", desc: "Social media sentiment" },
+    { source: "News Headlines", value: profile.avgWeights.news, color: "#f59e0b", desc: "Journalist reports" },
+    { source: "Market Data", value: profile.avgWeights.technical, color: "#10b981", desc: "Charts & patterns" }
+  ].sort((a, b) => b.value - a.value);
+
+  const mostTrusted = trustPreferences[0];
+  
+  // Calculate accuracy if possible
+  const totalPredictions = profile.totalAnalyses;
+
   return (
     <div>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 24 }}>Your Research Profile</h2>
-          <div style={{ color: "#9ca3af", fontSize: 14, marginTop: 4 }}>
-            Based on {profile.totalAnalyses} {profile.totalAnalyses === 1 ? "analysis" : "analyses"}
+          <h2 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: "#fafafa" }}>
+            Your Prediction Profile
+          </h2>
+          <div style={{ color: "#9ca3af", fontSize: 14, marginTop: 6 }}>
+            Based on {totalPredictions} {totalPredictions === 1 ? "prediction" : "predictions"}
           </div>
         </div>
         <button
           onClick={() => setShowClearConfirm(true)}
           style={{
-            padding: "8px 14px",
+            padding: "8px 16px",
             borderRadius: 8,
-            background: "rgba(255,80,80,0.1)",
-            border: "1px solid rgba(255,80,80,0.3)",
-            color: "#fb7185",
+            background: "rgba(239,68,68,0.12)",
+            border: "1px solid rgba(239,68,68,0.25)",
+            color: "#ef4444",
             cursor: "pointer",
             fontSize: 13,
             fontWeight: 600,
@@ -72,19 +88,23 @@ export function ProfileDashboard() {
       </div>
 
       {showClearConfirm && (
-        <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, background: "rgba(255,80,80,0.15)", border: "1px solid rgba(255,80,80,0.3)" }}>
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>Clear all analysis history?</div>
-          <div style={{ fontSize: 13, color: "#e5e7eb", marginBottom: 12 }}>This will permanently delete your profile data and cannot be undone.</div>
-          <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ marginBottom: 24, padding: 18, borderRadius: 12, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)" }}>
+          <div style={{ fontWeight: 700, marginBottom: 8, color: "#fca5a5" }}>
+            Delete all your prediction history?
+          </div>
+          <div style={{ fontSize: 13, color: "#d4d4d8", marginBottom: 14 }}>
+            This will permanently erase your profile data. You can't undo this.
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
             <button
               onClick={handleClearHistory}
-              style={{ padding: "6px 12px", borderRadius: 6, background: "#fb7185", border: "none", color: "#fff", cursor: "pointer", fontWeight: 600, fontSize: 13 }}
+              style={{ padding: "8px 16px", borderRadius: 8, background: "#ef4444", border: "none", color: "#fff", cursor: "pointer", fontWeight: 600, fontSize: 14 }}
             >
-              Yes, Clear
+              Yes, Delete Everything
             </button>
             <button
               onClick={() => setShowClearConfirm(false)}
-              style={{ padding: "6px 12px", borderRadius: 6, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", cursor: "pointer", fontSize: 13 }}
+              style={{ padding: "8px 16px", borderRadius: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#e4e4e7", cursor: "pointer", fontSize: 14, fontWeight: 600 }}
             >
               Cancel
             </button>
@@ -92,148 +112,135 @@ export function ProfileDashboard() {
         </div>
       )}
 
-      {/* Key Insights */}
-      <div style={{ marginBottom: 20, padding: 18, borderRadius: 16, background: "rgba(0,212,255,0.08)", border: "1px solid rgba(0,212,255,0.2)" }}>
-        <div style={{ fontWeight: 700, fontSize: 15, color: "#67e8f9", marginBottom: 12 }}>🔍 Your Research Insights</div>
-        <div style={{ display: "grid", gap: 8 }}>
-          {insights.map((insight, i) => (
-            <div key={i} style={{ fontSize: 14, color: "#e5e7eb", lineHeight: 1.5 }}>
-              • {insight}
-            </div>
+      {/* Summary Card */}
+      <div style={{ marginBottom: 28, padding: 28, borderRadius: 16, background: "linear-gradient(135deg, rgba(147,51,234,0.08) 0%, rgba(168,85,247,0.08) 100%)", border: "1px solid rgba(147,51,234,0.2)" }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#a78bfa", marginBottom: 16 }}>
+          🎯 Your Prediction Style
+        </div>
+        <div style={{ fontSize: 16, color: "#e4e4e7", lineHeight: 1.7, marginBottom: 14 }}>
+          You trust <strong style={{ color: "#a78bfa" }}>{mostTrusted.source}</strong> the most ({mostTrusted.value.toFixed(0)}% of your decisions).
+        </div>
+        <div style={{ fontSize: 14, color: "#9ca3af", lineHeight: 1.6 }}>
+          This means you rely heavily on {mostTrusted.desc} when making predictions.
+        </div>
+      </div>
+
+      {/* Trust Breakdown */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#e4e4e7", marginBottom: 16 }}>
+          What You Trust Most
+        </div>
+        <div style={{ display: "grid", gap: 12 }}>
+          {trustPreferences.map((pref, i) => (
+            <TrustBar
+              key={i}
+              rank={i + 1}
+              source={pref.source}
+              percentage={pref.value}
+              color={pref.color}
+              desc={pref.desc}
+            />
           ))}
         </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 20 }}>
-        {/* Average Weights */}
-        <div style={{ padding: 16, borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
-          <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 10 }}>Average Weights</div>
-          <div style={{ display: "grid", gap: 6 }}>
-            <WeightBar label="Social" value={profile.averageWeights.social} baseline={40} />
-            <WeightBar label="News" value={profile.averageWeights.news} baseline={35} />
-            <WeightBar label="Technical" value={profile.averageWeights.technical} baseline={25} />
-          </div>
-        </div>
-
-        {/* Stability Preference */}
-        <div style={{ padding: 16, borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
-          <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 10 }}>Stability Preference</div>
-          <div style={{ display: "grid", gap: 6 }}>
-            <PrefBar label="High" value={profile.stabilityPreference.high} total={profile.totalAnalyses} color="#10b981" />
-            <PrefBar label="Medium" value={profile.stabilityPreference.medium} total={profile.totalAnalyses} color="#f59e0b" />
-            <PrefBar label="Low" value={profile.stabilityPreference.low} total={profile.totalAnalyses} color="#ef4444" />
-          </div>
-        </div>
-
-        {/* Conviction Distribution */}
-        <div style={{ padding: 16, borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
-          <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 10 }}>Conviction Distribution</div>
-          <div style={{ display: "grid", gap: 6 }}>
-            <PrefBar label="High" value={profile.convictionDistribution.high} total={profile.totalAnalyses} color="#10b981" />
-            <PrefBar label="Moderate" value={profile.convictionDistribution.moderate} total={profile.totalAnalyses} color="#3b82f6" />
-            <PrefBar label="Uncertain" value={profile.convictionDistribution.uncertain} total={profile.totalAnalyses} color="#f59e0b" />
-            <PrefBar label="Weak" value={profile.convictionDistribution.weak} total={profile.totalAnalyses} color="#ef4444" />
+        <div style={{ marginTop: 14, padding: 14, borderRadius: 10, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}>
+          <div style={{ fontSize: 12, color: "#60a5fa", lineHeight: 1.6 }}>
+            💡 These are your average trust settings across all predictions. You can adjust them for each event.
           </div>
         </div>
       </div>
 
-      {/* Category Distribution */}
-      {Object.keys(profile.categoryDistribution).length > 0 && (
-        <div style={{ marginBottom: 20, padding: 16, borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
-          <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 10 }}>Event Categories Analyzed</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {Object.entries(profile.categoryDistribution)
-              .sort(([, a], [, b]) => b - a)
-              .map(([cat, count]) => (
-                <div
-                  key={cat}
-                  style={{
-                    padding: "6px 12px",
-                    borderRadius: 8,
-                    background: "rgba(0,212,255,0.1)",
-                    border: "1px solid rgba(0,212,255,0.2)",
-                    fontSize: 13,
-                  }}
-                >
-                  <span style={{ fontWeight: 700, color: "#67e8f9" }}>{cat}</span>
-                  <span style={{ color: "#9ca3af", marginLeft: 6 }}>({count})</span>
-                </div>
-              ))}
-          </div>
+      {/* Recent Predictions */}
+      <div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#e4e4e7", marginBottom: 16 }}>
+          Your Recent Predictions
         </div>
-      )}
-
-      {/* Recent Analyses */}
-      {recentAnalyses.length > 0 && (
-        <div style={{ padding: 16, borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
-          <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Recent Analyses</div>
-          <div style={{ display: "grid", gap: 10 }}>
-            {recentAnalyses.map((analysis) => (
-              <div
-                key={analysis.id}
-                style={{
-                  padding: 12,
-                  borderRadius: 10,
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 6 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, flex: 1 }}>{analysis.event}</div>
-                  <div style={{ fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap", marginLeft: 12 }}>
-                    {new Date(analysis.timestamp).toLocaleDateString()}
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 12, fontSize: 12, color: "#9ca3af" }}>
-                  <span>Category: <b style={{ color: "#67e8f9" }}>{analysis.category}</b></span>
-                  <span>•</span>
-                  <span>YES: <b style={{ color: "#10b981" }}>{analysis.directional.yes}%</b></span>
-                  <span>•</span>
-                  <span>Conviction: <b>{analysis.conviction}</b></span>
-                </div>
-              </div>
+        {recentAnalyses.length === 0 ? (
+          <div style={{ padding: 20, borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", textAlign: "center", color: "#9ca3af" }}>
+            No predictions yet
+          </div>
+        ) : (
+          <div style={{ display: "grid", gap: 12 }}>
+            {recentAnalyses.map((analysis, i) => (
+              <PredictionCard key={i} analysis={analysis} />
             ))}
           </div>
+        )}
+      </div>
+
+    </div>
+  );
+}
+
+function TrustBar({ rank, source, percentage, color, desc }: { rank: number; source: string; percentage: number; color: string; desc: string }) {
+  return (
+    <div style={{ padding: "16px 18px", borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ 
+            width: 28, 
+            height: 28, 
+            borderRadius: 6, 
+            background: `${color}20`, 
+            border: `1.5px solid ${color}40`,
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            fontSize: 13, 
+            fontWeight: 800, 
+            color 
+          }}>
+            {rank}
+          </div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#e4e4e7" }}>{source}</div>
+            <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>{desc}</div>
+          </div>
         </div>
-      )}
-    </div>
-  );
-}
-
-function WeightBar({ label, value, baseline }: { label: string; value: number; baseline: number }) {
-  const diff = value - baseline;
-  const isHigher = diff > 0;
-  const color = isHigher ? "#67e8f9" : "#fb7185";
-
-  return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-        <span style={{ fontSize: 12, color: "#e5e7eb" }}>{label}</span>
-        <span style={{ fontSize: 13, fontWeight: 700, color }}>
-          {value}% {Math.abs(diff) >= 5 && `(${isHigher ? "+" : ""}${diff})`}
-        </span>
+        <div style={{ fontSize: 20, fontWeight: 900, color }}>{percentage.toFixed(0)}%</div>
       </div>
-      <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${value}%`, background: color, transition: "width 0.3s" }} />
+      <div style={{ height: 8, borderRadius: 4, background: "rgba(255,255,255,0.05)", overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${percentage}%`, background: color, borderRadius: 4 }} />
       </div>
     </div>
   );
 }
 
-function PrefBar({ label, value, total, color }: { label: string; value: number; total: number; color: string }) {
-  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+function PredictionCard({ analysis }: { analysis: AnalysisRecord }) {
+  const prediction = analysis.yes > 50 ? "YES" : "NO";
+  const confidence = analysis.yes > 50 ? analysis.yes : 100 - analysis.yes;
+  const wasCorrect = null; // We don't track outcomes yet
 
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-        <span style={{ fontSize: 12, color: "#e5e7eb" }}>{label}</span>
-        <span style={{ fontSize: 13, fontWeight: 700, color }}>
-          {pct}% ({value})
-        </span>
+    <div style={{ padding: "16px 18px", borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 12 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: "#e4e4e7", lineHeight: 1.4, marginBottom: 6 }}>
+            {analysis.event}
+          </div>
+          <div style={{ fontSize: 12, color: "#71717a" }}>
+            {new Date(analysis.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+          </div>
+        </div>
+        <div style={{ 
+          padding: "6px 14px", 
+          borderRadius: 8, 
+          background: prediction === "YES" ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)",
+          border: prediction === "YES" ? "1px solid rgba(34,197,94,0.25)" : "1px solid rgba(239,68,68,0.25)"
+        }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: prediction === "YES" ? "#22c55e" : "#ef4444" }}>
+            {prediction}
+          </div>
+        </div>
       </div>
-      <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${pct}%`, background: color, transition: "width 0.3s" }} />
+      <div style={{ display: "flex", gap: 16, fontSize: 13 }}>
+        <div>
+          <span style={{ color: "#9ca3af" }}>Confidence: </span>
+          <span style={{ color: "#e4e4e7", fontWeight: 700 }}>{confidence.toFixed(0)}%</span>
+        </div>
+        <div>
+          <span style={{ color: "#9ca3af" }}>Category: </span>
+          <span style={{ color: "#e4e4e7", fontWeight: 600 }}>{analysis.category}</span>
+        </div>
       </div>
     </div>
   );
