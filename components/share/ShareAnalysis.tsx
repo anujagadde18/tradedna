@@ -151,7 +151,7 @@ Built with explainable AI - not a black box!
   );
 }
 
-export function SharePreviewCard({ analysis }: { analysis: AnalysisOutput }) {
+export function SharePreviewCard({ analysis }: { analysis: EnhancedAnalysisOutput }) {
   const reliability = calculateReliability(analysis);
   const direction = analysis.directional.yes > 50 ? "YES" : "NO";
   const confidence = analysis.directional.yes > 50 ? analysis.directional.yes : analysis.directional.no;
