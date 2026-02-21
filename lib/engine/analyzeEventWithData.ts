@@ -100,7 +100,17 @@ export function analyzeEventWithData(
   const divergence = Math.max(...values) - Math.min(...values);
   const stability = Math.min(100, Math.max(0, 100 - (stdDev / 25) * 100));
 
-  // Data integration note (removed from explanation - already clear from context)
+  // Add data sources in beginner-friendly language
+  let dataNote = "";
+  if (newsData && !newsData.error && newsData.totalCount > 0) {
+    dataNote += ` We analyzed ${newsData.totalCount} recent news articles.`;
+  }
+  if (socialData && !socialData.error && socialData.estimatedVolume > 0) {
+    dataNote += ` We tracked ${socialData.estimatedVolume.toLocaleString()} social media mentions.`;
+  }
+  if (dataNote) {
+    dataNote = " " + dataNote.trim();
+  }
 
   return {
     ...baseAnalysis,
@@ -113,7 +123,7 @@ export function analyzeEventWithData(
       stability: Math.round(stability),
       divergence: Math.round(divergence),
     },
-    explanation: baseAnalysis.explanation,
+    explanation: baseAnalysis.explanation + dataNote,
     dataIntegration: {
       news: {
         realDataUsed: !!(newsData && !newsData.error && newsData.totalCount > 0),
