@@ -4,6 +4,7 @@ import type { ComponentKey } from "./analyzeEvent";
 import { analyzeEvent } from "./analyzeEvent";
 import type { NewsData } from "../data/newsData";
 import type { SocialData } from "../data/socialData";
+import type { AnalysisOutput } from "@/lib/engine/analyzeEvent";
 
 /**
  * Analyzes an event with optional real-time data integration
