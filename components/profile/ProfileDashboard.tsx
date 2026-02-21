@@ -206,8 +206,8 @@ function TrustBar({ rank, source, percentage, color, desc }: { rank: number; sou
 }
 
 function PredictionCard({ analysis }: { analysis: AnalysisRecord }) {
-  const prediction = analysis.yes > 50 ? "YES" : "NO";
-  const confidence = analysis.yes > 50 ? analysis.yes : 100 - analysis.yes;
+  const prediction = analysis.directional.yes > 50 ? "YES" : "NO";
+  const confidence = analysis.directional.yes > 50 ? analysis.directional.yes : analysis.directional.no;
   const wasCorrect = null; // We don't track outcomes yet
 
   return (
