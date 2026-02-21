@@ -458,11 +458,26 @@ export function analyzeEvent(
     volatilityLabel: volatilityLabel(stats.volatility),
   };
 
+  // Generate beginner-friendly explanation
+  const strongestComponent = Object.entries(components)
+    .map(([key, comp]) => ({ key, score: comp.final }))
+    .sort((a, b) => b.score - a.score)[0];
+  
+  const componentNames = {
+    social: "community buzz",
+    news: "news headlines",
+    technical: "market data"
+  };
+
   const explanation = [
-    `${cat.name.toUpperCase()} event detected (${cat.confidence}%).`,
-    `Overall confidence is ${overall}% based on ${weights.social}% Social, ${weights.news}% News, ${weights.technical}% Technical.`,
-    `Stability is ${directional.stabilityLabel.toLowerCase()} (std dev ${round(stats.stdDev)}). Volatility is ${directional.volatilityLabel.toLowerCase()}.`,
-    `Directional confidence: YES ${directional.yes}% / NO ${directional.no}% (volatility-adjusted, divergence-aware).`,
+    `This is a ${cat.name} event.`,
+    `Our prediction is ${directional.yes > 50 ? "YES" : "NO"} with ${directional.yes > 50 ? directional.yes : directional.no}% confidence.`,
+    `${componentNames[strongestComponent.key as ComponentKey]} is the strongest signal (${strongestComponent.score} points).`,
+    directional.stabilityLabel === "High" 
+      ? "All signals agree with each other, giving us high trust in this prediction."
+      : directional.stabilityLabel === "Medium"
+      ? "Signals mostly agree with each other, giving us moderate trust."
+      : "Signals are mixed and don't fully agree, so trust this prediction carefully.",
   ].join(" ");
 
   return {
