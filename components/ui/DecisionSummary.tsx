@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import type { EnhancedAnalysisOutput } from "@/lib/engine/analyzeEventWithData";
+import type { analyzeEventWithData } from "@/lib/engine/analyzeEventWithData";
 
 export function calculateReliability(analysis: analyzeEventWithData): {
   score: number;
