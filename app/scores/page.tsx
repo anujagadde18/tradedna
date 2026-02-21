@@ -16,7 +16,6 @@ function ScoresContent() {
   const router = useRouter();
   const event = searchParams.get("event") || "Unknown Event";
 
-  const [mode, setMode] = useState<"balanced" | "custom">("balanced");
   const [weights, setWeights] = useState<Record<ComponentKey, number>>({
     social: 40,
     news: 35,
@@ -76,10 +75,10 @@ function ScoresContent() {
   function setWeight(key: ComponentKey, value: number) {
     const next = { ...weights, [key]: value };
     const sum = next.social + next.news + next.technical;
-    if (sum === 100) {
-      setWeights(next);
-      return;
-    }
+    
+    // Allow 0-100 on any slider
+    if (sum === 0) return; // Prevent all zeros
+    
     const scale = 100 / sum;
     const scaled = {
       social: Math.round(next.social * scale),
@@ -89,19 +88,15 @@ function ScoresContent() {
     setWeights(scaled);
   }
 
-  function setTrustLevel(level: "balanced" | "social" | "news" | "technical") {
-    if (level === "balanced") {
+  function setPreset(preset: "balanced" | "community" | "headlines" | "charts") {
+    if (preset === "balanced") {
       setWeights({ social: 40, news: 35, technical: 25 });
-      setMode("balanced");
-    } else if (level === "social") {
+    } else if (preset === "community") {
       setWeights({ social: 100, news: 0, technical: 0 });
-      setMode("custom");
-    } else if (level === "news") {
+    } else if (preset === "headlines") {
       setWeights({ social: 0, news: 100, technical: 0 });
-      setMode("custom");
     } else {
       setWeights({ social: 0, news: 0, technical: 100 });
-      setMode("custom");
     }
   }
 
@@ -113,7 +108,7 @@ function ScoresContent() {
 
   return (
     <main style={{ minHeight: "100vh", background: "#0f1419", color: "#fff" }}>
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px" }}>
+      <div style={{ maxWidth: 760, margin: "0 auto", padding: "40px 24px" }}>
 
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
@@ -122,155 +117,217 @@ function ScoresContent() {
           </a>
           <button
             onClick={() => router.push("/profile")}
-            style={{ padding: "6px 14px", borderRadius: 6, background: "rgba(147,51,234,0.15)", border: "1px solid rgba(147,51,234,0.3)", color: "#a78bfa", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+            style={{ padding: "6px 14px", borderRadius: 6, background: "rgba(147,51,234,0.12)", border: "1px solid rgba(147,51,234,0.25)", color: "#a78bfa", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
           >
-            Profile
+            My Profile
           </button>
         </div>
 
         {/* Event Title */}
-        <div style={{ marginBottom: 40 }}>
-          <div style={{ fontSize: 12, color: "#71717a", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 8 }}>
-            Analysis
+        <div style={{ marginBottom: 36 }}>
+          <div style={{ fontSize: 11, color: "#71717a", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8, fontWeight: 600 }}>
+            Prediction Analysis
           </div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, lineHeight: 1.3, color: "#fafafa" }}>
+          <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0, lineHeight: 1.3, color: "#fafafa" }}>
             {analysis.event}
           </h1>
         </div>
 
-        {/* Main Decision - Robinhood Style */}
-        <div style={{ marginBottom: 32, padding: 32, borderRadius: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+        {/* Main Result - Big & Clear */}
+        <div style={{ marginBottom: 32, padding: 36, borderRadius: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", textAlign: "center" }}>
           
-          {/* Big YES/NO */}
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <div style={{ fontSize: 14, color: "#9ca3af", marginBottom: 12 }}>Model Prediction</div>
-            <div style={{ fontSize: 64, fontWeight: 900, color: direction === "YES" ? "#22c55e" : "#ef4444", marginBottom: 8 }}>
-              {direction}
-            </div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: "#e4e4e7" }}>
-              {confidence}% Confidence
-            </div>
+          <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.8px" }}>
+            Our Prediction
+          </div>
+          
+          <div style={{ fontSize: 72, fontWeight: 900, color: direction === "YES" ? "#22c55e" : "#ef4444", marginBottom: 12, lineHeight: 1 }}>
+            {direction}
+          </div>
+          
+          <div style={{ fontSize: 22, fontWeight: 700, color: "#e4e4e7", marginBottom: 20 }}>
+            {confidence}% Confidence
           </div>
 
-          {/* Reliability Badge */}
+          {/* Reliability */}
           <div style={{ 
-            textAlign: "center", 
-            padding: "12px 20px", 
-            borderRadius: 10, 
-            background: reliability.score >= 70 ? "rgba(34,197,94,0.1)" : reliability.score >= 50 ? "rgba(251,146,60,0.1)" : "rgba(239,68,68,0.1)",
-            border: reliability.score >= 70 ? "1px solid rgba(34,197,94,0.3)" : reliability.score >= 50 ? "1px solid rgba(251,146,60,0.3)" : "1px solid rgba(239,68,68,0.3)",
+            display: "inline-block",
+            padding: "10px 18px", 
+            borderRadius: 8, 
+            background: reliability.score >= 70 ? "rgba(34,197,94,0.12)" : reliability.score >= 50 ? "rgba(251,146,60,0.12)" : "rgba(239,68,68,0.12)",
+            border: reliability.score >= 70 ? "1px solid rgba(34,197,94,0.25)" : reliability.score >= 50 ? "1px solid rgba(251,146,60,0.25)" : "1px solid rgba(239,68,68,0.25)",
             marginBottom: 20
           }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: reliability.score >= 70 ? "#22c55e" : reliability.score >= 50 ? "#fb923c" : "#ef4444" }}>
-              {reliability.level} Reliability • {reliability.score}%
+              {reliability.level} Trust Level • {reliability.score}%
             </div>
           </div>
 
-          {/* Simple Explanation */}
-          <div style={{ padding: 16, borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-            <div style={{ fontSize: 14, color: "#d4d4d8", lineHeight: 1.6 }}>
+          {/* Plain English Explanation */}
+          <div style={{ padding: 18, borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", textAlign: "left" }}>
+            <div style={{ fontSize: 14, color: "#d4d4d8", lineHeight: 1.65 }}>
               {analysis.explanation}
             </div>
           </div>
         </div>
 
-        {/* Trust Settings - Simple */}
-        <div style={{ marginBottom: 32, padding: 24, borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#e4e4e7", marginBottom: 6 }}>
-              What do you trust most?
+        {/* Trust Settings - Clear & Explained */}
+        <div style={{ marginBottom: 32, padding: 28, borderRadius: 14, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+          
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 17, fontWeight: 800, color: "#e4e4e7", marginBottom: 8 }}>
+              Adjust Your Trust
             </div>
-            <div style={{ fontSize: 13, color: "#9ca3af" }}>
-              Choose which signals matter to you
+            <div style={{ fontSize: 14, color: "#9ca3af", lineHeight: 1.5 }}>
+              Choose which signals you trust most. Your settings are saved for future predictions.
             </div>
           </div>
 
-          {/* Simple Buttons */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10, marginBottom: mode === "custom" ? 20 : 0 }}>
-            <TrustButton
-              label="Balanced"
-              active={mode === "balanced"}
-              onClick={() => setTrustLevel("balanced")}
-            />
-            <TrustButton
-              label="Social Only"
-              active={mode === "custom" && weights.social === 100}
-              onClick={() => setTrustLevel("social")}
-            />
-            <TrustButton
-              label="News Only"
-              active={mode === "custom" && weights.news === 100}
-              onClick={() => setTrustLevel("news")}
-            />
-            <TrustButton
-              label="Technical Only"
-              active={mode === "custom" && weights.technical === 100}
-              onClick={() => setTrustLevel("technical")}
-            />
+          {/* Quick Presets */}
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ fontSize: 13, color: "#71717a", marginBottom: 12, fontWeight: 600 }}>
+              QUICK PRESETS
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
+              <PresetButton
+                label="Trust All Equally"
+                desc="Balanced approach"
+                active={weights.social === 40 && weights.news === 35 && weights.technical === 25}
+                onClick={() => setPreset("balanced")}
+              />
+              <PresetButton
+                label="Community Buzz Only"
+                desc="Social media sentiment"
+                active={weights.social === 100}
+                onClick={() => setPreset("community")}
+              />
+              <PresetButton
+                label="News Headlines Only"
+                desc="Journalist reports"
+                active={weights.news === 100}
+                onClick={() => setPreset("headlines")}
+              />
+              <PresetButton
+                label="Market Data Only"
+                desc="Charts & patterns"
+                active={weights.technical === 100}
+                onClick={() => setPreset("charts")}
+              />
+            </div>
           </div>
 
-          {/* Custom Sliders - Only if Custom Mode */}
-          {mode === "custom" && (
-            <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 16 }}>
-                Or adjust manually:
+          {/* Custom Sliders with Explanations */}
+          <div>
+            <div style={{ fontSize: 13, color: "#71717a", marginBottom: 16, fontWeight: 600 }}>
+              OR CUSTOMIZE MANUALLY
+            </div>
+            
+            <TrustSlider
+              label="🗣️ Community Buzz"
+              tooltip="What people are saying on social media (Twitter, Reddit, forums)"
+              value={weights.social}
+              onChange={(v) => setWeight("social", v)}
+              color="#3b82f6"
+            />
+            
+            <TrustSlider
+              label="📰 News Headlines"
+              tooltip="What journalists and news outlets are reporting"
+              value={weights.news}
+              onChange={(v) => setWeight("news", v)}
+              color="#f59e0b"
+            />
+            
+            <TrustSlider
+              label="📊 Market Data"
+              tooltip="Price charts, trading patterns, and technical indicators"
+              value={weights.technical}
+              onChange={(v) => setWeight("technical", v)}
+              color="#10b981"
+            />
+
+            <div style={{ marginTop: 16, padding: 12, borderRadius: 8, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}>
+              <div style={{ fontSize: 12, color: "#60a5fa", lineHeight: 1.5 }}>
+                💡 Tip: Set a slider to 0% if you don't trust that source at all. Set to 100% to only use that source.
               </div>
-              <SimpleSlider label="Social" value={weights.social} onChange={(v) => setWeight("social", v)} />
-              <SimpleSlider label="News" value={weights.news} onChange={(v) => setWeight("news", v)} />
-              <SimpleSlider label="Technical" value={weights.technical} onChange={(v) => setWeight("technical", v)} />
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Show Advanced Toggle */}
+        {/* Advanced Details Toggle */}
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
           style={{ 
             width: "100%",
-            padding: "14px 20px", 
+            padding: "16px 20px", 
             borderRadius: 10, 
-            background: "rgba(255,255,255,0.03)", 
-            border: "1px solid rgba(255,255,255,0.08)", 
+            background: "rgba(255,255,255,0.02)", 
+            border: "1px solid rgba(255,255,255,0.06)", 
             color: "#9ca3af", 
             fontSize: 14, 
             fontWeight: 600, 
             cursor: "pointer",
             marginBottom: 24,
-            textAlign: "left",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center"
           }}
         >
-          <span>{showAdvanced ? "Hide" : "Show"} Advanced Details</span>
+          <span>{showAdvanced ? "Hide" : "Show"} Detailed Breakdown</span>
           <span>{showAdvanced ? "▲" : "▼"}</span>
         </button>
 
-        {/* Advanced Section - Hidden by Default */}
+        {/* Advanced Section */}
         {showAdvanced && (
           <div style={{ marginBottom: 32 }}>
             
             {/* Component Scores */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 13, color: "#71717a", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: 600 }}>
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 13, color: "#71717a", marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: 600 }}>
                 Signal Scores
               </div>
-              <div style={{ display: "grid", gap: 10 }}>
-                <ScoreRow label="Social" score={analysis.components.social.final} />
-                <ScoreRow label="News" score={analysis.components.news.final} />
-                <ScoreRow label="Technical" score={analysis.components.technical.final} />
+              <div style={{ display: "grid", gap: 12 }}>
+                <DetailRow 
+                  icon="🗣️" 
+                  label="Community Buzz" 
+                  value={`${analysis.components.social.final}%`}
+                  desc="Based on social media sentiment analysis"
+                />
+                <DetailRow 
+                  icon="📰" 
+                  label="News Headlines" 
+                  value={`${analysis.components.news.final}%`}
+                  desc={`From ${newsData?.totalCount || 0} recent articles`}
+                />
+                <DetailRow 
+                  icon="📊" 
+                  label="Market Data" 
+                  value={`${analysis.components.technical.final}%`}
+                  desc="Technical patterns and indicators"
+                />
               </div>
             </div>
 
-            {/* Stats */}
-            <div style={{ padding: 16, borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <div style={{ fontSize: 13, color: "#71717a", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: 600 }}>
-                Technical Metrics
+            {/* Technical Stats */}
+            <div style={{ padding: 20, borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div style={{ fontSize: 13, color: "#71717a", marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: 600 }}>
+                Analysis Quality
               </div>
-              <div style={{ display: "grid", gap: 8, fontSize: 13 }}>
-                <MetricRow label="Stability" value={`${analysis.stats.stability}%`} />
-                <MetricRow label="Volatility" value={`${analysis.stats.volatility}%`} />
-                <MetricRow label="Conviction" value={analysis.directional.convictionTier} />
+              <div style={{ display: "grid", gap: 10 }}>
+                <MetricRow 
+                  label="Signal Agreement" 
+                  value={`${analysis.stats.stability}%`}
+                  tooltip="How much all signals agree with each other"
+                />
+                <MetricRow 
+                  label="Confidence Level" 
+                  value={analysis.directional.convictionTier}
+                  tooltip="Overall strength of the prediction"
+                />
+                <MetricRow 
+                  label="Data Freshness" 
+                  value="Real-time"
+                  tooltip="Using live data from the last 24 hours"
+                />
               </div>
             </div>
           </div>
@@ -284,24 +341,27 @@ function ScoresContent() {
           onClick={() => track("click_polymarket", { event })}
           style={{ 
             display: "block",
-            padding: "16px 24px", 
-            borderRadius: 10, 
-            background: "#9333ea", 
+            padding: "18px 24px", 
+            borderRadius: 12, 
+            background: "linear-gradient(135deg, #9333ea 0%, #7c3aed 100%)", 
             border: "none", 
             color: "#fff", 
             fontSize: 16, 
             fontWeight: 700, 
             textDecoration: "none",
             textAlign: "center",
-            marginBottom: 16
+            marginBottom: 16,
+            boxShadow: "0 4px 14px rgba(147,51,234,0.4)"
           }}
         >
           Trade on Polymarket →
         </a>
 
-        {/* Disclaimer */}
-        <div style={{ fontSize: 12, color: "#71717a", textAlign: "center", lineHeight: 1.5 }}>
-          Analysis saved to your profile • Not financial advice
+        {/* Footer Note */}
+        <div style={{ fontSize: 12, color: "#71717a", textAlign: "center", lineHeight: 1.6 }}>
+          This analysis is saved to your profile • View your history and patterns anytime
+          <br />
+          Not financial advice • Do your own research
         </div>
 
       </div>
@@ -309,60 +369,141 @@ function ScoresContent() {
   );
 }
 
-function TrustButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+function PresetButton({ label, desc, active, onClick }: { label: string; desc: string; active: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
       style={{
         padding: "14px 16px",
-        borderRadius: 8,
-        background: active ? "rgba(147,51,234,0.15)" : "rgba(255,255,255,0.03)",
-        border: active ? "2px solid #9333ea" : "1px solid rgba(255,255,255,0.08)",
-        color: active ? "#a78bfa" : "#9ca3af",
-        fontSize: 14,
-        fontWeight: 600,
+        borderRadius: 10,
+        background: active ? "rgba(147,51,234,0.15)" : "rgba(255,255,255,0.02)",
+        border: active ? "2px solid #9333ea" : "1px solid rgba(255,255,255,0.06)",
+        textAlign: "left",
         cursor: "pointer",
         transition: "all 0.2s"
       }}
     >
-      {label}
+      <div style={{ fontSize: 14, fontWeight: 700, color: active ? "#a78bfa" : "#e4e4e7", marginBottom: 4 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 12, color: active ? "#9ca3af" : "#71717a" }}>
+        {desc}
+      </div>
     </button>
   );
 }
 
-function SimpleSlider({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+function TrustSlider({ label, tooltip, value, onChange, color }: { label: string; tooltip: string; value: number; onChange: (v: number) => void; color: string }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
   return (
-    <div style={{ marginBottom: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-        <span style={{ fontSize: 13, color: "#e4e4e7", fontWeight: 600 }}>{label}</span>
-        <span style={{ fontSize: 15, fontWeight: 800, color: "#9333ea" }}>{value}%</span>
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 14, color: "#e4e4e7", fontWeight: 700 }}>{label}</span>
+          <button
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+            style={{ 
+              width: 18, 
+              height: 18, 
+              borderRadius: "50%", 
+              background: "rgba(255,255,255,0.1)", 
+              border: "1px solid rgba(255,255,255,0.2)", 
+              color: "#9ca3af", 
+              fontSize: 11, 
+              cursor: "help",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 700
+            }}
+          >
+            ?
+          </button>
+        </div>
+        <span style={{ fontSize: 18, fontWeight: 900, color }}>{value}%</span>
       </div>
+      
+      {showTooltip && (
+        <div style={{ marginBottom: 8, padding: 10, borderRadius: 8, background: "rgba(0,0,0,0.8)", border: "1px solid rgba(255,255,255,0.1)", fontSize: 12, color: "#d4d4d8", lineHeight: 1.5 }}>
+          {tooltip}
+        </div>
+      )}
+
       <input
         type="range"
         min={0}
         max={100}
+        step={5}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        style={{ width: "100%", height: 6, borderRadius: 3, background: "rgba(255,255,255,0.1)", cursor: "pointer" }}
+        style={{ 
+          width: "100%", 
+          height: 8, 
+          borderRadius: 4, 
+          background: `linear-gradient(to right, ${color} 0%, ${color} ${value}%, rgba(255,255,255,0.08) ${value}%, rgba(255,255,255,0.08) 100%)`,
+          cursor: "pointer",
+          WebkitAppearance: "none",
+          appearance: "none"
+        }}
       />
     </div>
   );
 }
 
-function ScoreRow({ label, score }: { label: string; score: number }) {
+function DetailRow({ icon, label, value, desc }: { icon: string; label: string; value: string; desc: string }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
-      <span style={{ fontSize: 14, color: "#e4e4e7", fontWeight: 600 }}>{label}</span>
-      <span style={{ fontSize: 16, fontWeight: 800, color: "#9333ea" }}>{score}%</span>
+    <div style={{ padding: "14px 16px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 18 }}>{icon}</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#e4e4e7" }}>{label}</span>
+        </div>
+        <span style={{ fontSize: 17, fontWeight: 900, color: "#9333ea" }}>{value}</span>
+      </div>
+      <div style={{ fontSize: 12, color: "#9ca3af", paddingLeft: 28 }}>
+        {desc}
+      </div>
     </div>
   );
 }
 
-function MetricRow({ label, value }: { label: string; value: string }) {
+function MetricRow({ label, value, tooltip }: { label: string; value: string; tooltip: string }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: 8, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-      <span style={{ color: "#9ca3af" }}>{label}</span>
-      <span style={{ color: "#e4e4e7", fontWeight: 600 }}>{value}</span>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span style={{ color: "#9ca3af", fontSize: 13 }}>{label}</span>
+        <button
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+          style={{ 
+            width: 16, 
+            height: 16, 
+            borderRadius: "50%", 
+            background: "rgba(255,255,255,0.08)", 
+            border: "1px solid rgba(255,255,255,0.15)", 
+            color: "#71717a", 
+            fontSize: 10, 
+            cursor: "help",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: 700,
+            position: "relative"
+          }}
+        >
+          ?
+          {showTooltip && (
+            <div style={{ position: "absolute", bottom: "100%", left: "50%", transform: "translateX(-50%)", marginBottom: 8, padding: 8, borderRadius: 6, background: "rgba(0,0,0,0.95)", border: "1px solid rgba(255,255,255,0.1)", fontSize: 11, color: "#d4d4d8", whiteSpace: "nowrap", zIndex: 10 }}>
+              {tooltip}
+            </div>
+          )}
+        </button>
+      </div>
+      <span style={{ color: "#e4e4e7", fontWeight: 700, fontSize: 14 }}>{value}</span>
     </div>
   );
 }
@@ -371,7 +512,9 @@ export default function ScoresPage() {
   return (
     <Suspense fallback={
       <div style={{ minHeight: "100vh", background: "#0f1419", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        Analyzing...
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 14, color: "#9ca3af" }}>Analyzing your prediction...</div>
+        </div>
       </div>
     }>
       <ScoresContent />
