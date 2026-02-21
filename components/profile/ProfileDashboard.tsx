@@ -48,9 +48,9 @@ export function ProfileDashboard() {
 
   // Calculate trust preferences in plain English
   const trustPreferences = [
-    { source: "Community Buzz", value: profile.avgWeights.social, color: "#3b82f6", desc: "Social media sentiment" },
-    { source: "News Headlines", value: profile.avgWeights.news, color: "#f59e0b", desc: "Journalist reports" },
-    { source: "Market Data", value: profile.avgWeights.technical, color: "#10b981", desc: "Charts & patterns" }
+    { source: "Community Buzz", value: profile.averageWeights.social, color: "#3b82f6", desc: "Social media sentiment" },
+    { source: "News Headlines", value: profile.averageWeights.news, color: "#f59e0b", desc: "Journalist reports" },
+    { source: "Market Data", value: profile.averageWeights.technical, color: "#10b981", desc: "Charts & patterns" }
   ].sort((a, b) => b.value - a.value);
 
   const mostTrusted = trustPreferences[0];
