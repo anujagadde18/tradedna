@@ -2,232 +2,250 @@
 
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { PopularEventsFeed } from "@/components/home/PopularEventsFeed";
 import { getPopularEvents } from "@/lib/storage/popularEvents";
 
 function HomeContent() {
   const router = useRouter();
-  const [totalAnalyses, setTotalAnalyses] = useState(0);
-  const [activeEvents, setActiveEvents] = useState(0);
+  const [popularEvents, setPopularEvents] = useState<any[]>([]);
 
   useEffect(() => {
-    const events = getPopularEvents();
-    setActiveEvents(events.length);
-    setTotalAnalyses(events.reduce((sum, e) => sum + e.count, 0));
+    const events = getPopularEvents().slice(0, 6);
+    setPopularEvents(events);
   }, []);
 
-  const demoEvents = [
-    { title: "Will Bitcoin reach $150k in 2026?", category: "crypto" },
-    { title: "Will Trump win the 2024 election?", category: "politics" },
-    { title: "Will Apple stock hit $300 in 2026?", category: "finance" },
+  const quickEvents = [
+    "Will Bitcoin reach $150k in 2026?",
+    "Will Trump win the 2024 election?",
+    "Will Apple stock hit $300 in 2026?",
   ];
 
   return (
     <main style={{ minHeight: "100vh", background: "#0f1419", color: "#fff" }}>
       
-      {/* Navigation */}
+      {/* Simple Nav */}
       <nav style={{ 
-        borderBottom: "1px solid rgba(255,255,255,0.08)", 
+        borderBottom: "1px solid rgba(255,255,255,0.06)", 
         padding: "16px 0",
-        background: "rgba(15,20,25,0.9)",
-        backdropFilter: "blur(12px)",
+        background: "rgba(15,20,25,0.95)",
+        backdropFilter: "blur(8px)",
         position: "sticky",
         top: 0,
         zIndex: 100
       }}>
-        <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 36 }}>
-            <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.3px" }}>PlayPicks AI</div>
-            <div style={{ display: "flex", gap: 24, fontSize: 14 }}>
-              <a href="/" style={{ color: "#e4e4e7", textDecoration: "none", fontWeight: 500 }}>Home</a>
-              <a href="/event" style={{ color: "#71717a", textDecoration: "none", fontWeight: 500 }}>Analyze</a>
-              <a href="/profile" style={{ color: "#71717a", textDecoration: "none", fontWeight: 500 }}>Profile</a>
-            </div>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontSize: 18, fontWeight: 800 }}>PlayPicks AI</div>
+          <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+            <a href="/profile" style={{ color: "#9ca3af", fontSize: 14, textDecoration: "none", fontWeight: 500 }}>Profile</a>
+            <button
+              onClick={() => router.push("/event")}
+              style={{ 
+                padding: "8px 18px", 
+                borderRadius: 8, 
+                background: "#9333ea", 
+                border: "none", 
+                color: "#fff", 
+                fontSize: 14, 
+                fontWeight: 600, 
+                cursor: "pointer"
+              }}
+            >
+              Analyze Event
+            </button>
           </div>
-          <button
-            onClick={() => router.push("/event")}
-            style={{ 
-              padding: "8px 20px", 
-              borderRadius: 7, 
-              background: "#9333ea", 
-              border: "none", 
-              color: "#fff", 
-              fontSize: 14, 
-              fontWeight: 600, 
-              cursor: "pointer"
-            }}
-          >
-            Start Analysis
-          </button>
         </div>
       </nav>
 
-      <div style={{ maxWidth: 1300, margin: "0 auto", padding: "64px 32px" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "64px 24px" }}>
         
-        {/* Hero */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 56, alignItems: "center", marginBottom: 80 }}>
-          
-          <div>
-            <div style={{ 
-              display: "inline-block",
-              padding: "4px 12px",
-              borderRadius: 6,
-              background: "rgba(147, 51, 234, 0.15)",
-              border: "1px solid rgba(147, 51, 234, 0.3)",
-              fontSize: 11,
-              fontWeight: 600,
-              color: "#a78bfa",
-              marginBottom: 24,
-              textTransform: "uppercase",
-              letterSpacing: "0.8px"
-            }}>
-              Powered by TradeDNA™ Engine
-            </div>
-
-            <h1 style={{ 
-              fontSize: 48, 
-              fontWeight: 800, 
-              lineHeight: 1.1,
-              marginBottom: 20,
-              letterSpacing: "-1px",
-              color: "#fafafa"
-            }}>
-              Build Conviction with
-              <br />
-              Evidence, Not Guesses
-            </h1>
-
-            <p style={{ 
-              fontSize: 17, 
-              color: "#a1a1aa", 
-              marginBottom: 32,
-              lineHeight: 1.6,
-              maxWidth: 520
-            }}>
-              Analyze prediction markets with transparent signal breakdown, historical accuracy data, and reliability scoring. Turn research into actionable conviction.
-            </p>
-
-            <div style={{ display: "flex", gap: 12 }}>
-              <button
-                onClick={() => router.push("/event")}
-                style={{ 
-                  padding: "13px 26px", 
-                  borderRadius: 8, 
-                  background: "#9333ea", 
-                  border: "none", 
-                  color: "#fff", 
-                  fontSize: 15, 
-                  fontWeight: 600, 
-                  cursor: "pointer"
-                }}
-              >
-                Analyze Event →
-              </button>
-              <button
-                onClick={() => router.push("/profile")}
-                style={{ 
-                  padding: "13px 26px", 
-                  borderRadius: 8, 
-                  background: "rgba(255,255,255,0.06)", 
-                  border: "1px solid rgba(255,255,255,0.12)", 
-                  color: "#e4e4e7", 
-                  fontSize: 15, 
-                  fontWeight: 600, 
-                  cursor: "pointer" 
-                }}
-              >
-                View Demo
-              </button>
-            </div>
-          </div>
-
-          {/* Stats Card */}
+        {/* Hero - Clean & Simple */}
+        <div style={{ textAlign: "center", maxWidth: 680, margin: "0 auto 80px" }}>
           <div style={{ 
-            padding: 28, 
-            borderRadius: 12, 
-            background: "rgba(255,255,255,0.03)", 
-            border: "1px solid rgba(255,255,255,0.08)" 
+            display: "inline-block",
+            padding: "4px 12px",
+            borderRadius: 6,
+            background: "rgba(147, 51, 234, 0.12)",
+            fontSize: 11,
+            fontWeight: 600,
+            color: "#a78bfa",
+            marginBottom: 24,
+            textTransform: "uppercase",
+            letterSpacing: "1px"
           }}>
-            <div style={{ fontSize: 11, color: "#71717a", marginBottom: 20, textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600 }}>
-              Platform Activity
-            </div>
-            <div style={{ display: "grid", gap: 18 }}>
-              <MetricRow label="Total Analyses" value={totalAnalyses > 0 ? totalAnalyses.toString() : "—"} />
-              <MetricRow label="Active Events" value={activeEvents > 0 ? activeEvents.toString() : "—"} />
-              <MetricRow label="Signal Sources" value="Real-time" live />
-              <MetricRow label="Historical Data" value="6 Categories" />
-            </div>
+            Powered by TradeDNA™
           </div>
+
+          <h1 style={{ 
+            fontSize: 52, 
+            fontWeight: 900, 
+            lineHeight: 1.1,
+            marginBottom: 20,
+            letterSpacing: "-1.2px",
+            color: "#fafafa"
+          }}>
+            Make Smarter Predictions
+          </h1>
+
+          <p style={{ 
+            fontSize: 19, 
+            color: "#a1a1aa", 
+            marginBottom: 36,
+            lineHeight: 1.6
+          }}>
+            Get clear YES or NO predictions backed by real data. No confusing charts. No complex metrics. Just clear answers.
+          </p>
+
+          <button
+            onClick={() => router.push("/event")}
+            style={{ 
+              padding: "16px 40px", 
+              borderRadius: 10, 
+              background: "#9333ea", 
+              border: "none", 
+              color: "#fff", 
+              fontSize: 17, 
+              fontWeight: 700, 
+              cursor: "pointer",
+              boxShadow: "0 4px 14px rgba(147,51,234,0.4)"
+            }}
+          >
+            Analyze Your Event →
+          </button>
         </div>
 
-        {/* Quick Access */}
-        <div style={{ marginBottom: 64 }}>
-          <div style={{ fontSize: 11, color: "#71717a", marginBottom: 14, textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600 }}>
-            Quick Analysis
+        {/* Quick Examples */}
+        {quickEvents.length > 0 && (
+          <div style={{ marginBottom: 64 }}>
+            <div style={{ fontSize: 13, color: "#71717a", marginBottom: 16, textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600, textAlign: "center" }}>
+              Try These Examples
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14, maxWidth: 900, margin: "0 auto" }}>
+              {quickEvents.map((event, i) => (
+                <button
+                  key={i}
+                  onClick={() => router.push(`/scores?event=${encodeURIComponent(event)}`)}
+                  style={{
+                    padding: "20px",
+                    borderRadius: 12,
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                    e.currentTarget.style.borderColor = "rgba(147,51,234,0.4)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                  }}
+                >
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "#e4e4e7", lineHeight: 1.4, marginBottom: 8 }}>
+                    {event}
+                  </div>
+                  <div style={{ fontSize: 13, color: "#71717a" }}>
+                    Click to analyze
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-            {demoEvents.map((event, i) => (
-              <QuickCard key={i} event={event} onClick={() => router.push(`/scores?event=${encodeURIComponent(event.title)}`)} />
-            ))}
+        )}
+
+        {/* Popular Analyses */}
+        {popularEvents.length > 0 && (
+          <div style={{ marginBottom: 80 }}>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8, color: "#fafafa" }}>
+                Recently Analyzed
+              </h2>
+              <p style={{ fontSize: 15, color: "#9ca3af" }}>
+                See what others are researching
+              </p>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 14, maxWidth: 1000, margin: "0 auto" }}>
+              {popularEvents.map((event, i) => (
+                <button
+                  key={i}
+                  onClick={() => router.push(`/scores?event=${encodeURIComponent(event.event)}`)}
+                  style={{
+                    padding: "18px",
+                    borderRadius: 10,
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                    e.currentTarget.style.borderColor = "rgba(147,51,234,0.3)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.02)";
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                  }}
+                >
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#e4e4e7", lineHeight: 1.4, marginBottom: 10 }}>
+                    {event.event}
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#71717a" }}>
+                    <span>{event.category}</span>
+                    <span>{event.count} {event.count === 1 ? 'analysis' : 'analyses'}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Trending */}
-        <PopularEventsFeed />
-
-        {/* Features */}
-        <div style={{ marginTop: 80 }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <h2 style={{ fontSize: 32, fontWeight: 800, marginBottom: 12, letterSpacing: "-0.5px", color: "#fafafa" }}>
-              Why Traders Choose PlayPicks
+        {/* Simple Benefits */}
+        <div style={{ marginBottom: 80, maxWidth: 800, margin: "0 auto 80px" }}>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8, color: "#fafafa" }}>
+              How It Works
             </h2>
-            <p style={{ fontSize: 16, color: "#a1a1aa", maxWidth: 560, margin: "0 auto" }}>
-              Evidence-based conviction modeling for prediction market traders
+            <p style={{ fontSize: 15, color: "#9ca3af" }}>
+              Three simple steps to better predictions
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-            <Feature
-              title="Historical Win Rates"
-              desc="Component accuracy from backtested markets. Know which signals perform best per category."
+          <div style={{ display: "grid", gap: 20 }}>
+            <StepCard 
+              number="1"
+              title="Enter Your Question"
+              desc="Type any prediction market question or paste a Polymarket link"
             />
-            <Feature
-              title="Signal Transparency"
-              desc="See exactly why each score changed. Every contribution tracked and explained in detail."
+            <StepCard 
+              number="2"
+              title="Get Clear Answer"
+              desc="See YES or NO with confidence percentage. No jargon."
             />
-            <Feature
-              title="Divergence Alerts"
-              desc="Get notified when signals conflict. Know when to wait for alignment vs act on conviction."
-            />
-            <Feature
-              title="Real-Time Data"
-              desc="Live news and social sentiment from trusted sources. Not simulations or estimates."
-            />
-            <Feature
-              title="Behavioral Tracking"
-              desc="Monitor your research patterns. Discover if you're social-heavy or technical-focused."
-            />
-            <Feature
-              title="Reliability Scoring"
-              desc="Model confidence in its own predictions. Trust scores from high to low certainty."
+            <StepCard 
+              number="3"
+              title="Make Your Decision"
+              desc="Trade on Polymarket with confidence or wait for better signals"
             />
           </div>
         </div>
 
         {/* CTA */}
         <div style={{ 
-          marginTop: 80,
-          padding: 56,
+          padding: 48,
           borderRadius: 16,
           background: "rgba(147,51,234,0.08)",
           border: "1px solid rgba(147,51,234,0.2)",
-          textAlign: "center"
+          textAlign: "center",
+          maxWidth: 600,
+          margin: "0 auto 60px"
         }}>
-          <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 14, letterSpacing: "-0.5px", color: "#fafafa" }}>
-            Ready to Build Evidence-Based Conviction?
-          </h2>
-          <p style={{ fontSize: 16, color: "#a1a1aa", marginBottom: 28, maxWidth: 500, margin: "0 auto 28px" }}>
-            Start analyzing prediction markets with transparent, data-driven conviction modeling
+          <h3 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12, color: "#fafafa" }}>
+            Ready to Start?
+          </h3>
+          <p style={{ fontSize: 15, color: "#a1a1aa", marginBottom: 24 }}>
+            Analyze your first prediction market event
           </p>
           <button
             onClick={() => router.push("/event")}
@@ -242,27 +260,24 @@ function HomeContent() {
               cursor: "pointer"
             }}
           >
-            Analyze Your First Event →
+            Analyze Event →
           </button>
         </div>
 
         {/* Footer */}
         <div style={{ 
-          marginTop: 64, 
           paddingTop: 32, 
-          borderTop: "1px solid rgba(255,255,255,0.08)", 
+          borderTop: "1px solid rgba(255,255,255,0.06)", 
           display: "flex", 
-          justifyContent: "space-between", 
-          alignItems: "center" 
+          justifyContent: "center", 
+          alignItems: "center",
+          gap: 20,
+          fontSize: 14,
+          color: "#71717a"
         }}>
-          <div style={{ fontSize: 14, color: "#71717a" }}>
-            PlayPicks AI • Powered by TradeDNA™ • 2026
-          </div>
-          <div style={{ display: "flex", gap: 20, fontSize: 14, color: "#71717a" }}>
-            <a href="https://polymarket.com" target="_blank" rel="noreferrer" style={{ color: "#71717a", textDecoration: "none" }}>Polymarket</a>
-            <span>·</span>
-            <a href="/profile" style={{ color: "#71717a", textDecoration: "none" }}>Demo</a>
-          </div>
+          <span>PlayPicks AI • 2026</span>
+          <span>·</span>
+          <a href="https://polymarket.com" target="_blank" rel="noreferrer" style={{ color: "#71717a", textDecoration: "none" }}>Polymarket</a>
         </div>
 
       </div>
@@ -270,68 +285,29 @@ function HomeContent() {
   );
 }
 
-function MetricRow({ label, value, live }: { label: string; value: string; live?: boolean }) {
+function StepCard({ number, title, desc }: { number: string; title: string; desc: string }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingBottom: 14, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-      <div style={{ fontSize: 13, color: "#a1a1aa", fontWeight: 500 }}>{label}</div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 18, fontWeight: 700, color: "#fafafa" }}>{value}</span>
-        {live && <span style={{ fontSize: 10, fontWeight: 600, color: "#22c55e", display: "flex", alignItems: "center", gap: 3 }}><span style={{ fontSize: 7 }}>●</span> LIVE</span>}
+    <div style={{ display: "flex", gap: 20, padding: 24, borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+      <div style={{ 
+        width: 40, 
+        height: 40, 
+        borderRadius: 8, 
+        background: "rgba(147,51,234,0.15)", 
+        border: "1px solid rgba(147,51,234,0.3)",
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center", 
+        fontSize: 18, 
+        fontWeight: 800, 
+        color: "#a78bfa",
+        flexShrink: 0
+      }}>
+        {number}
       </div>
-    </div>
-  );
-}
-
-function QuickCard({ event, onClick }: { event: any; onClick: () => void }) {
-  const categoryColors = {
-    crypto: { bg: "rgba(251, 146, 60, 0.12)", border: "rgba(251, 146, 60, 0.25)", text: "#fb923c" },
-    politics: { bg: "rgba(96, 165, 250, 0.12)", border: "rgba(96, 165, 250, 0.25)", text: "#60a5fa" },
-    finance: { bg: "rgba(34, 197, 94, 0.12)", border: "rgba(34, 197, 94, 0.25)", text: "#22c55e" },
-  };
-  const color = categoryColors[event.category as keyof typeof categoryColors];
-
-  return (
-    <div
-      onClick={onClick}
-      style={{
-        padding: 20,
-        borderRadius: 10,
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        cursor: "pointer",
-        transition: "all 0.2s",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-        e.currentTarget.style.borderColor = "rgba(147, 51, 234, 0.3)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-      }}
-    >
-      <div style={{ marginBottom: 12 }}>
-        <span style={{ padding: "3px 10px", borderRadius: 5, background: color.bg, border: `1px solid ${color.border}`, fontSize: 11, fontWeight: 600, color: color.text, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-          {event.category}
-        </span>
+      <div>
+        <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6, color: "#e4e4e7" }}>{title}</h3>
+        <p style={{ fontSize: 14, color: "#9ca3af", margin: 0, lineHeight: 1.5 }}>{desc}</p>
       </div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: "#e4e4e7", lineHeight: 1.4, marginBottom: 8 }}>
-        {event.title}
-      </div>
-      <div style={{ fontSize: 12, color: "#71717a", fontWeight: 500 }}>
-        Click to analyze
-      </div>
-    </div>
-  );
-}
-
-function Feature({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div style={{ padding: 22, borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-      <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, color: "#e4e4e7" }}>{title}</h3>
-      <p style={{ fontSize: 14, color: "#a1a1aa", lineHeight: 1.55, margin: 0 }}>
-        {desc}
-      </p>
     </div>
   );
 }
