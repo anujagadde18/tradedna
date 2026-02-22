@@ -1,95 +1,97 @@
 // lib/engine/analyzeEventWithData.ts
 
-import type { ComponentKey } from "./analyzeEvent";
-import { analyzeEvent } from "./analyzeEvent";
-import type { NewsData } from "../data/newsData";
-import type { SocialData } from "../data/socialData";
-import type { AnalysisOutput } from "@/lib/engine/analyzeEvent";
+import { analyzeEvent as analyzeEventBase, type AnalysisOutput, type ComponentKey } from "./analyzeEvent";
+import type { NewsData } from "@/lib/data/newsData";
+import type { SocialData } from "@/lib/data/socialData";
 
-/**
- * Analyzes an event with optional real-time data integration
- */
+export type EnhancedAnalysisOutput = AnalysisOutput & {
+  dataIntegration: {
+    news: {
+      realDataUsed: boolean;
+      articleCount?: number;
+      scoreBoost?: number;
+    };
+    social: {
+      realDataUsed: boolean;
+      estimatedVolume?: number;
+      scoreBoost?: number;
+    };
+  };
+};
+
 export function analyzeEventWithData(
   event: string,
   weights: Record<ComponentKey, number>,
-  newsData: NewsData | null,
-  socialData: SocialData | null
-) {
+  newsData?: NewsData | null,
+  socialData?: SocialData | null
+): EnhancedAnalysisOutput {
   // Start with base analysis
-  const baseAnalysis = analyzeEvent(event, weights);
+  const baseAnalysis = analyzeEventBase(event, weights);
 
-  // If no real data, return base analysis
-  if ((!newsData || newsData.error) && (!socialData || socialData.error)) {
-    return baseAnalysis;
-  }
-
-  // --- Integrate Real Data ---
-
-  // News score boost based on article count and recency
+  // Apply real data boosts if available
   let newsScoreBoost = 0;
-  if (newsData && !newsData.error && newsData.totalCount > 0) {
-    const articleCount = newsData.totalCount;
-    // More articles = stronger signal (cap at +15)
-    newsScoreBoost = Math.min(15, Math.floor(articleCount / 10));
-    
-    // Adjust based on news score (0-100)
-    const newsScoreAdjustment = (newsData.score - 50) / 10; // -5 to +5
-    newsScoreBoost += Math.round(newsScoreAdjustment);
-    
-    newsScoreBoost = Math.max(-10, Math.min(15, newsScoreBoost)); // Cap between -10 and +15
-  }
-
-  // Social score boost based on volume and sentiment
   let socialScoreBoost = 0;
-  if (socialData && !socialData.error && socialData.estimatedVolume > 0) {
-    const volume = socialData.estimatedVolume;
+
+  if (newsData && !newsData.error && newsData.totalCount > 0) {
+    // News score boost based on article count
+    const articleScore = newsData.score;
+    const baseNewsScore = baseAnalysis.components.news.final;
     
-    // Volume boost (logarithmic scale)
-    if (volume > 10000) socialScoreBoost += 12;
-    else if (volume > 5000) socialScoreBoost += 10;
-    else if (volume > 1000) socialScoreBoost += 7;
-    else if (volume > 500) socialScoreBoost += 5;
-    else if (volume > 100) socialScoreBoost += 3;
+    // Blend real data with base analysis (70% real, 30% base)
+    const blendedScore = Math.round(articleScore * 0.7 + baseNewsScore * 0.3);
+    newsScoreBoost = blendedScore - baseNewsScore;
     
-    // Sentiment adjustment
-    const { positive, negative } = socialData.sentiment;
-    const sentimentDelta = positive - negative;
-    const sentimentAdjustment = Math.round(sentimentDelta / 10); // -10 to +10
-    socialScoreBoost += sentimentAdjustment;
-    
-    socialScoreBoost = Math.max(-10, Math.min(15, socialScoreBoost)); // Cap between -10 and +15
+    // Update news component
+    baseAnalysis.components.news = {
+      ...baseAnalysis.components.news,
+      contributions: [
+        ...baseAnalysis.components.news.contributions,
+        {
+          reason: `Real news data: ${newsData.totalCount} articles found`,
+          impact: newsScoreBoost,
+          tag: "real_data:news",
+        },
+      ],
+      final: Math.min(95, Math.max(40, baseNewsScore + newsScoreBoost)),
+    };
   }
 
-  // Apply boosts to component scores
-  const updatedComponents = {
-    social: {
+  if (socialData && !socialData.error && socialData.estimatedVolume > 0) {
+    // Social score boost based on volume
+    const volumeScore = socialData.score;
+    const baseSocialScore = baseAnalysis.components.social.final;
+    
+    // Blend real data with base analysis (70% real, 30% base)
+    const blendedScore = Math.round(volumeScore * 0.7 + baseSocialScore * 0.3);
+    socialScoreBoost = blendedScore - baseSocialScore;
+    
+    // Update social component
+    baseAnalysis.components.social = {
       ...baseAnalysis.components.social,
-      final: Math.max(0, Math.min(100, baseAnalysis.components.social.final + socialScoreBoost)),
-    },
-    news: {
-      ...baseAnalysis.components.news,
-      final: Math.max(0, Math.min(100, baseAnalysis.components.news.final + newsScoreBoost)),
-    },
-    technical: baseAnalysis.components.technical,
-  };
+      contributions: [
+        ...baseAnalysis.components.social.contributions,
+        {
+          reason: `Real social data: ~${socialData.estimatedVolume.toLocaleString()} mentions`,
+          impact: socialScoreBoost,
+          tag: "real_data:social",
+        },
+      ],
+      final: Math.min(95, Math.max(40, baseSocialScore + socialScoreBoost)),
+    };
+  }
 
-  // Recalculate overall score with updated components
+  // Recalculate overall with updated scores
   const updatedOverall = Math.round(
-    (updatedComponents.social.final * weights.social +
-      updatedComponents.news.final * weights.news +
-      updatedComponents.technical.final * weights.technical) /
+    (baseAnalysis.components.social.final * weights.social +
+      baseAnalysis.components.news.final * weights.news +
+      baseAnalysis.components.technical.final * weights.technical) /
       100
   );
 
-  // Recalculate directional confidence
-  const yesBoost = (socialScoreBoost + newsScoreBoost) / 4;
-  const updatedYes = Math.max(0, Math.min(100, baseAnalysis.directional.yes + yesBoost));
-  const updatedNo = 100 - updatedYes;
-
-  // Recalculate stats with updated component scores
+  // Recalculate stats with updated scores
   const values = [
-    updatedComponents.social.final,
-    updatedComponents.news.final,
+    baseAnalysis.components.social.final,
+    baseAnalysis.components.news.final,
     baseAnalysis.components.technical.final,
   ];
   const mean = values.reduce((a, b) => a + b, 0) / values.length;
