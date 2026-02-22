@@ -508,6 +508,60 @@ function ScoresContent() {
           </div>
         )}
 
+        {/* Share Buttons */}
+        <div style={{ marginBottom: 16, padding: 20, borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#e4e4e7", marginBottom: 14 }}>
+            📤 Share Your Analysis
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }}>
+            <ShareButton
+              label="Share on X"
+              icon="𝕏"
+              onClick={() => {
+                const text = `🎯 PlayPicks Analysis: ${analysis.event}
+
+${direction} (${confidence}%)
+Trust Level: ${reliability.level} (${reliability.score}%)
+
+Built with transparent AI → https://tradedna.vercel.app`;
+                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+                track("share_twitter", { event });
+              }}
+            />
+            <ShareButton
+              label="Copy Analysis"
+              icon="📋"
+              onClick={() => {
+                const text = `PlayPicks AI Analysis
+${analysis.event}
+
+Prediction: ${direction} (${confidence}%)
+Trust Level: ${reliability.level} (${reliability.score}%)
+
+Explanation: ${analysis.explanation}
+
+Analyzed at: https://tradedna.vercel.app`;
+                navigator.clipboard.writeText(text);
+                track("copy_analysis", { event });
+                alert("Analysis copied to clipboard!");
+              }}
+            />
+            <ShareButton
+              label="Copy Link"
+              icon="🔗"
+              onClick={() => {
+                const url = `https://tradedna.vercel.app/scores?event=${encodeURIComponent(event)}`;
+                navigator.clipboard.writeText(url);
+                track("copy_link", { event });
+                alert("Link copied to clipboard!");
+              }}
+            />
+          </div>
+          <div style={{ fontSize: 11, color: "#71717a", marginTop: 12, textAlign: "center" }}>
+            Share to help others make informed decisions
+          </div>
+        </div>
+
         {/* Action Button - Mobile Optimized */}
         <a
           href={polymarketUrl}
@@ -682,6 +736,40 @@ function MetricRow({ label, value, tooltip }: { label: string; value: string; to
       </div>
       <span style={{ color: "#e4e4e7", fontWeight: 700, fontSize: 13 }}>{value}</span>
     </div>
+  );
+}
+
+function ShareButton({ label, icon, onClick }: { label: string; icon: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: "12px 14px",
+        borderRadius: 8,
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        color: "#e4e4e7",
+        fontSize: 13,
+        fontWeight: 600,
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        transition: "all 0.2s"
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = "rgba(147,51,234,0.15)";
+        e.currentTarget.style.borderColor = "rgba(147,51,234,0.3)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+        e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+      }}
+    >
+      <span style={{ fontSize: 16 }}>{icon}</span>
+      <span>{label}</span>
+    </button>
   );
 }
 
