@@ -147,7 +147,7 @@ function SummaryItem({ label, value, highlight, color }: { label: string; value:
   );
 }
 
-function MetricsExplainer({ reliability, analysis }: { reliability: ReturnType<typeof calculateReliability>; analysis: EnhancedAnalysisOutput }) {
+function MetricsExplainer({ reliability, analysis }: { reliability: ReturnType<typeof calculateReliability>; analysis: AnalysisOutput }) {
   return (
     <div style={{ 
       marginTop: 12, 
@@ -192,7 +192,7 @@ function ExplainerRow({ term, meaning }: { term: string; meaning: string }) {
   );
 }
 
-export function TradeRecommendation({ analysis }: { analysis: EnhancedAnalysisOutput }) {
+export function TradeRecommendation({ analysis }: { analysis: AnalysisOutput }) {
   const reliability = calculateReliability(analysis);
   const direction = analysis.directional.yes > 50 ? "YES" : "NO";
   const confidence = analysis.directional.yes > 50 ? analysis.directional.yes : analysis.directional.no;
