@@ -38,7 +38,7 @@ export function calculateReliability(analysis: AnalysisOutput): {
   return { score, level, color, emoji };
 }
 
-export function DecisionSummaryCard({ analysis }: { analysis: EnhancedAnalysisOutput }) {
+export function DecisionSummaryCard({ analysis }: { analysis: AnalysisOutput }) {
   const [showExplainer, setShowExplainer] = useState(false);
   
   const direction = analysis.directional.yes > 50 ? "YES" : "NO";
