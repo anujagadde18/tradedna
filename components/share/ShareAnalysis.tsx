@@ -3,8 +3,7 @@
 
 import { useState } from "react";
 import type { AnalysisOutput } from "@/lib/engine/analyzeEvent";
-import { calculateReliability } from "@/components/ui/DecisionSummary";
-
+import type { AnalysisOutput } from "@/lib/engine/analyzeEvent";
 export function ShareAnalysisButton({ analysis }: { analysis: AnalysisOutput }) {
   const [isSharing, setIsSharing] = useState(false);
   const [copied, setCopied] = useState(false);
