@@ -396,19 +396,111 @@ function ScoresContent() {
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                     <span style={{ fontSize: 18 }}>🗣️</span>
                     <span style={{ fontSize: 14, fontWeight: 700, color: "#e4e4e7" }}>
-                      {socialData.estimatedVolume.toLocaleString()} Mentions
+                      {socialData.estimatedVolume.toLocaleString()} Social Mentions
                     </span>
                   </div>
                   <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 8 }}>
-                    {socialData.sentiment.positive}% positive, {socialData.sentiment.negative}% negative
+                    Sentiment: {socialData.sentiment.positive}% positive, {socialData.sentiment.negative}% negative
+                  </div>
+                  <div style={{ fontSize: 12, color: socialData.sentiment.positive > 50 ? "#22c55e" : "#ef4444", fontWeight: 600, marginBottom: 8 }}>
+                    {socialData.sentiment.positive > 50 
+                      ? `→ Positive sentiment supports ${direction} prediction`
+                      : `→ Negative sentiment conflicts with ${direction} prediction`
+                    }
                   </div>
                   <div style={{ fontSize: 11, color: "#71717a" }}>
-                    Twitter, Reddit, forums
+                    From Twitter, Reddit, forums
                   </div>
                 </div>
               )}
 
-              {/* Warning if no data */}
+              {/* Technical Sources - ALWAYS SHOW */}
+              <div style={{ padding: 16, borderRadius: 12, background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.15)", marginBottom: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                  <span style={{ fontSize: 18 }}>📊</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "#e4e4e7" }}>
+                    Market Data
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 10 }}>
+                  Technical analysis from trusted platforms
+                </div>
+                <div style={{ display: "grid", gap: 8 }}>
+                  <a
+                    href={polymarketUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ 
+                      display: "block", 
+                      padding: "10px 12px", 
+                      borderRadius: 8, 
+                      background: "rgba(255,255,255,0.03)", 
+                      border: "1px solid rgba(255,255,255,0.06)",
+                      textDecoration: "none",
+                      color: "#d4d4d8"
+                    }}
+                  >
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#e4e4e7" }}>
+                      Polymarket Odds
+                    </div>
+                    <div style={{ fontSize: 11, color: "#71717a" }}>
+                      Live prediction market pricing
+                    </div>
+                  </a>
+                  {event.toLowerCase().includes('bitcoin') || event.toLowerCase().includes('btc') || event.toLowerCase().includes('crypto') ? (
+                    <>
+                      <a
+                        href="https://www.tradingview.com/symbols/BTCUSD/"
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ 
+                          display: "block", 
+                          padding: "10px 12px", 
+                          borderRadius: 8, 
+                          background: "rgba(255,255,255,0.03)", 
+                          border: "1px solid rgba(255,255,255,0.06)",
+                          textDecoration: "none",
+                          color: "#d4d4d8"
+                        }}
+                      >
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#e4e4e7" }}>
+                          TradingView Charts
+                        </div>
+                        <div style={{ fontSize: 11, color: "#71717a" }}>
+                          Technical indicators and patterns
+                        </div>
+                      </a>
+                      <a
+                        href="https://coinmarketcap.com/currencies/bitcoin/"
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ 
+                          display: "block", 
+                          padding: "10px 12px", 
+                          borderRadius: 8, 
+                          background: "rgba(255,255,255,0.03)", 
+                          border: "1px solid rgba(255,255,255,0.06)",
+                          textDecoration: "none",
+                          color: "#d4d4d8"
+                        }}
+                      >
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#e4e4e7" }}>
+                          CoinMarketCap
+                        </div>
+                        <div style={{ fontSize: 11, color: "#71717a" }}>
+                          Price data and market metrics
+                        </div>
+                      </a>
+                    </>
+                  ) : (
+                    <div style={{ padding: "10px 12px", borderRadius: 8, background: "rgba(255,255,255,0.02)", fontSize: 11, color: "#9ca3af" }}>
+                      Pattern analysis and historical data
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Warning if no real data */}
               {(!newsData || newsData.error) && (!socialData || socialData.error) && (
                 <div style={{ padding: 14, borderRadius: 10, background: "rgba(251,146,60,0.08)", border: "1px solid rgba(251,146,60,0.2)" }}>
                   <div style={{ fontSize: 12, color: "#fb923c", lineHeight: 1.6 }}>
