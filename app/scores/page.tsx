@@ -427,7 +427,7 @@ function ScoresContent() {
                 </div>
                 <div style={{ display: "grid", gap: 8 }}>
                   <a
-                    href={polymarketUrl}
+                    href={`https://polymarket.com/search?q=${encodeURIComponent(event)}`}
                     target="_blank"
                     rel="noreferrer"
                     style={{ 
@@ -447,7 +447,7 @@ function ScoresContent() {
                       Live prediction market pricing
                     </div>
                   </a>
-                  {event.toLowerCase().includes('bitcoin') || event.toLowerCase().includes('btc') || event.toLowerCase().includes('crypto') ? (
+                  {event.toLowerCase().includes('bitcoin') || event.toLowerCase().includes('btc') || event.toLowerCase().includes('crypto') || event.toLowerCase().includes('eth') ? (
                     <>
                       <a
                         href="https://www.tradingview.com/symbols/BTCUSD/"
@@ -471,7 +471,7 @@ function ScoresContent() {
                         </div>
                       </a>
                       <a
-                        href="https://coinmarketcap.com/currencies/bitcoin/"
+                        href="https://coinmarketcap.com/"
                         target="_blank"
                         rel="noreferrer"
                         style={{ 
@@ -492,11 +492,7 @@ function ScoresContent() {
                         </div>
                       </a>
                     </>
-                  ) : (
-                    <div style={{ padding: "10px 12px", borderRadius: 8, background: "rgba(255,255,255,0.02)", fontSize: 11, color: "#9ca3af" }}>
-                      Pattern analysis and historical data
-                    </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
