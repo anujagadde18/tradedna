@@ -44,6 +44,7 @@ function HomeContent() {
           }}
         >
           <div style={{ fontSize: 18, fontWeight: 800 }}>PlayPicks AI</div>
+
           <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
             <a
               href="/profile"
@@ -56,6 +57,20 @@ function HomeContent() {
             >
               Profile
             </a>
+
+            {/* ✅ Added Sources link */}
+            <a
+              href="/sources"
+              style={{
+                color: "#9ca3af",
+                fontSize: 14,
+                textDecoration: "none",
+                fontWeight: 500,
+              }}
+            >
+              Sources
+            </a>
+
             <button
               onClick={() => router.push("/event")}
               style={{
@@ -279,9 +294,21 @@ function HomeContent() {
           </div>
 
           <div style={{ display: "grid", gap: 20 }}>
-            <StepCard number="1" title="Enter Your Question" desc="Type any prediction market question or paste a Polymarket link" />
-            <StepCard number="2" title="Get Clear Answer" desc="See YES or NO with confidence percentage. No jargon." />
-            <StepCard number="3" title="Make Your Decision" desc="Trade on Polymarket with confidence or wait for better signals" />
+            <StepCard
+              number="1"
+              title="Enter Your Question"
+              desc="Type any prediction market question or paste a Polymarket link"
+            />
+            <StepCard
+              number="2"
+              title="Get Clear Answer"
+              desc="See YES or NO with confidence percentage. No jargon."
+            />
+            <StepCard
+              number="3"
+              title="Make Your Decision"
+              desc="Trade on Polymarket with confidence or wait for better signals"
+            />
           </div>
         </div>
 
@@ -320,8 +347,7 @@ function HomeContent() {
               </h2>
 
               <p style={{ fontSize: 17, color: "#d4d4d8", lineHeight: 1.7, marginBottom: 32 }}>
-                Don't trust our default sources? Add your own RSS feeds, Twitter accounts, subreddits,
-                and more. Set custom weights. Get personalized predictions.
+                Don't trust our default sources? Add your own RSS feeds, Twitter accounts, subreddits, and more. Set custom weights. Get personalized predictions.
               </p>
 
               <a
