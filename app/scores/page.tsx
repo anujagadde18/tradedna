@@ -10,6 +10,7 @@ import { getCachedSocialData, type SocialData } from "@/lib/data/socialData";
 import { trackEventAnalysis } from "@/lib/storage/popularEvents";
 import { track, saveAnalysis as saveAnalyticAnalysis } from "@/lib/analytics";
 import { calculateReliability } from "@/components/ui/DecisionSummary";
+import { CustomSourcesBanner } from "@/components/customSources/CustomSourcesBanner";
 
 function ScoresContent() {
   const searchParams = useSearchParams();
