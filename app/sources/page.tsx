@@ -1,8 +1,9 @@
 // app/sources/page.tsx
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CustomSourcesBanner } from "@/components/customSources/CustomSourcesBanner";
 
 type SourceType = "news" | "social" | "technical";
 
@@ -24,9 +25,7 @@ function SourcesContent() {
   // Load saved sources from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("customSources");
-    if (saved) {
-      setCustomSources(JSON.parse(saved));
-    }
+    if (saved) setCustomSources(JSON.parse(saved));
   }, []);
 
   // Save sources to localStorage
@@ -41,38 +40,55 @@ function SourcesContent() {
   };
 
   const removeSource = (id: string) => {
-    saveSources(customSources.filter(s => s.id !== id));
+    saveSources(customSources.filter((s) => s.id !== id));
   };
 
   const toggleSource = (id: string) => {
-    saveSources(customSources.map(s => 
-      s.id === id ? { ...s, enabled: !s.enabled } : s
-    ));
+    saveSources(
+      customSources.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s))
+    );
   };
 
   const updateWeight = (id: string, weight: number) => {
-    saveSources(customSources.map(s => 
-      s.id === id ? { ...s, weight } : s
-    ));
+    saveSources(customSources.map((s) => (s.id === id ? { ...s, weight } : s)));
   };
 
-  const newsSources = customSources.filter(s => s.type === "news");
-  const socialSources = customSources.filter(s => s.type === "social");
-  const technicalSources = customSources.filter(s => s.type === "technical");
+  const newsSources = customSources.filter((s) => s.type === "news");
+  const socialSources = customSources.filter((s) => s.type === "social");
+  const technicalSources = customSources.filter((s) => s.type === "technical");
 
   return (
     <main style={{ minHeight: "100vh", background: "#0f1419", color: "#fff" }}>
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "40px 24px" }}>
-
         {/* Header */}
         <div style={{ marginBottom: 40 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <a href="/" style={{ color: "#9ca3af", fontSize: 14, textDecoration: "none" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <a
+              href="/"
+              style={{ color: "#9ca3af", fontSize: 14, textDecoration: "none" }}
+            >
               ← Back to Home
             </a>
+
             <button
               onClick={() => router.push("/event")}
-              style={{ padding: "8px 16px", borderRadius: 8, background: "#9333ea", border: "none", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
+              style={{
+                padding: "8px 16px",
+                borderRadius: 8,
+                background: "#9333ea",
+                border: "none",
+                color: "#fff",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
             >
               Analyze Event
             </button>
@@ -81,18 +97,31 @@ function SourcesContent() {
           <h1 style={{ fontSize: 28, fontWeight: 900, margin: "0 0 8px 0" }}>
             Custom Data Sources
           </h1>
+
           <p style={{ fontSize: 15, color: "#9ca3af", margin: 0, lineHeight: 1.6 }}>
             Add your trusted sources. We'll analyze them alongside our default data.
           </p>
         </div>
 
+        {/* Banner (right after header) */}
+        <CustomSourcesBanner />
+
         {/* Beta Badge */}
-        <div style={{ marginBottom: 32, padding: 16, borderRadius: 12, background: "rgba(147,51,234,0.08)", border: "1px solid rgba(147,51,234,0.2)" }}>
+        <div
+          style={{
+            marginBottom: 32,
+            padding: 16,
+            borderRadius: 12,
+            background: "rgba(147,51,234,0.08)",
+            border: "1px solid rgba(147,51,234,0.2)",
+          }}
+        >
           <div style={{ fontSize: 13, fontWeight: 700, color: "#a78bfa", marginBottom: 6 }}>
             🆕 BETA FEATURE
           </div>
           <div style={{ fontSize: 14, color: "#d4d4d8", lineHeight: 1.6 }}>
-            This feature is in beta. Currently supports RSS feeds, Twitter accounts, and Reddit communities. More integrations coming soon!
+            This feature is in beta. Currently supports RSS feeds, Twitter accounts,
+            and Reddit communities. More integrations coming soon!
           </div>
         </div>
 
@@ -101,10 +130,11 @@ function SourcesContent() {
           title="📰 News Sources"
           description="RSS feeds, blogs, news outlets"
           sources={newsSources}
-          defaultSources={[
-            { name: "Google News", weight: 35, enabled: true }
-          ]}
-          onAdd={() => { setSourceType("news"); setShowAddModal(true); }}
+          defaultSources={[{ name: "Google News", weight: 35, enabled: true }]}
+          onAdd={() => {
+            setSourceType("news");
+            setShowAddModal(true);
+          }}
           onRemove={removeSource}
           onToggle={toggleSource}
           onUpdateWeight={updateWeight}
@@ -115,10 +145,11 @@ function SourcesContent() {
           title="🗣️ Social Sources"
           description="Twitter accounts, Reddit, Discord, Telegram"
           sources={socialSources}
-          defaultSources={[
-            { name: "Twitter/Reddit (Default)", weight: 40, enabled: true }
-          ]}
-          onAdd={() => { setSourceType("social"); setShowAddModal(true); }}
+          defaultSources={[{ name: "Twitter/Reddit (Default)", weight: 40, enabled: true }]}
+          onAdd={() => {
+            setSourceType("social");
+            setShowAddModal(true);
+          }}
           onRemove={removeSource}
           onToggle={toggleSource}
           onUpdateWeight={updateWeight}
@@ -131,16 +162,27 @@ function SourcesContent() {
           sources={technicalSources}
           defaultSources={[
             { name: "Polymarket Odds", weight: 50, enabled: true },
-            { name: "TradingView (crypto)", weight: 25, enabled: true }
+            { name: "TradingView (crypto)", weight: 25, enabled: true },
           ]}
-          onAdd={() => { setSourceType("technical"); setShowAddModal(true); }}
+          onAdd={() => {
+            setSourceType("technical");
+            setShowAddModal(true);
+          }}
           onRemove={removeSource}
           onToggle={toggleSource}
           onUpdateWeight={updateWeight}
         />
 
         {/* How It Works */}
-        <div style={{ marginTop: 40, padding: 24, borderRadius: 12, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}>
+        <div
+          style={{
+            marginTop: 40,
+            padding: 24,
+            borderRadius: 12,
+            background: "rgba(59,130,246,0.08)",
+            border: "1px solid rgba(59,130,246,0.2)",
+          }}
+        >
           <div style={{ fontSize: 15, fontWeight: 700, color: "#60a5fa", marginBottom: 14 }}>
             💡 How Custom Sources Work
           </div>
@@ -154,18 +196,34 @@ function SourcesContent() {
         </div>
 
         {/* Examples */}
-        <div style={{ marginTop: 24, padding: 20, borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <div
+          style={{
+            marginTop: 24,
+            padding: 20,
+            borderRadius: 12,
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
           <div style={{ fontSize: 14, fontWeight: 700, color: "#e4e4e7", marginBottom: 12 }}>
             📝 Example Sources You Can Add
           </div>
+
           <div style={{ display: "grid", gap: 10, fontSize: 13, color: "#9ca3af" }}>
-            <div>• <strong>News:</strong> https://feeds.bloomberg.com/markets/news.rss</div>
-            <div>• <strong>Twitter:</strong> @elonmusk, @balajis, @VitalikButerin</div>
-            <div>• <strong>Reddit:</strong> r/CryptoCurrency, r/Polymarket</div>
-            <div>• <strong>Technical:</strong> Custom API endpoints (coming soon)</div>
+            <div>
+              • <strong>News:</strong> https://feeds.bloomberg.com/markets/news.rss
+            </div>
+            <div>
+              • <strong>Twitter:</strong> @elonmusk, @balajis, @VitalikButerin
+            </div>
+            <div>
+              • <strong>Reddit:</strong> r/CryptoCurrency, r/Polymarket
+            </div>
+            <div>
+              • <strong>Technical:</strong> Custom API endpoints (coming soon)
+            </div>
           </div>
         </div>
-
       </div>
 
       {/* Add Source Modal */}
@@ -180,15 +238,15 @@ function SourcesContent() {
   );
 }
 
-function SourceSection({ 
-  title, 
-  description, 
-  sources, 
+function SourceSection({
+  title,
+  description,
+  sources,
   defaultSources,
-  onAdd, 
-  onRemove, 
-  onToggle, 
-  onUpdateWeight 
+  onAdd,
+  onRemove,
+  onToggle,
+  onUpdateWeight,
 }: {
   title: string;
   description: string;
@@ -200,19 +258,33 @@ function SourceSection({
   onUpdateWeight: (id: string, weight: number) => void;
 }) {
   return (
-    <div style={{ marginBottom: 32, padding: 24, borderRadius: 14, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+    <div
+      style={{
+        marginBottom: 32,
+        padding: 24,
+        borderRadius: 14,
+        background: "rgba(255,255,255,0.02)",
+        border: "1px solid rgba(255,255,255,0.06)",
+      }}
+    >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 20 }}>
         <div>
-          <div style={{ fontSize: 17, fontWeight: 800, color: "#e4e4e7", marginBottom: 6 }}>
-            {title}
-          </div>
-          <div style={{ fontSize: 13, color: "#9ca3af" }}>
-            {description}
-          </div>
+          <div style={{ fontSize: 17, fontWeight: 800, color: "#e4e4e7", marginBottom: 6 }}>{title}</div>
+          <div style={{ fontSize: 13, color: "#9ca3af" }}>{description}</div>
         </div>
+
         <button
           onClick={onAdd}
-          style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(147,51,234,0.15)", border: "1px solid rgba(147,51,234,0.3)", color: "#a78bfa", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+          style={{
+            padding: "8px 14px",
+            borderRadius: 8,
+            background: "rgba(147,51,234,0.15)",
+            border: "1px solid rgba(147,51,234,0.3)",
+            color: "#a78bfa",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
         >
           + Add Source
         </button>
@@ -221,10 +293,30 @@ function SourceSection({
       {/* Default Sources */}
       <div style={{ marginBottom: sources.length > 0 ? 16 : 0 }}>
         {defaultSources.map((source, i) => (
-          <div key={i} style={{ padding: "12px 16px", marginBottom: 8, borderRadius: 10, background: "rgba(147,51,234,0.05)", border: "1px solid rgba(147,51,234,0.15)" }}>
+          <div
+            key={i}
+            style={{
+              padding: "12px 16px",
+              marginBottom: 8,
+              borderRadius: 10,
+              background: "rgba(147,51,234,0.05)",
+              border: "1px solid rgba(147,51,234,0.15)",
+            }}
+          >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 6, background: "rgba(147,51,234,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 6,
+                    background: "rgba(147,51,234,0.2)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 14,
+                  }}
+                >
                   ✓
                 </div>
                 <div>
@@ -260,40 +352,65 @@ function SourceSection({
   );
 }
 
-function SourceCard({ source, onRemove, onToggle, onUpdateWeight }: {
+function SourceCard({
+  source,
+  onRemove,
+  onToggle,
+  onUpdateWeight,
+}: {
   source: CustomSource;
   onRemove: () => void;
   onToggle: () => void;
   onUpdateWeight: (weight: number) => void;
 }) {
   return (
-    <div style={{ 
-      padding: "14px 16px", 
-      marginBottom: 10, 
-      borderRadius: 10, 
-      background: source.enabled ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.01)", 
-      border: source.enabled ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(255,255,255,0.04)",
-      opacity: source.enabled ? 1 : 0.5
-    }}>
+    <div
+      style={{
+        padding: "14px 16px",
+        marginBottom: 10,
+        borderRadius: 10,
+        background: source.enabled ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.01)",
+        border: source.enabled ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(255,255,255,0.04)",
+        opacity: source.enabled ? 1 : 0.5,
+      }}
+    >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 12 }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: "#e4e4e7", marginBottom: 4 }}>
             {source.name}
           </div>
-          <div style={{ fontSize: 12, color: "#71717a", wordBreak: "break-all" }}>
-            {source.url}
-          </div>
+          <div style={{ fontSize: 12, color: "#71717a", wordBreak: "break-all" }}>{source.url}</div>
         </div>
+
         <div style={{ display: "flex", gap: 8, marginLeft: 16 }}>
           <button
             onClick={onToggle}
-            style={{ padding: "6px 12px", borderRadius: 6, background: source.enabled ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: source.enabled ? "#22c55e" : "#9ca3af", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+            style={{
+              padding: "6px 12px",
+              borderRadius: 6,
+              background: source.enabled ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: source.enabled ? "#22c55e" : "#9ca3af",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
           >
             {source.enabled ? "ON" : "OFF"}
           </button>
+
           <button
             onClick={onRemove}
-            style={{ padding: "6px 10px", borderRadius: 6, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+            style={{
+              padding: "6px 10px",
+              borderRadius: 6,
+              background: "rgba(239,68,68,0.12)",
+              border: "1px solid rgba(239,68,68,0.2)",
+              color: "#ef4444",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
           >
             ✕
           </button>
@@ -306,6 +423,7 @@ function SourceCard({ source, onRemove, onToggle, onUpdateWeight }: {
             <span style={{ fontSize: 12, color: "#9ca3af" }}>Trust Weight</span>
             <span style={{ fontSize: 14, fontWeight: 700, color: "#9333ea" }}>{source.weight}%</span>
           </div>
+
           <input
             type="range"
             min={0}
@@ -313,14 +431,14 @@ function SourceCard({ source, onRemove, onToggle, onUpdateWeight }: {
             step={5}
             value={source.weight}
             onChange={(e) => onUpdateWeight(Number(e.target.value))}
-            style={{ 
-              width: "100%", 
-              height: 6, 
-              borderRadius: 3, 
+            style={{
+              width: "100%",
+              height: 6,
+              borderRadius: 3,
               background: `linear-gradient(to right, #9333ea 0%, #9333ea ${source.weight}%, rgba(255,255,255,0.08) ${source.weight}%, rgba(255,255,255,0.08) 100%)`,
               cursor: "pointer",
               WebkitAppearance: "none",
-              appearance: "none"
+              appearance: "none",
             }}
           />
         </div>
@@ -329,7 +447,11 @@ function SourceCard({ source, onRemove, onToggle, onUpdateWeight }: {
   );
 }
 
-function AddSourceModal({ type, onAdd, onClose }: {
+function AddSourceModal({
+  type,
+  onAdd,
+  onClose,
+}: {
   type: SourceType;
   onAdd: (source: CustomSource) => void;
   onClose: () => void;
@@ -350,47 +472,52 @@ function AddSourceModal({ type, onAdd, onClose }: {
       name,
       url,
       weight,
-      enabled: true
+      enabled: true,
     });
   };
 
-  const placeholders = {
+  const placeholders: Record<SourceType, string> = {
     news: "https://feeds.example.com/news.rss",
     social: "@username or r/subreddit",
-    technical: "https://api.example.com/data"
+    technical: "https://api.example.com/data",
   };
 
-  const examples = {
+  const examples: Record<SourceType, string[]> = {
     news: ["Bloomberg RSS", "TechCrunch Feed", "CoinDesk News"],
     social: ["@elonmusk", "r/CryptoCurrency", "@VitalikButerin"],
-    technical: ["Custom API", "Trading Signals", "Price Alerts"]
+    technical: ["Custom API", "Trading Signals", "Price Alerts"],
   };
 
   return (
-    <div style={{ 
-      position: "fixed", 
-      top: 0, 
-      left: 0, 
-      right: 0, 
-      bottom: 0, 
-      background: "rgba(0,0,0,0.8)", 
-      display: "flex", 
-      alignItems: "center", 
-      justifyContent: "center",
-      zIndex: 1000,
-      padding: "20px"
-    }}>
-      <div style={{ 
-        maxWidth: 500, 
-        width: "100%",
-        background: "#1a1f2e", 
-        borderRadius: 16, 
-        padding: 28,
-        border: "1px solid rgba(255,255,255,0.1)"
-      }}>
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: "rgba(0,0,0,0.8)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
+        padding: "20px",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 500,
+          width: "100%",
+          background: "#1a1f2e",
+          borderRadius: 16,
+          padding: 28,
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
         <div style={{ fontSize: 20, fontWeight: 800, color: "#e4e4e7", marginBottom: 8 }}>
           Add {type === "news" ? "News" : type === "social" ? "Social" : "Technical"} Source
         </div>
+
         <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 24 }}>
           Add a custom data source to improve your predictions
         </div>
@@ -404,15 +531,15 @@ function AddSourceModal({ type, onAdd, onClose }: {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={examples[type][0]}
-            style={{ 
-              width: "100%", 
-              padding: "10px 12px", 
-              borderRadius: 8, 
-              background: "rgba(255,255,255,0.05)", 
-              border: "1px solid rgba(255,255,255,0.1)", 
-              color: "#fff", 
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              borderRadius: 8,
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "#fff",
               fontSize: 14,
-              outline: "none"
+              outline: "none",
             }}
           />
         </div>
@@ -426,26 +553,25 @@ function AddSourceModal({ type, onAdd, onClose }: {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder={placeholders[type]}
-            style={{ 
-              width: "100%", 
-              padding: "10px 12px", 
-              borderRadius: 8, 
-              background: "rgba(255,255,255,0.05)", 
-              border: "1px solid rgba(255,255,255,0.1)", 
-              color: "#fff", 
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              borderRadius: 8,
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "#fff",
               fontSize: 14,
-              outline: "none"
+              outline: "none",
             }}
           />
         </div>
 
         <div style={{ marginBottom: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: "#d4d4d8" }}>
-              Trust Weight
-            </label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "#d4d4d8" }}>Trust Weight</label>
             <span style={{ fontSize: 14, fontWeight: 700, color: "#9333ea" }}>{weight}%</span>
           </div>
+
           <input
             type="range"
             min={0}
@@ -453,14 +579,14 @@ function AddSourceModal({ type, onAdd, onClose }: {
             step={5}
             value={weight}
             onChange={(e) => setWeight(Number(e.target.value))}
-            style={{ 
-              width: "100%", 
-              height: 8, 
-              borderRadius: 4, 
+            style={{
+              width: "100%",
+              height: 8,
+              borderRadius: 4,
               background: `linear-gradient(to right, #9333ea 0%, #9333ea ${weight}%, rgba(255,255,255,0.08) ${weight}%, rgba(255,255,255,0.08) 100%)`,
               cursor: "pointer",
               WebkitAppearance: "none",
-              appearance: "none"
+              appearance: "none",
             }}
           />
         </div>
@@ -468,32 +594,33 @@ function AddSourceModal({ type, onAdd, onClose }: {
         <div style={{ display: "flex", gap: 10 }}>
           <button
             onClick={handleSubmit}
-            style={{ 
+            style={{
               flex: 1,
-              padding: "12px", 
-              borderRadius: 8, 
-              background: "#9333ea", 
-              border: "none", 
-              color: "#fff", 
-              fontSize: 14, 
-              fontWeight: 600, 
-              cursor: "pointer" 
+              padding: "12px",
+              borderRadius: 8,
+              background: "#9333ea",
+              border: "none",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
             }}
           >
             Add Source
           </button>
+
           <button
             onClick={onClose}
-            style={{ 
+            style={{
               flex: 1,
-              padding: "12px", 
-              borderRadius: 8, 
-              background: "rgba(255,255,255,0.05)", 
-              border: "1px solid rgba(255,255,255,0.1)", 
-              color: "#9ca3af", 
-              fontSize: 14, 
-              fontWeight: 600, 
-              cursor: "pointer" 
+              padding: "12px",
+              borderRadius: 8,
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "#9ca3af",
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
             }}
           >
             Cancel
@@ -506,11 +633,22 @@ function AddSourceModal({ type, onAdd, onClose }: {
 
 export default function SourcesPage() {
   return (
-    <Suspense fallback={
-      <div style={{ minHeight: "100vh", background: "#0f1419", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div>Loading...</div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div
+          style={{
+            minHeight: "100vh",
+            background: "#0f1419",
+            color: "#fff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div>Loading...</div>
+        </div>
+      }
+    >
       <SourcesContent />
     </Suspense>
   );
