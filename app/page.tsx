@@ -13,10 +13,11 @@ function HomeContent() {
     setPopularEvents(events);
   }, []);
 
+  // ✅ UPDATED: All future events
   const quickEvents = [
     "Will Bitcoin reach $150k in 2026?",
-    "Will Trump win the 2024 election?",
-    "Will Apple stock hit $300 in 2026?",
+    "Will Apple stock hit $300 by end of 2026?",
+    "Will AI regulation pass in US by 2027?",
   ];
 
   return (
@@ -46,7 +47,7 @@ function HomeContent() {
           <div style={{ fontSize: 18, fontWeight: 800 }}>PlayPicks AI</div>
 
           <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
-            <a
+            
               href="/profile"
               style={{
                 color: "#9ca3af",
@@ -58,8 +59,7 @@ function HomeContent() {
               Profile
             </a>
 
-            {/* ✅ Added Sources link */}
-            <a
+            
               href="/sources"
               style={{
                 color: "#9ca3af",
@@ -120,7 +120,7 @@ function HomeContent() {
               color: "#fafafa",
             }}
           >
-            Make Smarter Predictions
+            Pick Feeds. Tweak Weights. Craft Conviction.
           </h1>
 
           <p
@@ -131,8 +131,7 @@ function HomeContent() {
               lineHeight: 1.6,
             }}
           >
-            Get clear YES or NO predictions backed by real data. No confusing charts.
-            No complex metrics. Just clear answers.
+            First prediction tool where YOU control the data sources. Add your RSS feeds, Twitter accounts, subreddits. Build real conviction.
           </p>
 
           <button
@@ -212,7 +211,7 @@ function HomeContent() {
                   >
                     {event}
                   </div>
-                  <div style={{ fontSize: 13, color: "#71717a" }}>Click to analyze</div>
+                  <div style={{ fontSize: 13, color: "#71717a" }}>Click to analyze →</div>
                 </button>
               ))}
             </div>
@@ -296,18 +295,18 @@ function HomeContent() {
           <div style={{ display: "grid", gap: 20 }}>
             <StepCard
               number="1"
-              title="Enter Your Question"
-              desc="Type any prediction market question or paste a Polymarket link"
+              title="Add Your Sources"
+              desc="RSS feeds, Twitter accounts, subreddits - use data you already trust"
             />
             <StepCard
               number="2"
-              title="Get Clear Answer"
-              desc="See YES or NO with confidence percentage. No jargon."
+              title="Set Your Weights"
+              desc="Control how much each source matters (0-100% per source)"
             />
             <StepCard
               number="3"
-              title="Make Your Decision"
-              desc="Trade on Polymarket with confidence or wait for better signals"
+              title="Get Your Analysis"
+              desc="See clear YES/NO with confidence. Trade with real conviction."
             />
           </div>
         </div>
@@ -339,18 +338,22 @@ function HomeContent() {
                   letterSpacing: "0.5px",
                 }}
               >
-                🆕 New Feature
+                🆕 Beta Feature
               </div>
 
               <h2 style={{ fontSize: 36, fontWeight: 900, margin: "0 0 16px 0", lineHeight: 1.2 }}>
                 Use <span style={{ color: "#a78bfa" }}>Your</span> Data Sources
               </h2>
 
-              <p style={{ fontSize: 17, color: "#d4d4d8", lineHeight: 1.7, marginBottom: 32 }}>
-                Don't trust our default sources? Add your own RSS feeds, Twitter accounts, subreddits, and more. Set custom weights. Get personalized predictions.
+              <p style={{ fontSize: 17, color: "#d4d4d8", lineHeight: 1.7, marginBottom: 28 }}>
+                "Picking feeds, tweaking weights, crafts conviction. How I like."
               </p>
 
-              <a
+              <p style={{ fontSize: 15, color: "#9ca3af", lineHeight: 1.6, marginBottom: 32 }}>
+                Don't trust black boxes? Add your own RSS feeds, Twitter accounts, subreddits. Set custom weights. Get personalized analysis.
+              </p>
+
+              
                 href="/sources"
                 style={{
                   display: "inline-block",
@@ -386,7 +389,7 @@ function HomeContent() {
             Ready to Start?
           </h3>
           <p style={{ fontSize: 15, color: "#a1a1aa", marginBottom: 24 }}>
-            Analyze your first prediction market event
+            Analyze your first prediction with YOUR data sources
           </p>
           <button
             onClick={() => router.push("/event")}
@@ -420,7 +423,7 @@ function HomeContent() {
         >
           <span>PlayPicks AI • 2026</span>
           <span>·</span>
-          <a
+          
             href="https://polymarket.com"
             target="_blank"
             rel="noreferrer"
