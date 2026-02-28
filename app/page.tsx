@@ -13,7 +13,6 @@ function HomeContent() {
     setPopularEvents(events);
   }, []);
 
-  // ✅ UPDATED: All future events
   const quickEvents = [
     "Will Bitcoin reach $150k in 2026?",
     "Will Apple stock hit $300 by end of 2026?",
@@ -22,7 +21,6 @@ function HomeContent() {
 
   return (
     <main style={{ minHeight: "100vh", background: "#0f1419", color: "#fff" }}>
-      {/* Simple Nav */}
       <nav
         style={{
           borderBottom: "1px solid rgba(255,255,255,0.06)",
@@ -47,27 +45,11 @@ function HomeContent() {
           <div style={{ fontSize: 18, fontWeight: 800 }}>PlayPicks AI</div>
 
           <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
-            
-              href="/profile"
-              style={{
-                color: "#9ca3af",
-                fontSize: 14,
-                textDecoration: "none",
-                fontWeight: 500,
-              }}
-            >
+            <a href="/profile" style={{ color: "#9ca3af", fontSize: 14, textDecoration: "none", fontWeight: 500 }}>
               Profile
             </a>
 
-            
-              href="/sources"
-              style={{
-                color: "#9ca3af",
-                fontSize: 14,
-                textDecoration: "none",
-                fontWeight: 500,
-              }}
-            >
+            <a href="/sources" style={{ color: "#9ca3af", fontSize: 14, textDecoration: "none", fontWeight: 500 }}>
               Sources
             </a>
 
@@ -91,7 +73,6 @@ function HomeContent() {
       </nav>
 
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "64px 24px" }}>
-        {/* Hero - Clean & Simple */}
         <div style={{ textAlign: "center", maxWidth: 680, margin: "0 auto 80px" }}>
           <div
             style={{
@@ -152,7 +133,6 @@ function HomeContent() {
           </button>
         </div>
 
-        {/* Quick Examples */}
         {quickEvents.length > 0 && (
           <div style={{ marginBottom: 64 }}>
             <div
@@ -200,15 +180,7 @@ function HomeContent() {
                     e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: 15,
-                      fontWeight: 600,
-                      color: "#e4e4e7",
-                      lineHeight: 1.4,
-                      marginBottom: 8,
-                    }}
-                  >
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "#e4e4e7", lineHeight: 1.4, marginBottom: 8 }}>
                     {event}
                   </div>
                   <div style={{ fontSize: 13, color: "#71717a" }}>Click to analyze →</div>
@@ -218,7 +190,6 @@ function HomeContent() {
           </div>
         )}
 
-        {/* Popular Analyses */}
         {popularEvents.length > 0 && (
           <div style={{ marginBottom: 80 }}>
             <div style={{ textAlign: "center", marginBottom: 32 }}>
@@ -259,15 +230,7 @@ function HomeContent() {
                     e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: "#e4e4e7",
-                      lineHeight: 1.4,
-                      marginBottom: 10,
-                    }}
-                  >
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#e4e4e7", lineHeight: 1.4, marginBottom: 10 }}>
                     {event.event}
                   </div>
 
@@ -283,7 +246,6 @@ function HomeContent() {
           </div>
         )}
 
-        {/* How It Works */}
         <div style={{ marginBottom: 80, maxWidth: 800, margin: "0 auto 80px" }}>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
             <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8, color: "#fafafa" }}>
@@ -311,14 +273,12 @@ function HomeContent() {
           </div>
         </div>
 
-        {/* Custom Sources Feature Highlight */}
         <div style={{ maxWidth: 1200, margin: "80px auto", padding: "0 24px" }}>
           <div
             style={{
               padding: "48px 40px",
               borderRadius: 20,
-              background:
-                "linear-gradient(135deg, rgba(147,51,234,0.15) 0%, rgba(168,85,247,0.15) 100%)",
+              background: "linear-gradient(135deg, rgba(147,51,234,0.15) 0%, rgba(168,85,247,0.15) 100%)",
               border: "1px solid rgba(147,51,234,0.3)",
             }}
           >
@@ -373,7 +333,6 @@ function HomeContent() {
           </div>
         </div>
 
-        {/* CTA */}
         <div
           style={{
             padding: 48,
@@ -408,7 +367,6 @@ function HomeContent() {
           </button>
         </div>
 
-        {/* Footer */}
         <div
           style={{
             paddingTop: 32,
@@ -423,12 +381,7 @@ function HomeContent() {
         >
           <span>PlayPicks AI • 2026</span>
           <span>·</span>
-          
-            href="https://polymarket.com"
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "#71717a", textDecoration: "none" }}
-          >
+          <a href="https://polymarket.com" target="_blank" rel="noreferrer" style={{ color: "#71717a", textDecoration: "none" }}>
             Polymarket
           </a>
         </div>
