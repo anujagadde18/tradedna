@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
 import { getPopularEvents } from "@/lib/storage/popularEvents";
 
 function HomeContent() {
@@ -21,6 +22,7 @@ function HomeContent() {
 
   return (
     <main style={{ minHeight: "100vh", background: "#0f1419", color: "#fff" }}>
+      {/* NAV */}
       <nav
         style={{
           borderBottom: "1px solid rgba(255,255,255,0.06)",
@@ -45,13 +47,29 @@ function HomeContent() {
           <div style={{ fontSize: 18, fontWeight: 800 }}>PlayPicks AI</div>
 
           <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
-            <a href="/profile" style={{ color: "#9ca3af", fontSize: 14, textDecoration: "none", fontWeight: 500 }}>
+            <Link
+              href="/profile"
+              style={{
+                color: "#9ca3af",
+                fontSize: 14,
+                textDecoration: "none",
+                fontWeight: 500,
+              }}
+            >
               Profile
-            </a>
+            </Link>
 
-            <a href="/sources" style={{ color: "#9ca3af", fontSize: 14, textDecoration: "none", fontWeight: 500 }}>
+            <Link
+              href="/sources"
+              style={{
+                color: "#9ca3af",
+                fontSize: 14,
+                textDecoration: "none",
+                fontWeight: 500,
+              }}
+            >
               Sources
-            </a>
+            </Link>
 
             <button
               onClick={() => router.push("/event")}
@@ -73,6 +91,7 @@ function HomeContent() {
       </nav>
 
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "64px 24px" }}>
+        {/* HERO */}
         <div style={{ textAlign: "center", maxWidth: 680, margin: "0 auto 80px" }}>
           <div
             style={{
@@ -112,7 +131,8 @@ function HomeContent() {
               lineHeight: 1.6,
             }}
           >
-            First prediction tool where YOU control the data sources. Add your RSS feeds, Twitter accounts, subreddits. Build real conviction.
+            First prediction tool where YOU control the data sources. Add your RSS feeds,
+            Twitter accounts, subreddits. Build real conviction.
           </p>
 
           <button
@@ -133,6 +153,7 @@ function HomeContent() {
           </button>
         </div>
 
+        {/* QUICK EVENTS */}
         {quickEvents.length > 0 && (
           <div style={{ marginBottom: 64 }}>
             <div
@@ -161,7 +182,9 @@ function HomeContent() {
               {quickEvents.map((event, i) => (
                 <button
                   key={i}
-                  onClick={() => router.push(`/scores?event=${encodeURIComponent(event)}`)}
+                  onClick={() =>
+                    router.push(`/scores?event=${encodeURIComponent(event)}`)
+                  }
                   style={{
                     padding: "20px",
                     borderRadius: 12,
@@ -169,76 +192,20 @@ function HomeContent() {
                     border: "1px solid rgba(255,255,255,0.08)",
                     textAlign: "left",
                     cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                    e.currentTarget.style.borderColor = "rgba(147,51,234,0.4)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
                   }}
                 >
-                  <div style={{ fontSize: 15, fontWeight: 600, color: "#e4e4e7", lineHeight: 1.4, marginBottom: 8 }}>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 600,
+                      color: "#e4e4e7",
+                      marginBottom: 8,
+                    }}
+                  >
                     {event}
                   </div>
-                  <div style={{ fontSize: 13, color: "#71717a" }}>Click to analyze →</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {popularEvents.length > 0 && (
-          <div style={{ marginBottom: 80 }}>
-            <div style={{ textAlign: "center", marginBottom: 32 }}>
-              <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8, color: "#fafafa" }}>
-                Recently Analyzed
-              </h2>
-              <p style={{ fontSize: 15, color: "#9ca3af" }}>See what others are researching</p>
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                gap: 14,
-                maxWidth: 1000,
-                margin: "0 auto",
-              }}
-            >
-              {popularEvents.map((event, i) => (
-                <button
-                  key={i}
-                  onClick={() => router.push(`/scores?event=${encodeURIComponent(event.event)}`)}
-                  style={{
-                    padding: "18px",
-                    borderRadius: 10,
-                    background: "rgba(255,255,255,0.02)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    textAlign: "left",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-                    e.currentTarget.style.borderColor = "rgba(147,51,234,0.3)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "rgba(255,255,255,0.02)";
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
-                  }}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#e4e4e7", lineHeight: 1.4, marginBottom: 10 }}>
-                    {event.event}
-                  </div>
-
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#71717a" }}>
-                    <span>{event.category}</span>
-                    <span>
-                      {event.count} {event.count === 1 ? "analysis" : "analyses"}
-                    </span>
+                  <div style={{ fontSize: 13, color: "#71717a" }}>
+                    Click to analyze →
                   </div>
                 </button>
               ))}
@@ -246,39 +213,14 @@ function HomeContent() {
           </div>
         )}
 
-        <div style={{ marginBottom: 80, maxWidth: 800, margin: "0 auto 80px" }}>
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8, color: "#fafafa" }}>
-              How It Works
-            </h2>
-            <p style={{ fontSize: 15, color: "#9ca3af" }}>Three simple steps to better predictions</p>
-          </div>
-
-          <div style={{ display: "grid", gap: 20 }}>
-            <StepCard
-              number="1"
-              title="Add Your Sources"
-              desc="RSS feeds, Twitter accounts, subreddits - use data you already trust"
-            />
-            <StepCard
-              number="2"
-              title="Set Your Weights"
-              desc="Control how much each source matters (0-100% per source)"
-            />
-            <StepCard
-              number="3"
-              title="Get Your Analysis"
-              desc="See clear YES/NO with confidence. Trade with real conviction."
-            />
-          </div>
-        </div>
-
+        {/* BETA SECTION */}
         <div style={{ maxWidth: 1200, margin: "80px auto", padding: "0 24px" }}>
           <div
             style={{
               padding: "48px 40px",
               borderRadius: 20,
-              background: "linear-gradient(135deg, rgba(147,51,234,0.15) 0%, rgba(168,85,247,0.15) 100%)",
+              background:
+                "linear-gradient(135deg, rgba(147,51,234,0.15) 0%, rgba(168,85,247,0.15) 100%)",
               border: "1px solid rgba(147,51,234,0.3)",
             }}
           >
@@ -295,25 +237,33 @@ function HomeContent() {
                   color: "#a78bfa",
                   marginBottom: 20,
                   textTransform: "uppercase",
-                  letterSpacing: "0.5px",
                 }}
               >
                 🆕 Beta Feature
               </div>
 
-              <h2 style={{ fontSize: 36, fontWeight: 900, margin: "0 0 16px 0", lineHeight: 1.2 }}>
+              <h2
+                style={{
+                  fontSize: 36,
+                  fontWeight: 900,
+                  marginBottom: 16,
+                }}
+              >
                 Use <span style={{ color: "#a78bfa" }}>Your</span> Data Sources
               </h2>
 
-              <p style={{ fontSize: 17, color: "#d4d4d8", lineHeight: 1.7, marginBottom: 28 }}>
-                "Picking feeds, tweaking weights, crafts conviction. How I like."
+              <p
+                style={{
+                  fontSize: 15,
+                  color: "#9ca3af",
+                  marginBottom: 32,
+                }}
+              >
+                Don't trust black boxes? Add your own RSS feeds, Twitter accounts,
+                subreddits. Set custom weights. Get personalized analysis.
               </p>
 
-              <p style={{ fontSize: 15, color: "#9ca3af", lineHeight: 1.6, marginBottom: 32 }}>
-                Don't trust black boxes? Add your own RSS feeds, Twitter accounts, subreddits. Set custom weights. Get personalized analysis.
-              </p>
-
-              
+              <Link
                 href="/sources"
                 style={{
                   display: "inline-block",
@@ -328,104 +278,25 @@ function HomeContent() {
                 }}
               >
                 Configure Your Sources →
-              </a>
+              </Link>
             </div>
           </div>
         </div>
 
-        <div
-          style={{
-            padding: 48,
-            borderRadius: 16,
-            background: "rgba(147,51,234,0.08)",
-            border: "1px solid rgba(147,51,234,0.2)",
-            textAlign: "center",
-            maxWidth: 600,
-            margin: "0 auto 60px",
-          }}
-        >
-          <h3 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12, color: "#fafafa" }}>
-            Ready to Start?
-          </h3>
-          <p style={{ fontSize: 15, color: "#a1a1aa", marginBottom: 24 }}>
-            Analyze your first prediction with YOUR data sources
-          </p>
-          <button
-            onClick={() => router.push("/event")}
-            style={{
-              padding: "14px 32px",
-              borderRadius: 8,
-              background: "#9333ea",
-              border: "none",
-              color: "#fff",
-              fontSize: 15,
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            Analyze Event →
-          </button>
-        </div>
-
+        {/* FOOTER */}
         <div
           style={{
             paddingTop: 32,
             borderTop: "1px solid rgba(255,255,255,0.06)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 20,
+            textAlign: "center",
             fontSize: 14,
             color: "#71717a",
           }}
         >
-          <span>PlayPicks AI • 2026</span>
-          <span>·</span>
-          <a href="https://polymarket.com" target="_blank" rel="noreferrer" style={{ color: "#71717a", textDecoration: "none" }}>
-            Polymarket
-          </a>
+          PlayPicks AI • 2026
         </div>
       </div>
     </main>
-  );
-}
-
-function StepCard({ number, title, desc }: { number: string; title: string; desc: string }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        gap: 20,
-        padding: 24,
-        borderRadius: 12,
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.06)",
-      }}
-    >
-      <div
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 8,
-          background: "rgba(147,51,234,0.15)",
-          border: "1px solid rgba(147,51,234,0.3)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 18,
-          fontWeight: 800,
-          color: "#a78bfa",
-          flexShrink: 0,
-        }}
-      >
-        {number}
-      </div>
-
-      <div>
-        <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6, color: "#e4e4e7" }}>{title}</h3>
-        <p style={{ fontSize: 14, color: "#9ca3af", margin: 0, lineHeight: 1.5 }}>{desc}</p>
-      </div>
-    </div>
   );
 }
 
