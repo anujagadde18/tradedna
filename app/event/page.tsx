@@ -1,164 +1,239 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
-import { extractEventFromUrl, isPolymarketUrl } from "@/lib/utils/urlParser";
 
-export default function EventPage() {
-  const [input, setInput] = useState("");
-  const [parsedEvent, setParsedEvent] = useState<string | null>(null);
+function EventContent() {
   const router = useRouter();
+  const [event, setEvent] = useState("");
 
-  function handleInputChange(value: string) {
-    setInput(value);
-    
-    if (isPolymarketUrl(value)) {
-      const extracted = extractEventFromUrl(value);
-      if (extracted) {
-        setParsedEvent(extracted);
-      } else {
-        setParsedEvent(null);
-      }
-    } else {
-      setParsedEvent(null);
-    }
-  }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!event.trim()) return;
+    router.push(`/scores?event=${encodeURIComponent(event)}`);
+  };
 
-  function handleAnalyze() {
-    const eventToAnalyze = parsedEvent || input;
-    if (!eventToAnalyze.trim()) return;
-    router.push(`/scores?event=${encodeURIComponent(eventToAnalyze)}`);
-  }
-
-  function handleKeyPress(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleAnalyze();
-    }
-  }
-
-  const examples = [
+  const exampleQuestions = [
     "Will Bitcoin reach $150k in 2026?",
-    "Will Trump win the 2024 election?",
-    "Will Apple stock hit $300 in 2026?",
+    "Will Apple stock hit $300 by end of 2026?",
+    "Will AI regulation pass in US by 2027?",
   ];
 
   return (
-    <main style={{ minHeight: "100vh", background: "#0f1419", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ maxWidth: 560, width: "100%" }}>
+    <main style={{ minHeight: "100vh", background: "#0f1419", color: "#fff" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "80px 24px" }}>
         
-        <div style={{ marginBottom: 32, textAlign: "center" }}>
-          <a href="/" style={{ color: "#9ca3af", fontSize: 14, textDecoration: "none", display: "inline-block", marginBottom: 32 }}>
-            ← Back to Home
-          </a>
-          <h1 style={{ fontSize: 36, fontWeight: 900, marginBottom: 10, color: "#fafafa" }}>
-            What Do You Want to Predict?
+        {/* Back Link */}
+        <a 
+          href="/" 
+          style={{ 
+            color: "#9ca3af", 
+            fontSize: 14, 
+            textDecoration: "none",
+            display: "inline-block",
+            marginBottom: 40
+          }}
+        >
+          ← Back to Home
+        </a>
+
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <h1 style={{ 
+            fontSize: 36, 
+            fontWeight: 900, 
+            marginBottom: 12,
+            color: "#fafafa" 
+          }}>
+            Analyze Any Prediction
           </h1>
-          <p style={{ fontSize: 16, color: "#9ca3af" }}>
-            Enter your question or paste a Polymarket link
+          <p style={{ 
+            fontSize: 17, 
+            color: "#9ca3af",
+            lineHeight: 1.6 
+          }}>
+            Paste a Polymarket URL or type any prediction question
           </p>
         </div>
 
-        <div style={{ marginBottom: 20 }}>
-          <textarea
-            value={input}
-            onChange={(e) => handleInputChange(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Example: Will Bitcoin reach $150k in 2026?
-
-Or paste: https://polymarket.com/event/..."
-            autoFocus
-            style={{
-              width: "100%",
-              minHeight: 120,
-              padding: 18,
-              fontSize: 15,
-              borderRadius: 12,
-              background: "rgba(255,255,255,0.04)",
-              border: "2px solid rgba(255,255,255,0.08)",
-              color: "#fff",
-              resize: "vertical",
-              fontFamily: "inherit",
-              lineHeight: 1.5,
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = "rgba(147,51,234,0.4)";
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-            }}
-          />
-
-          {parsedEvent && (
-            <div style={{ marginTop: 12, padding: 12, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 8 }}>
-              <div style={{ fontSize: 12, color: "#22c55e", fontWeight: 600, marginBottom: 4 }}>
-                ✓ Link Detected
-              </div>
-              <div style={{ fontSize: 14, color: "#d4d4d8" }}>
-                {parsedEvent}
-              </div>
+        {/* How It Works */}
+        <div style={{ 
+          marginBottom: 32,
+          padding: 24,
+          borderRadius: 12,
+          background: "rgba(59,130,246,0.08)",
+          border: "1px solid rgba(59,130,246,0.2)"
+        }}>
+          <div style={{ 
+            fontSize: 14, 
+            fontWeight: 700, 
+            color: "#60a5fa",
+            marginBottom: 16,
+            display: "flex",
+            alignItems: "center",
+            gap: 8
+          }}>
+            <span style={{ fontSize: 18 }}>💡</span>
+            How to Use PlayPicks
+          </div>
+          
+          <div style={{ fontSize: 14, color: "#d4d4d8", lineHeight: 1.8 }}>
+            <div style={{ marginBottom: 12 }}>
+              <strong>Option 1:</strong> Paste a Polymarket URL
             </div>
-          )}
+            <div style={{ 
+              padding: 10, 
+              borderRadius: 6, 
+              background: "rgba(0,0,0,0.3)",
+              fontFamily: "monospace",
+              fontSize: 13,
+              marginBottom: 16,
+              color: "#9ca3af"
+            }}>
+              https://polymarket.com/event/bitcoin-150k
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <strong>Option 2:</strong> Type any prediction question
+            </div>
+            <div style={{ 
+              padding: 10, 
+              borderRadius: 6, 
+              background: "rgba(0,0,0,0.3)",
+              fontFamily: "monospace",
+              fontSize: 13,
+              color: "#9ca3af"
+            }}>
+              Will Bitcoin reach $150k in 2026?
+            </div>
+          </div>
         </div>
 
-        <button
-          onClick={handleAnalyze}
-          disabled={!input.trim()}
-          style={{
-            width: "100%",
-            padding: "16px 24px",
-            borderRadius: 10,
-            background: input.trim() ? "#9333ea" : "rgba(255,255,255,0.05)",
-            border: "none",
-            color: input.trim() ? "#fff" : "#71717a",
-            fontSize: 16,
-            fontWeight: 700,
-            cursor: input.trim() ? "pointer" : "not-allowed",
-            marginBottom: 32,
-          }}
-        >
-          Analyze →
-        </button>
-
-        <div>
-          <div style={{ fontSize: 12, color: "#71717a", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: 600 }}>
-            Or Try These:
+        {/* Input Form */}
+        <form onSubmit={handleSubmit} style={{ marginBottom: 32 }}>
+          <div style={{ position: "relative" }}>
+            <input
+              type="text"
+              value={event}
+              onChange={(e) => setEvent(e.target.value)}
+              placeholder="Paste Polymarket URL or type your question..."
+              style={{
+                width: "100%",
+                padding: "18px 20px",
+                borderRadius: 12,
+                background: "rgba(255,255,255,0.05)",
+                border: "2px solid rgba(255,255,255,0.1)",
+                color: "#fff",
+                fontSize: 16,
+                outline: "none",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "rgba(147,51,234,0.5)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+              }}
+            />
           </div>
-          <div style={{ display: "grid", gap: 8 }}>
-            {examples.map((example, i) => (
+
+          <button
+            type="submit"
+            disabled={!event.trim()}
+            style={{
+              width: "100%",
+              marginTop: 16,
+              padding: "16px",
+              borderRadius: 10,
+              background: event.trim() ? "#9333ea" : "rgba(147,51,234,0.3)",
+              border: "none",
+              color: "#fff",
+              fontSize: 16,
+              fontWeight: 700,
+              cursor: event.trim() ? "pointer" : "not-allowed",
+              boxShadow: event.trim() ? "0 4px 14px rgba(147,51,234,0.4)" : "none",
+            }}
+          >
+            Analyze Event →
+          </button>
+        </form>
+
+        {/* Example Questions */}
+        <div>
+          <div style={{ 
+            fontSize: 13, 
+            color: "#71717a",
+            marginBottom: 14,
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: "1px"
+          }}>
+            Or Try These Examples
+          </div>
+
+          <div style={{ display: "grid", gap: 10 }}>
+            {exampleQuestions.map((question, i) => (
               <button
                 key={i}
-                onClick={() => {
-                  setInput(example);
-                  setParsedEvent(null);
-                }}
+                onClick={() => setEvent(question)}
                 style={{
-                  padding: "12px 14px",
-                  borderRadius: 8,
-                  background: "rgba(255,255,255,0.02)",
-                  border: "1px solid rgba(255,255,255,0.06)",
+                  padding: "14px 16px",
+                  borderRadius: 10,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  textAlign: "left",
                   color: "#d4d4d8",
                   fontSize: 14,
-                  textAlign: "left",
                   cursor: "pointer",
-                  transition: "all 0.2s",
+                  transition: "all 0.2s"
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                  e.currentTarget.style.background = "rgba(147,51,234,0.12)";
                   e.currentTarget.style.borderColor = "rgba(147,51,234,0.3)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.02)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                  e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
                 }}
               >
-                {example}
+                {question}
               </button>
             ))}
           </div>
         </div>
 
+        {/* Next Steps */}
+        <div style={{ 
+          marginTop: 48,
+          padding: 20,
+          borderRadius: 12,
+          background: "rgba(147,51,234,0.08)",
+          border: "1px solid rgba(147,51,234,0.2)"
+        }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#a78bfa", marginBottom: 10 }}>
+            🎯 What Happens Next?
+          </div>
+          <div style={{ fontSize: 13, color: "#d4d4d8", lineHeight: 1.7 }}>
+            1. You'll see a clear <strong>YES</strong> or <strong>NO</strong> prediction with confidence %
+            <br />
+            2. See which data sources agree/disagree
+            <br />
+            3. Optional: Customize trust levels for different sources
+            <br />
+            4. Optional: Add YOUR own data sources at <a href="/sources" style={{ color: "#a78bfa" }}>/sources</a>
+          </div>
+        </div>
+
       </div>
     </main>
+  );
+}
+
+export default function EventPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "100vh", background: "#0f1419" }} />
+    }>
+      <EventContent />
+    </Suspense>
   );
 }
