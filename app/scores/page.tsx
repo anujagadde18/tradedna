@@ -10,7 +10,8 @@ import { type SocialData, getCachedSocialData } from "@/lib/data/socialData";
 import { trackEventAnalysis } from "@/lib/storage/popularEvents";
 import { track, saveAnalysis as saveAnalyticAnalysis } from "@/lib/analytics";
 import { calculateReliability } from "@/components/ui/DecisionSummary";
-import { loadCustomSources, getCustomSourceSummary } from "@/lib/customSources/applyCustomSources";
+import { ActiveSourcesBreakdown } from "@/components/customSources/ActiveSourcesBreakdown";
+import { loadSources } from "@/lib/customSources/sourceManager";
 
 function ScoresContent() {
   const searchParams = useSearchParams();
@@ -27,21 +28,11 @@ function ScoresContent() {
   const [newsData, setNewsData] = useState<NewsData | null>(null);
   const [socialData, setSocialData] = useState<SocialData | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
-
+  
   const [customSources, setCustomSources] = useState<any[]>([]);
-  const [customSourceCount, setCustomSourceCount] = useState(0);
-  const [customSourceSummary, setCustomSourceSummary] = useState<any>({
-    total: 0,
-    byType: { news: 0, social: 0, technical: 0 },
-    topSources: [],
-  });
 
   useEffect(() => {
-    const sources = loadCustomSources().filter((s: any) => s.enabled);
-    const summary = getCustomSourceSummary();
-    setCustomSources(sources);
-    setCustomSourceCount(sources.length);
-    setCustomSourceSummary(summary);
+    setCustomSources(loadSources());
   }, []);
 
   useEffect(() => {
@@ -140,8 +131,8 @@ function ScoresContent() {
             gap: 12,
           }}
         >
-          <a
-            href="/"
+          
+            href="/event"
             style={{
               color: "#9ca3af",
               fontSize: 14,
@@ -198,65 +189,15 @@ function ScoresContent() {
           </h1>
         </div>
 
-        {/* Enhanced Custom Sources Banner */}
-        {customSourceCount > 0 && (
-          <div style={{
-            padding: "16px 20px",
-            borderRadius: 12,
-            background: "rgba(147,51,234,0.12)",
-            border: "1px solid rgba(147,51,234,0.25)",
-            marginBottom: 20
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", flexWrap: "wrap", gap: 12 }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "#a78bfa", marginBottom: 6 }}>
-                  ⚙️ Using {customSourceCount} Custom Source{customSourceCount === 1 ? "" : "s"}
-                </div>
-                <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 8 }}>
-                  {customSourceSummary.topSources.slice(0, 2).map((s: any) => s.name).join(", ")}
-                  {customSourceCount > 2 && ` and ${customSourceCount - 2} more`}
-                </div>
-                <div style={{ fontSize: 11, color: "#71717a" }}>
-                  These custom sources are included in this analysis
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <a
-                  href="/sources"
-                  style={{
-                    padding: "8px 14px",
-                    borderRadius: 6,
-                    background: "rgba(147,51,234,0.2)",
-                    border: "1px solid rgba(147,51,234,0.3)",
-                    color: "#a78bfa",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    textDecoration: "none",
-                    whiteSpace: "nowrap"
-                  }}
-                >
-                  Manage Sources
-                </a>
-                <button
-                  onClick={() => window.location.reload()}
-                  style={{
-                    padding: "8px 14px",
-                    borderRadius: 6,
-                    background: "#9333ea",
-                    border: "none",
-                    color: "#fff",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    whiteSpace: "nowrap"
-                  }}
-                >
-                  Re-analyze
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* ✅ Active Sources Breakdown */}
+        <ActiveSourcesBreakdown
+          sources={customSources}
+          categoryWeights={{
+            news: weights.news,
+            social: weights.social,
+            technical: weights.technical
+          }}
+        />
 
         {/* Main Result - Mobile Optimized */}
         <div
@@ -570,79 +511,7 @@ function ScoresContent() {
               </div>
             </div>
 
-            {/* Active Sources Breakdown */}
-            {customSourceCount > 0 && (
-              <div style={{
-                marginBottom: 32,
-                padding: 20,
-                borderRadius: 12,
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(255,255,255,0.06)"
-              }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: "#e4e4e7", marginBottom: 16 }}>
-                  🎯 Sources Used in This Analysis
-                </div>
-
-                <div style={{ display: "grid", gap: 12 }}>
-                  {/* News Sources */}
-                  <div>
-                    <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 6 }}>
-                      📰 News Sources:
-                    </div>
-                    <div style={{ fontSize: 13, color: "#d4d4d8", paddingLeft: 12 }}>
-                      <div>• Google News (35% - default)</div>
-                      {customSources
-                        .filter((s: any) => s.type === "news" && s.enabled)
-                        .map((s: any) => (
-                          <div key={s.id}>
-                            • {s.name} ({s.weight}% - <span style={{ color: "#a78bfa" }}>custom ✨</span>)
-                          </div>
-                        ))
-                      }
-                    </div>
-                  </div>
-
-                  {/* Social Sources */}
-                  <div>
-                    <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 6 }}>
-                      🗣️ Social Sources:
-                    </div>
-                    <div style={{ fontSize: 13, color: "#d4d4d8", paddingLeft: 12 }}>
-                      <div>• Twitter/Reddit (40% - default)</div>
-                      {customSources
-                        .filter((s: any) => s.type === "social" && s.enabled)
-                        .map((s: any) => (
-                          <div key={s.id}>
-                            • {s.name} ({s.weight}% - <span style={{ color: "#a78bfa" }}>custom ✨</span>)
-                          </div>
-                        ))
-                      }
-                    </div>
-                  </div>
-
-                  {/* Technical Sources */}
-                  <div>
-                    <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 6 }}>
-                      📊 Technical Sources:
-                    </div>
-                    <div style={{ fontSize: 13, color: "#d4d4d8", paddingLeft: 12 }}>
-                      <div>• Polymarket Odds (50% - default)</div>
-                      <div>• TradingView (25% - default, crypto only)</div>
-                      {customSources
-                        .filter((s: any) => s.type === "technical" && s.enabled)
-                        .map((s: any) => (
-                          <div key={s.id}>
-                            • {s.name} ({s.weight}% - <span style={{ color: "#a78bfa" }}>custom ✨</span>)
-                          </div>
-                        ))
-                      }
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Evidence Sources */}
+            {/* Evidence Sources - MOBILE OPTIMIZED */}
             <div>
               <div
                 style={{
@@ -681,7 +550,7 @@ function ScoresContent() {
 
                   {newsData.articles &&
                     newsData.articles.slice(0, 3).map((article: any, i: number) => (
-                      <a
+                      
                         key={i}
                         href={article.url}
                         target="_blank"
@@ -765,7 +634,7 @@ function ScoresContent() {
                 </div>
 
                 <div style={{ display: "grid", gap: 8 }}>
-                  <a
+                  
                     href={`https://polymarket.com/search?q=${encodeURIComponent(event)}`}
                     target="_blank"
                     rel="noreferrer"
@@ -790,7 +659,7 @@ function ScoresContent() {
                   event.toLowerCase().includes("crypto") ||
                   event.toLowerCase().includes("eth") ? (
                     <>
-                      <a
+                      
                         href="https://www.tradingview.com/symbols/BTCUSD/"
                         target="_blank"
                         rel="noreferrer"
@@ -812,7 +681,7 @@ function ScoresContent() {
                         </div>
                       </a>
 
-                      <a
+                      
                         href="https://coinmarketcap.com/"
                         target="_blank"
                         rel="noreferrer"
@@ -924,7 +793,7 @@ Analyzed at: https://tradedna.vercel.app`;
         </div>
 
         {/* Action Button - Mobile Optimized */}
-        <a
+        
           href={polymarketUrl}
           target="_blank"
           rel="noreferrer"
