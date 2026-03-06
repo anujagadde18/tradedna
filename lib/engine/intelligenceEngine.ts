@@ -20,13 +20,12 @@ export interface IntelligenceMetrics {
 
 /**
  * Calculate weighted confidence from category weights
- * This makes the confidence score explainable and based on actual data
  */
 export function calculateWeightedConfidence(
   weights: Record<ComponentKey, number>,
-  newsStrength: number = 0.75,  // How strong the news signal is (0-1)
-  socialStrength: number = 0.65, // How strong the social signal is (0-1)
-  technicalStrength: number = 0.85 // How strong the technical signal is (0-1)
+  newsStrength: number = 0.75,
+  socialStrength: number = 0.65,
+  technicalStrength: number = 0.85
 ): number {
   const newsContribution = (weights.news / 100) * newsStrength * 100;
   const socialContribution = (weights.social / 100) * socialStrength * 100;
@@ -82,8 +81,6 @@ export function calculateDirection(confidence: number): "YES" | "NO" {
 
 /**
  * Calculate market edge (AI prediction vs market odds)
- * @param aiPrediction - Our AI confidence (0-100)
- * @param marketOdds - Market probability (0-100) from Polymarket/Kalshi
  */
 export function calculateMarketEdge(
   aiPrediction: number,
@@ -95,7 +92,6 @@ export function calculateMarketEdge(
 
 /**
  * Calculate impact of custom sources on confidence
- * Compares default confidence vs custom source confidence
  */
 export function calculateCustomSourceImpact(
   defaultConfidence: number,
@@ -113,41 +109,46 @@ export function generateExplanation(
   customSourcesCount: number,
   customImpact: number
 ): string {
-  const dominantSource = 
-    weights.news > weights.social && weights.news > weights.technical ? "news" :
-    weights.social > weights.news && weights.social > weights.technical ? "social" :
-    "market data";
-
-  const sourceDescriptions = {
-    news: "news headlines",
-    social: "social sentiment",
-    "market data": "technical indicators"
-  };
-
-  let explanation = `This prediction favors ${direction} based on `;
-
+  const sources = [];
+  
   if (weights.news > 30) {
-    explanation += `strong news signals (${weights.news}% weight), `;
+    sources.push(`news analysis (${weights.news}% weight)`);
   }
   
   if (weights.social > 30) {
-    explanation += `${weights.social}% social sentiment analysis, `;
+    sources.push(`social sentiment (${weights.social}% weight)`);
   }
   
   if (weights.technical > 20) {
-    explanation += `and ${weights.technical}% market data. `;
+    sources.push(`market data (${weights.technical}% weight)`);
+  }
+
+  let explanation = `This prediction favors ${direction} based on `;
+  
+  if (sources.length === 0) {
+    explanation += "balanced analysis across all sources.";
+  } else if (sources.length === 1) {
+    explanation += `${sources[0]}.`;
+  } else if (sources.length === 2) {
+    explanation += `${sources[0]} and ${sources[1]}.`;
+  } else {
+    explanation += `${sources[0]}, ${sources[1]}, and ${sources[2]}.`;
   }
 
   if (customSourcesCount > 0) {
-    if (customImpact > 0) {
-      explanation += `Your ${customSourcesCount} custom sources increased confidence by ${customImpact}%.`;
+    explanation += ` Your ${customSourcesCount} custom source${customSourcesCount > 1 ? 's' : ''}`;
+    
+    if (customImpact > 5) {
+      explanation += ` significantly boosted this prediction (+${customImpact}%).`;
+    } else if (customImpact > 0) {
+      explanation += ` slightly increased confidence (+${customImpact}%).`;
+    } else if (customImpact < -5) {
+      explanation += ` significantly lowered this prediction (${customImpact}%).`;
     } else if (customImpact < 0) {
-      explanation += `Your ${customSourcesCount} custom sources decreased confidence by ${Math.abs(customImpact)}%.`;
+      explanation += ` slightly decreased confidence (${customImpact}%).`;
     } else {
-      explanation += `Your ${customSourcesCount} custom sources aligned with our analysis.`;
+      explanation += ` aligned with the default analysis.`;
     }
-  } else {
-    explanation += `Analysis based on ${dominantSource}.`;
   }
 
   return explanation;
@@ -155,7 +156,6 @@ export function generateExplanation(
 
 /**
  * Main intelligence calculation
- * This is the central function that ties everything together
  */
 export function calculateIntelligence(
   baseConfidence: number,
@@ -163,11 +163,10 @@ export function calculateIntelligence(
   customSourcesCount: number = 0,
   marketOdds: number | null = null
 ): IntelligenceMetrics {
-  // Calculate weighted confidence
   const confidence = baseConfidence;
   
-  // Default confidence (no custom sources)
-  const defaultConfidence = 56; // This would be your base prediction
+  // Default confidence (assumes 3 default sources balanced)
+  const defaultConfidence = 56;
   
   // Custom source impact
   const customSourceImpact = customSourcesCount > 0 
