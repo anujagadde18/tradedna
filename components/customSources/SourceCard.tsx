@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 interface SourceCardProps {
   source: any;
   categoryWeight: number;
@@ -9,7 +11,21 @@ interface SourceCardProps {
 }
 
 export function SourceCard({ source, categoryWeight, onRemove, onToggle, onWeightChange }: SourceCardProps) {
-  const finalPercentage = ((source.weight / 100) * categoryWeight).toFixed(1);
+  const [currentWeight, setCurrentWeight] = useState(source.weight);
+  
+  useEffect(() => {
+    setCurrentWeight(source.weight);
+  }, [source.weight]);
+
+  const handleSliderChange = (newWeight: number) => {
+    setCurrentWeight(newWeight);
+  };
+
+  const handleSliderRelease = () => {
+    onWeightChange(currentWeight);
+  };
+
+  const finalPercentage = Math.round((currentWeight / 100) * categoryWeight);
   
   return (
     <div style={{ 
@@ -48,7 +64,7 @@ export function SourceCard({ source, categoryWeight, onRemove, onToggle, onWeigh
           
           {!source.isDefault && (
             <button onClick={onRemove} style={{ padding: "6px 10px", borderRadius: 6, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
-              ✕
+              X
             </button>
           )}
         </div>
@@ -56,20 +72,34 @@ export function SourceCard({ source, categoryWeight, onRemove, onToggle, onWeigh
 
       {source.enabled && (
         <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <span style={{ fontSize: 12, color: "#9ca3af" }}>Weight within category</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 15, fontWeight: 800, color: "#9333ea" }}>{source.weight}%</span>
-              <span style={{ fontSize: 11, color: "#71717a" }}>=</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#22c55e" }}>{finalPercentage}% total</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <span style={{ fontSize: 12, color: "#9ca3af" }}>Final weight in prediction:</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 22, fontWeight: 900, color: "#22c55e" }}>{finalPercentage}%</span>
             </div>
           </div>
-          <input type="range" min={0} max={100} step={5} value={source.weight} onChange={(e) => onWeightChange(Number(e.target.value))} style={{ width: "100%", height: 6, borderRadius: 3, background: `linear-gradient(to right, #9333ea 0%, #9333ea ${source.weight}%, rgba(255,255,255,0.08) ${source.weight}%, rgba(255,255,255,0.08) 100%)`, cursor: "pointer", WebkitAppearance: "none", appearance: "none" }} />
-          <div style={{ fontSize: 11, color: "#71717a", marginTop: 6 }}>
-            {source.isDefault 
-              ? "This source auto-balances with others in this category"
-              : `This source gets ${finalPercentage}% of your final prediction`
-            }
+          <input 
+            type="range" 
+            min={0} 
+            max={100} 
+            step={1} 
+            value={currentWeight} 
+            onChange={(e) => handleSliderChange(Number(e.target.value))}
+            onMouseUp={handleSliderRelease}
+            onTouchEnd={handleSliderRelease}
+            style={{ 
+              width: "100%", 
+              height: 6, 
+              borderRadius: 3, 
+              background: `linear-gradient(to right, #9333ea 0%, #9333ea ${currentWeight}%, rgba(255,255,255,0.08) ${currentWeight}%, rgba(255,255,255,0.08) 100%)`, 
+              cursor: "pointer", 
+              WebkitAppearance: "none", 
+              appearance: "none" 
+            }} 
+          />
+          <div style={{ fontSize: 11, color: "#71717a", marginTop: 8, display: "flex", justifyContent: "space-between" }}>
+            <span>Within category: {currentWeight}%</span>
+            <span>Updates when you release slider</span>
           </div>
         </div>
       )}
