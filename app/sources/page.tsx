@@ -14,11 +14,14 @@ function SourcesContent() {
   const [modalType, setModalType] = useState<"news" | "social" | "technical">("news");
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [lastEvent, setLastEvent] = useState<string | null>(null);
 
   const categoryWeights = { news: 35, social: 40, technical: 25 };
 
   useEffect(() => {
     setSources(loadSources());
+    const savedEvent = localStorage.getItem('lastAnalyzedEvent');
+    setLastEvent(savedEvent);
   }, []);
 
   const handleAddCurated = (type: "news" | "social" | "technical", curatedSource: any) => {
@@ -34,9 +37,9 @@ function SourcesContent() {
     
     const categorySources = updated.filter((s: any) => s.type === type && s.enabled);
     const addedSource = categorySources.find((s: any) => s.name === curatedSource.name);
-    const finalPercentage = addedSource ? ((addedSource.weight / 100) * categoryWeights[type]).toFixed(1) : "0";
+    const finalPercentage = addedSource ? Math.round((addedSource.weight / 100) * categoryWeights[type]) : 0;
     
-    setSuccessMessage(`${curatedSource.name} added! Now gets ${addedSource?.weight}% of ${type} = ${finalPercentage}% of final prediction.`);
+    setSuccessMessage(`${curatedSource.name} added! Now gets ${finalPercentage}% of your final prediction.`);
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 8000);
   };
@@ -64,11 +67,19 @@ function SourcesContent() {
     
     const categorySources = updated.filter((s: any) => s.type === type && s.enabled);
     const addedSource = categorySources.find((s: any) => s.name === name);
-    const finalPercentage = addedSource ? ((addedSource.weight / 100) * categoryWeights[type]).toFixed(1) : "0";
+    const finalPercentage = addedSource ? Math.round((addedSource.weight / 100) * categoryWeights[type]) : 0;
     
-    setSuccessMessage(`${name} added! Now gets ${addedSource?.weight}% of ${type} = ${finalPercentage}% of final prediction.`);
+    setSuccessMessage(`${name} added! Now gets ${finalPercentage}% of your final prediction.`);
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 8000);
+  };
+
+  const handleReanalyze = () => {
+    if (lastEvent) {
+      router.push(`/scores?event=${encodeURIComponent(lastEvent)}`);
+    } else {
+      router.push('/event');
+    }
   };
 
   const newsSources = getSourcesByType(sources, "news");
@@ -94,16 +105,25 @@ function SourcesContent() {
         <div style={{ marginBottom: 40 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
             <a href="/" style={{ color: "#9ca3af", fontSize: 14, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>Back to Home</a>
-            <button onClick={() => router.push("/event")} style={{ padding: "8px 16px", borderRadius: 8, background: "#9333ea", border: "none", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Analyze Event</button>
+            <button onClick={handleReanalyze} style={{ padding: "8px 16px", borderRadius: 8, background: "#9333ea", border: "none", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+              {lastEvent ? `Re-analyze` : 'Analyze Event'}
+            </button>
           </div>
 
           <h1 style={{ fontSize: 28, fontWeight: 900, margin: "0 0 8px 0" }}>Custom Data Sources</h1>
           <p style={{ fontSize: 15, color: "#9ca3af", margin: 0, lineHeight: 1.6 }}>Add your trusted sources. Weights auto-balance within each category.</p>
+          
+          {lastEvent && (
+            <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(147,51,234,0.08)", border: "1px solid rgba(147,51,234,0.2)" }}>
+              <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4 }}>Currently analyzing:</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#a78bfa" }}>{lastEvent}</div>
+            </div>
+          )}
         </div>
 
         <div style={{ marginBottom: 32, padding: 16, borderRadius: 12, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: "#60a5fa", marginBottom: 8 }}>How It Works</div>
-          <div style={{ fontSize: 13, color: "#d4d4d8", lineHeight: 1.7 }}>Sources within each category split the category's total weight. For example, if News is 35% and you have 2 news sources at 50% each, they each get 17.5% of the final prediction.</div>
+          <div style={{ fontSize: 13, color: "#d4d4d8", lineHeight: 1.7 }}>Sources within each category split the category's total weight. Add sources, adjust their weights, then click Re-analyze to see updated predictions.</div>
         </div>
 
         <CategorySection title="News Sources" description="RSS feeds, blogs, news outlets" sources={newsSources} curatedSources={CURATED_SOURCES.news} type="news" categoryWeight={categoryWeights.news} onAdd={(source: any) => handleAddCurated("news", source)} onRemove={handleRemove} onToggle={handleToggle} onWeightChange={handleWeightChange} onAddCustomClick={() => { setModalType("news"); setShowAddModal(true); }} />
