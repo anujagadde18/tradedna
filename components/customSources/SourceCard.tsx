@@ -12,6 +12,7 @@ interface SourceCardProps {
 
 export function SourceCard({ source, categoryWeight, onRemove, onToggle, onWeightChange }: SourceCardProps) {
   const [currentWeight, setCurrentWeight] = useState(source.weight);
+  const [showTooltip, setShowTooltip] = useState(false);
   
   useEffect(() => {
     setCurrentWeight(source.weight);
@@ -28,15 +29,40 @@ export function SourceCard({ source, categoryWeight, onRemove, onToggle, onWeigh
   const finalPercentage = Math.round((currentWeight / 100) * categoryWeight);
   
   return (
-    <div style={{ 
-      padding: "14px 16px", 
-      marginBottom: 10, 
-      borderRadius: 10, 
-      background: source.enabled ? "rgba(147,51,234,0.08)" : "rgba(255,255,255,0.02)", 
-      border: source.enabled ? "1px solid rgba(147,51,234,0.2)" : "1px solid rgba(255,255,255,0.06)",
-      opacity: source.enabled ? 1 : 0.5,
-      transition: "all 0.2s"
-    }}>
+    <div 
+      style={{ 
+        padding: "14px 16px", 
+        marginBottom: 10, 
+        borderRadius: 10, 
+        background: source.enabled ? "rgba(147,51,234,0.08)" : "rgba(255,255,255,0.02)", 
+        border: source.enabled ? "1px solid rgba(147,51,234,0.2)" : "1px solid rgba(255,255,255,0.06)",
+        opacity: source.enabled ? 1 : 0.5,
+        transition: "all 0.2s",
+        position: "relative"
+      }}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
+      {showTooltip && source.description && (
+        <div style={{ 
+          position: "absolute", 
+          top: -50, 
+          left: 16, 
+          right: 16, 
+          padding: "10px 12px", 
+          borderRadius: 8, 
+          background: "rgba(0,0,0,0.95)", 
+          border: "1px solid rgba(147,51,234,0.4)",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+          zIndex: 10,
+          fontSize: 12,
+          color: "#d4d4d8",
+          lineHeight: 1.5
+        }}>
+          {source.description}
+        </div>
+      )}
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: source.enabled ? 12 : 0 }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
@@ -47,11 +73,6 @@ export function SourceCard({ source, categoryWeight, onRemove, onToggle, onWeigh
               <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: "rgba(59,130,246,0.15)", color: "#60a5fa", fontWeight: 600 }}>DEFAULT</span>
             )}
           </div>
-          {source.description && (
-            <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4 }}>
-              {source.description}
-            </div>
-          )}
           <div style={{ fontSize: 11, color: "#71717a", wordBreak: "break-all" }}>
             {source.url}
           </div>
