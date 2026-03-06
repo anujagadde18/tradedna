@@ -132,6 +132,26 @@ function ScoresContent() {
             Back
           </a>
           <div style={{ display: "flex", gap: 8 }}>
+            <button 
+              onClick={() => {
+                const customSourcesCount = customSources.filter(s => !s.isDefault && s.enabled).length;
+                const shareText = `${event}\n\nPrediction: ${direction} (${confidence}% confidence)\n${customSourcesCount > 0 ? `\nAnalyzed with ${customSourcesCount} custom sources` : ''}\n\nPlayPicks AI\ntradedna.vercel.app`;
+                
+                if (navigator.share) {
+                  navigator.share({ text: shareText }).catch(() => {
+                    navigator.clipboard.writeText(shareText);
+                    alert('Copied to clipboard!');
+                  });
+                } else {
+                  navigator.clipboard.writeText(shareText);
+                  alert('Copied to clipboard!');
+                }
+                track("share_analysis", { event });
+              }}
+              style={{ padding: "6px 14px", borderRadius: 6, background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.25)", color: "#60a5fa", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+            >
+              Share
+            </button>
             <button onClick={() => router.push("/event")} style={{ padding: "6px 14px", borderRadius: 6, background: "rgba(147,51,234,0.12)", border: "1px solid rgba(147,51,234,0.25)", color: "#a78bfa", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
               Analyze Another Event
             </button>
