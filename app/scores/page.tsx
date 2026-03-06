@@ -120,7 +120,7 @@ function ScoresContent() {
   return (
     <main style={{ minHeight: "100vh", background: "#0f1419", color: "#fff" }}>
       <div style={{ maxWidth: 760, margin: "0 auto", padding: "20px 16px" }}>
-        {/* Header - Mobile Optimized */}
+        {/* Header */}
         <div
           style={{
             display: "flex",
@@ -128,7 +128,7 @@ function ScoresContent() {
             alignItems: "center",
             marginBottom: 24,
             flexWrap: "wrap",
-            gap: 12,
+            gap: 12
           }}
         >
           
@@ -139,7 +139,7 @@ function ScoresContent() {
               textDecoration: "none",
               display: "flex",
               alignItems: "center",
-              gap: 6,
+              gap: 6
             }}
           >
             ← Back
@@ -154,14 +154,14 @@ function ScoresContent() {
               color: "#a78bfa",
               fontSize: 13,
               fontWeight: 600,
-              cursor: "pointer",
+              cursor: "pointer"
             }}
           >
             Profile
           </button>
         </div>
 
-        {/* Event Title - Mobile Friendly */}
+        {/* Event Title */}
         <div style={{ marginBottom: 28 }}>
           <div
             style={{
@@ -170,7 +170,7 @@ function ScoresContent() {
               textTransform: "uppercase",
               letterSpacing: "1px",
               marginBottom: 8,
-              fontWeight: 600,
+              fontWeight: 600
             }}
           >
             Prediction Analysis
@@ -182,14 +182,14 @@ function ScoresContent() {
               margin: 0,
               lineHeight: 1.3,
               color: "#fafafa",
-              wordBreak: "break-word",
+              wordBreak: "break-word"
             }}
           >
             {analysis.event}
           </h1>
         </div>
 
-        {/* ✅ Active Sources Breakdown */}
+        {/* Active Sources Breakdown */}
         <ActiveSourcesBreakdown
           sources={customSources}
           categoryWeights={{
@@ -199,7 +199,7 @@ function ScoresContent() {
           }}
         />
 
-        {/* Main Result - Mobile Optimized */}
+        {/* Main Result */}
         <div
           style={{
             marginBottom: 28,
@@ -207,7 +207,7 @@ function ScoresContent() {
             borderRadius: 16,
             background: "rgba(255,255,255,0.03)",
             border: "1px solid rgba(255,255,255,0.08)",
-            textAlign: "center",
+            textAlign: "center"
           }}
         >
           <div
@@ -216,7 +216,7 @@ function ScoresContent() {
               color: "#9ca3af",
               marginBottom: 14,
               textTransform: "uppercase",
-              letterSpacing: "0.8px",
+              letterSpacing: "0.8px"
             }}
           >
             Our Prediction
@@ -228,7 +228,7 @@ function ScoresContent() {
               fontWeight: 900,
               color: direction === "YES" ? "#22c55e" : "#ef4444",
               marginBottom: 10,
-              lineHeight: 1,
+              lineHeight: 1
             }}
           >
             {direction}
@@ -238,7 +238,7 @@ function ScoresContent() {
             {confidence}% Confidence
           </div>
 
-          {/* Reliability with Tooltip */}
+          {/* Reliability */}
           <div style={{ marginBottom: 18 }}>
             <div
               style={{
@@ -256,7 +256,7 @@ function ScoresContent() {
                     ? "1px solid rgba(34,197,94,0.25)"
                     : reliability.score >= 50
                     ? "1px solid rgba(251,146,60,0.25)"
-                    : "1px solid rgba(239,68,68,0.25)",
+                    : "1px solid rgba(239,68,68,0.25)"
               }}
             >
               <div
@@ -268,7 +268,7 @@ function ScoresContent() {
                       ? "#22c55e"
                       : reliability.score >= 50
                       ? "#fb923c"
-                      : "#ef4444",
+                      : "#ef4444"
                 }}
               >
                 {reliability.level} Trust Level • {reliability.score}%
@@ -285,7 +285,7 @@ function ScoresContent() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: 6,
+                  gap: 6
                 }}
               >
                 <span>❓</span>
@@ -302,7 +302,7 @@ function ScoresContent() {
                   fontSize: 13,
                   color: "#d4d4d8",
                   lineHeight: 1.6,
-                  textAlign: "left",
+                  textAlign: "left"
                 }}
               >
                 {reliability.score >= 70
@@ -314,14 +314,14 @@ function ScoresContent() {
             </details>
           </div>
 
-          {/* Explanation - Mobile Friendly */}
+          {/* Explanation */}
           <div
             style={{
               padding: 16,
               borderRadius: 10,
               background: "rgba(255,255,255,0.02)",
               border: "1px solid rgba(255,255,255,0.06)",
-              textAlign: "left",
+              textAlign: "left"
             }}
           >
             <div style={{ fontSize: 14, color: "#d4d4d8", lineHeight: 1.65 }}>
@@ -330,14 +330,14 @@ function ScoresContent() {
           </div>
         </div>
 
-        {/* Trust Settings - Mobile Optimized */}
+        {/* Trust Settings */}
         <div
           style={{
             marginBottom: 28,
             padding: 20,
             borderRadius: 14,
             background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.06)"
           }}
         >
           <div style={{ marginBottom: 20 }}>
@@ -349,7 +349,7 @@ function ScoresContent() {
             </div>
           </div>
 
-          {/* Quick Presets - Mobile Grid */}
+          {/* Quick Presets */}
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontSize: 12, color: "#71717a", marginBottom: 12, fontWeight: 600 }}>
               QUICK PRESETS
@@ -418,7 +418,7 @@ function ScoresContent() {
                 padding: 12,
                 borderRadius: 8,
                 background: "rgba(59,130,246,0.08)",
-                border: "1px solid rgba(59,130,246,0.2)",
+                border: "1px solid rgba(59,130,246,0.2)"
               }}
             >
               <div style={{ fontSize: 12, color: "#60a5fa", lineHeight: 1.5 }}>
@@ -444,7 +444,7 @@ function ScoresContent() {
             marginBottom: 20,
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: "center"
           }}
         >
           <span>{showAdvanced ? "Hide" : "Show"} Detailed Breakdown</span>
@@ -463,7 +463,7 @@ function ScoresContent() {
                   marginBottom: 12,
                   textTransform: "uppercase",
                   letterSpacing: "0.8px",
-                  fontWeight: 600,
+                  fontWeight: 600
                 }}
               >
                 Signal Scores
@@ -488,7 +488,7 @@ function ScoresContent() {
                 borderRadius: 12,
                 background: "rgba(255,255,255,0.02)",
                 border: "1px solid rgba(255,255,255,0.06)",
-                marginBottom: 20,
+                marginBottom: 20
               }}
             >
               <div
@@ -498,7 +498,7 @@ function ScoresContent() {
                   marginBottom: 12,
                   textTransform: "uppercase",
                   letterSpacing: "0.8px",
-                  fontWeight: 600,
+                  fontWeight: 600
                 }}
               >
                 Analysis Quality
@@ -511,7 +511,7 @@ function ScoresContent() {
               </div>
             </div>
 
-            {/* Evidence Sources - MOBILE OPTIMIZED */}
+            {/* Evidence Sources */}
             <div>
               <div
                 style={{
@@ -520,7 +520,7 @@ function ScoresContent() {
                   marginBottom: 12,
                   textTransform: "uppercase",
                   letterSpacing: "0.8px",
-                  fontWeight: 600,
+                  fontWeight: 600
                 }}
               >
                 Data Sources
@@ -534,7 +534,7 @@ function ScoresContent() {
                     padding: 16,
                     borderRadius: 12,
                     background: "rgba(251,146,60,0.05)",
-                    border: "1px solid rgba(251,146,60,0.15)",
+                    border: "1px solid rgba(251,146,60,0.15)"
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
@@ -563,7 +563,7 @@ function ScoresContent() {
                           background: "rgba(255,255,255,0.03)",
                           border: "1px solid rgba(255,255,255,0.06)",
                           textDecoration: "none",
-                          color: "#d4d4d8",
+                          color: "#d4d4d8"
                         }}
                       >
                         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, color: "#e4e4e7", lineHeight: 1.3 }}>
@@ -583,7 +583,7 @@ function ScoresContent() {
                     borderRadius: 12,
                     background: "rgba(59,130,246,0.05)",
                     border: "1px solid rgba(59,130,246,0.15)",
-                    marginBottom: 14,
+                    marginBottom: 14
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
@@ -602,7 +602,7 @@ function ScoresContent() {
                       fontSize: 12,
                       color: socialData.sentiment.positive > 50 ? "#22c55e" : "#ef4444",
                       fontWeight: 600,
-                      marginBottom: 8,
+                      marginBottom: 8
                     }}
                   >
                     {socialData.sentiment.positive > 50
@@ -614,14 +614,14 @@ function ScoresContent() {
                 </div>
               )}
 
-              {/* Technical Sources - ALWAYS SHOW */}
+              {/* Technical Sources */}
               <div
                 style={{
                   padding: 16,
                   borderRadius: 12,
                   background: "rgba(16,185,129,0.05)",
                   border: "1px solid rgba(16,185,129,0.15)",
-                  marginBottom: 14,
+                  marginBottom: 14
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
@@ -645,7 +645,7 @@ function ScoresContent() {
                       background: "rgba(255,255,255,0.03)",
                       border: "1px solid rgba(255,255,255,0.06)",
                       textDecoration: "none",
-                      color: "#d4d4d8",
+                      color: "#d4d4d8"
                     }}
                   >
                     <div style={{ fontSize: 13, fontWeight: 600, color: "#e4e4e7" }}>
@@ -670,7 +670,7 @@ function ScoresContent() {
                           background: "rgba(255,255,255,0.03)",
                           border: "1px solid rgba(255,255,255,0.06)",
                           textDecoration: "none",
-                          color: "#d4d4d8",
+                          color: "#d4d4d8"
                         }}
                       >
                         <div style={{ fontSize: 13, fontWeight: 600, color: "#e4e4e7" }}>
@@ -692,7 +692,7 @@ function ScoresContent() {
                           background: "rgba(255,255,255,0.03)",
                           border: "1px solid rgba(255,255,255,0.06)",
                           textDecoration: "none",
-                          color: "#d4d4d8",
+                          color: "#d4d4d8"
                         }}
                       >
                         <div style={{ fontSize: 13, fontWeight: 600, color: "#e4e4e7" }}>
@@ -714,7 +714,7 @@ function ScoresContent() {
                     padding: 14,
                     borderRadius: 10,
                     background: "rgba(251,146,60,0.08)",
-                    border: "1px solid rgba(251,146,60,0.2)",
+                    border: "1px solid rgba(251,146,60,0.2)"
                   }}
                 >
                   <div style={{ fontSize: 12, color: "#fb923c", lineHeight: 1.6 }}>
@@ -733,7 +733,7 @@ function ScoresContent() {
             padding: 20,
             borderRadius: 12,
             background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.06)"
           }}
         >
           <div style={{ fontSize: 14, fontWeight: 700, color: "#e4e4e7", marginBottom: 14 }}>
@@ -792,7 +792,7 @@ Analyzed at: https://tradedna.vercel.app`;
           </div>
         </div>
 
-        {/* Action Button - Mobile Optimized */}
+        {/* Action Button */}
         
           href={polymarketUrl}
           target="_blank"
@@ -810,7 +810,7 @@ Analyzed at: https://tradedna.vercel.app`;
             textDecoration: "none",
             textAlign: "center",
             marginBottom: 14,
-            boxShadow: "0 4px 14px rgba(147,51,234,0.4)",
+            boxShadow: "0 4px 14px rgba(147,51,234,0.4)"
           }}
         >
           Trade on Polymarket →
@@ -823,7 +823,7 @@ Analyzed at: https://tradedna.vercel.app`;
             color: "#71717a",
             textAlign: "center",
             lineHeight: 1.6,
-            padding: "0 10px",
+            padding: "0 10px"
           }}
         >
           Analysis saved to your profile
@@ -856,7 +856,7 @@ function PresetButton({
         border: active ? "2px solid #9333ea" : "1px solid rgba(255,255,255,0.06)",
         textAlign: "left",
         cursor: "pointer",
-        transition: "all 0.2s",
+        transition: "all 0.2s"
       }}
     >
       <div style={{ fontSize: 13, fontWeight: 700, color: active ? "#a78bfa" : "#e4e4e7", marginBottom: 3 }}>
@@ -903,7 +903,7 @@ function TrustSlider({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontWeight: 700,
+              fontWeight: 700
             }}
           >
             ?
@@ -922,7 +922,7 @@ function TrustSlider({
             border: "1px solid rgba(255,255,255,0.1)",
             fontSize: 12,
             color: "#d4d4d8",
-            lineHeight: 1.5,
+            lineHeight: 1.5
           }}
         >
           {tooltip}
@@ -943,7 +943,7 @@ function TrustSlider({
           background: `linear-gradient(to right, ${color} 0%, ${color} ${value}%, rgba(255,255,255,0.08) ${value}%, rgba(255,255,255,0.08) 100%)`,
           cursor: "pointer",
           WebkitAppearance: "none",
-          appearance: "none",
+          appearance: "none"
         }}
       />
     </div>
@@ -1007,7 +1007,7 @@ function MetricRow({
             alignItems: "center",
             justifyContent: "center",
             fontWeight: 700,
-            position: "relative",
+            position: "relative"
           }}
         >
           ?
@@ -1025,7 +1025,7 @@ function MetricRow({
                 fontSize: 11,
                 color: "#d4d4d8",
                 whiteSpace: "nowrap",
-                zIndex: 10,
+                zIndex: 10
               }}
             >
               {tooltip}
@@ -1063,7 +1063,7 @@ function ShareButton({
         alignItems: "center",
         justifyContent: "center",
         gap: 8,
-        transition: "all 0.2s",
+        transition: "all 0.2s"
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.background = "rgba(147,51,234,0.15)";
@@ -1091,7 +1091,7 @@ export default function ScoresPage() {
             color: "#fff",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
+            justifyContent: "center"
           }}
         >
           <div style={{ textAlign: "center", padding: "0 20px" }}>
