@@ -11,6 +11,7 @@ export function ActiveSourcesBreakdown(props: any) {
   }
 
   const customSourcesCount = enabledSources.filter((s: any) => !s.isDefault).length;
+  const hasCustomChanges = customSourcesCount > 0 || enabledSources.length !== 3;
 
   // Group sources by category
   const newsSources = enabledSources.filter((s: any) => s.type === "news");
@@ -34,6 +35,13 @@ export function ActiveSourcesBreakdown(props: any) {
               ? `${enabledSources.length} sources (${customSourcesCount} custom)`
               : `${enabledSources.length} default sources`}
           </div>
+          {hasCustomChanges && (
+            <div style={{ marginTop: 8, padding: "6px 10px", borderRadius: 6, background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", display: "inline-block" }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#22c55e" }}>
+                Using your custom configuration
+              </div>
+            </div>
+          )}
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <a href="/sources" style={{ padding: "8px 14px", borderRadius: 6, background: "rgba(147,51,234,0.2)", border: "1px solid rgba(147,51,234,0.3)", color: "#a78bfa", fontSize: 13, fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" }}>Manage Sources</a>
