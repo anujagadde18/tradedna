@@ -32,8 +32,8 @@ function SourcesContent() {
     const updated = addSource(sources, newSource);
     setSources(updated);
     
-    const categorySources = updated.filter(s => s.type === type && s.enabled);
-    const addedSource = categorySources.find(s => s.name === curatedSource.name);
+    const categorySources = updated.filter((s: any) => s.type === type && s.enabled);
+    const addedSource = categorySources.find((s: any) => s.name === curatedSource.name);
     const finalPercentage = addedSource ? ((addedSource.weight / 100) * categoryWeights[type]).toFixed(1) : "0";
     
     setSuccessMessage(`${curatedSource.name} added! Now gets ${addedSource?.weight}% of ${type} = ${finalPercentage}% of final prediction.`);
@@ -62,8 +62,8 @@ function SourcesContent() {
     setSources(updated);
     setShowAddModal(false);
     
-    const categorySources = updated.filter(s => s.type === type && s.enabled);
-    const addedSource = categorySources.find(s => s.name === name);
+    const categorySources = updated.filter((s: any) => s.type === type && s.enabled);
+    const addedSource = categorySources.find((s: any) => s.name === name);
     const finalPercentage = addedSource ? ((addedSource.weight / 100) * categoryWeights[type]).toFixed(1) : "0";
     
     setSuccessMessage(`${name} added! Now gets ${addedSource?.weight}% of ${type} = ${finalPercentage}% of final prediction.`);
@@ -86,7 +86,7 @@ function SourcesContent() {
                 <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 6 }}>Success!</div>
                 <div style={{ fontSize: 13, color: "rgba(255,255,255,0.9)" }}>{successMessage}</div>
               </div>
-              <button onClick={() => setShowSuccess(false)} style={{ background: "none", border: "none", color: "#fff", fontSize: 18, cursor: "pointer", padding: 0, lineHeight: 1 }}>✕</button>
+              <button onClick={() => setShowSuccess(false)} style={{ background: "none", border: "none", color: "#fff", fontSize: 18, cursor: "pointer", padding: 0, lineHeight: 1 }}>X</button>
             </div>
           </div>
         )}
@@ -106,11 +106,11 @@ function SourcesContent() {
           <div style={{ fontSize: 13, color: "#d4d4d8", lineHeight: 1.7 }}>Sources within each category split the category's total weight. For example, if News is 35% and you have 2 news sources at 50% each, they each get 17.5% of the final prediction.</div>
         </div>
 
-        <CategorySection title="News Sources" description="RSS feeds, blogs, news outlets" sources={newsSources} curatedSources={CURATED_SOURCES.news} type="news" categoryWeight={categoryWeights.news} onAdd={(source) => handleAddCurated("news", source)} onRemove={handleRemove} onToggle={handleToggle} onWeightChange={handleWeightChange} onAddCustomClick={() => { setModalType("news"); setShowAddModal(true); }} />
+        <CategorySection title="News Sources" description="RSS feeds, blogs, news outlets" sources={newsSources} curatedSources={CURATED_SOURCES.news} type="news" categoryWeight={categoryWeights.news} onAdd={(source: any) => handleAddCurated("news", source)} onRemove={handleRemove} onToggle={handleToggle} onWeightChange={handleWeightChange} onAddCustomClick={() => { setModalType("news"); setShowAddModal(true); }} />
 
-        <CategorySection title="Social Sources" description="Twitter accounts, Reddit, Discord, Telegram" sources={socialSources} curatedSources={CURATED_SOURCES.social} type="social" categoryWeight={categoryWeights.social} onAdd={(source) => handleAddCurated("social", source)} onRemove={handleRemove} onToggle={handleToggle} onWeightChange={handleWeightChange} onAddCustomClick={() => { setModalType("social"); setShowAddModal(true); }} />
+        <CategorySection title="Social Sources" description="Twitter accounts, Reddit, Discord, Telegram" sources={socialSources} curatedSources={CURATED_SOURCES.social} type="social" categoryWeight={categoryWeights.social} onAdd={(source: any) => handleAddCurated("social", source)} onRemove={handleRemove} onToggle={handleToggle} onWeightChange={handleWeightChange} onAddCustomClick={() => { setModalType("social"); setShowAddModal(true); }} />
 
-        <CategorySection title="Technical Sources" description="Market data, charts, APIs" sources={technicalSources} curatedSources={CURATED_SOURCES.technical} type="technical" categoryWeight={categoryWeights.technical} onAdd={(source) => handleAddCurated("technical", source)} onRemove={handleRemove} onToggle={handleToggle} onWeightChange={handleWeightChange} onAddCustomClick={() => { setModalType("technical"); setShowAddModal(true); }} />
+        <CategorySection title="Technical Sources" description="Market data, charts, APIs" sources={technicalSources} curatedSources={CURATED_SOURCES.technical} type="technical" categoryWeight={categoryWeights.technical} onAdd={(source: any) => handleAddCurated("technical", source)} onRemove={handleRemove} onToggle={handleToggle} onWeightChange={handleWeightChange} onAddCustomClick={() => { setModalType("technical"); setShowAddModal(true); }} />
 
       </div>
 
@@ -121,7 +121,6 @@ function SourcesContent() {
 
 function CategorySection({ title, description, sources, curatedSources, type, categoryWeight, onAdd, onRemove, onToggle, onWeightChange, onAddCustomClick }: any) {
   const enabledSources = sources.filter((s: any) => s.enabled);
-  const customSources = sources.filter((s: any) => !s.isDefault);
 
   return (
     <div style={{ marginBottom: 32, padding: 24, borderRadius: 14, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
@@ -138,7 +137,7 @@ function CategorySection({ title, description, sources, curatedSources, type, ca
         ) : (
           <div>
             {sources.map((source: any) => (
-              <SourceCard key={source.id} source={source} categoryWeight={categoryWeight} onRemove={() => onRemove(source.id)} onToggle={() => onToggle(source.id)} onWeightChange={(weight) => onWeightChange(source.id, weight)} />
+              <SourceCard key={source.id} source={source} categoryWeight={categoryWeight} onRemove={() => onRemove(source.id)} onToggle={() => onToggle(source.id)} onWeightChange={(weight: number) => onWeightChange(source.id, weight)} />
             ))}
           </div>
         )}
