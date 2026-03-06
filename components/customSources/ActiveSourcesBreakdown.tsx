@@ -17,9 +17,9 @@ export function ActiveSourcesBreakdown(props: any) {
   const socialSources = enabledSources.filter((s: any) => s.type === "social");
   const technicalSources = enabledSources.filter((s: any) => s.type === "technical");
 
-  // Calculate final percentages
+  // Calculate final percentages (simplified display)
   const calculateFinal = (source: any, categoryWeight: number) => {
-    return ((source.weight / 100) * categoryWeight).toFixed(1);
+    return Math.round((source.weight / 100) * categoryWeight);
   };
 
   return (
@@ -31,32 +31,32 @@ export function ActiveSourcesBreakdown(props: any) {
           </div>
           <div style={{ fontSize: 13, color: "#9ca3af" }}>
             {customSourcesCount > 0 
-              ? `Using ${enabledSources.length} sources (${customSourcesCount} custom)`
-              : `Using ${enabledSources.length} default sources`}
+              ? `${enabledSources.length} sources (${customSourcesCount} custom)`
+              : `${enabledSources.length} default sources`}
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <a href="/sources" style={{ padding: "8px 14px", borderRadius: 6, background: "rgba(147,51,234,0.2)", border: "1px solid rgba(147,51,234,0.3)", color: "#a78bfa", fontSize: 13, fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" }}>Manage Sources</a>
-          <button onClick={() => window.location.reload()} style={{ padding: "8px 14px", borderRadius: 6, background: "#9333ea", border: "none", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>Re-analyze</button>
+          <button onClick={() => window.location.reload()} style={{ padding: "8px 14px", borderRadius: 6, background: "#9333ea", border: "none", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>Refresh Analysis</button>
         </div>
       </div>
 
-      <div style={{ display: "grid", gap: 16 }}>
+      <div style={{ display: "grid", gap: 14 }}>
         {newsSources.length > 0 && (
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#e4e4e7", marginBottom: 8 }}>
-              News ({categoryWeights.news}% total weight):
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#9ca3af", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              News Sources:
             </div>
-            <div style={{ paddingLeft: 16, display: "grid", gap: 6 }}>
+            <div style={{ display: "grid", gap: 6 }}>
               {newsSources.map((source: any) => (
-                <div key={source.id} style={{ fontSize: 13, color: "#d4d4d8", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <span>{source.isDefault ? "📋" : "✨"}</span>
+                <div key={source.id} style={{ fontSize: 13, color: "#d4d4d8", display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>{source.isDefault ? "📋" : "✨"}</span>
                   <span style={{ fontWeight: 600 }}>{source.name}</span>
-                  <span style={{ color: "#9ca3af" }}>
-                    {source.weight}% of news = {calculateFinal(source, categoryWeights.news)}% total
+                  <span style={{ fontSize: 12, padding: "2px 8px", borderRadius: 4, background: "rgba(147,51,234,0.15)", color: "#a78bfa", fontWeight: 700 }}>
+                    {calculateFinal(source, categoryWeights.news)}%
                   </span>
                   {!source.isDefault && (
-                    <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: "rgba(147,51,234,0.2)", color: "#a78bfa", fontWeight: 600 }}>CUSTOM</span>
+                    <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 3, background: "rgba(34,197,94,0.15)", color: "#22c55e", fontWeight: 600 }}>CUSTOM</span>
                   )}
                 </div>
               ))}
@@ -66,19 +66,19 @@ export function ActiveSourcesBreakdown(props: any) {
 
         {socialSources.length > 0 && (
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#e4e4e7", marginBottom: 8 }}>
-              Social ({categoryWeights.social}% total weight):
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#9ca3af", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              Social Sources:
             </div>
-            <div style={{ paddingLeft: 16, display: "grid", gap: 6 }}>
+            <div style={{ display: "grid", gap: 6 }}>
               {socialSources.map((source: any) => (
-                <div key={source.id} style={{ fontSize: 13, color: "#d4d4d8", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <span>{source.isDefault ? "📋" : "✨"}</span>
+                <div key={source.id} style={{ fontSize: 13, color: "#d4d4d8", display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>{source.isDefault ? "📋" : "✨"}</span>
                   <span style={{ fontWeight: 600 }}>{source.name}</span>
-                  <span style={{ color: "#9ca3af" }}>
-                    {source.weight}% of social = {calculateFinal(source, categoryWeights.social)}% total
+                  <span style={{ fontSize: 12, padding: "2px 8px", borderRadius: 4, background: "rgba(59,130,246,0.15)", color: "#60a5fa", fontWeight: 700 }}>
+                    {calculateFinal(source, categoryWeights.social)}%
                   </span>
                   {!source.isDefault && (
-                    <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: "rgba(147,51,234,0.2)", color: "#a78bfa", fontWeight: 600 }}>CUSTOM</span>
+                    <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 3, background: "rgba(34,197,94,0.15)", color: "#22c55e", fontWeight: 600 }}>CUSTOM</span>
                   )}
                 </div>
               ))}
@@ -88,19 +88,19 @@ export function ActiveSourcesBreakdown(props: any) {
 
         {technicalSources.length > 0 && (
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#e4e4e7", marginBottom: 8 }}>
-              Technical ({categoryWeights.technical}% total weight):
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#9ca3af", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              Technical Sources:
             </div>
-            <div style={{ paddingLeft: 16, display: "grid", gap: 6 }}>
+            <div style={{ display: "grid", gap: 6 }}>
               {technicalSources.map((source: any) => (
-                <div key={source.id} style={{ fontSize: 13, color: "#d4d4d8", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <span>{source.isDefault ? "📋" : "✨"}</span>
+                <div key={source.id} style={{ fontSize: 13, color: "#d4d4d8", display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>{source.isDefault ? "📋" : "✨"}</span>
                   <span style={{ fontWeight: 600 }}>{source.name}</span>
-                  <span style={{ color: "#9ca3af" }}>
-                    {source.weight}% of technical = {calculateFinal(source, categoryWeights.technical)}% total
+                  <span style={{ fontSize: 12, padding: "2px 8px", borderRadius: 4, background: "rgba(16,185,129,0.15)", color: "#10b981", fontWeight: 700 }}>
+                    {calculateFinal(source, categoryWeights.technical)}%
                   </span>
                   {!source.isDefault && (
-                    <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: "rgba(147,51,234,0.2)", color: "#a78bfa", fontWeight: 600 }}>CUSTOM</span>
+                    <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 3, background: "rgba(34,197,94,0.15)", color: "#22c55e", fontWeight: 600 }}>CUSTOM</span>
                   )}
                 </div>
               ))}
@@ -109,9 +109,10 @@ export function ActiveSourcesBreakdown(props: any) {
         )}
       </div>
 
-      <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(147,51,234,0.2)", fontSize: 11, color: "#9ca3af", display: "flex", gap: 16, flexWrap: "wrap" }}>
-        <span>📋 = Default source</span>
-        <span>✨ = Your custom source</span>
+      <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(147,51,234,0.2)", fontSize: 11, color: "#71717a", display: "flex", gap: 16, flexWrap: "wrap" }}>
+        <span>📋 Default</span>
+        <span>✨ Your custom source</span>
+        <span>Percentages show final weight in prediction</span>
       </div>
     </div>
   );
