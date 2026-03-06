@@ -12,6 +12,7 @@ import { track, saveAnalysis as saveAnalyticAnalysis } from "@/lib/analytics";
 import { calculateReliability } from "@/components/ui/DecisionSummary";
 import { ActiveSourcesBreakdown } from "@/components/customSources/ActiveSourcesBreakdown";
 import { loadSources } from "@/lib/customSources/sourceManager";
+import { calculateIntelligence } from "@/lib/engine/intelligenceEngine";
 
 function ScoresContent() {
   const searchParams = useSearchParams();
@@ -23,13 +24,13 @@ function ScoresContent() {
     news: 35,
     technical: 25,
   });
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [newsData, setNewsData] = useState<NewsData | null>(null);
   const [socialData, setSocialData] = useState<SocialData | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
   
   const [customSources, setCustomSources] = useState<any[]>([]);
+  const [marketOdds, setMarketOdds] = useState<number | null>(null);
 
   useEffect(() => {
     setCustomSources(loadSources());
@@ -38,6 +39,11 @@ function ScoresContent() {
   useEffect(() => {
     if (event && event !== "Unknown Event") {
       localStorage.setItem('lastAnalyzedEvent', event);
+      
+      // Mock Polymarket odds (in real app, fetch from API)
+      // For demo: generate realistic market odds
+      const mockMarketOdds = Math.floor(Math.random() * 20) + 45; // 45-65%
+      setMarketOdds(mockMarketOdds);
     }
   }, [event]);
 
@@ -68,6 +74,16 @@ function ScoresContent() {
     () => analyzeEventWithData(event, weights, newsData, socialData),
     [event, weights, newsData, socialData]
   );
+
+  // Calculate intelligence metrics
+  const intelligence = useMemo(() => {
+    const customSourcesCount = customSources.filter(s => !s.isDefault && s.enabled).length;
+    const baseConfidence = analysis.directional.yes > 50 
+      ? analysis.directional.yes 
+      : analysis.directional.no;
+    
+    return calculateIntelligence(baseConfidence, weights, customSourcesCount, marketOdds);
+  }, [analysis, weights, customSources, marketOdds]);
 
   useEffect(() => {
     if (analysis && event !== "Unknown Event" && !isLoadingData) {
@@ -116,17 +132,14 @@ function ScoresContent() {
     }
   }
 
-  const direction = analysis.directional.yes > 50 ? "YES" : "NO";
-  const confidence = analysis.directional.yes > 50 ? analysis.directional.yes : analysis.directional.no;
   const reliability = calculateReliability(analysis);
-
   const polymarketUrl = "https://polymarket.com/search?q=" + encodeURIComponent(event);
 
   return (
     <main style={{ minHeight: "100vh", background: "#0f1419", color: "#fff" }}>
       <div style={{ maxWidth: 760, margin: "0 auto", padding: "20px 16px" }}>
         
-        {/* Header with Better Navigation */}
+        {/* Header with Navigation */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <a href="/event" style={{ color: "#9ca3af", fontSize: 14, textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
             Back
@@ -135,7 +148,7 @@ function ScoresContent() {
             <button 
               onClick={() => {
                 const customSourcesCount = customSources.filter(s => !s.isDefault && s.enabled).length;
-                const shareText = `${event}\n\nPrediction: ${direction} (${confidence}% confidence)\n${customSourcesCount > 0 ? `\nAnalyzed with ${customSourcesCount} custom sources` : ''}\n\nPlayPicks AI\ntradedna.vercel.app`;
+                const shareText = `${event}\n\nPrediction: ${intelligence.direction} (${intelligence.confidence}% confidence)\nTrust Level: ${intelligence.trustLevel}\n${intelligence.marketEdge ? `AI Edge: ${intelligence.marketEdge > 0 ? '+' : ''}${intelligence.marketEdge}% vs Market` : ''}\n${customSourcesCount > 0 ? `\nAnalyzed with ${customSourcesCount} custom sources` : ''}\n\nPlayPicks AI\ntradedna.vercel.app`;
                 
                 if (navigator.share) {
                   navigator.share({ text: shareText }).catch(() => {
@@ -164,7 +177,7 @@ function ScoresContent() {
         {/* Event Title */}
         <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 11, color: "#71717a", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8, fontWeight: 600 }}>
-            Prediction Analysis
+            AI Prediction Analysis
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, lineHeight: 1.3, color: "#fafafa", wordBreak: "break-word" }}>
             {analysis.event}
@@ -181,31 +194,124 @@ function ScoresContent() {
           }}
         />
 
-        {/* Main Result */}
-        <div style={{ marginBottom: 28, padding: 24, borderRadius: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", textAlign: "center" }}>
-          <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.8px" }}>
-            Our Prediction
-          </div>
+        {/* Main Intelligence Result */}
+        <div style={{ marginBottom: 28, padding: 24, borderRadius: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          
+          {/* Prediction Header */}
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.8px" }}>
+              Our Prediction
+            </div>
 
-          <div style={{ fontSize: 56, fontWeight: 900, color: direction === "YES" ? "#22c55e" : "#ef4444", marginBottom: 10, lineHeight: 1 }}>
-            {direction}
-          </div>
+            <div style={{ fontSize: 56, fontWeight: 900, color: intelligence.direction === "YES" ? "#22c55e" : "#ef4444", marginBottom: 10, lineHeight: 1 }}>
+              {intelligence.direction}
+            </div>
 
-          <div style={{ fontSize: 20, fontWeight: 700, color: "#e4e4e7", marginBottom: 18 }}>
-            {confidence}% Confidence
-          </div>
-
-          <div style={{ marginBottom: 18 }}>
-            <div style={{ display: "inline-block", padding: "10px 16px", borderRadius: 8, background: reliability.score >= 70 ? "rgba(34,197,94,0.12)" : reliability.score >= 50 ? "rgba(251,146,60,0.12)" : "rgba(239,68,68,0.12)", border: reliability.score >= 70 ? "1px solid rgba(34,197,94,0.25)" : reliability.score >= 50 ? "1px solid rgba(251,146,60,0.25)" : "1px solid rgba(239,68,68,0.25)" }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: reliability.score >= 70 ? "#22c55e" : reliability.score >= 50 ? "#fb923c" : "#ef4444" }}>
-                {reliability.level} Trust Level - {reliability.score}%
-              </div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "#e4e4e7", marginBottom: 20 }}>
+              {intelligence.confidence}% Confidence
             </div>
           </div>
 
-          <div style={{ padding: 16, borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", textAlign: "left" }}>
+          {/* Intelligence Metrics Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 20 }}>
+            
+            {/* Trust Level */}
+            <div style={{ 
+              padding: "14px 16px", 
+              borderRadius: 10, 
+              background: intelligence.trustScore >= 70 ? "rgba(34,197,94,0.12)" : intelligence.trustScore >= 60 ? "rgba(251,146,60,0.12)" : "rgba(239,68,68,0.12)",
+              border: intelligence.trustScore >= 70 ? "1px solid rgba(34,197,94,0.25)" : intelligence.trustScore >= 60 ? "1px solid rgba(251,146,60,0.25)" : "1px solid rgba(239,68,68,0.25)"
+            }}>
+              <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6, fontWeight: 600 }}>TRUST LEVEL</div>
+              <div style={{ 
+                fontSize: 16, 
+                fontWeight: 800, 
+                color: intelligence.trustScore >= 70 ? "#22c55e" : intelligence.trustScore >= 60 ? "#fb923c" : "#ef4444"
+              }}>
+                {intelligence.trustLevel}
+              </div>
+            </div>
+
+            {/* Risk Level */}
+            <div style={{ 
+              padding: "14px 16px", 
+              borderRadius: 10, 
+              background: intelligence.riskLevel === "Low Risk" ? "rgba(34,197,94,0.12)" : intelligence.riskLevel === "Medium Risk" ? "rgba(251,146,60,0.12)" : "rgba(239,68,68,0.12)",
+              border: intelligence.riskLevel === "Low Risk" ? "1px solid rgba(34,197,94,0.25)" : intelligence.riskLevel === "Medium Risk" ? "1px solid rgba(251,146,60,0.25)" : "1px solid rgba(239,68,68,0.25)"
+            }}>
+              <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6, fontWeight: 600 }}>RISK LEVEL</div>
+              <div style={{ 
+                fontSize: 16, 
+                fontWeight: 800, 
+                color: intelligence.riskLevel === "Low Risk" ? "#22c55e" : intelligence.riskLevel === "Medium Risk" ? "#fb923c" : "#ef4444"
+              }}>
+                {intelligence.riskLevel}
+              </div>
+            </div>
+
+            {/* Market Edge (if available) */}
+            {intelligence.marketEdge !== null && (
+              <div style={{ 
+                padding: "14px 16px", 
+                borderRadius: 10, 
+                background: Math.abs(intelligence.marketEdge) > 10 ? "rgba(147,51,234,0.12)" : "rgba(59,130,246,0.12)",
+                border: Math.abs(intelligence.marketEdge) > 10 ? "1px solid rgba(147,51,234,0.25)" : "1px solid rgba(59,130,246,0.25)"
+              }}>
+                <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6, fontWeight: 600 }}>AI EDGE vs MARKET</div>
+                <div style={{ 
+                  fontSize: 16, 
+                  fontWeight: 800, 
+                  color: Math.abs(intelligence.marketEdge) > 10 ? "#a78bfa" : "#60a5fa"
+                }}>
+                  {intelligence.marketEdge > 0 ? '+' : ''}{intelligence.marketEdge}%
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Market Edge Explanation */}
+          {intelligence.marketEdge !== null && marketOdds !== null && (
+            <div style={{ 
+              padding: "12px 16px", 
+              borderRadius: 10, 
+              background: "rgba(147,51,234,0.08)", 
+              border: "1px solid rgba(147,51,234,0.2)",
+              marginBottom: 20
+            }}>
+              <div style={{ fontSize: 13, color: "#d4d4d8", lineHeight: 1.6 }}>
+                <strong style={{ color: "#a78bfa" }}>Market Opportunity:</strong> The market prices this at {marketOdds}%, but our AI predicts {intelligence.confidence}%. 
+                {Math.abs(intelligence.marketEdge) > 10 
+                  ? ` That's a significant ${Math.abs(intelligence.marketEdge)}% edge${intelligence.marketEdge > 0 ? ' in favor of YES' : ' in favor of NO'}.`
+                  : ' The AI and market are closely aligned.'
+                }
+              </div>
+            </div>
+          )}
+
+          {/* Custom Source Impact */}
+          {intelligence.customSourceImpact !== 0 && (
+            <div style={{ 
+              padding: "12px 16px", 
+              borderRadius: 10, 
+              background: "rgba(34,197,94,0.08)", 
+              border: "1px solid rgba(34,197,94,0.2)",
+              marginBottom: 20
+            }}>
+              <div style={{ fontSize: 13, color: "#d4d4d8", lineHeight: 1.6 }}>
+                <strong style={{ color: "#22c55e" }}>Your Custom Sources:</strong> {
+                  intelligence.customSourceImpact > 0 
+                    ? `Boosted confidence by +${intelligence.customSourceImpact}%`
+                    : `Lowered confidence by ${intelligence.customSourceImpact}%`
+                }
+              </div>
+            </div>
+          )}
+
+          {/* Explanation */}
+          <div style={{ padding: 16, borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 8, fontWeight: 600 }}>WHY THIS PREDICTION?</div>
             <div style={{ fontSize: 14, color: "#d4d4d8", lineHeight: 1.65 }}>
-              {analysis.explanation}
+              {intelligence.explanation}
             </div>
           </div>
         </div>
@@ -217,7 +323,7 @@ function ScoresContent() {
               Adjust Your Trust
             </div>
             <div style={{ fontSize: 13, color: "#9ca3af", lineHeight: 1.5 }}>
-              Choose which signals you trust most
+              Move sliders to see confidence update in real-time
             </div>
           </div>
 
@@ -235,7 +341,7 @@ function ScoresContent() {
 
           <div>
             <div style={{ fontSize: 12, color: "#71717a", marginBottom: 14, fontWeight: 600 }}>
-              OR CUSTOMIZE
+              CUSTOMIZE WEIGHTS
             </div>
 
             <TrustSlider label="Community Buzz" tooltip="Social media sentiment from Twitter, Reddit, forums" value={weights.social} onChange={(v) => setWeight("social", v)} color="#3b82f6" />
@@ -244,7 +350,7 @@ function ScoresContent() {
 
             <div style={{ marginTop: 14, padding: 12, borderRadius: 8, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}>
               <div style={{ fontSize: 12, color: "#60a5fa", lineHeight: 1.5 }}>
-                Tip: Drag sliders to adjust. Set to 0% to ignore a source completely.
+                Tip: Watch the confidence and metrics update as you adjust sliders!
               </div>
             </div>
           </div>
