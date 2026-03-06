@@ -41,7 +41,6 @@ function ScoresContent() {
       localStorage.setItem('lastAnalyzedEvent', event);
       
       // Mock Polymarket odds (in real app, fetch from API)
-      // For demo: generate realistic market odds
       const mockMarketOdds = Math.floor(Math.random() * 20) + 45; // 45-65%
       setMarketOdds(mockMarketOdds);
     }
@@ -148,7 +147,7 @@ function ScoresContent() {
             <button 
               onClick={() => {
                 const customSourcesCount = customSources.filter(s => !s.isDefault && s.enabled).length;
-                const shareText = `${event}\n\nPrediction: ${intelligence.direction} (${intelligence.confidence}% confidence)\nTrust Level: ${intelligence.trustLevel}\n${intelligence.marketEdge ? `AI Edge: ${intelligence.marketEdge > 0 ? '+' : ''}${intelligence.marketEdge}% vs Market` : ''}\n${customSourcesCount > 0 ? `\nAnalyzed with ${customSourcesCount} custom sources` : ''}\n\nPlayPicks AI\ntradedna.vercel.app`;
+                const shareText = `${event}\n\nPrediction: ${intelligence.direction} (${intelligence.confidence}% confidence)\nTrust Level: ${intelligence.trustLevel}\n${intelligence.marketEdge ? `AI Edge: ${intelligence.marketEdge > 0 ? '+' : ''}${intelligence.marketEdge}% vs Market` : ''}\n${customSourcesCount > 0 ? `\nWith ${customSourcesCount} custom sources` : ''}\n\nPlayPicks AI\ntradedna.vercel.app`;
                 
                 if (navigator.share) {
                   navigator.share({ text: shareText }).catch(() => {
@@ -166,7 +165,7 @@ function ScoresContent() {
               Share
             </button>
             <button onClick={() => router.push("/event")} style={{ padding: "6px 14px", borderRadius: 6, background: "rgba(147,51,234,0.12)", border: "1px solid rgba(147,51,234,0.25)", color: "#a78bfa", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-              Analyze Another Event
+              Analyze Another
             </button>
             <button onClick={() => router.push("/profile")} style={{ padding: "6px 14px", borderRadius: 6, background: "rgba(147,51,234,0.12)", border: "1px solid rgba(147,51,234,0.25)", color: "#a78bfa", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
               Profile
@@ -200,7 +199,7 @@ function ScoresContent() {
           {/* Prediction Header */}
           <div style={{ textAlign: "center", marginBottom: 24 }}>
             <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.8px" }}>
-              Our Prediction
+              AI Prediction
             </div>
 
             <div style={{ fontSize: 56, fontWeight: 900, color: intelligence.direction === "YES" ? "#22c55e" : "#ef4444", marginBottom: 10, lineHeight: 1 }}>
@@ -213,7 +212,7 @@ function ScoresContent() {
           </div>
 
           {/* Intelligence Metrics Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
             
             {/* Trust Level */}
             <div style={{ 
@@ -249,7 +248,7 @@ function ScoresContent() {
               </div>
             </div>
 
-            {/* Market Edge (if available) */}
+            {/* Market Edge */}
             {intelligence.marketEdge !== null && (
               <div style={{ 
                 padding: "14px 16px", 
@@ -257,7 +256,7 @@ function ScoresContent() {
                 background: Math.abs(intelligence.marketEdge) > 10 ? "rgba(147,51,234,0.12)" : "rgba(59,130,246,0.12)",
                 border: Math.abs(intelligence.marketEdge) > 10 ? "1px solid rgba(147,51,234,0.25)" : "1px solid rgba(59,130,246,0.25)"
               }}>
-                <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6, fontWeight: 600 }}>AI EDGE vs MARKET</div>
+                <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6, fontWeight: 600 }}>AI EDGE</div>
                 <div style={{ 
                   fontSize: 16, 
                   fontWeight: 800, 
@@ -279,10 +278,10 @@ function ScoresContent() {
               marginBottom: 20
             }}>
               <div style={{ fontSize: 13, color: "#d4d4d8", lineHeight: 1.6 }}>
-                <strong style={{ color: "#a78bfa" }}>Market Opportunity:</strong> The market prices this at {marketOdds}%, but our AI predicts {intelligence.confidence}%. 
+                <strong style={{ color: "#a78bfa" }}>Market Opportunity:</strong> Market prices this at {marketOdds}%, we predict {intelligence.confidence}%. 
                 {Math.abs(intelligence.marketEdge) > 10 
-                  ? ` That's a significant ${Math.abs(intelligence.marketEdge)}% edge${intelligence.marketEdge > 0 ? ' in favor of YES' : ' in favor of NO'}.`
-                  : ' The AI and market are closely aligned.'
+                  ? ` That's a ${Math.abs(intelligence.marketEdge)}% edge${intelligence.marketEdge > 0 ? ' favoring YES' : ' favoring NO'}.`
+                  : ' AI and market are aligned.'
                 }
               </div>
             </div>
@@ -293,12 +292,12 @@ function ScoresContent() {
             <div style={{ 
               padding: "12px 16px", 
               borderRadius: 10, 
-              background: "rgba(34,197,94,0.08)", 
-              border: "1px solid rgba(34,197,94,0.2)",
+              background: intelligence.customSourceImpact > 0 ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)", 
+              border: intelligence.customSourceImpact > 0 ? "1px solid rgba(34,197,94,0.2)" : "1px solid rgba(239,68,68,0.2)",
               marginBottom: 20
             }}>
               <div style={{ fontSize: 13, color: "#d4d4d8", lineHeight: 1.6 }}>
-                <strong style={{ color: "#22c55e" }}>Your Custom Sources:</strong> {
+                <strong style={{ color: intelligence.customSourceImpact > 0 ? "#22c55e" : "#ef4444" }}>Your Custom Sources:</strong> {
                   intelligence.customSourceImpact > 0 
                     ? `Boosted confidence by +${intelligence.customSourceImpact}%`
                     : `Lowered confidence by ${intelligence.customSourceImpact}%`
@@ -350,7 +349,7 @@ function ScoresContent() {
 
             <div style={{ marginTop: 14, padding: 12, borderRadius: 8, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}>
               <div style={{ fontSize: 12, color: "#60a5fa", lineHeight: 1.5 }}>
-                Tip: Watch the confidence and metrics update as you adjust sliders!
+                Tip: Watch confidence and metrics update as you adjust!
               </div>
             </div>
           </div>
@@ -404,7 +403,7 @@ function TrustSlider({ label, tooltip, value, onChange, color }: { label: string
         </div>
       )}
 
-      <input type="range" min={0} max={100} step={5} value={value} onChange={(e) => onChange(Number(e.target.value))} style={{ width: "100%", height: 8, borderRadius: 4, background: `linear-gradient(to right, ${color} 0%, ${color} ${value}%, rgba(255,255,255,0.08) ${value}%, rgba(255,255,255,0.08) 100%)`, cursor: "pointer", WebkitAppearance: "none", appearance: "none" }} />
+      <input type="range" min={0} max={100} step={1} value={value} onChange={(e) => onChange(Number(e.target.value))} style={{ width: "100%", height: 8, borderRadius: 4, background: `linear-gradient(to right, ${color} 0%, ${color} ${value}%, rgba(255,255,255,0.08) ${value}%, rgba(255,255,255,0.08) 100%)`, cursor: "pointer", WebkitAppearance: "none", appearance: "none" }} />
     </div>
   );
 }
