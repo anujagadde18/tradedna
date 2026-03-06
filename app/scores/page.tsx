@@ -120,7 +120,6 @@ function ScoresContent() {
   return (
     <main style={{ minHeight: "100vh", background: "#0f1419", color: "#fff" }}>
       <div style={{ maxWidth: 760, margin: "0 auto", padding: "20px 16px" }}>
-        {/* Header */}
         <div
           style={{
             display: "flex",
@@ -142,7 +141,7 @@ function ScoresContent() {
               gap: 6
             }}
           >
-            ← Back
+            Back
           </a>
           <button
             onClick={() => router.push("/profile")}
@@ -161,7 +160,6 @@ function ScoresContent() {
           </button>
         </div>
 
-        {/* Event Title */}
         <div style={{ marginBottom: 28 }}>
           <div
             style={{
@@ -189,7 +187,6 @@ function ScoresContent() {
           </h1>
         </div>
 
-        {/* Active Sources Breakdown */}
         <ActiveSourcesBreakdown
           sources={customSources}
           categoryWeights={{
@@ -199,7 +196,6 @@ function ScoresContent() {
           }}
         />
 
-        {/* Main Result */}
         <div
           style={{
             marginBottom: 28,
@@ -238,7 +234,6 @@ function ScoresContent() {
             {confidence}% Confidence
           </div>
 
-          {/* Reliability */}
           <div style={{ marginBottom: 18 }}>
             <div
               style={{
@@ -271,7 +266,7 @@ function ScoresContent() {
                       : "#ef4444"
                 }}
               >
-                {reliability.level} Trust Level • {reliability.score}%
+                {reliability.level} Trust Level - {reliability.score}%
               </div>
             </div>
 
@@ -288,8 +283,7 @@ function ScoresContent() {
                   gap: 6
                 }}
               >
-                <span>❓</span>
-                <span style={{ textDecoration: "underline" }}>What does this mean?</span>
+                <span>What does this mean?</span>
               </summary>
 
               <div
@@ -314,7 +308,6 @@ function ScoresContent() {
             </details>
           </div>
 
-          {/* Explanation */}
           <div
             style={{
               padding: 16,
@@ -330,7 +323,6 @@ function ScoresContent() {
           </div>
         </div>
 
-        {/* Trust Settings */}
         <div
           style={{
             marginBottom: 28,
@@ -349,7 +341,6 @@ function ScoresContent() {
             </div>
           </div>
 
-          {/* Quick Presets */}
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontSize: 12, color: "#71717a", marginBottom: 12, fontWeight: 600 }}>
               QUICK PRESETS
@@ -382,14 +373,13 @@ function ScoresContent() {
             </div>
           </div>
 
-          {/* Custom Sliders */}
           <div>
             <div style={{ fontSize: 12, color: "#71717a", marginBottom: 14, fontWeight: 600 }}>
               OR CUSTOMIZE
             </div>
 
             <TrustSlider
-              label="🗣️ Community Buzz"
+              label="Community Buzz"
               tooltip="Social media sentiment from Twitter, Reddit, forums"
               value={weights.social}
               onChange={(v) => setWeight("social", v)}
@@ -397,7 +387,7 @@ function ScoresContent() {
             />
 
             <TrustSlider
-              label="📰 News Headlines"
+              label="News Headlines"
               tooltip="Journalist reports from major news outlets"
               value={weights.news}
               onChange={(v) => setWeight("news", v)}
@@ -405,7 +395,7 @@ function ScoresContent() {
             />
 
             <TrustSlider
-              label="📊 Market Data"
+              label="Market Data"
               tooltip="Price charts and technical indicators"
               value={weights.technical}
               onChange={(v) => setWeight("technical", v)}
@@ -422,13 +412,12 @@ function ScoresContent() {
               }}
             >
               <div style={{ fontSize: 12, color: "#60a5fa", lineHeight: 1.5 }}>
-                💡 Tip: Drag sliders to adjust. Set to 0% to ignore a source completely.
+                Tip: Drag sliders to adjust. Set to 0% to ignore a source completely.
               </div>
             </div>
           </div>
         </div>
 
-        {/* Show Advanced Toggle */}
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
           style={{
@@ -451,10 +440,8 @@ function ScoresContent() {
           <span>{showAdvanced ? "▲" : "▼"}</span>
         </button>
 
-        {/* Advanced Section */}
         {showAdvanced && (
           <div style={{ marginBottom: 28 }}>
-            {/* Component Scores */}
             <div style={{ marginBottom: 20 }}>
               <div
                 style={{
@@ -481,7 +468,6 @@ function ScoresContent() {
               </div>
             </div>
 
-            {/* Technical Stats */}
             <div
               style={{
                 padding: 18,
@@ -511,7 +497,6 @@ function ScoresContent() {
               </div>
             </div>
 
-            {/* Evidence Sources */}
             <div>
               <div
                 style={{
@@ -526,7 +511,6 @@ function ScoresContent() {
                 Data Sources
               </div>
 
-              {/* News Sources */}
               {newsData && !newsData.error && newsData.totalCount > 0 && (
                 <div
                   style={{
@@ -575,7 +559,6 @@ function ScoresContent() {
                 </div>
               )}
 
-              {/* Social Sources */}
               {socialData && !socialData.error && socialData.estimatedVolume > 0 && (
                 <div
                   style={{
@@ -606,15 +589,14 @@ function ScoresContent() {
                     }}
                   >
                     {socialData.sentiment.positive > 50
-                      ? `→ Positive sentiment supports ${direction} prediction`
-                      : `→ Negative sentiment conflicts with ${direction} prediction`}
+                      ? `Positive sentiment supports ${direction} prediction`
+                      : `Negative sentiment conflicts with ${direction} prediction`}
                   </div>
 
                   <div style={{ fontSize: 11, color: "#71717a" }}>From Twitter, Reddit, forums</div>
                 </div>
               )}
 
-              {/* Technical Sources */}
               <div
                 style={{
                   padding: 16,
@@ -707,7 +689,6 @@ function ScoresContent() {
                 </div>
               </div>
 
-              {/* Warning if no real data */}
               {(!newsData || newsData.error) && (!socialData || socialData.error) && (
                 <div
                   style={{
@@ -718,7 +699,7 @@ function ScoresContent() {
                   }}
                 >
                   <div style={{ fontSize: 12, color: "#fb923c", lineHeight: 1.6 }}>
-                    ⚠️ Real-time data unavailable. Using baseline analysis.
+                    Real-time data unavailable. Using baseline analysis.
                   </div>
                 </div>
               )}
@@ -726,7 +707,6 @@ function ScoresContent() {
           </div>
         )}
 
-        {/* Share Buttons */}
         <div
           style={{
             marginBottom: 16,
@@ -737,20 +717,20 @@ function ScoresContent() {
           }}
         >
           <div style={{ fontSize: 14, fontWeight: 700, color: "#e4e4e7", marginBottom: 14 }}>
-            📤 Share Your Analysis
+            Share Your Analysis
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }}>
             <ShareButton
               label="Share on X"
-              icon="𝕏"
+              icon="X"
               onClick={() => {
-                const text = `🎯 PlayPicks Analysis: ${analysis.event}
+                const text = `PlayPicks Analysis: ${analysis.event}
 
 ${direction} (${confidence}%)
 Trust Level: ${reliability.level} (${reliability.score}%)
 
-Built with transparent AI → https://tradedna.vercel.app`;
+Built with transparent AI - https://tradedna.vercel.app`;
                 window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, "_blank");
                 track("share_twitter", { event });
               }}
@@ -758,7 +738,7 @@ Built with transparent AI → https://tradedna.vercel.app`;
 
             <ShareButton
               label="Copy Analysis"
-              icon="📋"
+              icon="Copy"
               onClick={() => {
                 const text = `PlayPicks AI Analysis
 ${analysis.event}
@@ -777,7 +757,7 @@ Analyzed at: https://tradedna.vercel.app`;
 
             <ShareButton
               label="Copy Link"
-              icon="🔗"
+              icon="Link"
               onClick={() => {
                 const url = `https://tradedna.vercel.app/scores?event=${encodeURIComponent(event)}`;
                 navigator.clipboard.writeText(url);
@@ -792,7 +772,6 @@ Analyzed at: https://tradedna.vercel.app`;
           </div>
         </div>
 
-        {/* Action Button */}
         
           href={polymarketUrl}
           target="_blank"
@@ -813,10 +792,9 @@ Analyzed at: https://tradedna.vercel.app`;
             boxShadow: "0 4px 14px rgba(147,51,234,0.4)"
           }}
         >
-          Trade on Polymarket →
+          Trade on Polymarket
         </a>
 
-        {/* Footer */}
         <div
           style={{
             fontSize: 12,
@@ -828,7 +806,7 @@ Analyzed at: https://tradedna.vercel.app`;
         >
           Analysis saved to your profile
           <br />
-          Not financial advice • Do your own research
+          Not financial advice - Do your own research
         </div>
       </div>
     </main>
@@ -1074,7 +1052,6 @@ function ShareButton({
         e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
       }}
     >
-      <span style={{ fontSize: 16 }}>{icon}</span>
       <span>{label}</span>
     </button>
   );
