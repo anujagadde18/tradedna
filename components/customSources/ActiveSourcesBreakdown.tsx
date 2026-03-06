@@ -49,8 +49,7 @@ export function ActiveSourcesBreakdown({ sources, categoryWeights }: ActiveSourc
               : `Using ${enabledSources.length} default sources`
             }
           </div>
-        </div>
-        
+        </div>  
           href="/sources"
           style={{
             padding: "8px 14px",
