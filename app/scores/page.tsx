@@ -36,6 +36,12 @@ function ScoresContent() {
   }, []);
 
   useEffect(() => {
+    if (event && event !== "Unknown Event") {
+      localStorage.setItem('lastAnalyzedEvent', event);
+    }
+  }, [event]);
+
+  useEffect(() => {
     if (event === "Unknown Event") return;
     track("analyze_started", { event });
 
