@@ -1,5 +1,6 @@
 // lib/customSources/curatedSources.ts
-import { CustomSource, CuratedSource } from "./types";
+   // Updated to fix import error
+   import { CustomSource, CuratedSource } from "./types";
 
 export const CURATED_SOURCES: Record<string, CuratedSource[]> = {
   news: [
