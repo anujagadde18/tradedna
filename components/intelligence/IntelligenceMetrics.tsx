@@ -30,11 +30,11 @@ export function IntelligenceMetricsDisplay({ intelligence, marketOdds }: Intelli
       {/* Intelligence Metrics Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 20 }}>
         
-        {/* Trust Level */}
+        {/* Prediction Strength */}
         <MetricCard
-          label="TRUST LEVEL"
-          value={intelligence.trustLevel}
-          color={intelligence.trustScore >= 70 ? "green" : intelligence.trustScore >= 60 ? "orange" : "red"}
+          label="PREDICTION STRENGTH"
+          value={intelligence.predictionStrength}
+          color={intelligence.strengthScore >= 70 ? "green" : intelligence.strengthScore >= 60 ? "orange" : "red"}
         />
 
         {/* Risk Level */}
@@ -148,3 +148,12 @@ function MetricCard({ label, value, color }: { label: string; value: string; col
     </div>
   );
 }
+```
+
+---
+
+## 🚀 **RECOMMENDED: Just delete the file**
+
+Since we're not using it in the new layout, simply delete:
+```
+components/intelligence/IntelligenceMetrics.tsx
