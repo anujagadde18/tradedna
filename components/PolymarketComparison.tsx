@@ -7,6 +7,15 @@ interface Props {
   aiPrediction: number;
 }
 
+// Extract Polymarket slug from URL if present
+function extractPolymarketSlug(text: string): string | null {
+  // Match patterns like:
+  // https://polymarket.com/event/uefa-champions-league-winner
+  // polymarket.com/event/some-event-name
+  const match = text.match(/polymarket\.com\/event\/([a-z0-9-]+)/i);
+  return match ? match[1] : null;
+}
+
 export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
   const [polymarketData, setPolymarketData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -21,9 +30,26 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
       setError(null);
       
       try {
-        const response = await fetch(
-          `/api/polymarket?endpoint=markets&query=${encodeURIComponent(userQuestion)}&limit=10`
-        );
+        // Check if user provided a direct Polymarket URL
+        const slug = extractPolymarketSlug(userQuestion);
+        
+        let endpoint = '/api/polymarket';
+        let params = new URLSearchParams();
+        
+        if (slug) {
+          // DIRECT FETCH by slug (more reliable!)
+          console.log('Fetching Polymarket event by slug:', slug);
+          params.append('endpoint', 'events');
+          params.append('slug', slug);
+        } else {
+          // SEARCH by query (fallback)
+          console.log('Searching Polymarket for:', userQuestion);
+          params.append('endpoint', 'markets');
+          params.append('query', userQuestion);
+          params.append('limit', '10');
+        }
+        
+        const response = await fetch(`${endpoint}?${params.toString()}`);
         
         if (!response.ok) {
           setError('Failed to fetch Polymarket data');
@@ -32,17 +58,31 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
         }
         
         const data = await response.json();
-        console.log('Polymarket raw response:', data);
+        console.log('Polymarket response:', data);
         
-        if (!Array.isArray(data) || data.length === 0) {
+        // Handle different response formats
+        let markets = [];
+        if (Array.isArray(data)) {
+          markets = data;
+        } else if (data.markets && Array.isArray(data.markets)) {
+          markets = data.markets;
+        } else if (data.event && data.event.markets) {
+          // Single event response
+          markets = data.event.markets;
+        }
+        
+        if (markets.length === 0) {
           setError('No matching markets found');
           setLoading(false);
           return;
         }
         
-        // FILTER OUT CLOSED MARKETS - only use active ones
-        const activeMarkets = data.filter(m => m.active === true && m.closed === false);
-        console.log('Active markets:', activeMarkets.length, 'out of', data.length);
+        // Filter for active markets
+        const activeMarkets = markets.filter((m: any) => 
+          m.active === true && m.closed === false
+        );
+        
+        console.log('Active markets found:', activeMarkets.length);
         
         if (activeMarkets.length === 0) {
           setError('No active markets found (all are closed)');
@@ -51,9 +91,9 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
         }
         
         const market = activeMarkets[0];
-        console.log('Selected market:', market.question);
+        console.log('Using market:', market.question);
         
-        // FIX: Parse stringified JSON arrays
+        // Parse stringified JSON
         let outcomes, outcomePrices;
         
         try {
@@ -71,25 +111,36 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
           return;
         }
         
-        console.log('Parsed outcomes:', outcomes);
-        console.log('Parsed prices:', outcomePrices);
+        console.log('Outcomes:', outcomes);
+        console.log('Prices:', outcomePrices);
         
-        if (!Array.isArray(outcomes) || !Array.isArray(outcomePrices) || outcomes.length === 0) {
+        if (!Array.isArray(outcomes) || !Array.isArray(outcomePrices)) {
           setError('Invalid market structure');
           setLoading(false);
           return;
         }
         
-        // Check if multi-outcome (more than 2 options)
-        const isMulti = outcomes.length > 2;
+        // Filter out zero-probability outcomes
+        const validOutcomes = outcomes.map((name: string, idx: number) => ({
+          name,
+          price: parseFloat(outcomePrices[idx])
+        })).filter(o => o.price > 0);
+        
+        if (validOutcomes.length === 0) {
+          setError('No valid outcomes found');
+          setLoading(false);
+          return;
+        }
+        
+        // Check if multi-outcome
+        const isMulti = validOutcomes.length > 2;
         setIsMultiOutcome(isMulti);
         
         if (isMulti) {
-          // MULTI-OUTCOME MARKET
-          const outcomesList = outcomes.map((name: string, idx: number) => ({
-            name,
-            probability: Math.round(parseFloat(outcomePrices[idx]) * 100),
-            priceRaw: outcomePrices[idx]
+          // Multi-outcome market
+          const outcomesList = validOutcomes.map((o: any) => ({
+            name: o.name,
+            probability: Math.round(o.price * 100)
           })).sort((a: any, b: any) => b.probability - a.probability);
           
           setAllOutcomes(outcomesList);
@@ -101,8 +152,7 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
           setComparison({
             aiPrediction,
             marketOdds,
-            divergence,
-            agreement: divergence <= 15 ? 'moderate' : 'weak'
+            divergence
           });
           
           setPolymarketData({
@@ -110,27 +160,30 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
             marketOdds,
             volume: market.volume,
             topOutcome: topOutcome.name,
-            url: `https://polymarket.com/event/${market.slug}`
+            url: slug 
+              ? `https://polymarket.com/event/${slug}`
+              : `https://polymarket.com/event/${market.slug}`
           });
           
         } else {
-          // BINARY MARKET (YES/NO)
-          const yesPrice = outcomePrices[0];
-          const marketOdds = Math.round(parseFloat(yesPrice) * 100);
+          // Binary market
+          const yesPrice = validOutcomes[0].price;
+          const marketOdds = Math.round(yesPrice * 100);
           const divergence = Math.abs(aiPrediction - marketOdds);
           
           setComparison({
             aiPrediction,
             marketOdds,
-            divergence,
-            agreement: divergence <= 15 ? 'moderate' : 'weak'
+            divergence
           });
           
           setPolymarketData({
             question: market.question,
             marketOdds,
             volume: market.volume,
-            url: `https://polymarket.com/event/${market.slug}`
+            url: slug 
+              ? `https://polymarket.com/event/${slug}`
+              : `https://polymarket.com/event/${market.slug}`
           });
         }
         
@@ -164,6 +217,9 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
         </div>
         <div className="text-xs text-gray-500 mb-3">
           {error || 'No matching market found'}
+        </div>
+        <div className="text-xs text-gray-400 mb-3">
+          💡 <strong>Tip:</strong> Paste the full Polymarket event URL for accurate comparison
         </div>
         <a 
           href={`https://polymarket.com/search?q=${encodeURIComponent(userQuestion)}`}
