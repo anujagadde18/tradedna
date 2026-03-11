@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { searchPolymarketMarkets, compareWithPolymarket } from '@/lib/polymarket-integration';
+import { searchPolymarketMarkets, compareWithPolymarket, getTopOutcome } from '@/lib/polymarket-integration';
 
 interface Props {
   userQuestion: string;
@@ -13,6 +13,8 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
   const [loading, setLoading] = useState(true);
   const [comparison, setComparison] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isMultiOutcome, setIsMultiOutcome] = useState(false);
+  const [allOutcomes, setAllOutcomes] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadData() {
@@ -22,7 +24,7 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
       try {
         const markets = await searchPolymarketMarkets(userQuestion);
         
-        console.log('Polymarket search results:', markets); // DEBUG
+        console.log('Polymarket search results:', markets);
         
         if (!markets || markets.length === 0) {
           setError('No matching Polymarket market found');
@@ -31,42 +33,77 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
         }
         
         const market = markets[0];
-        console.log('Selected market:', market); // DEBUG
+        console.log('Selected market:', market);
         
-        // FIXED: Better validation of market data
+        // Validate market has outcomes
         if (!market.outcomePrices || !Array.isArray(market.outcomePrices) || market.outcomePrices.length === 0) {
           setError('Invalid market data format');
           setLoading(false);
           return;
         }
-        
-        const yesPrice = market.outcomePrices[0];
-        console.log('YES price:', yesPrice); // DEBUG
-        
-        // FIXED: Validate price is a valid number
-        if (!yesPrice || isNaN(parseFloat(yesPrice))) {
-          setError('Invalid price data');
-          setLoading(false);
-          return;
+
+        // Check if multi-outcome market (more than 2 outcomes)
+        const isMulti = market.outcomePrices.length > 2;
+        setIsMultiOutcome(isMulti);
+
+        if (isMulti) {
+          // MULTI-OUTCOME MARKET (e.g., UEFA Champions League Winner)
+          console.log('Multi-outcome market detected');
+          
+          // Get all outcomes with their probabilities
+          const outcomes = market.outcomes.map((name: string, idx: number) => ({
+            name,
+            probability: parseFloat(market.outcomePrices[idx]) * 100,
+            priceRaw: market.outcomePrices[idx]
+          })).sort((a: any, b: any) => b.probability - a.probability); // Sort by highest probability
+          
+          setAllOutcomes(outcomes);
+          
+          // Use the TOP outcome for comparison
+          const topOutcome = outcomes[0];
+          const topPrice = market.outcomePrices[market.outcomes.indexOf(topOutcome.name)];
+          
+          console.log('Top outcome:', topOutcome.name, topPrice);
+          
+          const comp = compareWithPolymarket(aiPrediction, topPrice);
+          
+          setComparison(comp);
+          setPolymarketData({
+            question: market.question,
+            marketOdds: comp.marketOdds,
+            volume: market.volume,
+            topOutcome: topOutcome.name,
+            url: `https://polymarket.com/event/${market.slug || market.id}`
+          });
+          
+        } else {
+          // BINARY MARKET (YES/NO)
+          console.log('Binary market detected');
+          
+          const yesPrice = market.outcomePrices[0];
+          
+          if (!yesPrice || isNaN(parseFloat(yesPrice))) {
+            setError('Invalid price data');
+            setLoading(false);
+            return;
+          }
+          
+          const comp = compareWithPolymarket(aiPrediction, yesPrice);
+          
+          if (isNaN(comp.marketOdds) || isNaN(comp.divergence)) {
+            setError('Failed to calculate comparison');
+            setLoading(false);
+            return;
+          }
+          
+          setComparison(comp);
+          setPolymarketData({
+            question: market.question,
+            marketOdds: comp.marketOdds,
+            volume: market.volume,
+            url: `https://polymarket.com/event/${market.slug || market.id}`
+          });
         }
-        
-        const comp = compareWithPolymarket(aiPrediction, yesPrice);
-        console.log('Comparison:', comp); // DEBUG
-        
-        // FIXED: Validate comparison results
-        if (isNaN(comp.marketOdds) || isNaN(comp.divergence)) {
-          setError('Failed to calculate comparison');
-          setLoading(false);
-          return;
-        }
-        
-        setComparison(comp);
-        setPolymarketData({
-          question: market.question,
-          marketOdds: comp.marketOdds,
-          volume: market.volume,
-          url: `https://polymarket.com/event/${market.slug || market.id}`
-        });
         
       } catch (error) {
         console.error('Error loading Polymarket:', error);
@@ -79,7 +116,6 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
     loadData();
   }, [userQuestion, aiPrediction]);
 
-  // LOADING STATE
   if (loading) {
     return (
       <div className="border border-purple-500/20 rounded-lg p-6 bg-black/40">
@@ -91,7 +127,6 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
     );
   }
 
-  // ERROR STATE - Show helpful message
   if (error || !polymarketData || !comparison) {
     return (
       <div className="border border-gray-700 rounded-lg p-6 bg-black/40">
@@ -113,7 +148,6 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
     );
   }
 
-  // FIXED: Additional validation before rendering
   if (isNaN(comparison.marketOdds) || isNaN(comparison.divergence)) {
     return (
       <div className="border border-gray-700 rounded-lg p-6 bg-black/40">
@@ -150,6 +184,13 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
         </a>
       </div>
 
+      {/* MULTI-OUTCOME: Show top outcome name */}
+      {isMultiOutcome && polymarketData.topOutcome && (
+        <div className="mb-4 text-xs text-gray-400">
+          Comparing to leading outcome: <span className="text-purple-300 font-semibold">{polymarketData.topOutcome}</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-500/20">
           <div className="text-xs text-purple-300 mb-2">PlayPicks AI</div>
@@ -158,11 +199,35 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
         </div>
 
         <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-500/20">
-          <div className="text-xs text-blue-300 mb-2">Polymarket Odds</div>
+          <div className="text-xs text-blue-300 mb-2">
+            {isMultiOutcome ? 'Market Leader' : 'Polymarket Odds'}
+          </div>
           <div className="text-3xl font-bold text-white">{comparison.marketOdds}%</div>
-          <div className="text-xs text-gray-400 mt-2">Market probability</div>
+          <div className="text-xs text-gray-400 mt-2">
+            {isMultiOutcome ? polymarketData.topOutcome : 'Market probability'}
+          </div>
         </div>
       </div>
+
+      {/* MULTI-OUTCOME: Show all outcomes */}
+      {isMultiOutcome && allOutcomes.length > 0 && (
+        <div className="mb-6 bg-black/30 rounded-lg p-4 border border-gray-700">
+          <div className="text-xs text-gray-400 mb-3 font-semibold">ALL OUTCOMES</div>
+          <div className="space-y-2">
+            {allOutcomes.slice(0, 5).map((outcome, idx) => (
+              <div key={idx} className="flex items-center justify-between">
+                <span className="text-xs text-gray-300">{outcome.name}</span>
+                <span className="text-sm font-bold text-white">{Math.round(outcome.probability)}%</span>
+              </div>
+            ))}
+            {allOutcomes.length > 5 && (
+              <div className="text-xs text-gray-500 mt-2">
+                +{allOutcomes.length - 5} more options
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="bg-black/40 rounded-lg p-4 border border-gray-700">
         <div className="flex items-center justify-between mb-3">
@@ -174,9 +239,9 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
 
         <div className="text-xs text-gray-400">
           {aiHigher ? (
-            <p>💡 Your AI model is {comparison.divergence}% more bullish than the market.</p>
+            <p>💡 Your AI model is {comparison.divergence}% more bullish than the {isMultiOutcome ? 'leading outcome' : 'market'}.</p>
           ) : (
-            <p>💡 The market is {comparison.divergence}% more bullish than your AI.</p>
+            <p>💡 The {isMultiOutcome ? 'leading outcome' : 'market'} is {comparison.divergence}% more bullish than your AI.</p>
           )}
         </div>
       </div>
