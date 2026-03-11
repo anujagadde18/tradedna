@@ -9,14 +9,12 @@ interface Props {
 
 // Parse Polymarket URL to extract event slug and optional market slug
 function parsePolymarketURL(text: string): { eventSlug: string; marketSlug?: string } | null {
-  // Match: polymarket.com/event/EVENT-SLUG or
-  //        polymarket.com/event/EVENT-SLUG/MARKET-SLUG
   const match = text.match(/polymarket\.com\/event\/([a-z0-9-]+)(?:\/([a-z0-9-]+))?/i);
   
   if (match) {
     return {
       eventSlug: match[1],
-      marketSlug: match[2] // Optional - specific market within the event
+      marketSlug: match[2]
     };
   }
   
@@ -40,23 +38,42 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
         const urlParse = parsePolymarketURL(userQuestion);
         
         if (urlParse) {
-          // DIRECT URL - Use official slug endpoint (NO SEARCH!)
-          console.log('Fetching Polymarket event by slug:', urlParse.eventSlug);
+          // DIRECT URL - Fetch by slug using our proxy
+          console.log('Fetching event by slug:', urlParse.eventSlug);
           
-          // Use official endpoint: /events/slug/{slug}
+          // Use our API proxy route
           const response = await fetch(
-            `https://gamma-api.polymarket.com/events/slug/${urlParse.eventSlug}`
+            `/api/polymarket?endpoint=events&slug=${urlParse.eventSlug}`
           );
           
           if (!response.ok) {
-            console.error('Failed to fetch event:', response.status);
+            const errorText = await response.text();
+            console.error('API error:', response.status, errorText);
             setError('Event not found on Polymarket');
             setLoading(false);
             return;
           }
           
-          const event = await response.json();
-          console.log('Event data:', event);
+          const data = await response.json();
+          console.log('API response:', data);
+          
+          // Handle response format - could be single event or array
+          let event;
+          if (Array.isArray(data)) {
+            event = data[0];
+          } else if (data.event) {
+            event = data.event;
+          } else {
+            event = data;
+          }
+          
+          console.log('Event:', event);
+          
+          if (!event) {
+            setError('Event not found');
+            setLoading(false);
+            return;
+          }
           
           // Extract markets from event
           const markets = event.markets || [];
@@ -71,61 +88,57 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
           let targetMarket;
           
           if (urlParse.marketSlug) {
-            // SPECIFIC MARKET REQUESTED (e.g., "will-kevin-wilson...")
-            console.log('Looking for specific market:', urlParse.marketSlug);
+            // SPECIFIC MARKET REQUESTED
+            console.log('Looking for market:', urlParse.marketSlug);
             
-            // Find market that matches the market slug
             targetMarket = markets.find((m: any) => 
               m.slug === urlParse.marketSlug ||
+              m.slug?.includes(urlParse.marketSlug) ||
               m.conditionId === urlParse.marketSlug
             );
             
             if (!targetMarket) {
-              console.warn('Specific market not found, using first market');
+              console.warn('Specific market not found, using first');
               targetMarket = markets[0];
             } else {
-              console.log('Found exact market match:', targetMarket.question);
+              console.log('Found market:', targetMarket.question);
             }
           } else {
-            // NO SPECIFIC MARKET - Use first/primary market
+            // Use first market
             targetMarket = markets[0];
-            console.log('Using primary market:', targetMarket.question);
           }
           
-          // Process the target market
           await processMarket(targetMarket, event);
           
         } else {
-          // TEXT QUERY - Search for matching market
-          console.log('Text query, searching Polymarket:', userQuestion);
+          // TEXT QUERY - Search
+          console.log('Searching for:', userQuestion);
           
           const response = await fetch(
-            `https://gamma-api.polymarket.com/events?` + 
+            `/api/polymarket?endpoint=events&` + 
             new URLSearchParams({
               active: 'true',
               closed: 'false',
-              limit: '10',
+              limit: '5',
               order: 'volume_24hr'
             })
           );
           
           if (!response.ok) {
-            setError('Failed to search Polymarket');
+            setError('Search failed');
             setLoading(false);
             return;
           }
           
           const events = await response.json();
-          console.log('Search results:', events.length, 'events');
+          console.log('Search results:', events);
           
-          if (events.length === 0) {
+          if (!events || events.length === 0) {
             setError('No active markets found');
             setLoading(false);
             return;
           }
           
-          // For text queries, use the first active market
-          // (In production, you'd implement better search matching here)
           const firstEvent = events[0];
           const firstMarket = firstEvent.markets?.[0];
           
@@ -139,16 +152,16 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
         }
         
       } catch (error: any) {
-        console.error('Error loading Polymarket:', error);
-        setError('Failed to load Polymarket data');
+        console.error('Error:', error);
+        setError('Failed to load: ' + error.message);
       } finally {
         setLoading(false);
       }
     }
     
     async function processMarket(market: any, event: any) {
-      console.log('Processing market:', market.question);
-      setMatchedMarket(market.question || 'Unknown market');
+      console.log('Processing:', market.question);
+      setMatchedMarket(market.question || 'Unknown');
       
       // Parse outcomes
       let outcomes: string[];
@@ -164,41 +177,31 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
           : market.outcomePrices || [];
       } catch (e) {
         console.error('Parse error:', e);
-        setError('Invalid market format');
+        setError('Invalid format');
         return;
       }
       
       console.log('Outcomes:', outcomes);
       console.log('Prices:', outcomePrices);
       
-      if (!outcomes || outcomes.length === 0) {
-        setError('No outcomes in market');
-        return;
-      }
-      
-      // Calculate market odds
+      // Calculate odds
       let marketOdds: number;
       
-      if (outcomes.length === 2 && outcomePrices && outcomePrices.length === 2) {
-        // BINARY MARKET (Yes/No, Up/Down)
-        // Use first outcome price (YES/UP)
-        const yesPrice = parseFloat(outcomePrices[0] || '0');
-        marketOdds = Math.round(yesPrice * 100);
-        console.log('Binary market - YES probability:', marketOdds + '%');
-        
-      } else if (outcomePrices && outcomePrices.length > 0) {
-        // MULTI-OUTCOME MARKET
-        // Use highest probability
-        const prices = outcomePrices.map((p: string) => parseFloat(p || '0'));
-        const maxPrice = Math.max(...prices);
-        marketOdds = Math.round(maxPrice * 100);
-        console.log('Multi-outcome market - top probability:', marketOdds + '%');
-        
+      if (outcomePrices && outcomePrices.length > 0) {
+        if (outcomePrices.length === 2) {
+          // Binary
+          marketOdds = Math.round(parseFloat(outcomePrices[0] || '0') * 100);
+        } else {
+          // Multi-outcome - use max
+          const prices = outcomePrices.map((p: string) => parseFloat(p || '0'));
+          marketOdds = Math.round(Math.max(...prices) * 100);
+        }
       } else {
-        // Fallback to market metadata if available
+        // Fallback
         marketOdds = market.bestBid ? Math.round(market.bestBid * 100) : 50;
-        console.log('Using fallback price:', marketOdds + '%');
       }
+      
+      console.log('Market odds:', marketOdds + '%');
       
       const divergence = Math.abs(aiPrediction - marketOdds);
       
@@ -207,7 +210,7 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
         question: market.question,
         marketOdds,
         volume: event.volume || market.volume,
-        url: `https://polymarket.com/event/${event.slug || market.slug || ''}`
+        url: `https://polymarket.com/event/${event.slug || market.slug}`
       });
     }
     
@@ -232,11 +235,11 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
           💡 <strong>Polymarket Comparison</strong>
         </div>
         <div className="text-xs text-gray-500 mb-3">
-          {error || 'No matching market found'}
+          {error || 'No market found'}
         </div>
         {matchedMarket && (
           <div className="text-xs text-gray-400 mb-3">
-            Attempted: <span className="text-purple-300">{matchedMarket}</span>
+            Found: <span className="text-purple-300">{matchedMarket}</span>
           </div>
         )}
         <a 
