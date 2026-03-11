@@ -12,28 +12,65 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
   const [polymarketData, setPolymarketData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [comparison, setComparison] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
       setLoading(true);
+      setError(null);
+      
       try {
         const markets = await searchPolymarketMarkets(userQuestion);
         
-        if (markets.length > 0) {
-          const market = markets[0];
-          const yesPrice = market.outcomePrices[0];
-          const comp = compareWithPolymarket(aiPrediction, yesPrice);
-          
-          setComparison(comp);
-          setPolymarketData({
-            question: market.question,
-            marketOdds: comp.marketOdds,
-            volume: market.volume,
-            url: `https://polymarket.com/event/${market.slug || market.id}`
-          });
+        console.log('Polymarket search results:', markets); // DEBUG
+        
+        if (!markets || markets.length === 0) {
+          setError('No matching Polymarket market found');
+          setLoading(false);
+          return;
         }
+        
+        const market = markets[0];
+        console.log('Selected market:', market); // DEBUG
+        
+        // FIXED: Better validation of market data
+        if (!market.outcomePrices || !Array.isArray(market.outcomePrices) || market.outcomePrices.length === 0) {
+          setError('Invalid market data format');
+          setLoading(false);
+          return;
+        }
+        
+        const yesPrice = market.outcomePrices[0];
+        console.log('YES price:', yesPrice); // DEBUG
+        
+        // FIXED: Validate price is a valid number
+        if (!yesPrice || isNaN(parseFloat(yesPrice))) {
+          setError('Invalid price data');
+          setLoading(false);
+          return;
+        }
+        
+        const comp = compareWithPolymarket(aiPrediction, yesPrice);
+        console.log('Comparison:', comp); // DEBUG
+        
+        // FIXED: Validate comparison results
+        if (isNaN(comp.marketOdds) || isNaN(comp.divergence)) {
+          setError('Failed to calculate comparison');
+          setLoading(false);
+          return;
+        }
+        
+        setComparison(comp);
+        setPolymarketData({
+          question: market.question,
+          marketOdds: comp.marketOdds,
+          volume: market.volume,
+          url: `https://polymarket.com/event/${market.slug || market.id}`
+        });
+        
       } catch (error) {
         console.error('Error loading Polymarket:', error);
+        setError('Failed to load Polymarket data');
       } finally {
         setLoading(false);
       }
@@ -42,6 +79,7 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
     loadData();
   }, [userQuestion, aiPrediction]);
 
+  // LOADING STATE
   if (loading) {
     return (
       <div className="border border-purple-500/20 rounded-lg p-6 bg-black/40">
@@ -53,8 +91,37 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
     );
   }
 
-  if (!polymarketData || !comparison) {
-    return null;
+  // ERROR STATE - Show helpful message
+  if (error || !polymarketData || !comparison) {
+    return (
+      <div className="border border-gray-700 rounded-lg p-6 bg-black/40">
+        <div className="text-sm text-gray-400 mb-2">
+          💡 <strong>Polymarket Comparison</strong>
+        </div>
+        <div className="text-xs text-gray-500">
+          {error || 'No matching market found on Polymarket for this event.'}
+        </div>
+        <a 
+          href={`https://polymarket.com/search?q=${encodeURIComponent(userQuestion)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-purple-400 hover:text-purple-300 mt-2 inline-block"
+        >
+          Search on Polymarket →
+        </a>
+      </div>
+    );
+  }
+
+  // FIXED: Additional validation before rendering
+  if (isNaN(comparison.marketOdds) || isNaN(comparison.divergence)) {
+    return (
+      <div className="border border-gray-700 rounded-lg p-6 bg-black/40">
+        <div className="text-sm text-gray-400">
+          Unable to compare with Polymarket (invalid data)
+        </div>
+      </div>
+    );
   }
 
   const getDivergenceColor = () => {
