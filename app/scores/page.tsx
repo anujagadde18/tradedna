@@ -1,13 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PolymarketComparison } from '@/components/PolymarketComparison';
-
-// Import the NEW dynamic intelligence engine
 import { calculateIntelligence } from '@/lib/intelligenceEngine';
 
-export default function ScoresPage() {
+function ScoresPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const event = searchParams.get('event') || 'Unknown Event';
@@ -83,7 +81,6 @@ export default function ScoresPage() {
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-7xl mx-auto">
         
-        {/* Header */}
         <div className="mb-6">
           <button
             onClick={() => router.push('/')}
@@ -98,19 +95,15 @@ export default function ScoresPage() {
           </p>
         </div>
 
-        {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
-          {/* LEFT COLUMN */}
           <div className="space-y-6">
             
-            {/* Event Question */}
             <div className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-lg p-6">
               <div className="text-gray-400 text-sm mb-2">Analyzing Event</div>
               <div className="text-xl text-white font-semibold break-words">{event}</div>
             </div>
 
-            {/* Main Prediction */}
             <div className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-lg p-6">
               <h2 className="text-white text-xl font-bold mb-6">AI Prediction</h2>
               
@@ -123,7 +116,6 @@ export default function ScoresPage() {
               </div>
 
               <div className="space-y-4">
-                {/* Progress Bar */}
                 <div className="flex items-center justify-between p-3 bg-black/40 rounded-lg">
                   <span className="text-gray-300">NO</span>
                   <div className="flex-1 mx-4 h-2 bg-gray-700 rounded-full overflow-hidden">
@@ -144,14 +136,12 @@ export default function ScoresPage() {
               </div>
             </div>
 
-            {/* Polymarket Comparison */}
             <PolymarketComparison 
               userQuestion={event}
               aiPrediction={intelligence.confidence}
               onDataReceived={handlePolymarketData}
             />
 
-            {/* Risk Level */}
             <div className="bg-gradient-to-br from-red-900/20 to-black border border-red-500/30 rounded-lg p-6">
               <h2 className={`text-2xl font-bold ${getRiskColor(intelligence.riskLevel)}`}>
                 {intelligence.riskLevel}
@@ -160,10 +150,8 @@ export default function ScoresPage() {
 
           </div>
 
-          {/* RIGHT COLUMN */}
           <div className="space-y-6">
             
-            {/* Sources Used */}
             <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
               <h2 className="text-xl font-bold mb-2">Sources Used in This Analysis</h2>
               <p className="text-gray-400 text-sm mb-4">
@@ -186,7 +174,6 @@ export default function ScoresPage() {
               </div>
             </div>
 
-            {/* Signal Contribution */}
             <div className="bg-gradient-to-br from-green-900/20 to-black border border-green-500/30 rounded-lg p-6">
               <h2 className="text-xl font-bold mb-4">Signal Contribution</h2>
               
@@ -218,7 +205,6 @@ export default function ScoresPage() {
               </div>
             </div>
 
-            {/* Confidence Drivers */}
             <div className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-lg p-6">
               <h2 className="text-xl font-bold mb-4">Confidence Drivers</h2>
               
@@ -253,7 +239,6 @@ export default function ScoresPage() {
               </div>
             </div>
 
-            {/* Why This Prediction */}
             <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
               <h2 className="text-xl font-bold mb-4">Why This Prediction?</h2>
               <p className="text-gray-300 leading-relaxed">
@@ -264,11 +249,22 @@ export default function ScoresPage() {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="mt-8 text-center text-sm text-gray-500">
           Analysis saved to profile • Not financial advice • Research purposes only
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ScoresPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-purple-400">Loading...</div>
+      </div>
+    }>
+      <ScoresPageContent />
+    </Suspense>
   );
 }
