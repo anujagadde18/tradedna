@@ -5,19 +5,17 @@ import { useState, useEffect } from 'react';
 interface Props {
   userQuestion: string;
   aiPrediction: number;
-  onDataReceived?: (marketOdds: number) => void; // NEW: Callback to parent
+  onDataReceived?: (marketOdds: number) => void;
 }
 
 function parsePolymarketURL(text: string): { eventSlug: string; marketSlug?: string } | null {
   const match = text.match(/polymarket\.com\/event\/([a-z0-9-]+)(?:\/([a-z0-9-]+))?/i);
-  
   if (match) {
     return {
       eventSlug: match[1],
       marketSlug: match[2]
     };
   }
-  
   return null;
 }
 
@@ -38,22 +36,19 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
         const urlParse = parsePolymarketURL(userQuestion);
         
         if (urlParse) {
-          console.log('Fetching event by slug:', urlParse.eventSlug);
+          console.log('Fetching event:', urlParse.eventSlug);
           
           const response = await fetch(
             `/api/polymarket?endpoint=events&slug=${urlParse.eventSlug}`
           );
           
           if (!response.ok) {
-            const errorText = await response.text();
-            console.error('API error:', response.status, errorText);
             setError('Event not found');
             setLoading(false);
             return;
           }
           
           const data = await response.json();
-          console.log('API response:', data);
           
           let event;
           if (Array.isArray(data)) {
@@ -64,8 +59,6 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
             event = data;
           }
           
-          console.log('Event:', event);
-          
           if (!event) {
             setError('Event not found');
             setLoading(false);
@@ -73,7 +66,6 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
           }
           
           const markets = event.markets || [];
-          console.log('Markets:', markets.length);
           
           if (markets.length === 0) {
             setError('No markets in event');
@@ -84,8 +76,6 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
           let targetMarket;
           
           if (urlParse.marketSlug) {
-            console.log('Looking for:', urlParse.marketSlug);
-            
             targetMarket = markets.find((m: any) => 
               m.slug === urlParse.marketSlug ||
               m.slug?.includes(urlParse.marketSlug) ||
@@ -93,10 +83,7 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
             );
             
             if (!targetMarket) {
-              console.warn('Specific market not found');
               targetMarket = markets[0];
-            } else {
-              console.log('Found:', targetMarket.question);
             }
           } else {
             targetMarket = markets[0];
@@ -105,16 +92,8 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
           await processMarket(targetMarket, event);
           
         } else {
-          console.log('Searching:', userQuestion);
-          
           const response = await fetch(
-            `/api/polymarket?endpoint=events&` + 
-            new URLSearchParams({
-              active: 'true',
-              closed: 'false',
-              limit: '5',
-              order: 'volume_24hr'
-            })
+            `/api/polymarket?endpoint=events&active=true&closed=false&limit=5&order=volume_24hr`
           );
           
           if (!response.ok) {
@@ -124,7 +103,6 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
           }
           
           const events = await response.json();
-          console.log('Search results:', events);
           
           if (!events || events.length === 0) {
             setError('No markets found');
@@ -146,14 +124,13 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
         
       } catch (error: any) {
         console.error('Error:', error);
-        setError('Failed to load: ' + error.message);
+        setError('Failed to load');
       } finally {
         setLoading(false);
       }
     }
     
     async function processMarket(market: any, event: any) {
-      console.log('Processing:', market.question);
       setMatchedMarket(market.question || 'Unknown');
       
       let outcomes: string[];
@@ -168,13 +145,9 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
           ? JSON.parse(market.outcomePrices)
           : market.outcomePrices || [];
       } catch (e) {
-        console.error('Parse error:', e);
         setError('Invalid format');
         return;
       }
-      
-      console.log('Outcomes:', outcomes);
-      console.log('Prices:', outcomePrices);
       
       let marketOdds: number;
       
@@ -189,9 +162,7 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
         marketOdds = market.bestBid ? Math.round(market.bestBid * 100) : 50;
       }
       
-      console.log('Market odds:', marketOdds + '%');
-      
-      // SEND DATA TO PARENT!
+      // SEND DATA TO PARENT
       if (onDataReceived) {
         onDataReceived(marketOdds);
       }
@@ -280,14 +251,14 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-500/20">
-          <div className="text-xs text-purple-300 mb-2">PlayPicks AI</div>
-          <div className="text-3xl font-bold text-white">{comparison.aiPrediction}%</div>
+          <div className="text-sm text-purple-300 mb-2 font-semibold">PlayPicks AI</div>
+          <div className="text-5xl font-bold text-white">{comparison.aiPrediction}%</div>
           <div className="text-xs text-gray-400 mt-2">Your sources</div>
         </div>
 
         <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-500/20">
-          <div className="text-xs text-blue-300 mb-2">Polymarket</div>
-          <div className="text-3xl font-bold text-white">{comparison.marketOdds}%</div>
+          <div className="text-sm text-blue-300 mb-2 font-semibold">Polymarket</div>
+          <div className="text-5xl font-bold text-white">{comparison.marketOdds}%</div>
           <div className="text-xs text-gray-400 mt-2">Market odds</div>
         </div>
       </div>
