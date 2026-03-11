@@ -1,6 +1,6 @@
 /**
- * IMPROVED DYNAMIC INTELLIGENCE ENGINE
- * Properly weights market data and handles divergence intelligently
+ * FIXED INTELLIGENCE ENGINE
+ * Market signal now properly pulls toward market consensus
  */
 
 interface IntelligenceOutput {
@@ -38,20 +38,40 @@ export function calculateIntelligence(
   const actualConfidence = direction === 'YES' ? finalConfidence : (100 - finalConfidence);
   
   const marketAnalysis = analyzeMarketDivergence(actualConfidence, marketOdds);
-  const strength = calculateStrength(actualConfidence, marketAnalysis.divergence, marketOdds);
-  const risk = calculateRisk(actualConfidence, marketAnalysis.divergence);
-  const drivers = identifyDrivers(signals, marketAnalysis, customSourcesCount, marketOdds);
-  const explanation = generateExplanation(direction, actualConfidence, signals, marketAnalysis, weights, marketOdds);
+  
+  // ADJUST CONFIDENCE if divergence is high
+  let adjustedConfidence = actualConfidence;
+  if (marketOdds !== null && marketAnalysis.divergence > 40) {
+    // High divergence - weight heavily toward market
+    const marketWeight = 0.6; // 60% market, 40% AI
+    const marketDirection = marketOdds >= 50 ? marketOdds : (100 - marketOdds);
+    adjustedConfidence = Math.round(
+      actualConfidence * (1 - marketWeight) + marketDirection * marketWeight
+    );
+  } else if (marketOdds !== null && marketAnalysis.divergence > 20) {
+    // Medium divergence - blend 50/50
+    const marketWeight = 0.3; // 30% market, 70% AI
+    const marketDirection = marketOdds >= 50 ? marketOdds : (100 - marketOdds);
+    adjustedConfidence = Math.round(
+      actualConfidence * (1 - marketWeight) + marketDirection * marketWeight
+    );
+  }
+  
+  const finalMarketAnalysis = analyzeMarketDivergence(adjustedConfidence, marketOdds);
+  const strength = calculateStrength(adjustedConfidence, finalMarketAnalysis.divergence, marketOdds);
+  const risk = calculateRisk(adjustedConfidence, finalMarketAnalysis.divergence);
+  const drivers = identifyDrivers(signals, finalMarketAnalysis, customSourcesCount, marketOdds, adjustedConfidence !== actualConfidence);
+  const explanation = generateExplanation(direction, adjustedConfidence, signals, finalMarketAnalysis, weights, marketOdds, adjustedConfidence !== actualConfidence);
   
   return {
     direction,
-    confidence: actualConfidence,
-    probabilityLabel: getProbabilityLabel(actualConfidence),
+    confidence: adjustedConfidence,
+    probabilityLabel: getProbabilityLabel(adjustedConfidence),
     predictionStrength: strength.label,
     strengthScore: strength.score,
     riskLevel: risk,
-    marketEdge: marketAnalysis.edge,
-    edgeContext: marketAnalysis.context,
+    marketEdge: finalMarketAnalysis.edge,
+    edgeContext: finalMarketAnalysis.context,
     modelComponents: signals.components,
     confidenceDrivers: drivers,
     explanation
@@ -74,9 +94,18 @@ function calculateDynamicSignals(
   let marketDescription: string;
   
   if (marketOdds !== null) {
-    // Use ACTUAL market odds, not base confidence!
-    marketSignal = marketOdds * technicalWeight;
-    marketDescription = `Live Polymarket odds (${marketOdds}%) weighted at ${Math.round(technicalWeight * 100)}%`;
+    // FIXED: Market signal should represent the full market prediction weighted
+    // If market says 3% YES, that means market predicts NO at 97%
+    // For a YES/NO prediction, we want to know: how much does market pull us toward its answer?
+    
+    // Market prediction (aligned to YES direction for consistency)
+    const marketPrediction = marketOdds;
+    
+    // Apply weight to market's full prediction, not just the percentage
+    // This allows market to pull the total confidence toward its position
+    marketSignal = marketPrediction * technicalWeight;
+    
+    marketDescription = `Live Polymarket odds (${marketOdds}% YES / ${100-marketOdds}% NO) weighted at ${Math.round(technicalWeight * 100)}%`;
   } else {
     marketSignal = baseConfidence * technicalWeight;
     marketDescription = 'Prediction market indicators and trading signals';
@@ -143,26 +172,20 @@ function calculateStrength(
   marketOdds: number | null
 ): { score: number; label: string } {
   
-  // When market data is available and clear, strength should reflect that clarity
   if (marketOdds !== null) {
-    // Extreme market positions (very low or very high) = strong signal
     const marketCertainty = Math.max(marketOdds, 100 - marketOdds);
     
     if (marketCertainty >= 90) {
-      // Market is 90%+ certain - this is a STRONG signal
       return { score: 85, label: 'Strong' };
     } else if (marketCertainty >= 75) {
-      // Market is 75-90% certain
       return { score: 70, label: 'Strong' };
     } else if (marketCertainty >= 60) {
       return { score: 55, label: 'Moderate' };
     } else {
-      // Market is uncertain
       return { score: 40, label: 'Weak' };
     }
   }
   
-  // Fallback when no market data
   let score = confidence;
   
   if (divergence > 30) {
@@ -186,7 +209,6 @@ function calculateStrength(
 }
 
 function calculateRisk(confidence: number, divergence: number): string {
-  // High divergence = High risk, regardless of confidence
   if (divergence > 40) {
     return 'High Risk';
   } else if (divergence > 20) {
@@ -202,12 +224,12 @@ function identifyDrivers(
   signals: any,
   marketAnalysis: any,
   customSourcesCount: number,
-  marketOdds: number | null
+  marketOdds: number | null,
+  wasAdjusted: boolean
 ) {
   const positive: string[] = [];
   const negative: string[] = [];
   
-  // Market-based drivers (most important)
   if (marketOdds !== null) {
     const marketCertainty = Math.max(marketOdds, 100 - marketOdds);
     
@@ -215,14 +237,17 @@ function identifyDrivers(
       positive.push(`Market shows ${marketCertainty}% certainty - very strong signal`);
     }
     
-    if (marketAnalysis.divergence > 30) {
+    if (wasAdjusted) {
+      positive.push('AI confidence adjusted toward market consensus due to high divergence');
+    }
+    
+    if (marketAnalysis.divergence > 30 && !wasAdjusted) {
       negative.push(`Large ${marketAnalysis.divergence}% divergence from market consensus - proceed with caution`);
     } else if (marketAnalysis.divergence <= 10) {
       positive.push('AI prediction aligns closely with market expectations');
     }
   }
   
-  // Signal strength drivers
   if (signals.newsSignal > 15) {
     positive.push('Strong news sentiment supporting this outcome');
   }
@@ -233,7 +258,6 @@ function identifyDrivers(
     positive.push(`${customSourcesCount} custom sources configured for analysis`);
   }
   
-  // Warning drivers
   if (signals.totalConfidence < 55 && marketOdds === null) {
     negative.push('Low overall confidence across signals');
   }
@@ -241,7 +265,6 @@ function identifyDrivers(
     negative.push('Limited news sentiment data available');
   }
   
-  // Ensure we always have at least one
   if (positive.length === 0) {
     positive.push('Multiple data sources analyzed');
   }
@@ -267,7 +290,8 @@ function generateExplanation(
   signals: any,
   marketAnalysis: any,
   weights: any,
-  marketOdds: number | null
+  marketOdds: number | null,
+  wasAdjusted: boolean
 ): string {
   const parts: string[] = [];
   
@@ -279,29 +303,31 @@ function generateExplanation(
   if (marketAnalysis.edge !== null && marketOdds !== null) {
     const marketCertainty = Math.max(marketOdds, 100 - marketOdds);
     
-    if (Math.abs(marketAnalysis.edge) <= 10) {
+    if (wasAdjusted) {
+      parts.push(
+        `⚠️ The AI's initial prediction was adjusted toward the market consensus due to ${Math.abs(marketAnalysis.edge)}% divergence. ` +
+        `When market certainty is ${marketCertainty}% and divergence is high, the market signal is given greater weight.`
+      );
+    } else if (Math.abs(marketAnalysis.edge) <= 10) {
       parts.push(
         `This prediction aligns closely with Polymarket odds (${marketOdds}%), suggesting market consensus supports this view.`
       );
     } else if (Math.abs(marketAnalysis.edge) > 30) {
-      // Large divergence - WARNING
       if (marketCertainty >= 80) {
         parts.push(
-          `⚠️ WARNING: The market shows ${marketCertainty}% certainty, but the AI diverges by ${Math.abs(marketAnalysis.edge)}%. ` +
-          `When markets are this confident, large divergence suggests the AI may be missing key information. ` +
-          `Consider trusting the market or investigating why the AI differs so significantly.`
+          `⚠️ WARNING: The market shows ${marketCertainty}% certainty, with ${Math.abs(marketAnalysis.edge)}% divergence from AI signals. ` +
+          `When markets are this confident, large divergence suggests investigating why the AI differs or trusting the market.`
         );
       } else {
         parts.push(
           `The AI diverges from the market by ${Math.abs(marketAnalysis.edge)}%. ` +
-          `This large divergence suggests conflicting signals - proceed with caution and verify both perspectives.`
+          `This large difference suggests conflicting signals - verify both perspectives before deciding.`
         );
       }
     } else {
-      // Moderate divergence
       parts.push(
         `The AI shows ${Math.abs(marketAnalysis.edge)}% divergence from the market. ` +
-        `This moderate difference suggests reviewing both the AI's sources and market reasoning before deciding.`
+        `This moderate difference suggests reviewing both sources before deciding.`
       );
     }
   }
