@@ -14,31 +14,30 @@ function ScoresPageContent() {
   const [polymarketOdds, setPolymarketOdds] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Weight controls
+  // Controls
   const [weights, setWeights] = useState({ social: 40, news: 35, technical: 25 });
-  const [showWeightPanel, setShowWeightPanel] = useState(false);
+  const [customSources, setCustomSources] = useState<any[]>([]);
+  const [showSourcePanel, setShowSourcePanel] = useState(false);
+  const [activeTab, setActiveTab] = useState<'weights' | 'sources'>('weights');
 
   useEffect(() => {
-    // Load saved weights
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem('signalWeights');
-        if (saved) {
-          setWeights(JSON.parse(saved));
+        const savedWeights = localStorage.getItem('signalWeights');
+        if (savedWeights) {
+          setWeights(JSON.parse(savedWeights));
+        }
+        
+        const savedSources = localStorage.getItem('customSources');
+        if (savedSources) {
+          setCustomSources(JSON.parse(savedSources));
         }
       } catch {}
     }
   }, []);
 
   const getCustomSourcesCount = () => {
-    if (typeof window === 'undefined') return 0;
-    try {
-      const saved = localStorage.getItem('customSources');
-      const sources = saved ? JSON.parse(saved) : [];
-      return sources.filter((s: any) => s.enabled).length;
-    } catch {
-      return 0;
-    }
+    return customSources.filter((s: any) => s.enabled).length;
   };
 
   const runAnalysis = () => {
@@ -59,12 +58,11 @@ function ScoresPageContent() {
 
   useEffect(() => {
     runAnalysis();
-  }, [event, polymarketOdds, weights]);
+  }, [event, polymarketOdds, weights, customSources]);
 
   const handleWeightChange = (type: 'social' | 'news' | 'technical', value: number) => {
     const newWeights = { ...weights, [type]: value };
     
-    // Auto-balance other weights
     const total = newWeights.social + newWeights.news + newWeights.technical;
     if (total !== 100) {
       const diff = 100 - total;
@@ -77,9 +75,53 @@ function ScoresPageContent() {
     
     setWeights(newWeights);
     
-    // Save to localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('signalWeights', JSON.stringify(newWeights));
+    }
+  };
+
+  const toggleSource = (index: number) => {
+    const updated = [...customSources];
+    updated[index].enabled = !updated[index].enabled;
+    setCustomSources(updated);
+    
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('customSources', JSON.stringify(updated));
+    }
+  };
+
+  const addCustomSource = () => {
+    const newSource = {
+      id: Date.now(),
+      name: 'New Source',
+      url: '',
+      type: 'news',
+      enabled: true
+    };
+    const updated = [...customSources, newSource];
+    setCustomSources(updated);
+    
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('customSources', JSON.stringify(updated));
+    }
+  };
+
+  const updateSource = (index: number, field: string, value: string) => {
+    const updated = [...customSources];
+    updated[index][field] = value;
+    setCustomSources(updated);
+    
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('customSources', JSON.stringify(updated));
+    }
+  };
+
+  const removeSource = (index: number) => {
+    const updated = customSources.filter((_, i) => i !== index);
+    setCustomSources(updated);
+    
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('customSources', JSON.stringify(updated));
     }
   };
 
@@ -130,10 +172,10 @@ function ScoresPageContent() {
           {/* CONTROL BUTTONS */}
           <div className="flex gap-3">
             <button
-              onClick={() => setShowWeightPanel(!showWeightPanel)}
+              onClick={() => setShowSourcePanel(!showSourcePanel)}
               className="px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold transition-all"
             >
-              {showWeightPanel ? 'Hide' : 'Adjust'} Weights
+              {showSourcePanel ? 'Hide' : 'Manage'} Sources
             </button>
             <button
               onClick={runAnalysis}
@@ -144,68 +186,174 @@ function ScoresPageContent() {
           </div>
         </div>
 
-        {/* WEIGHT CONTROL PANEL */}
-        {showWeightPanel && (
-          <div className="mb-6 p-6 bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-xl">
-            <h3 className="text-xl font-bold mb-6 text-white">Customize Signal Weights</h3>
+        {/* MANAGE SOURCES PANEL */}
+        {showSourcePanel && (
+          <div className="mb-6 bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-xl overflow-hidden">
             
-            <div className="space-y-6">
-              {/* Social Weight */}
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-300">Community Signals</span>
-                  <span className="text-white font-bold">{Math.round(weights.social)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={weights.social}
-                  onChange={(e) => handleWeightChange('social', parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                />
-              </div>
-
-              {/* News Weight */}
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-300">News Sentiment</span>
-                  <span className="text-white font-bold">{Math.round(weights.news)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={weights.news}
-                  onChange={(e) => handleWeightChange('news', parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                />
-              </div>
-
-              {/* Technical Weight */}
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-300">Market Probability (Polymarket)</span>
-                  <span className="text-white font-bold">{Math.round(weights.technical)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={weights.technical}
-                  onChange={(e) => handleWeightChange('technical', parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                />
-              </div>
+            {/* TABS */}
+            <div className="flex border-b border-gray-700">
+              <button
+                onClick={() => setActiveTab('weights')}
+                className={`flex-1 px-6 py-4 font-semibold transition-all ${
+                  activeTab === 'weights'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-black/40 text-gray-400 hover:text-white'
+                }`}
+              >
+                Adjust Weights
+              </button>
+              <button
+                onClick={() => setActiveTab('sources')}
+                className={`flex-1 px-6 py-4 font-semibold transition-all ${
+                  activeTab === 'sources'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-black/40 text-gray-400 hover:text-white'
+                }`}
+              >
+                Custom Sources ({getCustomSourcesCount()})
+              </button>
             </div>
 
-            <div className="mt-6 p-4 bg-black/40 rounded-lg border border-gray-700">
-              <div className="text-sm text-gray-400 mb-2">💡 Tip:</div>
-              <div className="text-sm text-gray-300">
-                Trust market data more? Increase Market Probability weight. 
-                Think community sentiment matters? Boost Community Signals. 
-                Weights are automatically balanced to total 100%.
-              </div>
+            <div className="p-6">
+              {/* WEIGHTS TAB */}
+              {activeTab === 'weights' && (
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold text-white">Signal Weights</h3>
+                  
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-gray-300">Community Signals</span>
+                      <span className="text-white font-bold">{Math.round(weights.social)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={weights.social}
+                      onChange={(e) => handleWeightChange('social', parseInt(e.target.value))}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-gray-300">News Sentiment</span>
+                      <span className="text-white font-bold">{Math.round(weights.news)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={weights.news}
+                      onChange={(e) => handleWeightChange('news', parseInt(e.target.value))}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-gray-300">Market Probability (Polymarket)</span>
+                      <span className="text-white font-bold">{Math.round(weights.technical)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={weights.technical}
+                      onChange={(e) => handleWeightChange('technical', parseInt(e.target.value))}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                    />
+                  </div>
+
+                  <div className="p-4 bg-black/40 rounded-lg border border-gray-700">
+                    <div className="text-sm text-gray-400 mb-2">💡 Tip:</div>
+                    <div className="text-sm text-gray-300">
+                      Trust market data more? Increase Market Probability weight. 
+                      Think community sentiment matters? Boost Community Signals. 
+                      Weights automatically balance to total 100%.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* SOURCES TAB */}
+              {activeTab === 'sources' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-white">Custom Sources</h3>
+                    <button
+                      onClick={addCustomSource}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg font-semibold transition-all text-sm"
+                    >
+                      + Add Source
+                    </button>
+                  </div>
+
+                  {customSources.length === 0 ? (
+                    <div className="p-8 text-center text-gray-500">
+                      No custom sources yet. Click "Add Source" to create one.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {customSources.map((source, idx) => (
+                        <div
+                          key={source.id}
+                          className="p-4 bg-black/40 border border-gray-700 rounded-lg"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3 flex-1">
+                              <input
+                                type="checkbox"
+                                checked={source.enabled}
+                                onChange={() => toggleSource(idx)}
+                                className="w-5 h-5 rounded accent-purple-500"
+                              />
+                              <input
+                                type="text"
+                                value={source.name}
+                                onChange={(e) => updateSource(idx, 'name', e.target.value)}
+                                className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm"
+                                placeholder="Source name"
+                              />
+                            </div>
+                            <button
+                              onClick={() => removeSource(idx)}
+                              className="ml-3 px-3 py-2 bg-red-600 hover:bg-red-500 rounded text-sm font-semibold transition-all"
+                            >
+                              Remove
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs text-gray-400 mb-1 block">Type</label>
+                              <select
+                                value={source.type}
+                                onChange={(e) => updateSource(idx, 'type', e.target.value)}
+                                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm"
+                              >
+                                <option value="news">News</option>
+                                <option value="social">Social</option>
+                                <option value="technical">Technical</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray-400 mb-1 block">URL/Feed</label>
+                              <input
+                                type="text"
+                                value={source.url}
+                                onChange={(e) => updateSource(idx, 'url', e.target.value)}
+                                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm"
+                                placeholder="https://..."
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -270,9 +418,9 @@ function ScoresPageContent() {
           <div className="space-y-6">
             
             <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
-              <h2 className="text-xl font-bold mb-2">Current Signal Weights</h2>
+              <h2 className="text-xl font-bold mb-2">Current Configuration</h2>
               <p className="text-gray-400 text-sm mb-4">
-                {getCustomSourcesCount()} sources active
+                {getCustomSourcesCount()} custom sources active
               </p>
               
               <div className="space-y-2 text-sm">
@@ -285,7 +433,7 @@ function ScoresPageContent() {
                   <span className="text-white">{Math.round(weights.social)}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Technical Sources:</span>
+                  <span className="text-gray-400">Market Probability:</span>
                   <span className="text-white">{Math.round(weights.technical)}%</span>
                 </div>
               </div>
