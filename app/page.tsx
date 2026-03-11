@@ -17,10 +17,26 @@ export default function HomePage() {
   };
 
   const exampleQueries = [
-    { text: "Will Trump win 2024?", category: "Politics" },
-    { text: "https://polymarket.com/event/fed-decision-march", category: "Economics" },
-    { text: "Will Bitcoin hit 100k?", category: "Crypto" },
-    { text: "https://polymarket.com/event/nba-mvp-2024", category: "Sports" }
+    { 
+      text: "Will Trump win the 2024 election?", 
+      display: "Will Trump win the 2024 election?",
+      category: "Politics" 
+    },
+    { 
+      text: "https://polymarket.com/event/fed-decision-march", 
+      display: "Fed Interest Rate Decision - March",
+      category: "Economics" 
+    },
+    { 
+      text: "Will Bitcoin hit $100k in 2025?", 
+      display: "Will Bitcoin hit $100k in 2025?",
+      category: "Crypto" 
+    },
+    { 
+      text: "https://polymarket.com/event/nba-mvp-2024", 
+      display: "NBA MVP Winner 2024",
+      category: "Sports" 
+    }
   ];
 
   return (
@@ -28,7 +44,6 @@ export default function HomePage() {
       
       {/* HERO SECTION WITH SEARCH */}
       <div className="relative overflow-hidden">
-        {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-blue-900/20" />
         
         <div className="relative max-w-7xl mx-auto px-6 py-20">
@@ -93,7 +108,7 @@ export default function HomePage() {
                     <span className="text-gray-500 group-hover:text-purple-400 transition-colors">→</span>
                   </div>
                   <div className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                    {example.text}
+                    {example.display}
                   </div>
                 </button>
               ))}
