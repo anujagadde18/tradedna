@@ -5,9 +5,9 @@ import { useState, useEffect } from 'react';
 interface Props {
   userQuestion: string;
   aiPrediction: number;
+  onDataReceived?: (marketOdds: number) => void; // NEW: Callback to parent
 }
 
-// Parse Polymarket URL to extract event slug and optional market slug
 function parsePolymarketURL(text: string): { eventSlug: string; marketSlug?: string } | null {
   const match = text.match(/polymarket\.com\/event\/([a-z0-9-]+)(?:\/([a-z0-9-]+))?/i);
   
@@ -21,7 +21,7 @@ function parsePolymarketURL(text: string): { eventSlug: string; marketSlug?: str
   return null;
 }
 
-export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
+export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceived }: Props) {
   const [polymarketData, setPolymarketData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [comparison, setComparison] = useState<any>(null);
@@ -38,10 +38,8 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
         const urlParse = parsePolymarketURL(userQuestion);
         
         if (urlParse) {
-          // DIRECT URL - Fetch by slug using our proxy
           console.log('Fetching event by slug:', urlParse.eventSlug);
           
-          // Use our API proxy route
           const response = await fetch(
             `/api/polymarket?endpoint=events&slug=${urlParse.eventSlug}`
           );
@@ -49,7 +47,7 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
           if (!response.ok) {
             const errorText = await response.text();
             console.error('API error:', response.status, errorText);
-            setError('Event not found on Polymarket');
+            setError('Event not found');
             setLoading(false);
             return;
           }
@@ -57,7 +55,6 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
           const data = await response.json();
           console.log('API response:', data);
           
-          // Handle response format - could be single event or array
           let event;
           if (Array.isArray(data)) {
             event = data[0];
@@ -75,12 +72,11 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
             return;
           }
           
-          // Extract markets from event
           const markets = event.markets || [];
-          console.log('Markets in event:', markets.length);
+          console.log('Markets:', markets.length);
           
           if (markets.length === 0) {
-            setError('No markets in this event');
+            setError('No markets in event');
             setLoading(false);
             return;
           }
@@ -88,8 +84,7 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
           let targetMarket;
           
           if (urlParse.marketSlug) {
-            // SPECIFIC MARKET REQUESTED
-            console.log('Looking for market:', urlParse.marketSlug);
+            console.log('Looking for:', urlParse.marketSlug);
             
             targetMarket = markets.find((m: any) => 
               m.slug === urlParse.marketSlug ||
@@ -98,21 +93,19 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
             );
             
             if (!targetMarket) {
-              console.warn('Specific market not found, using first');
+              console.warn('Specific market not found');
               targetMarket = markets[0];
             } else {
-              console.log('Found market:', targetMarket.question);
+              console.log('Found:', targetMarket.question);
             }
           } else {
-            // Use first market
             targetMarket = markets[0];
           }
           
           await processMarket(targetMarket, event);
           
         } else {
-          // TEXT QUERY - Search
-          console.log('Searching for:', userQuestion);
+          console.log('Searching:', userQuestion);
           
           const response = await fetch(
             `/api/polymarket?endpoint=events&` + 
@@ -134,7 +127,7 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
           console.log('Search results:', events);
           
           if (!events || events.length === 0) {
-            setError('No active markets found');
+            setError('No markets found');
             setLoading(false);
             return;
           }
@@ -163,7 +156,6 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
       console.log('Processing:', market.question);
       setMatchedMarket(market.question || 'Unknown');
       
-      // Parse outcomes
       let outcomes: string[];
       let outcomePrices: string[];
       
@@ -184,24 +176,25 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
       console.log('Outcomes:', outcomes);
       console.log('Prices:', outcomePrices);
       
-      // Calculate odds
       let marketOdds: number;
       
       if (outcomePrices && outcomePrices.length > 0) {
         if (outcomePrices.length === 2) {
-          // Binary
           marketOdds = Math.round(parseFloat(outcomePrices[0] || '0') * 100);
         } else {
-          // Multi-outcome - use max
           const prices = outcomePrices.map((p: string) => parseFloat(p || '0'));
           marketOdds = Math.round(Math.max(...prices) * 100);
         }
       } else {
-        // Fallback
         marketOdds = market.bestBid ? Math.round(market.bestBid * 100) : 50;
       }
       
       console.log('Market odds:', marketOdds + '%');
+      
+      // SEND DATA TO PARENT!
+      if (onDataReceived) {
+        onDataReceived(marketOdds);
+      }
       
       const divergence = Math.abs(aiPrediction - marketOdds);
       
@@ -215,7 +208,7 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
     }
     
     loadData();
-  }, [userQuestion, aiPrediction]);
+  }, [userQuestion, aiPrediction, onDataReceived]);
 
   if (loading) {
     return (
