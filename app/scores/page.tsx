@@ -13,16 +13,22 @@ function ScoresPageContent() {
   const [intelligence, setIntelligence] = useState<any>(null);
   const [polymarketOdds, setPolymarketOdds] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Weight controls
+  const [weights, setWeights] = useState({ social: 40, news: 35, technical: 25 });
+  const [showWeightPanel, setShowWeightPanel] = useState(false);
 
-  const getWeights = () => {
-    if (typeof window === 'undefined') return { social: 40, news: 35, technical: 25 };
-    try {
-      const saved = localStorage.getItem('signalWeights');
-      return saved ? JSON.parse(saved) : { social: 40, news: 35, technical: 25 };
-    } catch {
-      return { social: 40, news: 35, technical: 25 };
+  useEffect(() => {
+    // Load saved weights
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('signalWeights');
+        if (saved) {
+          setWeights(JSON.parse(saved));
+        }
+      } catch {}
     }
-  };
+  }, []);
 
   const getCustomSourcesCount = () => {
     if (typeof window === 'undefined') return 0;
@@ -35,9 +41,8 @@ function ScoresPageContent() {
     }
   };
 
-  useEffect(() => {
+  const runAnalysis = () => {
     const baseConfidence = 54;
-    const weights = getWeights();
     const customSourcesCount = getCustomSourcesCount();
     
     const result = calculateIntelligence(
@@ -50,10 +55,35 @@ function ScoresPageContent() {
     
     setIntelligence(result);
     setLoading(false);
-  }, [event, polymarketOdds]);
+  };
+
+  useEffect(() => {
+    runAnalysis();
+  }, [event, polymarketOdds, weights]);
+
+  const handleWeightChange = (type: 'social' | 'news' | 'technical', value: number) => {
+    const newWeights = { ...weights, [type]: value };
+    
+    // Auto-balance other weights
+    const total = newWeights.social + newWeights.news + newWeights.technical;
+    if (total !== 100) {
+      const diff = 100 - total;
+      const others = ['social', 'news', 'technical'].filter(k => k !== type) as ('social' | 'news' | 'technical')[];
+      const adjust = diff / others.length;
+      others.forEach(k => {
+        newWeights[k] = Math.max(0, Math.min(100, newWeights[k] + adjust));
+      });
+    }
+    
+    setWeights(newWeights);
+    
+    // Save to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('signalWeights', JSON.stringify(newWeights));
+    }
+  };
 
   const handlePolymarketData = (odds: number) => {
-    console.log('Received Polymarket odds:', odds);
     setPolymarketOdds(odds);
   };
 
@@ -81,22 +111,108 @@ function ScoresPageContent() {
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-7xl mx-auto">
         
-        <div className="mb-6">
-          <button
-            onClick={() => router.push('/')}
-            className="mb-4 text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
-          >
-            ← Back
-          </button>
-          
-          <h1 className="text-3xl font-bold mb-2">AI Forecast Engine</h1>
-          <p className="text-gray-400 text-sm">
-            Multi-source prediction engine analyzing news sentiment, market probability signals, and community trends
-          </p>
+        {/* HEADER WITH CONTROLS */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <button
+              onClick={() => router.push('/')}
+              className="mb-4 text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
+            >
+              ← Back
+            </button>
+            
+            <h1 className="text-3xl font-bold mb-2">AI Forecast Engine</h1>
+            <p className="text-gray-400 text-sm">
+              Multi-source prediction engine analyzing news sentiment, market probability signals, and community trends
+            </p>
+          </div>
+
+          {/* CONTROL BUTTONS */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowWeightPanel(!showWeightPanel)}
+              className="px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold transition-all"
+            >
+              {showWeightPanel ? 'Hide' : 'Adjust'} Weights
+            </button>
+            <button
+              onClick={runAnalysis}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition-all"
+            >
+              Re-analyze
+            </button>
+          </div>
         </div>
+
+        {/* WEIGHT CONTROL PANEL */}
+        {showWeightPanel && (
+          <div className="mb-6 p-6 bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-xl">
+            <h3 className="text-xl font-bold mb-6 text-white">Customize Signal Weights</h3>
+            
+            <div className="space-y-6">
+              {/* Social Weight */}
+              <div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-300">Community Signals</span>
+                  <span className="text-white font-bold">{Math.round(weights.social)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={weights.social}
+                  onChange={(e) => handleWeightChange('social', parseInt(e.target.value))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                />
+              </div>
+
+              {/* News Weight */}
+              <div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-300">News Sentiment</span>
+                  <span className="text-white font-bold">{Math.round(weights.news)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={weights.news}
+                  onChange={(e) => handleWeightChange('news', parseInt(e.target.value))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                />
+              </div>
+
+              {/* Technical Weight */}
+              <div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-300">Market Probability (Polymarket)</span>
+                  <span className="text-white font-bold">{Math.round(weights.technical)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={weights.technical}
+                  onChange={(e) => handleWeightChange('technical', parseInt(e.target.value))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 bg-black/40 rounded-lg border border-gray-700">
+              <div className="text-sm text-gray-400 mb-2">💡 Tip:</div>
+              <div className="text-sm text-gray-300">
+                Trust market data more? Increase Market Probability weight. 
+                Think community sentiment matters? Boost Community Signals. 
+                Weights are automatically balanced to total 100%.
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
+          {/* LEFT COLUMN */}
           <div className="space-y-6">
             
             <div className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-lg p-6">
@@ -150,26 +266,27 @@ function ScoresPageContent() {
 
           </div>
 
+          {/* RIGHT COLUMN */}
           <div className="space-y-6">
             
             <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
-              <h2 className="text-xl font-bold mb-2">Sources Used in This Analysis</h2>
+              <h2 className="text-xl font-bold mb-2">Current Signal Weights</h2>
               <p className="text-gray-400 text-sm mb-4">
-                {getCustomSourcesCount()} sources ({Math.max(0, getCustomSourcesCount() - 1)} custom)
+                {getCustomSourcesCount()} sources active
               </p>
               
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-400">News Sources:</span>
-                  <span className="text-white">{Math.round(getWeights().news)}%</span>
+                  <span className="text-white">{Math.round(weights.news)}%</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Social Sources:</span>
-                  <span className="text-white">{Math.round(getWeights().social)}%</span>
+                  <span className="text-white">{Math.round(weights.social)}%</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Technical Sources:</span>
-                  <span className="text-white">{Math.round(getWeights().technical)}%</span>
+                  <span className="text-white">{Math.round(weights.technical)}%</span>
                 </div>
               </div>
             </div>
