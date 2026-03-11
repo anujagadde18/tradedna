@@ -40,7 +40,6 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
         const urlParse = parsePolymarketURL(userQuestion);
         
         let markets: any[] = [];
-        let targetOutcome: string | null = null;
         
         if (urlParse) {
           // USER PROVIDED POLYMARKET URL
@@ -70,16 +69,18 @@ export function PolymarketComparison({ userQuestion, aiPrediction }: Props) {
           if (urlParse.outcomeSlug && markets.length > 0) {
             console.log('Looking for outcome:', urlParse.outcomeSlug);
             
+            const outcomeSlug = urlParse.outcomeSlug; // Store in variable for null safety
+            
             // Try to find market that matches the outcome slug
-            const matchedMarket = markets.find((m: any) => 
-              m.slug === urlParse.outcomeSlug || 
-              m.slug?.includes(urlParse.outcomeSlug) ||
-              m.question?.toLowerCase().includes(urlParse.outcomeSlug.replace(/-/g, ' '))
+            const matchedMarketResult = markets.find((m: any) => 
+              m.slug === outcomeSlug || 
+              m.slug?.includes(outcomeSlug) ||
+              m.question?.toLowerCase().includes(outcomeSlug.replace(/-/g, ' '))
             );
             
-            if (matchedMarket) {
-              console.log('Found matching outcome market:', matchedMarket.question);
-              markets = [matchedMarket];
+            if (matchedMarketResult) {
+              console.log('Found matching outcome market:', matchedMarketResult.question);
+              markets = [matchedMarketResult];
             } else {
               console.log('No exact match, will use first market');
             }
