@@ -1,312 +1,274 @@
-/**
- * DYNAMIC INTELLIGENCE ENGINE
- * Makes predictions based on actual market data, not hardcoded values
- */
+'use client';
 
-interface IntelligenceInput {
-  baseConfidence: number;        // From your existing analysis
-  weights: {
-    social: number;
-    news: number;
-    technical: number;
-  };
-  customSourcesCount: number;
-  marketOdds: number | null;     // FROM POLYMARKET - the key input!
-  eventQuestion: string;
-}
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { PolymarketComparison } from '@/components/PolymarketComparison';
 
-interface IntelligenceOutput {
-  direction: 'YES' | 'NO';
-  confidence: number;
-  probabilityLabel: string;
-  predictionStrength: string;
-  strengthScore: number;
-  riskLevel: string;
-  marketEdge: number | null;
-  edgeContext: string;
-  modelComponents: Array<{
-    name: string;
-    contribution: number;
-    description: string;
-  }>;
-  confidenceDrivers: {
-    positive: string[];
-    negative: string[];
-  };
-  explanation: string;
-}
+// Import the NEW dynamic intelligence engine
+import { calculateIntelligence } from '@/lib/intelligenceEngine';
 
-export function calculateIntelligence(
-  baseConfidence: number,
-  weights: { social: number; news: number; technical: number },
-  customSourcesCount: number,
-  marketOdds: number | null,
-  eventQuestion: string
-): IntelligenceOutput {
+export default function ScoresPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const event = searchParams.get('event') || 'Unknown Event';
   
-  // 1. CALCULATE DYNAMIC SIGNAL CONTRIBUTIONS
-  const signals = calculateDynamicSignals(baseConfidence, weights, marketOdds);
-  
-  // 2. DETERMINE FINAL PREDICTION
-  const finalConfidence = signals.totalConfidence;
-  const direction = finalConfidence >= 50 ? 'YES' : 'NO';
-  const actualConfidence = direction === 'YES' ? finalConfidence : (100 - finalConfidence);
-  
-  // 3. CALCULATE MARKET DIVERGENCE
-  const marketAnalysis = analyzeMarketDivergence(actualConfidence, marketOdds);
-  
-  // 4. DETERMINE STRENGTH & RISK
-  const strength = calculateStrength(actualConfidence, marketAnalysis.divergence, customSourcesCount);
-  const risk = calculateRisk(actualConfidence, marketAnalysis.divergence);
-  
-  // 5. IDENTIFY CONFIDENCE DRIVERS
-  const drivers = identifyDrivers(signals, marketAnalysis, customSourcesCount);
-  
-  // 6. GENERATE EXPLANATION
-  const explanation = generateExplanation(
-    direction,
-    actualConfidence,
-    signals,
-    marketAnalysis,
-    weights
-  );
-  
-  return {
-    direction,
-    confidence: actualConfidence,
-    probabilityLabel: getProbabilityLabel(actualConfidence),
-    predictionStrength: strength.label,
-    strengthScore: strength.score,
-    riskLevel: risk,
-    marketEdge: marketAnalysis.edge,
-    edgeContext: marketAnalysis.context,
-    modelComponents: signals.components,
-    confidenceDrivers: drivers,
-    explanation
-  };
-}
+  const [intelligence, setIntelligence] = useState<any>(null);
+  const [polymarketOdds, setPolymarketOdds] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
-// DYNAMIC SIGNAL CALCULATION - Uses real market data!
-function calculateDynamicSignals(
-  baseConfidence: number,
-  weights: { social: number; news: number; technical: number },
-  marketOdds: number | null
-) {
-  // Convert weights to decimal
-  const socialWeight = weights.social / 100;
-  const newsWeight = weights.news / 100;
-  const technicalWeight = weights.technical / 100;
-  
-  // Base signals from existing analysis
-  const socialSignal = baseConfidence * socialWeight;
-  const newsSignal = baseConfidence * newsWeight;
-  
-  // MARKET SIGNAL - Use Polymarket odds if available!
-  let marketSignal: number;
-  if (marketOdds !== null) {
-    // Use actual Polymarket odds as the technical signal!
-    marketSignal = marketOdds * technicalWeight;
-  } else {
-    // Fallback to base confidence if no market data
-    marketSignal = baseConfidence * technicalWeight;
-  }
-  
-  // Total confidence is weighted sum
-  const totalConfidence = Math.round(socialSignal + newsSignal + marketSignal);
-  
-  // Component contributions (how much each adds to total)
-  const components = [
-    {
-      name: 'News Sentiment Model',
-      contribution: Math.round(newsSignal),
-      description: 'Analyzes sentiment and momentum across major news outlets'
-    },
-    {
-      name: 'Community Signal Model',
-      contribution: Math.round(socialSignal),
-      description: 'Measures public sentiment and discussion trends'
-    },
-    {
-      name: 'Market Probability Model',
-      contribution: Math.round(marketSignal),
-      description: marketOdds !== null 
-        ? `Live Polymarket odds (${marketOdds}%) weighted at ${Math.round(technicalWeight * 100)}%`
-        : 'Prediction market indicators and trading signals'
+  const getWeights = () => {
+    if (typeof window === 'undefined') return { social: 40, news: 35, technical: 25 };
+    try {
+      const saved = localStorage.getItem('signalWeights');
+      return saved ? JSON.parse(saved) : { social: 40, news: 35, technical: 25 };
+    } catch {
+      return { social: 40, news: 35, technical: 25 };
     }
-  ];
-  
-  return {
-    totalConfidence,
-    socialSignal: Math.round(socialSignal),
-    newsSignal: Math.round(newsSignal),
-    marketSignal: Math.round(marketSignal),
-    components
   };
-}
 
-// MARKET DIVERGENCE ANALYSIS
-function analyzeMarketDivergence(aiConfidence: number, marketOdds: number | null) {
-  if (marketOdds === null) {
-    return {
-      divergence: 0,
-      edge: null,
-      context: 'No market data available'
-    };
-  }
-  
-  const divergence = Math.abs(aiConfidence - marketOdds);
-  const edge = aiConfidence - marketOdds;
-  
-  let context: string;
-  if (Math.abs(edge) <= 5) {
-    context = 'Strong agreement with market';
-  } else if (Math.abs(edge) <= 15) {
-    context = 'Moderate divergence from market';
-  } else if (edge > 15) {
-    context = 'AI significantly more bullish than market';
-  } else {
-    context = 'AI significantly more bearish than market';
-  }
-  
-  return { divergence, edge, context };
-}
-
-// STRENGTH CALCULATION - Based on confidence level and alignment
-function calculateStrength(
-  confidence: number,
-  divergence: number,
-  customSourcesCount: number
-) {
-  // High confidence + low divergence = strong prediction
-  // Low confidence OR high divergence = weak prediction
-  
-  let score = confidence;
-  
-  // Penalty for high divergence from market
-  if (divergence > 30) {
-    score -= 20;
-  } else if (divergence > 15) {
-    score -= 10;
-  }
-  
-  // Bonus for custom sources
-  score += Math.min(customSourcesCount * 2, 10);
-  
-  score = Math.max(0, Math.min(100, score));
-  
-  let label: string;
-  if (score >= 70) {
-    label = 'Strong';
-  } else if (score >= 50) {
-    label = 'Moderate';
-  } else {
-    label = 'Weak';
-  }
-  
-  return { score, label };
-}
-
-// RISK CALCULATION - Based on confidence and divergence
-function calculateRisk(confidence: number, divergence: number): string {
-  // Low confidence OR high divergence = high risk
-  if (confidence < 55 || divergence > 30) {
-    return 'High Risk';
-  } else if (confidence < 65 || divergence > 15) {
-    return 'Medium Risk';
-  } else {
-    return 'Low Risk';
-  }
-}
-
-// IDENTIFY KEY DRIVERS
-function identifyDrivers(
-  signals: any,
-  marketAnalysis: any,
-  customSourcesCount: number
-) {
-  const positive: string[] = [];
-  const negative: string[] = [];
-  
-  // Positive drivers
-  if (signals.newsSignal > 15) {
-    positive.push('Strong news sentiment supporting this outcome');
-  }
-  if (signals.socialSignal > 15) {
-    positive.push('Community discussion trends are favorable');
-  }
-  if (marketAnalysis.edge !== null && Math.abs(marketAnalysis.edge) <= 10) {
-    positive.push('AI prediction aligns with market expectations');
-  }
-  if (customSourcesCount > 3) {
-    positive.push(`${customSourcesCount} custom sources configured for analysis`);
-  }
-  
-  // Negative drivers
-  if (signals.totalConfidence < 55) {
-    negative.push('Low overall confidence across signals');
-  }
-  if (marketAnalysis.divergence > 20) {
-    negative.push('Significant divergence from market consensus');
-  }
-  if (signals.newsSignal < 10) {
-    negative.push('Limited news sentiment data available');
-  }
-  
-  // Ensure we always have at least one of each
-  if (positive.length === 0) {
-    positive.push('Multiple data sources analyzed');
-  }
-  if (negative.length === 0) {
-    negative.push('No significant negative signals detected');
-  }
-  
-  return { positive, negative };
-}
-
-// PROBABILITY LABEL
-function getProbabilityLabel(confidence: number): string {
-  if (confidence >= 75) return 'Highly Likely';
-  if (confidence >= 65) return 'Likely';
-  if (confidence >= 55) return 'Probable';
-  if (confidence >= 45) return 'Uncertain';
-  if (confidence >= 35) return 'Unlikely';
-  return 'Highly Unlikely';
-}
-
-// GENERATE EXPLANATION
-function generateExplanation(
-  direction: 'YES' | 'NO',
-  confidence: number,
-  signals: any,
-  marketAnalysis: any,
-  weights: any
-): string {
-  const parts: string[] = [];
-  
-  // Overall assessment
-  parts.push(
-    `Analysis across news (${weights.news}%), social (${weights.social}%), and market data (${weights.technical}%) ` +
-    `indicates ${direction} is ${getProbabilityLabel(confidence).toLowerCase()} at ${confidence}% confidence.`
-  );
-  
-  // Market context if available
-  if (marketAnalysis.edge !== null) {
-    if (Math.abs(marketAnalysis.edge) <= 10) {
-      parts.push(
-        `This prediction aligns closely with Polymarket odds, suggesting market consensus supports this view.`
-      );
-    } else if (marketAnalysis.edge > 10) {
-      parts.push(
-        `The AI is more bullish than the market by ${Math.abs(marketAnalysis.edge)}%, ` +
-        `indicating potential opportunity if the AI's signal sources prove accurate.`
-      );
-    } else {
-      parts.push(
-        `The market is more bullish than the AI by ${Math.abs(marketAnalysis.edge)}%, ` +
-        `suggesting caution or further investigation of market signals.`
-      );
+  const getCustomSourcesCount = () => {
+    if (typeof window === 'undefined') return 0;
+    try {
+      const saved = localStorage.getItem('customSources');
+      const sources = saved ? JSON.parse(saved) : [];
+      return sources.filter((s: any) => s.enabled).length;
+    } catch {
+      return 0;
     }
+  };
+
+  useEffect(() => {
+    const baseConfidence = 54;
+    const weights = getWeights();
+    const customSourcesCount = getCustomSourcesCount();
+    
+    const result = calculateIntelligence(
+      baseConfidence,
+      weights,
+      customSourcesCount,
+      polymarketOdds,
+      event
+    );
+    
+    setIntelligence(result);
+    setLoading(false);
+  }, [event, polymarketOdds]);
+
+  const handlePolymarketData = (odds: number) => {
+    console.log('Received Polymarket odds:', odds);
+    setPolymarketOdds(odds);
+  };
+
+  if (loading || !intelligence) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-purple-400">Loading analysis...</div>
+      </div>
+    );
   }
-  
-  return parts.join(' ');
+
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence >= 70) return 'text-green-400';
+    if (confidence >= 55) return 'text-yellow-400';
+    return 'text-orange-400';
+  };
+
+  const getRiskColor = (risk: string) => {
+    if (risk === 'Low Risk') return 'text-green-400';
+    if (risk === 'Medium Risk') return 'text-yellow-400';
+    return 'text-red-400';
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-white p-6">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header */}
+        <div className="mb-6">
+          <button
+            onClick={() => router.push('/')}
+            className="mb-4 text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
+          >
+            ← Back
+          </button>
+          
+          <h1 className="text-3xl font-bold mb-2">AI Forecast Engine</h1>
+          <p className="text-gray-400 text-sm">
+            Multi-source prediction engine analyzing news sentiment, market probability signals, and community trends
+          </p>
+        </div>
+
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* LEFT COLUMN */}
+          <div className="space-y-6">
+            
+            {/* Event Question */}
+            <div className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-lg p-6">
+              <div className="text-gray-400 text-sm mb-2">Analyzing Event</div>
+              <div className="text-xl text-white font-semibold break-words">{event}</div>
+            </div>
+
+            {/* Main Prediction */}
+            <div className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-lg p-6">
+              <h2 className="text-white text-xl font-bold mb-6">AI Prediction</h2>
+              
+              <div className="text-center mb-6">
+                <div className="text-6xl font-bold mb-2">{intelligence.direction}</div>
+                <div className={`text-4xl font-bold mb-2 ${getConfidenceColor(intelligence.confidence)}`}>
+                  {intelligence.confidence}% Confidence
+                </div>
+                <div className="text-gray-400">{intelligence.probabilityLabel}</div>
+              </div>
+
+              <div className="space-y-4">
+                {/* Progress Bar */}
+                <div className="flex items-center justify-between p-3 bg-black/40 rounded-lg">
+                  <span className="text-gray-300">NO</span>
+                  <div className="flex-1 mx-4 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-purple-500 transition-all"
+                      style={{ 
+                        width: `${intelligence.direction === 'YES' ? intelligence.confidence : (100 - intelligence.confidence)}%` 
+                      }}
+                    />
+                  </div>
+                  <span className="text-gray-300">YES</span>
+                </div>
+
+                <div className="text-center">
+                  <div className="text-sm text-gray-400 mb-1">PREDICTION STRENGTH</div>
+                  <div className="text-lg font-semibold text-white">{intelligence.predictionStrength}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Polymarket Comparison */}
+            <PolymarketComparison 
+              userQuestion={event}
+              aiPrediction={intelligence.confidence}
+              onDataReceived={handlePolymarketData}
+            />
+
+            {/* Risk Level */}
+            <div className="bg-gradient-to-br from-red-900/20 to-black border border-red-500/30 rounded-lg p-6">
+              <h2 className={`text-2xl font-bold ${getRiskColor(intelligence.riskLevel)}`}>
+                {intelligence.riskLevel}
+              </h2>
+            </div>
+
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div className="space-y-6">
+            
+            {/* Sources Used */}
+            <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
+              <h2 className="text-xl font-bold mb-2">Sources Used in This Analysis</h2>
+              <p className="text-gray-400 text-sm mb-4">
+                {getCustomSourcesCount()} sources ({Math.max(0, getCustomSourcesCount() - 1)} custom)
+              </p>
+              
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">News Sources:</span>
+                  <span className="text-white">{Math.round(getWeights().news)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Social Sources:</span>
+                  <span className="text-white">{Math.round(getWeights().social)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Technical Sources:</span>
+                  <span className="text-white">{Math.round(getWeights().technical)}%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Signal Contribution */}
+            <div className="bg-gradient-to-br from-green-900/20 to-black border border-green-500/30 rounded-lg p-6">
+              <h2 className="text-xl font-bold mb-4">Signal Contribution</h2>
+              
+              <div className="space-y-4">
+                {intelligence.modelComponents.map((component: any, idx: number) => (
+                  <div key={idx}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-300">{component.name}</span>
+                      <span className="text-white font-semibold">
+                        {component.contribution > 0 ? '+' : ''}{component.contribution}%
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-green-500 transition-all"
+                        style={{ width: `${Math.abs(component.contribution)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">{component.description}</p>
+                  </div>
+                ))}
+                
+                <div className="pt-4 border-t border-gray-700">
+                  <div className="flex justify-between">
+                    <span className="text-white font-semibold">Total Confidence</span>
+                    <span className="text-white font-bold">{intelligence.confidence}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Confidence Drivers */}
+            <div className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-lg p-6">
+              <h2 className="text-xl font-bold mb-4">Confidence Drivers</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-semibold text-green-400 mb-2 uppercase">
+                    Positive Signals
+                  </h4>
+                  <ul className="space-y-2">
+                    {intelligence.confidenceDrivers.positive.map((driver: string, idx: number) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm text-gray-300">
+                        <span className="text-green-400">✓</span>
+                        <span>{driver}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-semibold text-orange-400 mb-2 uppercase">
+                    Negative Signals
+                  </h4>
+                  <ul className="space-y-2">
+                    {intelligence.confidenceDrivers.negative.map((driver: string, idx: number) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm text-gray-300">
+                        <span className="text-orange-400">⚠</span>
+                        <span>{driver}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Why This Prediction */}
+            <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
+              <h2 className="text-xl font-bold mb-4">Why This Prediction?</h2>
+              <p className="text-gray-300 leading-relaxed">
+                {intelligence.explanation}
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 text-center text-sm text-gray-500">
+          Analysis saved to profile • Not financial advice • Research purposes only
+        </div>
+      </div>
+    </div>
+  );
 }
