@@ -1,6 +1,6 @@
 /**
- * POLYMARKET API INTEGRATION - FIXED VERSION
- * Real-time market data from Polymarket Gamma API
+ * POLYMARKET API INTEGRATION - MULTI-OUTCOME SUPPORT
+ * Handles both binary (YES/NO) and categorical (multi-outcome) markets
  */
 
 const GAMMA_API_URL = 'https://gamma-api.polymarket.com';
@@ -18,13 +18,18 @@ interface PolymarketMarket {
   condition_id?: string;
 }
 
+interface MarketOutcome {
+  name: string;
+  probability: number;
+  priceRaw: string;
+}
+
 /**
  * Search Polymarket markets by question text
- * Uses our API proxy to avoid CORS
  */
 export async function searchPolymarketMarkets(query: string): Promise<PolymarketMarket[]> {
   try {
-    console.log('Searching Polymarket for:', query); // DEBUG
+    console.log('Searching Polymarket for:', query);
     
     const response = await fetch(
       `/api/polymarket?endpoint=markets&query=${encodeURIComponent(query)}&limit=5`
@@ -36,9 +41,9 @@ export async function searchPolymarketMarkets(query: string): Promise<Polymarket
     }
     
     const data = await response.json();
-    console.log('Polymarket API response:', data); // DEBUG
+    console.log('Polymarket API response:', data);
     
-    // FIXED: Handle different response formats
+    // Handle different response formats
     if (Array.isArray(data)) {
       return data;
     } else if (data.markets && Array.isArray(data.markets)) {
@@ -58,7 +63,6 @@ export async function searchPolymarketMarkets(query: string): Promise<Polymarket
 
 /**
  * Get probability percentage from outcome price
- * Polymarket prices are decimal format: "0.53" = 53%
  */
 export function getProbabilityFromPrice(price: string | number): number {
   try {
@@ -69,7 +73,7 @@ export function getProbabilityFromPrice(price: string | number): number {
       return 0;
     }
     
-    // FIXED: Handle both decimal (0.53) and percentage (53) formats
+    // Handle both decimal (0.53) and percentage (53) formats
     if (numPrice <= 1) {
       // Decimal format (0.53 = 53%)
       return Math.round(numPrice * 100);
@@ -81,6 +85,63 @@ export function getProbabilityFromPrice(price: string | number): number {
     console.error('Error parsing probability:', error);
     return 0;
   }
+}
+
+/**
+ * NEW: Get top outcome from multi-outcome market
+ */
+export function getTopOutcome(market: PolymarketMarket): MarketOutcome | null {
+  try {
+    if (!market.outcomes || !market.outcomePrices) {
+      return null;
+    }
+
+    const outcomes = market.outcomes.map((name, idx) => ({
+      name,
+      probability: getProbabilityFromPrice(market.outcomePrices[idx]),
+      priceRaw: market.outcomePrices[idx]
+    }));
+
+    // Sort by highest probability
+    outcomes.sort((a, b) => b.probability - a.probability);
+
+    return outcomes[0] || null;
+  } catch (error) {
+    console.error('Error getting top outcome:', error);
+    return null;
+  }
+}
+
+/**
+ * NEW: Get all outcomes from multi-outcome market
+ */
+export function getAllOutcomes(market: PolymarketMarket): MarketOutcome[] {
+  try {
+    if (!market.outcomes || !market.outcomePrices) {
+      return [];
+    }
+
+    const outcomes = market.outcomes.map((name, idx) => ({
+      name,
+      probability: getProbabilityFromPrice(market.outcomePrices[idx]),
+      priceRaw: market.outcomePrices[idx]
+    }));
+
+    // Sort by highest probability
+    outcomes.sort((a, b) => b.probability - a.probability);
+
+    return outcomes;
+  } catch (error) {
+    console.error('Error getting all outcomes:', error);
+    return [];
+  }
+}
+
+/**
+ * Check if market is binary (YES/NO) or multi-outcome
+ */
+export function isMultiOutcomeMarket(market: PolymarketMarket): boolean {
+  return market.outcomePrices && market.outcomePrices.length > 2;
 }
 
 /**
