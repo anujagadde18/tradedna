@@ -125,6 +125,39 @@ function ScoresPageContent() {
     }
   };
 
+  // SAVE ANALYSIS FUNCTION
+  const saveAnalysis = () => {
+    if (typeof window === 'undefined' || !intelligence) return;
+    
+    const analysis = {
+      id: Date.now().toString(),
+      event,
+      direction: intelligence.direction,
+      confidence: intelligence.confidence,
+      timestamp: Date.now(),
+      polymarketOdds
+    };
+    
+    try {
+      const saved = localStorage.getItem('savedAnalyses');
+      const analyses = saved ? JSON.parse(saved) : [];
+      
+      // Check if already saved (same event)
+      const existing = analyses.find((a: any) => a.event === event);
+      if (existing) {
+        alert('This analysis is already saved!');
+        return;
+      }
+      
+      analyses.unshift(analysis); // Add to beginning
+      localStorage.setItem('savedAnalyses', JSON.stringify(analyses));
+      alert('✅ Analysis saved to your profile!');
+    } catch (error) {
+      console.error('Failed to save:', error);
+      alert('❌ Failed to save analysis');
+    }
+  };
+
   const handlePolymarketData = (odds: number) => {
     setPolymarketOdds(odds);
   };
@@ -154,35 +187,52 @@ function ScoresPageContent() {
       <div className="max-w-7xl mx-auto">
         
         {/* HEADER WITH CONTROLS */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
             <button
               onClick={() => router.push('/')}
-              className="mb-4 text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
+              className="text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
             >
               ← Back
             </button>
             
-            <h1 className="text-3xl font-bold mb-2">AI Forecast Engine</h1>
-            <p className="text-gray-400 text-sm">
-              Multi-source prediction engine analyzing news sentiment, market probability signals, and community trends
-            </p>
+            <button
+              onClick={() => router.push('/profile')}
+              className="text-gray-400 hover:text-white transition-colors text-sm"
+            >
+              View Profile →
+            </button>
           </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">AI Forecast Engine</h1>
+              <p className="text-gray-400 text-sm">
+                Multi-source prediction engine analyzing news sentiment, market probability signals, and community trends
+              </p>
+            </div>
 
-          {/* CONTROL BUTTONS */}
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowSourcePanel(!showSourcePanel)}
-              className="px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold transition-all"
-            >
-              {showSourcePanel ? 'Hide' : 'Manage'} Sources
-            </button>
-            <button
-              onClick={runAnalysis}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition-all"
-            >
-              Re-analyze
-            </button>
+            {/* CONTROL BUTTONS */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowSourcePanel(!showSourcePanel)}
+                className="px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold transition-all"
+              >
+                {showSourcePanel ? 'Hide' : 'Manage'} Sources
+              </button>
+              <button
+                onClick={runAnalysis}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition-all"
+              >
+                Re-analyze
+              </button>
+              <button
+                onClick={saveAnalysis}
+                className="px-6 py-3 bg-green-600 hover:bg-green-500 rounded-lg font-semibold transition-all"
+              >
+                Save
+              </button>
+            </div>
           </div>
         </div>
 
