@@ -215,7 +215,7 @@ export function PolymarketComparison({
                   <span className="text-white font-medium">{outcome.name}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-bold text-white">{outcome.odds}%</span>
-                    {outcome.momentum !== 0 && (
+                    {outcome.momentum && outcome.momentum !== 0 && (
                       <span className={`text-sm ${outcome.momentum > 0 ? 'text-green-400' : 'text-red-400'}`}>
                         {outcome.momentum > 0 ? '↑' : '↓'}{Math.abs(outcome.momentum)}%
                       </span>
