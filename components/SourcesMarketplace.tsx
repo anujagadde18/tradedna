@@ -22,7 +22,7 @@ export const SOURCE_MARKETPLACE = {
     { id: 'reddit-nba', name: 'r/nba', url: 'https://www.reddit.com/r/nba.json', type: 'social' },
     { id: 'reddit-wallstreetbets', name: 'r/wallstreetbets', url: 'https://www.reddit.com/r/wallstreetbets.json', type: 'social' },
     { id: 'stocktwits', name: 'StockTwits', url: 'https://api.stocktwits.com/api/2/trending/symbols.json', type: 'social' },
-    { id: 'twitter', name: 'Twitter/X Feed', url: '', type: 'social' }, // User configures
+    { id: 'twitter', name: 'Twitter/X Feed', url: '', type: 'social' },
     { id: 'discord', name: 'Discord Community', url: '', type: 'social' },
     { id: 'telegram', name: 'Telegram Channel', url: '', type: 'social' }
   ],
@@ -36,10 +36,9 @@ export const SOURCE_MARKETPLACE = {
   ]
 };
 
-// Component for Sources Marketplace UI
 interface SourceMarketplaceProps {
   onAddSource: (source: { id: string; name: string; url: string; type: string }) => void;
-  activeSources: string[]; // IDs of already added sources
+  activeSources: string[];
 }
 
 export function SourcesMarketplace({ onAddSource, activeSources }: SourceMarketplaceProps) {
@@ -61,7 +60,6 @@ export function SourcesMarketplace({ onAddSource, activeSources }: SourceMarketp
       <div>
         <h3 className="text-xl font-bold text-white mb-4">Browse Source Marketplace</h3>
         
-        {/* Search */}
         <input
           type="text"
           placeholder="Search sources..."
@@ -70,7 +68,6 @@ export function SourcesMarketplace({ onAddSource, activeSources }: SourceMarketp
           className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm mb-4"
         />
 
-        {/* Category Tabs */}
         <div className="flex gap-2 mb-4">
           {categories.map(cat => (
             <button
@@ -88,7 +85,6 @@ export function SourcesMarketplace({ onAddSource, activeSources }: SourceMarketp
         </div>
       </div>
 
-      {/* Sources Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
         {filteredSources.map(source => {
           const isActive = activeSources.includes(source.id);
@@ -121,7 +117,6 @@ export function SourcesMarketplace({ onAddSource, activeSources }: SourceMarketp
         })}
       </div>
 
-      {/* Custom Source Option */}
       <div className="pt-4 border-t border-gray-700">
         <button
           onClick={() => onAddSource({ 
