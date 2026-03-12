@@ -2,284 +2,232 @@
 
 import { useState, useEffect } from 'react';
 
-interface Props {
+interface PolymarketComparisonProps {
   userQuestion: string;
   aiPrediction: number;
   onDataReceived?: (marketOdds: number) => void;
 }
 
-function parsePolymarketURL(text: string): { eventSlug: string; marketSlug?: string } | null {
-  const match = text.match(/polymarket\.com\/event\/([a-z0-9-]+)(?:\/([a-z0-9-]+))?/i);
-  if (match) {
-    return {
-      eventSlug: match[1],
-      marketSlug: match[2]
-    };
-  }
-  return null;
+interface MarketOutcome {
+  name: string;
+  odds: number;
 }
 
-export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceived }: Props) {
-  const [polymarketData, setPolymarketData] = useState<any>(null);
+export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceived }: PolymarketComparisonProps) {
   const [loading, setLoading] = useState(true);
-  const [comparison, setComparison] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const [matchedMarket, setMatchedMarket] = useState<string>('');
+  const [marketOdds, setMarketOdds] = useState<number | null>(null);
+  const [marketName, setMarketName] = useState<string>('');
+  const [isMultiOutcome, setIsMultiOutcome] = useState(false);
+  const [outcomes, setOutcomes] = useState<MarketOutcome[]>([]);
+  const [selectedOutcome, setSelectedOutcome] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadData() {
+    fetchPolymarketData();
+  }, [userQuestion]);
+
+  useEffect(() => {
+    if (selectedOutcome && outcomes.length > 0) {
+      const outcome = outcomes.find(o => o.name === selectedOutcome);
+      if (outcome) {
+        setMarketOdds(outcome.odds);
+        if (onDataReceived) {
+          onDataReceived(outcome.odds);
+        }
+      }
+    }
+  }, [selectedOutcome, outcomes]);
+
+  const fetchPolymarketData = async () => {
+    try {
       setLoading(true);
       setError(null);
-      setMatchedMarket('');
+
+      const urlMatch = userQuestion.match(/polymarket\.com\/event\/([^\/\s]+)(?:\/([^\/\s]+))?/);
       
-      try {
-        const urlParse = parsePolymarketURL(userQuestion);
-        
-        if (urlParse) {
-          console.log('Fetching event:', urlParse.eventSlug);
-          
-          const response = await fetch(
-            `/api/polymarket?endpoint=events&slug=${urlParse.eventSlug}`
-          );
-          
-          if (!response.ok) {
-            setError('Event not found');
-            setLoading(false);
-            return;
-          }
-          
-          const data = await response.json();
-          
-          let event;
-          if (Array.isArray(data)) {
-            event = data[0];
-          } else if (data.event) {
-            event = data.event;
-          } else {
-            event = data;
-          }
-          
-          if (!event) {
-            setError('Event not found');
-            setLoading(false);
-            return;
-          }
-          
-          const markets = event.markets || [];
-          
-          if (markets.length === 0) {
-            setError('No markets in event');
-            setLoading(false);
-            return;
-          }
-          
-          let targetMarket;
-          
-          if (urlParse.marketSlug) {
-            targetMarket = markets.find((m: any) => 
-              m.slug === urlParse.marketSlug ||
-              m.slug?.includes(urlParse.marketSlug) ||
-              m.conditionId === urlParse.marketSlug
-            );
-            
-            if (!targetMarket) {
-              targetMarket = markets[0];
-            }
-          } else {
-            targetMarket = markets[0];
-          }
-          
-          await processMarket(targetMarket, event);
-          
-        } else {
-          const response = await fetch(
-            `/api/polymarket?endpoint=events&active=true&closed=false&limit=5&order=volume_24hr`
-          );
-          
-          if (!response.ok) {
-            setError('Search failed');
-            setLoading(false);
-            return;
-          }
-          
-          const events = await response.json();
-          
-          if (!events || events.length === 0) {
-            setError('No markets found');
-            setLoading(false);
-            return;
-          }
-          
-          const firstEvent = events[0];
-          const firstMarket = firstEvent.markets?.[0];
-          
-          if (!firstMarket) {
-            setError('No markets available');
-            setLoading(false);
-            return;
-          }
-          
-          await processMarket(firstMarket, firstEvent);
-        }
-        
-      } catch (error: any) {
-        console.error('Error:', error);
-        setError('Failed to load');
-      } finally {
+      if (!urlMatch) {
+        setError('No Polymarket URL detected');
         setLoading(false);
-      }
-    }
-    
-    async function processMarket(market: any, event: any) {
-      setMatchedMarket(market.question || 'Unknown');
-      
-      let outcomes: string[];
-      let outcomePrices: string[];
-      
-      try {
-        outcomes = typeof market.outcomes === 'string' 
-          ? JSON.parse(market.outcomes) 
-          : market.outcomes || [];
-          
-        outcomePrices = typeof market.outcomePrices === 'string'
-          ? JSON.parse(market.outcomePrices)
-          : market.outcomePrices || [];
-      } catch (e) {
-        setError('Invalid format');
         return;
       }
+
+      const eventSlug = urlMatch[1];
+      const outcomeSlug = urlMatch[2];
+
+      const response = await fetch(`/api/polymarket?slug=${eventSlug}`);
       
-      let marketOdds: number;
-      
-      if (outcomePrices && outcomePrices.length > 0) {
-        if (outcomePrices.length === 2) {
-          marketOdds = Math.round(parseFloat(outcomePrices[0] || '0') * 100);
+      if (!response.ok) {
+        throw new Error('Failed to fetch market data');
+      }
+
+      const data = await response.json();
+
+      if (!data || !data.markets || data.markets.length === 0) {
+        throw new Error('No market data found');
+      }
+
+      const market = data.markets[0];
+      setMarketName(market.question || data.title || 'Unknown Market');
+
+      let parsedOutcomes: string[];
+      let parsedPrices: string[];
+
+      try {
+        parsedOutcomes = typeof market.outcomes === 'string' 
+          ? JSON.parse(market.outcomes) 
+          : market.outcomes;
+        parsedPrices = typeof market.outcomePrices === 'string'
+          ? JSON.parse(market.outcomePrices)
+          : market.outcomePrices;
+      } catch (e) {
+        throw new Error('Invalid market data format');
+      }
+
+      if (!parsedOutcomes || !parsedPrices || parsedOutcomes.length !== parsedPrices.length) {
+        throw new Error('Market data mismatch');
+      }
+
+      const outcomesList: MarketOutcome[] = parsedOutcomes.map((name: string, idx: number) => ({
+        name,
+        odds: Math.round(parseFloat(parsedPrices[idx]) * 100)
+      }));
+
+      setOutcomes(outcomesList);
+
+      if (outcomesList.length > 2) {
+        setIsMultiOutcome(true);
+        
+        if (outcomeSlug) {
+          const matchedOutcome = outcomesList.find(o => 
+            o.name.toLowerCase().includes(outcomeSlug.toLowerCase().replace(/-/g, ' '))
+          );
+          if (matchedOutcome) {
+            setSelectedOutcome(matchedOutcome.name);
+          } else {
+            setSelectedOutcome(outcomesList[0].name);
+          }
         } else {
-          const prices = outcomePrices.map((p: string) => parseFloat(p || '0'));
-          marketOdds = Math.round(Math.max(...prices) * 100);
+          setSelectedOutcome(outcomesList[0].name);
         }
       } else {
-        marketOdds = market.bestBid ? Math.round(market.bestBid * 100) : 50;
+        setIsMultiOutcome(false);
+        const odds = outcomesList[0].odds;
+        setMarketOdds(odds);
+        if (onDataReceived) {
+          onDataReceived(odds);
+        }
       }
-      
-      // SEND DATA TO PARENT
-      if (onDataReceived) {
-        onDataReceived(marketOdds);
-      }
-      
-      const divergence = Math.abs(aiPrediction - marketOdds);
-      
-      setComparison({ aiPrediction, marketOdds, divergence });
-      setPolymarketData({
-        question: market.question,
-        marketOdds,
-        volume: event.volume || market.volume,
-        url: `https://polymarket.com/event/${event.slug || market.slug}`
-      });
+
+      setLoading(false);
+    } catch (err: any) {
+      console.error('Polymarket fetch error:', err);
+      setError(err.message || 'Failed to fetch market data');
+      setLoading(false);
     }
-    
-    loadData();
-  }, [userQuestion, aiPrediction, onDataReceived]);
+  };
 
   if (loading) {
     return (
-      <div className="border border-purple-500/20 rounded-lg p-6 bg-black/40">
-        <div className="flex items-center gap-2 text-purple-400">
-          <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-          <span>Fetching from Polymarket...</span>
-        </div>
+      <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
+        <h2 className="text-xl font-bold mb-4 text-white">Polymarket Comparison</h2>
+        <div className="text-center text-gray-400">Loading market data...</div>
       </div>
     );
   }
 
-  if (error || !polymarketData || !comparison) {
+  if (error) {
     return (
-      <div className="border border-gray-700 rounded-lg p-6 bg-black/40">
-        <div className="text-sm text-gray-400 mb-2">
-          💡 <strong>Polymarket Comparison</strong>
-        </div>
-        <div className="text-xs text-gray-500 mb-3">
-          {error || 'No market found'}
-        </div>
-        {matchedMarket && (
-          <div className="text-xs text-gray-400 mb-3">
-            Found: <span className="text-purple-300">{matchedMarket}</span>
-          </div>
-        )}
-        <a 
-          href={`https://polymarket.com/search?q=${encodeURIComponent(userQuestion)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-purple-400 hover:text-purple-300"
-        >
-          Search on Polymarket →
-        </a>
+      <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
+        <h2 className="text-xl font-bold mb-4 text-white">Polymarket Comparison</h2>
+        <div className="text-center text-gray-500 text-sm">{error}</div>
       </div>
     );
   }
 
-  const getDivergenceColor = () => {
-    if (comparison.divergence <= 5) return 'text-green-400';
-    if (comparison.divergence <= 15) return 'text-yellow-400';
-    if (comparison.divergence <= 30) return 'text-orange-400';
-    return 'text-red-400';
-  };
-
-  const aiHigher = comparison.aiPrediction > comparison.marketOdds;
+  const divergence = marketOdds !== null ? Math.abs(aiPrediction - marketOdds) : null;
 
   return (
-    <div className="border border-purple-500/30 rounded-lg p-6 bg-gradient-to-br from-purple-900/10 to-black/40">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
-          <h3 className="text-lg font-semibold text-white">AI vs Market</h3>
-        </div>
-        <a 
-          href={polymarketData.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-purple-400 hover:text-purple-300"
-        >
-          View on Polymarket →
-        </a>
+    <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
+      <h2 className="text-xl font-bold mb-4 text-white">Polymarket Comparison</h2>
+      
+      <div className="mb-4">
+        <div className="text-sm text-gray-400 mb-2">Market Question</div>
+        <div className="text-white font-semibold">{marketName}</div>
       </div>
 
-      <div className="mb-4 p-3 bg-black/30 rounded-lg border border-gray-700">
-        <div className="text-xs text-gray-500 mb-1">Matched Market:</div>
-        <div className="text-sm text-white font-medium leading-snug">{matchedMarket}</div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-500/20">
-          <div className="text-sm text-purple-300 mb-2 font-semibold">PlayPicks AI</div>
-          <div className="text-5xl font-bold text-white">{comparison.aiPrediction}%</div>
-          <div className="text-xs text-gray-400 mt-2">Your sources</div>
+      {isMultiOutcome && (
+        <div className="mb-6 p-4 bg-black/40 rounded-lg border border-gray-700">
+          <div className="text-sm text-gray-400 mb-3">Select outcome to analyze:</div>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {outcomes.map((outcome) => (
+              <button
+                key={outcome.name}
+                onClick={() => setSelectedOutcome(outcome.name)}
+                className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${
+                  selectedOutcome === outcome.name
+                    ? 'bg-purple-600 border-2 border-purple-400'
+                    : 'bg-gray-800 border-2 border-gray-700 hover:border-purple-500/50'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-4 h-4 rounded-full border-2 ${
+                    selectedOutcome === outcome.name
+                      ? 'bg-white border-white'
+                      : 'border-gray-500'
+                  }`}>
+                    {selectedOutcome === outcome.name && (
+                      <div className="w-full h-full rounded-full bg-purple-600" />
+                    )}
+                  </div>
+                  <span className="text-white font-medium">{outcome.name}</span>
+                </div>
+                <span className="text-xl font-bold text-white">{outcome.odds}%</span>
+              </button>
+            ))}
+          </div>
         </div>
+      )}
 
-        <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-500/20">
-          <div className="text-sm text-blue-300 mb-2 font-semibold">Polymarket</div>
-          <div className="text-5xl font-bold text-white">{comparison.marketOdds}%</div>
-          <div className="text-xs text-gray-400 mt-2">Market odds</div>
-        </div>
-      </div>
+      {marketOdds !== null && (
+        <>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="text-center p-4 bg-purple-900/20 rounded-lg">
+              <div className="text-sm font-semibold text-gray-400 mb-1">PlayPicks AI</div>
+              <div className="text-5xl font-bold text-purple-400">{aiPrediction}%</div>
+            </div>
+            <div className="text-center p-4 bg-blue-900/20 rounded-lg">
+              <div className="text-sm font-semibold text-gray-400 mb-1">Polymarket</div>
+              <div className="text-5xl font-bold text-blue-400">{marketOdds}%</div>
+            </div>
+          </div>
 
-      <div className="bg-black/40 rounded-lg p-4 border border-gray-700">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-300">Divergence</span>
-          <span className={`text-sm font-semibold ${getDivergenceColor()}`}>
-            {comparison.divergence}%
-          </span>
-        </div>
-        <div className="text-xs text-gray-400">
-          {aiHigher ? (
-            <p>💡 AI is {comparison.divergence}% more bullish</p>
-          ) : comparison.divergence === 0 ? (
-            <p>✅ AI and market agree</p>
-          ) : (
-            <p>💡 Market is {comparison.divergence}% more bullish</p>
+          {divergence !== null && (
+            <div className="p-3 bg-black/40 rounded-lg">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-400">Divergence</span>
+                <span className={`font-semibold ${
+                  divergence > 30 ? 'text-red-400' : divergence > 15 ? 'text-yellow-400' : 'text-green-400'
+                }`}>
+                  {divergence}%
+                </span>
+              </div>
+              {divergence > 30 && (
+                <div className="mt-2 text-xs text-orange-400">
+                  ⚠️ High divergence detected - review both perspectives carefully
+                </div>
+              )}
+            </div>
           )}
-        </div>
-      </div>
+
+          {isMultiOutcome && selectedOutcome && (
+            <div className="mt-4 p-3 bg-purple-900/10 rounded-lg border border-purple-500/30">
+              <div className="text-xs text-purple-400">
+                💡 Analyzing outcome: <span className="font-semibold">{selectedOutcome}</span>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
