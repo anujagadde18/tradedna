@@ -106,24 +106,41 @@ export function PolymarketComparison({
       const outcomesList: MarketOutcome[] = parsedOutcomes.map((name: string, idx: number) => ({
         name,
         odds: Math.round(parseFloat(parsedPrices[idx]) * 100),
-        // TODO: Calculate AI confidence for each outcome
         aiConfidence: 0,
         edge: 0,
         momentum: 0
       }));
+
+      // CRITICAL: Sort by probability DESCENDING
+      outcomesList.sort((a, b) => b.odds - a.odds);
 
       setOutcomes(outcomesList);
 
       // MARKET TYPE DETECTION
       if (outcomesList.length > 2) {
         setIsCategorical(true);
-        setViewMode('overview'); // Start with overview for categorical
+        setViewMode('overview');
         
-        // Auto-select highest probability
-        const highest = outcomesList.reduce((prev, current) => 
-          current.odds > prev.odds ? current : prev
-        );
-        setSelectedOutcome(highest.name);
+        // STEP 1: Try to match URL slug to specific outcome
+        const urlMatch = userQuestion.match(/polymarket\.com\/event\/([^\/\s]+)(?:\/([^\/\s]+))?/);
+        const outcomeSlug = urlMatch?.[2];
+        
+        let matched = false;
+        if (outcomeSlug) {
+          const matchedOutcome = outcomesList.find(o => 
+            o.name.toLowerCase().includes(outcomeSlug.toLowerCase().replace(/-/g, ' ')) ||
+            outcomeSlug.toLowerCase().includes(o.name.toLowerCase().replace(/\s/g, '-'))
+          );
+          if (matchedOutcome) {
+            setSelectedOutcome(matchedOutcome.name);
+            matched = true;
+          }
+        }
+        
+        // STEP 2: Default to HIGHEST probability (first after sort)
+        if (!matched) {
+          setSelectedOutcome(outcomesList[0].name);
+        }
       } else {
         // Binary market
         setIsCategorical(false);
@@ -403,11 +420,65 @@ export function PolymarketComparison({
       </h2>
       
       {isCategorical && selectedOutcome && (
-        <div className="mb-4 p-3 bg-purple-900/20 rounded-lg border border-purple-500/30">
-          <div className="text-xs text-purple-300">
-            Analyzing: <span className="font-semibold">{selectedOutcome}</span>
+        <>
+          {/* Outcome Switcher Dropdown */}
+          <div className="mb-4 p-4 bg-purple-900/20 rounded-lg border border-purple-500/30">
+            <label className="text-xs text-purple-300 block mb-2">ANALYZING OUTCOME</label>
+            <select
+              value={selectedOutcome}
+              onChange={(e) => {
+                setSelectedOutcome(e.target.value);
+                const outcome = outcomes.find(o => o.name === e.target.value);
+                if (outcome) {
+                  setMarketOdds(outcome.odds);
+                  if (onDataReceived) {
+                    onDataReceived(outcome.odds);
+                  }
+                }
+              }}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white font-semibold focus:outline-none focus:border-purple-500"
+            >
+              {outcomes.map(outcome => (
+                <option key={outcome.name} value={outcome.name}>
+                  {outcome.name} ({outcome.odds}%)
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
+
+          {/* All Outcomes Overview Panel */}
+          <div className="mb-4 p-4 bg-black/40 rounded-lg border border-gray-700">
+            <div className="text-sm font-semibold text-gray-300 mb-3">ALL OUTCOMES OVERVIEW</div>
+            <div className="space-y-2">
+              {outcomes.map((outcome) => (
+                <div key={outcome.name} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2 flex-1">
+                    <span className={outcome.name === selectedOutcome ? 'text-purple-400 font-semibold' : 'text-gray-400'}>
+                      {outcome.name}
+                    </span>
+                    {outcome.name === selectedOutcome && (
+                      <span className="text-xs text-purple-400">← ANALYZING</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                      <div 
+                        className={outcome.name === selectedOutcome ? 'bg-purple-500' : 'bg-gray-500'}
+                        style={{ width: `${outcome.odds}%`, height: '100%' }}
+                      />
+                    </div>
+                    <span className="text-gray-300 w-12 text-right">{outcome.odds}%</span>
+                    {outcome.momentum && outcome.momentum !== 0 && (
+                      <span className={`text-xs w-10 ${outcome.momentum > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {outcome.momentum > 0 ? '↑' : '↓'}{Math.abs(outcome.momentum)}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
       )}
 
       <div className="mb-4">
