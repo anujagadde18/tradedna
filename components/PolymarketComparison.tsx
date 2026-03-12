@@ -18,9 +18,10 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
   const [error, setError] = useState<string | null>(null);
   const [marketOdds, setMarketOdds] = useState<number | null>(null);
   const [marketName, setMarketName] = useState<string>('');
-  const [isMultiOutcome, setIsMultiOutcome] = useState(false);
+  const [isCategorical, setIsCategorical] = useState(false);
   const [outcomes, setOutcomes] = useState<MarketOutcome[]>([]);
   const [selectedOutcome, setSelectedOutcome] = useState<string | null>(null);
+  const [waitingForSelection, setWaitingForSelection] = useState(false);
 
   useEffect(() => {
     fetchPolymarketData();
@@ -31,6 +32,7 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
       const outcome = outcomes.find(o => o.name === selectedOutcome);
       if (outcome) {
         setMarketOdds(outcome.odds);
+        setWaitingForSelection(false);
         if (onDataReceived) {
           onDataReceived(outcome.odds);
         }
@@ -42,6 +44,7 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
     try {
       setLoading(true);
       setError(null);
+      setWaitingForSelection(false);
 
       const urlMatch = userQuestion.match(/polymarket\.com\/event\/([^\/\s]+)(?:\/([^\/\s]+))?/);
       
@@ -94,8 +97,11 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
 
       setOutcomes(outcomesList);
 
+      // PHASE 1: MARKET TYPE DETECTION
       if (outcomesList.length > 2) {
-        setIsMultiOutcome(true);
+        // CATEGORICAL MARKET
+        setIsCategorical(true);
+        setWaitingForSelection(true);
         
         if (outcomeSlug) {
           const matchedOutcome = outcomesList.find(o => 
@@ -104,13 +110,20 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
           if (matchedOutcome) {
             setSelectedOutcome(matchedOutcome.name);
           } else {
-            setSelectedOutcome(outcomesList[0].name);
+            const highest = outcomesList.reduce((prev, current) => 
+              current.odds > prev.odds ? current : prev
+            );
+            setSelectedOutcome(highest.name);
           }
         } else {
-          setSelectedOutcome(outcomesList[0].name);
+          const highest = outcomesList.reduce((prev, current) => 
+            current.odds > prev.odds ? current : prev
+          );
+          setSelectedOutcome(highest.name);
         }
       } else {
-        setIsMultiOutcome(false);
+        // BINARY MARKET
+        setIsCategorical(false);
         const odds = outcomesList[0].odds;
         setMarketOdds(odds);
         if (onDataReceived) {
@@ -124,6 +137,10 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
       setError(err.message || 'Failed to fetch market data');
       setLoading(false);
     }
+  };
+
+  const handleOutcomeSelect = (outcomeName: string) => {
+    setSelectedOutcome(outcomeName);
   };
 
   if (loading) {
@@ -155,40 +172,82 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
         <div className="text-white font-semibold">{marketName}</div>
       </div>
 
-      {isMultiOutcome && (
-        <div className="mb-6 p-4 bg-black/40 rounded-lg border border-gray-700">
-          <div className="text-sm text-gray-400 mb-3">Select outcome to analyze:</div>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {outcomes.map((outcome) => (
-              <button
-                key={outcome.name}
-                onClick={() => setSelectedOutcome(outcome.name)}
-                className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${
-                  selectedOutcome === outcome.name
-                    ? 'bg-purple-600 border-2 border-purple-400'
-                    : 'bg-gray-800 border-2 border-gray-700 hover:border-purple-500/50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-4 h-4 rounded-full border-2 ${
-                    selectedOutcome === outcome.name
-                      ? 'bg-white border-white'
-                      : 'border-gray-500'
-                  }`}>
-                    {selectedOutcome === outcome.name && (
-                      <div className="w-full h-full rounded-full bg-purple-600" />
-                    )}
-                  </div>
-                  <span className="text-white font-medium">{outcome.name}</span>
-                </div>
-                <span className="text-xl font-bold text-white">{outcome.odds}%</span>
-              </button>
-            ))}
+      {/* OUTCOME SELECTOR */}
+      {isCategorical && (
+        <div className="mb-6">
+          <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-500/50 mb-4">
+            <div className="flex items-center gap-2 text-sm text-blue-300 mb-1">
+              <span>📊</span>
+              <span className="font-semibold">Multi-Outcome Market Detected</span>
+            </div>
+            <div className="text-xs text-gray-400">
+              Select which outcome you want to analyze
+            </div>
           </div>
+
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+            {outcomes.map((outcome) => {
+              const isSelected = selectedOutcome === outcome.name;
+              
+              return (
+                <button
+                  key={outcome.name}
+                  onClick={() => handleOutcomeSelect(outcome.name)}
+                  className={`w-full p-4 rounded-lg border-2 transition-all ${
+                    isSelected
+                      ? 'bg-purple-900/40 border-purple-500'
+                      : 'bg-gray-900/40 border-gray-700 hover:border-purple-500/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        isSelected
+                          ? 'border-purple-500 bg-purple-500'
+                          : 'border-gray-500'
+                      }`}>
+                        {isSelected && (
+                          <div className="w-2 h-2 rounded-full bg-white" />
+                        )}
+                      </div>
+                      <span className={`font-semibold ${
+                        isSelected ? 'text-white' : 'text-gray-300'
+                      }`}>
+                        {outcome.name}
+                      </span>
+                    </div>
+                    <span className={`text-2xl font-bold ${
+                      isSelected ? 'text-white' : 'text-gray-400'
+                    }`}>
+                      {outcome.odds}%
+                    </span>
+                  </div>
+                  
+                  <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all ${
+                        isSelected ? 'bg-purple-500' : 'bg-gray-500'
+                      }`}
+                      style={{ width: `${outcome.odds}%` }}
+                    />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {selectedOutcome && (
+            <div className="mt-4 p-3 bg-purple-900/20 rounded-lg border border-purple-500/30">
+              <div className="text-xs text-purple-300">
+                ✓ Analyzing: <span className="font-semibold">{selectedOutcome}</span> at {outcomes.find(o => o.name === selectedOutcome)?.odds}%
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {marketOdds !== null && (
+      {/* COMPARISON DISPLAY */}
+      {marketOdds !== null && !waitingForSelection && (
         <>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="text-center p-4 bg-purple-900/20 rounded-lg">
@@ -219,10 +278,32 @@ export function PolymarketComparison({ userQuestion, aiPrediction, onDataReceive
             </div>
           )}
 
-          {isMultiOutcome && selectedOutcome && (
-            <div className="mt-4 p-3 bg-purple-900/10 rounded-lg border border-purple-500/30">
-              <div className="text-xs text-purple-400">
-                💡 Analyzing outcome: <span className="font-semibold">{selectedOutcome}</span>
+          {/* MARKET CONTEXT */}
+          {isCategorical && selectedOutcome && (
+            <div className="mt-4 p-4 bg-black/40 rounded-lg border border-gray-700">
+              <div className="text-sm font-semibold text-gray-300 mb-3">Market Context - All Outcomes:</div>
+              <div className="space-y-2">
+                {outcomes.map((outcome) => (
+                  <div key={outcome.name} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className={outcome.name === selectedOutcome ? 'text-purple-400' : 'text-gray-400'}>
+                        {outcome.name}
+                      </span>
+                      {outcome.name === selectedOutcome && (
+                        <span className="text-xs text-purple-400">← YOU</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                        <div 
+                          className={outcome.name === selectedOutcome ? 'bg-purple-500' : 'bg-gray-500'}
+                          style={{ width: `${outcome.odds}%`, height: '100%' }}
+                        />
+                      </div>
+                      <span className="text-gray-300 w-10 text-right">{outcome.odds}%</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
