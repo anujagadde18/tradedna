@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PolymarketComparison } from '@/components/PolymarketComparison';
 import { calculateIntelligence } from '@/lib/intelligenceEngine';
+import { SourcesMarketplace } from '@/components/SourcesMarketplace';
 
 function ScoresPageContent() {
   const router = useRouter();
@@ -14,18 +15,22 @@ function ScoresPageContent() {
   const [polymarketOdds, setPolymarketOdds] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Controls
-  const [weights, setWeights] = useState({ social: 40, news: 35, technical: 25 });
+  // DEFAULT WEIGHTS - ALWAYS START HERE
+  const DEFAULT_WEIGHTS = { social: 40, news: 35, technical: 25 };
+  
+  const [weights, setWeights] = useState(DEFAULT_WEIGHTS);
   const [customSources, setCustomSources] = useState<any[]>([]);
   const [showSourcePanel, setShowSourcePanel] = useState(false);
-  const [activeTab, setActiveTab] = useState<'weights' | 'sources'>('weights');
+  const [activeTab, setActiveTab] = useState<'weights' | 'marketplace'>('weights');
 
+  // Load saved data on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
         const savedWeights = localStorage.getItem('signalWeights');
         if (savedWeights) {
-          setWeights(JSON.parse(savedWeights));
+          const parsed = JSON.parse(savedWeights);
+          setWeights(parsed);
         }
         
         const savedSources = localStorage.getItem('customSources');
@@ -36,6 +41,42 @@ function ScoresPageContent() {
     }
   }, []);
 
+  // Calculate smart weights based on active sources
+  const calculateSmartWeights = (manualWeights: typeof weights) => {
+    const sourcesByType = {
+      news: customSources.filter(s => s.enabled && s.type === 'news').length,
+      social: customSources.filter(s => s.enabled && s.type === 'social').length,
+      technical: customSources.filter(s => s.enabled && s.type === 'technical').length
+    };
+
+    // If user has explicitly set weights, use those
+    if (manualWeights !== DEFAULT_WEIGHTS) {
+      return manualWeights;
+    }
+
+    // Otherwise, adjust based on available sources
+    let adjusted = { ...DEFAULT_WEIGHTS };
+    
+    // Reduce weight if no sources of that type
+    if (sourcesByType.news === 0) {
+      adjusted.news = Math.max(10, adjusted.news - 10);
+    }
+    if (sourcesByType.social === 0) {
+      adjusted.social = Math.max(10, adjusted.social - 10);
+    }
+
+    // Normalize to 100
+    const total = adjusted.news + adjusted.social + adjusted.technical;
+    if (total !== 100) {
+      const factor = 100 / total;
+      adjusted.news = Math.round(adjusted.news * factor);
+      adjusted.social = Math.round(adjusted.social * factor);
+      adjusted.technical = 100 - adjusted.news - adjusted.social;
+    }
+
+    return adjusted;
+  };
+
   const getCustomSourcesCount = () => {
     return customSources.filter((s: any) => s.enabled).length;
   };
@@ -43,10 +84,11 @@ function ScoresPageContent() {
   const runAnalysis = () => {
     const baseConfidence = 54;
     const customSourcesCount = getCustomSourcesCount();
+    const smartWeights = calculateSmartWeights(weights);
     
     const result = calculateIntelligence(
       baseConfidence,
-      weights,
+      smartWeights,
       customSourcesCount,
       polymarketOdds,
       event
@@ -58,19 +100,26 @@ function ScoresPageContent() {
 
   useEffect(() => {
     runAnalysis();
-  }, [event, polymarketOdds, weights, customSources]);
+  }, [event, polymarketOdds, customSources]);
 
   const handleWeightChange = (type: 'social' | 'news' | 'technical', value: number) => {
     const newWeights = { ...weights, [type]: value };
     
-    const total = newWeights.social + newWeights.news + newWeights.technical;
-    if (total !== 100) {
-      const diff = 100 - total;
-      const others = ['social', 'news', 'technical'].filter(k => k !== type) as ('social' | 'news' | 'technical')[];
-      const adjust = diff / others.length;
-      others.forEach(k => {
-        newWeights[k] = Math.max(0, Math.min(100, newWeights[k] + adjust));
+    // Auto-balance other weights proportionally
+    const others = ['social', 'news', 'technical'].filter(k => k !== type) as ('social' | 'news' | 'technical')[];
+    const otherTotal = others.reduce((sum, key) => sum + weights[key], 0);
+    const remaining = 100 - value;
+    
+    if (otherTotal > 0) {
+      others.forEach(key => {
+        newWeights[key] = Math.round((weights[key] / otherTotal) * remaining);
       });
+      
+      // Fix rounding errors
+      const actualTotal = newWeights.social + newWeights.news + newWeights.technical;
+      if (actualTotal !== 100) {
+        newWeights[others[0]] += (100 - actualTotal);
+      }
     }
     
     setWeights(newWeights);
@@ -80,22 +129,24 @@ function ScoresPageContent() {
     }
   };
 
-  const toggleSource = (index: number) => {
-    const updated = [...customSources];
-    updated[index].enabled = !updated[index].enabled;
-    setCustomSources(updated);
-    
+  const resetWeights = () => {
+    setWeights(DEFAULT_WEIGHTS);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('customSources', JSON.stringify(updated));
+      localStorage.setItem('signalWeights', JSON.stringify(DEFAULT_WEIGHTS));
     }
   };
 
-  const addCustomSource = () => {
+  const applyAndReanalyze = () => {
+    runAnalysis();
+    setShowSourcePanel(false);
+  };
+
+  const addSourceFromMarketplace = (source: any) => {
     const newSource = {
-      id: Date.now(),
-      name: 'New Source',
-      url: '',
-      type: 'news',
+      id: source.id,
+      name: source.name,
+      url: source.url,
+      type: source.type,
       enabled: true
     };
     const updated = [...customSources, newSource];
@@ -106,9 +157,10 @@ function ScoresPageContent() {
     }
   };
 
-  const updateSource = (index: number, field: string, value: string) => {
-    const updated = [...customSources];
-    updated[index][field] = value;
+  const toggleSource = (id: string) => {
+    const updated = customSources.map(s => 
+      s.id === id ? { ...s, enabled: !s.enabled } : s
+    );
     setCustomSources(updated);
     
     if (typeof window !== 'undefined') {
@@ -116,8 +168,8 @@ function ScoresPageContent() {
     }
   };
 
-  const removeSource = (index: number) => {
-    const updated = customSources.filter((_, i) => i !== index);
+  const removeSource = (id: string) => {
+    const updated = customSources.filter(s => s.id !== id);
     setCustomSources(updated);
     
     if (typeof window !== 'undefined') {
@@ -125,7 +177,6 @@ function ScoresPageContent() {
     }
   };
 
-  // SAVE ANALYSIS FUNCTION
   const saveAnalysis = () => {
     if (typeof window === 'undefined' || !intelligence) return;
     
@@ -142,14 +193,13 @@ function ScoresPageContent() {
       const saved = localStorage.getItem('savedAnalyses');
       const analyses = saved ? JSON.parse(saved) : [];
       
-      // Check if already saved (same event)
       const existing = analyses.find((a: any) => a.event === event);
       if (existing) {
         alert('This analysis is already saved!');
         return;
       }
       
-      analyses.unshift(analysis); // Add to beginning
+      analyses.unshift(analysis);
       localStorage.setItem('savedAnalyses', JSON.stringify(analyses));
       alert('✅ Analysis saved to your profile!');
     } catch (error) {
@@ -182,11 +232,18 @@ function ScoresPageContent() {
     return 'text-red-400';
   };
 
+  const smartWeights = calculateSmartWeights(weights);
+  const sourcesByType = {
+    news: customSources.filter(s => s.enabled && s.type === 'news').length,
+    social: customSources.filter(s => s.enabled && s.type === 'social').length,
+    technical: customSources.filter(s => s.enabled && s.type === 'technical').length
+  };
+
   return (
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-7xl mx-auto">
         
-        {/* HEADER WITH CONTROLS */}
+        {/* HEADER */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <button
@@ -212,7 +269,6 @@ function ScoresPageContent() {
               </p>
             </div>
 
-            {/* CONTROL BUTTONS */}
             <div className="flex gap-3">
               <button
                 onClick={() => setShowSourcePanel(!showSourcePanel)}
@@ -240,7 +296,6 @@ function ScoresPageContent() {
         {showSourcePanel && (
           <div className="mb-6 bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-xl overflow-hidden">
             
-            {/* TABS */}
             <div className="flex border-b border-gray-700">
               <button
                 onClick={() => setActiveTab('weights')}
@@ -253,42 +308,32 @@ function ScoresPageContent() {
                 Adjust Weights
               </button>
               <button
-                onClick={() => setActiveTab('sources')}
+                onClick={() => setActiveTab('marketplace')}
                 className={`flex-1 px-6 py-4 font-semibold transition-all ${
-                  activeTab === 'sources'
+                  activeTab === 'marketplace'
                     ? 'bg-purple-600 text-white'
                     : 'bg-black/40 text-gray-400 hover:text-white'
                 }`}
               >
-                Custom Sources ({getCustomSourcesCount()})
+                Source Marketplace ({getCustomSourcesCount()})
               </button>
             </div>
 
             <div className="p-6">
-              {/* WEIGHTS TAB */}
               {activeTab === 'weights' && (
                 <div className="space-y-6">
-                  <h3 className="text-xl font-bold text-white">Signal Weights</h3>
+                  <h3 className="text-xl font-bold text-white">Adjust Signal Weights</h3>
                   
+                  {/* NEWS WEIGHT */}
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="text-gray-300">Community Signals</span>
-                      <span className="text-white font-bold">{Math.round(weights.social)}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={weights.social}
-                      onChange={(e) => handleWeightChange('social', parseInt(e.target.value))}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                    />
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-gray-300">News Sentiment</span>
-                      <span className="text-white font-bold">{Math.round(weights.news)}%</span>
+                      <div>
+                        <span className="text-gray-300">News Sources</span>
+                        {sourcesByType.news === 0 && (
+                          <span className="ml-2 text-xs text-orange-400">⚠ No sources active</span>
+                        )}
+                      </div>
+                      <span className="text-white font-bold">{smartWeights.news}%</span>
                     </div>
                     <input
                       type="range"
@@ -296,14 +341,36 @@ function ScoresPageContent() {
                       max="100"
                       value={weights.news}
                       onChange={(e) => handleWeightChange('news', parseInt(e.target.value))}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                      className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
                     />
                   </div>
 
+                  {/* SOCIAL WEIGHT */}
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <div>
+                        <span className="text-gray-300">Social Sources</span>
+                        {sourcesByType.social === 0 && (
+                          <span className="ml-2 text-xs text-orange-400">⚠ No sources active</span>
+                        )}
+                      </div>
+                      <span className="text-white font-bold">{smartWeights.social}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={weights.social}
+                      onChange={(e) => handleWeightChange('social', parseInt(e.target.value))}
+                      className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                    />
+                  </div>
+
+                  {/* TECHNICAL WEIGHT */}
                   <div>
                     <div className="flex justify-between mb-2">
                       <span className="text-gray-300">Market Probability (Polymarket)</span>
-                      <span className="text-white font-bold">{Math.round(weights.technical)}%</span>
+                      <span className="text-white font-bold">{smartWeights.technical}%</span>
                     </div>
                     <input
                       type="range"
@@ -311,97 +378,86 @@ function ScoresPageContent() {
                       max="100"
                       value={weights.technical}
                       onChange={(e) => handleWeightChange('technical', parseInt(e.target.value))}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                      className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
                     />
                   </div>
 
+                  <div className="pt-4 border-t border-gray-700 flex justify-between items-center">
+                    <div className="text-sm">
+                      <span className="text-gray-400">Total: </span>
+                      <span className="text-white font-bold">{smartWeights.news + smartWeights.social + smartWeights.technical}%</span>
+                      {smartWeights.news + smartWeights.social + smartWeights.technical === 100 && (
+                        <span className="ml-2 text-green-400">✓</span>
+                      )}
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={resetWeights}
+                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg font-semibold transition-all text-sm"
+                      >
+                        Reset to Default
+                      </button>
+                      <button
+                        onClick={applyAndReanalyze}
+                        className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold transition-all text-sm"
+                      >
+                        Apply & Re-analyze
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="p-4 bg-black/40 rounded-lg border border-gray-700">
-                    <div className="text-sm text-gray-400 mb-2">💡 Tip:</div>
+                    <div className="text-sm text-gray-400 mb-2">💡 Smart Weights:</div>
                     <div className="text-sm text-gray-300">
-                      Trust market data more? Increase Market Probability weight. 
-                      Think community sentiment matters? Boost Community Signals. 
-                      Weights automatically balance to total 100%.
+                      Weights automatically adjust based on your active sources. Add more sources to improve prediction accuracy.
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* SOURCES TAB */}
-              {activeTab === 'sources' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-bold text-white">Custom Sources</h3>
-                    <button
-                      onClick={addCustomSource}
-                      className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg font-semibold transition-all text-sm"
-                    >
-                      + Add Source
-                    </button>
-                  </div>
-
-                  {customSources.length === 0 ? (
-                    <div className="p-8 text-center text-gray-500">
-                      No custom sources yet. Click "Add Source" to create one.
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {customSources.map((source, idx) => (
-                        <div
-                          key={source.id}
-                          className="p-4 bg-black/40 border border-gray-700 rounded-lg"
-                        >
-                          <div className="flex items-start justify-between mb-3">
+              {activeTab === 'marketplace' && (
+                <div className="space-y-6">
+                  {/* ACTIVE SOURCES */}
+                  {customSources.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-bold text-white mb-3">
+                        Your Active Sources ({getCustomSourcesCount()})
+                      </h3>
+                      <div className="space-y-2 mb-6">
+                        {customSources.map((source) => (
+                          <div
+                            key={source.id}
+                            className="p-3 bg-black/40 border border-gray-700 rounded-lg flex items-center justify-between"
+                          >
                             <div className="flex items-center gap-3 flex-1">
                               <input
                                 type="checkbox"
                                 checked={source.enabled}
-                                onChange={() => toggleSource(idx)}
-                                className="w-5 h-5 rounded accent-purple-500"
+                                onChange={() => toggleSource(source.id)}
+                                className="w-4 h-4 rounded accent-purple-500"
                               />
-                              <input
-                                type="text"
-                                value={source.name}
-                                onChange={(e) => updateSource(idx, 'name', e.target.value)}
-                                className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm"
-                                placeholder="Source name"
-                              />
+                              <div className="flex-1">
+                                <div className="text-white font-medium">{source.name}</div>
+                                <div className="text-xs text-gray-500">{source.type}</div>
+                              </div>
                             </div>
                             <button
-                              onClick={() => removeSource(idx)}
-                              className="ml-3 px-3 py-2 bg-red-600 hover:bg-red-500 rounded text-sm font-semibold transition-all"
+                              onClick={() => removeSource(source.id)}
+                              className="px-3 py-1 bg-red-600 hover:bg-red-500 rounded text-sm font-semibold transition-all"
                             >
                               Remove
                             </button>
                           </div>
-
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="text-xs text-gray-400 mb-1 block">Type</label>
-                              <select
-                                value={source.type}
-                                onChange={(e) => updateSource(idx, 'type', e.target.value)}
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm"
-                              >
-                                <option value="news">News</option>
-                                <option value="social">Social</option>
-                                <option value="technical">Technical</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label className="text-xs text-gray-400 mb-1 block">URL/Feed</label>
-                              <input
-                                type="text"
-                                value={source.url}
-                                onChange={(e) => updateSource(idx, 'url', e.target.value)}
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm"
-                                placeholder="https://..."
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   )}
+
+                  {/* MARKETPLACE */}
+                  <SourcesMarketplace
+                    onAddSource={addSourceFromMarketplace}
+                    activeSources={customSources.map(s => s.id)}
+                  />
                 </div>
               )}
             </div>
@@ -476,15 +532,15 @@ function ScoresPageContent() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-400">News Sources:</span>
-                  <span className="text-white">{Math.round(weights.news)}%</span>
+                  <span className="text-white">{smartWeights.news}%</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Social Sources:</span>
-                  <span className="text-white">{Math.round(weights.social)}%</span>
+                  <span className="text-white">{smartWeights.social}%</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Market Probability:</span>
-                  <span className="text-white">{Math.round(weights.technical)}%</span>
+                  <span className="text-white">{smartWeights.technical}%</span>
                 </div>
               </div>
             </div>
