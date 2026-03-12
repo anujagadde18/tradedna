@@ -1,3 +1,7 @@
+'use client';
+
+import { useState } from 'react';
+
 // Sources Marketplace Data
 export const SOURCE_MARKETPLACE = {
   news: [
