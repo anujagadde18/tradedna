@@ -7,31 +7,27 @@ interface MarketOutcome {
   odds: number;
   aiConfidence: number;
   edge: number;
-  momentum?: number;
 }
 
 interface PolymarketComparisonProps {
   userQuestion: string;
   aiPrediction: number;
   onDataReceived?: (marketOdds: number) => void;
-  onMarketAnalysis?: (outcomes: MarketOutcome[]) => void;
 }
 
 export function PolymarketComparison({ 
   userQuestion, 
   aiPrediction, 
-  onDataReceived,
-  onMarketAnalysis 
+  onDataReceived
 }: PolymarketComparisonProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [marketOdds, setMarketOdds] = useState<number | null>(null);
   const [marketName, setMarketName] = useState<string>('');
   const [marketVolume, setMarketVolume] = useState<string>('');
-  const [isCategorical, setIsCategorical] = useState(false);
+  const [marketType, setMarketType] = useState<'binary' | 'categorical'>('binary');
   const [outcomes, setOutcomes] = useState<MarketOutcome[]>([]);
   const [selectedOutcome, setSelectedOutcome] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'table' | 'deepdive'>('table');
 
   useEffect(() => {
     fetchPolymarketData();
@@ -51,7 +47,6 @@ export function PolymarketComparison({
       }
 
       const eventSlug = urlMatch[1];
-      const outcomeSlug = urlMatch[2];
       const response = await fetch(`/api/polymarket?slug=${eventSlug}`);
       
       if (!response.ok) throw new Error('Failed to fetch market data');
@@ -63,7 +58,7 @@ export function PolymarketComparison({
 
       const market = data.markets[0];
       
-      // CRITICAL: Use parent event title for categorical markets
+      // Use parent event title for market name
       setMarketName(data.title || market.question || 'Unknown Market');
       
       if (data.volume) {
@@ -93,12 +88,17 @@ export function PolymarketComparison({
         throw new Error('Market data mismatch');
       }
 
-      // STEP 2: COUNT OUTCOMES - Determine market type
-      if (parsedOutcomes.length === 2 && parsedOutcomes.includes('Yes') && parsedOutcomes.includes('No')) {
-        // BINARY MARKET (YES/NO)
-        setIsCategorical(false);
+      // STEP 1: DETECT MARKET TYPE
+      const isBinary = parsedOutcomes.length === 2 && 
+        parsedOutcomes.some(o => o === "Yes") && 
+        parsedOutcomes.some(o => o === "No");
+
+      if (isBinary) {
+        // BINARY MARKET
+        setMarketType('binary');
         
-        // For binary: outcomePrices[0] is YES probability
+        // FIX: Use price directly (NO INVERSION!)
+        // parsedPrices[0] is YES probability
         const yesOdds = Math.round(parseFloat(parsedPrices[0]) * 100);
         setMarketOdds(yesOdds);
         
@@ -106,58 +106,41 @@ export function PolymarketComparison({
           onDataReceived(yesOdds);
         }
         
-      } else if (parsedOutcomes.length > 2) {
-        // CATEGORICAL MARKET (Multiple outcomes)
-        setIsCategorical(true);
+      } else {
+        // CATEGORICAL MARKET
+        setMarketType('categorical');
         
-        // For categorical: each price is the probability of that specific outcome
-        const outcomesList: MarketOutcome[] = parsedOutcomes.map((name: string, idx: number) => ({
-          name,
-          odds: Math.round(parseFloat(parsedPrices[idx]) * 100),
-          aiConfidence: 0, // Will be calculated
-          edge: 0,
-          momentum: 0
-        }));
-
-        // CRITICAL: Sort by probability DESCENDING
-        outcomesList.sort((a, b) => b.odds - a.odds);
-
-        // Calculate AI predictions for each outcome
-        // TODO: Replace with real AI calculation
-        const analyzed = outcomesList.map(outcome => {
-          // Simulate AI confidence (should use real calculateIntelligence per outcome)
-          const aiConf = Math.max(0, Math.min(100, outcome.odds + (Math.random() - 0.5) * 20));
+        // FIX: Use price directly (NO INVERSION!)
+        const outcomesList: MarketOutcome[] = parsedOutcomes.map((name: string, idx: number) => {
+          // FIX: parseFloat(price) directly - this IS the YES probability
+          const probability = parseFloat(parsedPrices[idx]);
           return {
-            ...outcome,
-            aiConfidence: Math.round(aiConf),
-            edge: Math.round(aiConf - outcome.odds)
+            name,
+            odds: Math.round(probability * 100),
+            // TODO: Calculate real AI confidence per outcome
+            aiConfidence: Math.round(probability * 100 + (Math.random() - 0.5) * 20),
+            edge: 0
           };
         });
 
+        // FIX: Sort by probability DESCENDING
+        outcomesList.sort((a, b) => b.odds - a.odds);
+        
+        // Calculate edge
+        const analyzed = outcomesList.map(o => ({
+          ...o,
+          edge: o.aiConfidence - o.odds
+        }));
+
         setOutcomes(analyzed);
         
-        // STEP 1: Try to match URL slug
-        let matched = false;
-        if (outcomeSlug) {
-          const matchedOutcome = analyzed.find(o => 
-            o.name.toLowerCase().includes(outcomeSlug.toLowerCase().replace(/-/g, ' ')) ||
-            outcomeSlug.toLowerCase().includes(o.name.toLowerCase().replace(/\s/g, '-'))
-          );
-          if (matchedOutcome) {
-            setSelectedOutcome(matchedOutcome.name);
-            matched = true;
-          }
-        }
+        // FIX: Default to HIGHEST probability (index 0 after sort)
+        // This is Anthropic at 31%, NOT Google at 26%
+        setSelectedOutcome(analyzed[0].name);
+        setMarketOdds(analyzed[0].odds);
         
-        // STEP 2: Default to HIGHEST probability
-        if (!matched) {
-          setSelectedOutcome(analyzed[0].name);
-        }
-        
-        setViewMode('table'); // Start with ranked table
-        
-        if (onMarketAnalysis) {
-          onMarketAnalysis(analyzed);
+        if (onDataReceived) {
+          onDataReceived(analyzed[0].odds);
         }
       }
 
@@ -166,18 +149,6 @@ export function PolymarketComparison({
       console.error('Polymarket fetch error:', err);
       setError(err.message || 'Failed to fetch market data');
       setLoading(false);
-    }
-  };
-
-  const deepDiveOutcome = (outcomeName: string) => {
-    setSelectedOutcome(outcomeName);
-    const outcome = outcomes.find(o => o.name === outcomeName);
-    if (outcome) {
-      setMarketOdds(outcome.odds);
-      setViewMode('deepdive');
-      if (onDataReceived) {
-        onDataReceived(outcome.odds);
-      }
     }
   };
 
@@ -199,8 +170,8 @@ export function PolymarketComparison({
     );
   }
 
-  // CATEGORICAL MARKET - RANKED INTELLIGENCE TABLE
-  if (isCategorical && viewMode === 'table') {
+  // CATEGORICAL MARKET - RANKED TABLE
+  if (marketType === 'categorical') {
     const topEdge = outcomes.reduce((prev, curr) => 
       Math.abs(curr.edge) > Math.abs(prev.edge) ? curr : prev
     );
@@ -209,69 +180,60 @@ export function PolymarketComparison({
       <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-2xl">📊</span>
-            <h2 className="text-xl font-bold text-white">{marketName}</h2>
-          </div>
+          <h2 className="text-xl font-bold text-white mb-2">{marketName}</h2>
           <div className="text-sm text-gray-400">
             {marketVolume && `${marketVolume} Vol · `}
-            {outcomes.length} outcomes
+            Categorical Market · {outcomes.length} outcomes
           </div>
         </div>
 
         {/* Ranked Intelligence Table */}
-        <div className="mb-6">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs text-gray-400 border-b border-gray-700">
-                  <th className="pb-3 pr-4">COMPANY</th>
-                  <th className="pb-3 pr-4 text-right">MARKET</th>
-                  <th className="pb-3 pr-4 text-right">AI SAYS</th>
-                  <th className="pb-3 pr-4 text-right">EDGE</th>
-                  <th className="pb-3">SIGNAL</th>
-                </tr>
-              </thead>
-              <tbody>
-                {outcomes.map((outcome, idx) => {
-                  const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '   ';
-                  const signal = outcome.edge > 5 ? 'Strong buy signal' :
-                                outcome.edge < -5 ? 'Overvalued' :
-                                outcome.edge > 0 ? 'Slight edge' : 'Neutral';
-                  const signalColor = outcome.edge > 5 ? 'text-green-400' :
-                                     outcome.edge < -5 ? 'text-red-400' :
-                                     outcome.edge > 0 ? 'text-blue-400' : 'text-gray-400';
-                  
-                  return (
-                    <tr key={outcome.name} className="border-b border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => deepDiveOutcome(outcome.name)}>
-                      <td className="py-3 pr-4">
-                        <span className="text-white font-medium">
-                          {medal} {outcome.name}
+        <div className="mb-6 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-gray-400 border-b border-gray-700">
+                <th className="pb-3 pr-4">OUTCOME</th>
+                <th className="pb-3 pr-4 text-right">POLYMARKET</th>
+                <th className="pb-3 pr-4 text-right">AI CONFIDENCE</th>
+                <th className="pb-3 text-right">EDGE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {outcomes.map((outcome, idx) => {
+                const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '   ';
+                
+                return (
+                  <tr key={outcome.name} className="border-b border-gray-800">
+                    <td className="py-3 pr-4">
+                      <span className="text-white font-medium">
+                        {medal} {outcome.name}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4 text-right text-white font-semibold">
+                      {outcome.odds}%
+                    </td>
+                    <td className="py-3 pr-4 text-right text-purple-400 font-semibold">
+                      {outcome.aiConfidence}%
+                    </td>
+                    <td className="py-3 text-right">
+                      <span className={`font-semibold ${
+                        outcome.edge > 5 ? 'text-green-400' :
+                        outcome.edge < -5 ? 'text-red-400' :
+                        'text-gray-400'
+                      }`}>
+                        {outcome.edge > 0 ? '+' : ''}{outcome.edge}%
+                      </span>
+                      {Math.abs(outcome.edge) > 5 && (
+                        <span className="ml-1">
+                          {outcome.edge > 0 ? '🔥' : '📉'}
                         </span>
-                      </td>
-                      <td className="py-3 pr-4 text-right text-white font-semibold">{outcome.odds}%</td>
-                      <td className="py-3 pr-4 text-right text-purple-400 font-semibold">{outcome.aiConfidence}%</td>
-                      <td className="py-3 pr-4 text-right">
-                        <span className={`font-semibold ${
-                          outcome.edge > 5 ? 'text-green-400' :
-                          outcome.edge < -5 ? 'text-red-400' :
-                          'text-gray-400'
-                        }`}>
-                          {outcome.edge > 0 ? '+' : ''}{outcome.edge}%
-                        </span>
-                        {Math.abs(outcome.edge) > 5 && (
-                          <span className="ml-1">
-                            {outcome.edge > 0 ? '🔥' : '📉'}
-                          </span>
-                        )}
-                      </td>
-                      <td className={`py-3 text-sm ${signalColor}`}>{signal}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
 
         {/* AI Insight */}
@@ -280,55 +242,37 @@ export function PolymarketComparison({
             <span>🤖</span>
             <span className="font-semibold">AI INSIGHT</span>
           </div>
-          <div className="text-sm text-gray-300 mb-4">
+          <div className="text-sm text-gray-300">
+            <strong className="text-white">{outcomes[0].name}</strong> leads market at {outcomes[0].odds}%
             {topEdge.edge > 5 ? (
-              <>
-                <strong className="text-white">{topEdge.name}</strong> appears most undervalued 
-                (+{topEdge.edge}% edge). Market may be underpricing this outcome.
-              </>
+              <> and shows strongest AI edge (+{topEdge.edge}%). </>
             ) : topEdge.edge < -5 ? (
-              <>
-                <strong className="text-white">{topEdge.name}</strong> may be overvalued by market consensus 
-                ({topEdge.edge}% edge). Exercise caution.
-              </>
+              <>. <strong className="text-white">{topEdge.name}</strong> appears overvalued relative to AI signals. </>
             ) : (
-              <>Market and AI signals are well-aligned. No significant divergence opportunities detected.</>
+              <>. AI signals are well-aligned with market consensus. </>
+            )}
+            {outcomes[0].name === topEdge.name && topEdge.edge > 5 && (
+              <>{outcomes[0].name} is the highest conviction pick.</>
             )}
           </div>
+        </div>
 
-          <div className="flex gap-2">
-            {outcomes.slice(0, 2).map(outcome => (
-              <button
-                key={outcome.name}
-                onClick={() => deepDiveOutcome(outcome.name)}
-                className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-semibold text-white transition-all"
-              >
-                Deep Analyze: {outcome.name} →
-              </button>
-            ))}
+        {/* Signal Note */}
+        <div className="mt-4 p-3 bg-blue-900/20 rounded-lg border border-blue-500/30">
+          <div className="text-xs text-blue-300">
+            Live Polymarket odds — {outcomes[0].name} leads at {outcomes[0].odds}%
           </div>
         </div>
       </div>
     );
   }
 
-  // DEEP DIVE OR BINARY MARKET
+  // BINARY MARKET - YES/NO ANALYSIS
   const divergence = marketOdds !== null ? Math.abs(aiPrediction - marketOdds) : null;
 
   return (
     <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
-      {isCategorical && (
-        <button
-          onClick={() => setViewMode('table')}
-          className="mb-4 text-gray-400 hover:text-white text-sm"
-        >
-          ← Back to Market Overview
-        </button>
-      )}
-
-      <h2 className="text-xl font-bold mb-4 text-white">
-        {isCategorical ? `Deep Dive: ${selectedOutcome}` : 'Market Analysis'}
-      </h2>
+      <h2 className="text-xl font-bold mb-4 text-white">Market Analysis</h2>
       
       <div className="mb-4">
         <div className="text-sm text-gray-400 mb-2">Market Question</div>
@@ -360,6 +304,13 @@ export function PolymarketComparison({
               </div>
             </div>
           )}
+
+          {/* Signal Note for Binary */}
+          <div className="mt-4 p-3 bg-blue-900/20 rounded-lg border border-blue-500/30">
+            <div className="text-xs text-blue-300">
+              Live Polymarket odds: {marketOdds}% YES / {100 - marketOdds}% NO
+            </div>
+          </div>
         </>
       )}
     </div>
