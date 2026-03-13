@@ -4,23 +4,34 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 // Detect what kind of outcomes these are based on names
-function detectOutcomeType(names: string[]): 'companies' | 'dates' | 'candidates' | 'options' {
+function detectOutcomeType(names: string[]): 'companies' | 'dates' | 'candidates' | 'prices' | 'options' {
   if (names.length === 0) return 'options';
 
-  const sample = names.map(n => n.toLowerCase());
+  const sample = names.map(n => n.toLowerCase().trim());
 
-  // Date patterns: "March 15", "December 31", "June 30", "Q1 2026" etc.
-  const datePatterns = /^(january|february|march|april|may|june|july|august|september|october|november|december|\d{1,2}\/\d{1,2}|q[1-4]|\d{4})/i;
-  const dateCount = sample.filter(n => datePatterns.test(n) || /\d{1,2}$/.test(n)).length;
+  // Price/number targets: "$90", "↑$80", "90", "$100", "above 90" etc.
+  // Must check this BEFORE date check — "$90" ends in digits but is a price
+  const pricePattern = /^\$[\d,]+|^[↑↓]?\s*\$[\d,]+|^above\s*\$|^below\s*\$|^over\s*\$|^under\s*\$/i;
+  const priceCount = sample.filter(n => pricePattern.test(n)).length;
+  if (priceCount >= names.length * 0.4) return 'prices';
+
+  // Pure number ranges: "90", "100", "75" with no $ — still price targets in context
+  const pureNumberCount = sample.filter(n => /^\d+(\.\d+)?$/.test(n)).length;
+  if (pureNumberCount >= names.length * 0.5) return 'prices';
+
+  // Date patterns: "March 15", "December 31", "June 30", "Q1 2026"
+  // Must NOT match things that are just numbers (caught above)
+  const datePatterns = /^(january|february|march|april|may|june|july|august|september|october|november|december|\d{1,2}\/\d{1,2}|q[1-4])/i;
+  const dateCount = sample.filter(n => datePatterns.test(n)).length;
   if (dateCount >= names.length * 0.5) return 'dates';
 
-  // Candidate patterns: often just names (two words, capitalized)
+  // Candidate patterns: two-word proper names like "Donald Trump", "Kamala Harris"
   const namePattern = /^[a-z]+ [a-z]+$/i;
   const nameCount = sample.filter(n => namePattern.test(n)).length;
   if (nameCount >= names.length * 0.6) return 'candidates';
 
-  // Company patterns: known company suffixes or AI/tech names
-  const companyHints = ['ai', 'inc', 'corp', 'openai', 'google', 'anthropic', 'microsoft', 'meta', 'apple', 'amazon', 'nvidia'];
+  // Company patterns
+  const companyHints = ['ai', 'inc', 'corp', 'openai', 'google', 'anthropic', 'microsoft', 'meta', 'apple', 'amazon', 'nvidia', 'deepseek', 'mistral', 'xai', 'z.ai', 'meituan', 'alibaba', 'moonshot'];
   const companyCount = sample.filter(n => companyHints.some(h => n.includes(h))).length;
   if (companyCount >= 2) return 'companies';
 
@@ -113,7 +124,8 @@ export async function GET(request: NextRequest) {
         title: event.title,
         volume: event.volume || '0',
         endDate: event.endDate || '',
-        outcomes
+        outcomes,
+        outcomeType
       });
     }
 
