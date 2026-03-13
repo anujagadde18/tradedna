@@ -264,40 +264,80 @@ export function PolymarketComparison({
 
             return (
               <div key={outcome.name}>
-                <div className="flex items-center justify-between text-sm mb-2">
+                {/* Row Header */}
+                <div className="flex items-center justify-between mb-2">
+                  
+                  {/* Left: Medal + Name */}
                   <div className="flex items-center gap-2 flex-1">
                     {medal && <span className="text-xl">{medal}</span>}
                     <span className="text-white font-semibold">{outcome.name}</span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-2xl font-bold text-white">{outcome.odds}%</span>
+
+                  {/* Right: All Numbers */}
+                  <div className="flex items-center gap-4 text-sm">
+                    
+                    {/* Polymarket Odds */}
+                    <div className="text-center min-w-[60px]">
+                      <div className="text-xs text-gray-400">Market</div>
+                      <div className="text-white font-bold">{outcome.odds}%</div>
+                    </div>
+
+                    {/* AI Confidence */}
+                    <div className="text-center min-w-[60px]">
+                      <div className="text-xs text-gray-400">AI</div>
+                      <div className="text-purple-400 font-bold">{outcome.aiConfidence}%</div>
+                    </div>
+
+                    {/* Weekly Momentum */}
                     {hasChange && (
-                      <span className={`text-sm ${weekChangeNum > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {weekChangeNum > 0 ? '▲' : '▼'}{Math.abs(weekChangeNum)}% wk
-                      </span>
+                      <div className="text-center min-w-[60px]">
+                        <div className="text-xs text-gray-400">1wk</div>
+                        <div className={weekChangeNum > 0 ? 'text-green-400' : 'text-red-400'}>
+                          {weekChangeNum > 0 ? '▲' : '▼'}{Math.abs(weekChangeNum)}%
+                        </div>
+                      </div>
                     )}
-                    {outcome.edge !== 0 && (
-                      <span className={`text-sm font-semibold ${
+
+                    {/* Edge */}
+                    <div className="text-center min-w-[70px]">
+                      <div className="text-xs text-gray-400">Edge</div>
+                      <div className={`font-bold ${
                         outcome.edge > 5 ? 'text-green-400' :
                         outcome.edge < -5 ? 'text-red-400' :
                         'text-gray-400'
                       }`}>
-                        Edge: {outcome.edge > 0 ? '+' : ''}{outcome.edge}%
+                        {outcome.edge > 0 ? '+' : ''}{outcome.edge}%
                         {outcome.edge > 5 && ' 🔥'}
                         {outcome.edge < -5 && ' 📉'}
-                      </span>
-                    )}
+                      </div>
+                    </div>
+
                   </div>
                 </div>
-                <div className="h-3 bg-gray-700 rounded-md overflow-hidden">
-                  <div 
-                    className={`h-full transition-all ${
-                      idx === 0 
-                        ? 'bg-gradient-to-r from-purple-500 to-purple-700' 
-                        : 'bg-gray-500'
-                    }`}
-                    style={{ width: `${outcome.odds}%` }}
-                  />
+
+                {/* Dual Progress Bars */}
+                <div className="space-y-1">
+                  {/* Market Bar (Purple) */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 w-12">Market</span>
+                    <div className="flex-1 bg-gray-700 rounded-md h-2.5 overflow-hidden">
+                      <div 
+                        className="bg-gradient-to-r from-purple-500 to-purple-700 h-full transition-all"
+                        style={{ width: `${outcome.odds}%` }}
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* AI Bar (Blue) */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 w-12">AI</span>
+                    <div className="flex-1 bg-gray-700 rounded-md h-2.5 overflow-hidden">
+                      <div 
+                        className="bg-gradient-to-r from-blue-500 to-blue-700 h-full transition-all"
+                        style={{ width: `${outcome.aiConfidence}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             );
