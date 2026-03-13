@@ -14,7 +14,7 @@ interface MarketOutcome {
 interface PolymarketComparisonProps {
   userQuestion: string;
   aiPrediction: number;
-  onDataReceived?: (marketOdds: number, type?: 'binary' | 'categorical') => void;
+  onDataReceived?: (marketOdds: number, type?: 'binary' | 'categorical', outcomes?: any[]) => void;
 }
 
 // AI Confidence Calculation - NO RANDOM!
@@ -129,7 +129,7 @@ export function PolymarketComparison({
         if (analyzed.length > 0) {
           setMarketOdds(analyzed[0].odds);
           if (onDataReceived) {
-            onDataReceived(analyzed[0].odds, 'categorical');
+            onDataReceived(analyzed[0].odds, 'categorical', analyzed);
           }
         }
       }
