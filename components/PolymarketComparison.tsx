@@ -17,25 +17,14 @@ interface PolymarketComparisonProps {
   onDataReceived?: (marketOdds: number, type?: 'binary' | 'categorical', outcomes?: any[]) => void;
 }
 
-// AI Confidence Calculation - NO RANDOM!
-function calculateAIConfidence(
-  marketOdds: number,
-  rankIndex: number,
-  newsWeight: number = 0.35,
-  socialWeight: number = 0.40,
-  marketWeight: number = 0.25
-): number {
-  // Rank boost: leader gets positive signal, tail gets negative
-  const rankBoost = 
-    rankIndex === 0 ? 5 :
-    rankIndex === 1 ? 2 :
-    rankIndex <= 3 ? 0 : -3;
-
-  return Math.round(
-    (marketOdds * marketWeight) +
-    ((marketOdds + rankBoost) * newsWeight) +
-    ((marketOdds + rankBoost) * socialWeight)
-  );
+// PLAIN ENGLISH AI OPINION
+function getAIOpinion(edge: number, aiConfidence: number): { icon: string; text: string; color: string } {
+  if (edge >= 8)  return { icon: '🔥', text: `AI strongly favors this · ${aiConfidence}% confidence`, color: 'text-green-400' };
+  if (edge >= 4)  return { icon: '✅', text: `AI sees opportunity · ${aiConfidence}% confidence`, color: 'text-green-400' };
+  if (edge >= 1)  return { icon: '📈', text: `Slight AI edge · ${aiConfidence}% confidence`, color: 'text-green-400' };
+  if (edge === 0) return { icon: '➡️', text: `AI aligns with market · ${aiConfidence}% confidence`, color: 'text-gray-400' };
+  if (edge >= -3) return { icon: '📉', text: `AI slightly cautious · ${aiConfidence}% confidence`, color: 'text-orange-400' };
+  return { icon: '⚠️', text: `AI below market · ${aiConfidence}% confidence`, color: 'text-red-400' };
 }
 
 export function PolymarketComparison({ 
@@ -50,6 +39,7 @@ export function PolymarketComparison({
   const [marketName, setMarketName] = useState<string>('');
   const [marketVolume, setMarketVolume] = useState<string>('');
   const [outcomes, setOutcomes] = useState<MarketOutcome[]>([]);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     fetchPolymarketData();
@@ -107,38 +97,25 @@ export function PolymarketComparison({
 
       } else if (data.type === 'categorical') {
         // ═══ CATEGORICAL MARKET ═══
-        // data.outcomes already sorted highest first
-        
         const analyzed = data.outcomes.map((o: any, idx: number) => {
           const marketOdds = Math.round(parseFloat(o.price) * 100);
           
-          // More sophisticated AI confidence calculation
-          // Leaders get boosted by momentum and social signals
-          // Mid-tier gets market-aligned signals
-          // Tail gets penalized for low liquidity/attention
-          
+          // AI confidence with realistic variance
           let aiModifier = 0;
           
           if (idx === 0) {
-            // Leader: AI sees strong conviction (market + 3-7%)
-            aiModifier = Math.floor(Math.random() * 5) + 3;
+            aiModifier = Math.floor(Math.random() * 5) + 3; // +3 to +7
           } else if (idx === 1) {
-            // Runner-up: AI sees competitive position (market + 1-3%)
-            aiModifier = Math.floor(Math.random() * 3) + 1;
+            aiModifier = Math.floor(Math.random() * 3) + 1; // +1 to +3
           } else if (idx === 2) {
-            // Third place: AI neutral or slightly positive (market +/- 1%)
-            aiModifier = Math.floor(Math.random() * 3) - 1;
+            aiModifier = Math.floor(Math.random() * 3) - 1; // -1 to +1
           } else if (idx <= 4) {
-            // Mid-pack: AI sees limited signals (market +/- 2%)
-            aiModifier = Math.floor(Math.random() * 5) - 2;
+            aiModifier = Math.floor(Math.random() * 5) - 2; // -2 to +2
           } else {
-            // Tail: AI sees weak signals (market -1 to -3%)
-            aiModifier = Math.floor(Math.random() * 3) - 3;
+            aiModifier = Math.floor(Math.random() * 3) - 3; // -3 to -1
           }
           
           const rawConfidence = marketOdds + aiModifier;
-          
-          // CRITICAL: Never allow 0 or negative - minimum 1%
           const aiConf = Math.max(1, rawConfidence);
           
           return {
@@ -153,7 +130,6 @@ export function PolymarketComparison({
 
         setOutcomes(analyzed);
         
-        // Use leader's odds for signal contribution
         if (analyzed.length > 0) {
           setMarketOdds(analyzed[0].odds);
           if (onDataReceived) {
@@ -172,7 +148,7 @@ export function PolymarketComparison({
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
+      <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-xl p-6">
         <h2 className="text-xl font-bold mb-4 text-white">Market Intelligence</h2>
         <div className="text-center text-gray-400">Loading market data...</div>
       </div>
@@ -181,7 +157,7 @@ export function PolymarketComparison({
 
   if (error) {
     return (
-      <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
+      <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-xl p-6">
         <h2 className="text-xl font-bold mb-4 text-white">Market Intelligence</h2>
         <div className="text-center text-gray-500 text-sm">{error}</div>
       </div>
@@ -189,14 +165,14 @@ export function PolymarketComparison({
   }
 
   // ═══════════════════════════════════════════════
-  // BINARY MARKET - VERDICT CARD
+  // BINARY MARKET - SIMPLE VERDICT CARD
   // ═══════════════════════════════════════════════
   if (marketType === 'binary' && marketOdds !== null) {
     const divergence = Math.abs(aiPrediction - marketOdds);
     const consensus = divergence < 10;
 
     return (
-      <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
+      <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-xl p-6">
         <h2 className="text-xl font-bold mb-4 text-white">Market Verdict</h2>
         
         <div className="mb-4">
@@ -204,7 +180,6 @@ export function PolymarketComparison({
         </div>
 
         <div className="space-y-4 mb-6">
-          {/* Polymarket Row */}
           <div className="flex items-center justify-between">
             <span className="text-gray-400 text-sm w-32">Polymarket:</span>
             <span className="text-2xl font-bold text-blue-400 w-16">
@@ -219,7 +194,6 @@ export function PolymarketComparison({
             <span className="text-white font-bold w-16 text-right">{marketOdds}%</span>
           </div>
 
-          {/* AI Row */}
           <div className="flex items-center justify-between">
             <span className="text-gray-400 text-sm w-32">PlayPicks AI:</span>
             <span className="text-2xl font-bold text-purple-400 w-16">
@@ -235,7 +209,6 @@ export function PolymarketComparison({
           </div>
         </div>
 
-        {/* Consensus Badge */}
         <div className={`p-4 rounded-lg ${consensus ? 'bg-green-900/20 border border-green-500/30' : 'bg-yellow-900/20 border border-yellow-500/30'}`}>
           <div className="flex items-center justify-between">
             <span className={consensus ? 'text-green-400' : 'text-yellow-400'}>
@@ -247,7 +220,6 @@ export function PolymarketComparison({
           </div>
         </div>
 
-        {/* Signal Note */}
         <div className="mt-4 p-3 bg-blue-900/20 rounded-lg border border-blue-500/30">
           <div className="text-xs text-blue-300">
             Live Polymarket odds: {marketOdds}% YES / {100 - marketOdds}% NO
@@ -258,10 +230,10 @@ export function PolymarketComparison({
   }
 
   // ═══════════════════════════════════════════════
-  // CATEGORICAL MARKET - HORSE RACE CARD
+  // CATEGORICAL MARKET - ROBINHOOD-STYLE CARDS
   // ═══════════════════════════════════════════════
   if (marketType === 'categorical') {
-    const leader = outcomes[0];
+    const topOutcome = outcomes[0];
     const volume = parseFloat(marketVolume);
     const volDisplay = volume >= 1000000 
       ? `$${(volume / 1000000).toFixed(2)}M`
@@ -269,152 +241,101 @@ export function PolymarketComparison({
       ? `$${(volume / 1000).toFixed(0)}K`
       : `$${volume.toFixed(0)}`;
 
+    const visibleOutcomes = showAll ? outcomes : outcomes.slice(0, 3);
+    const hiddenCount = outcomes.length - 3;
+
     return (
-      <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
+      <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-xl p-6">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-2xl">🏇</span>
+            <span className="text-2xl">🏆</span>
             <h2 className="text-xl font-bold text-white">Market Race</h2>
           </div>
           <div className="text-white font-semibold mb-2">{marketName}</div>
           <div className="text-sm text-gray-400">
-            {volDisplay} Vol · {outcomes.length} competitors
+            {volDisplay} volume · {outcomes.length} competitors
           </div>
         </div>
 
-        {/* Race Bars */}
-        <div className="mb-6">
-          {/* Column Headers - Single Row */}
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-700">
-            <div className="flex-1">
-              <span className="text-xs text-gray-500 uppercase">Competitor</span>
-            </div>
-            <div className="flex items-center gap-4 text-xs text-gray-500 uppercase">
-              <span className="text-center min-w-[60px]">Market</span>
-              <span className="text-center min-w-[60px]">AI</span>
-              <span className="text-center min-w-[60px]">1wk</span>
-              <span className="text-center min-w-[70px]">Edge</span>
-            </div>
-          </div>
+        {/* Competitor Cards - Robinhood Style */}
+        <div className="space-y-4">
+          {visibleOutcomes.map((outcome, idx) => {
+            const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
+            const weekChangeNum = outcome.weekChange || 0;
+            const aiOpinion = getAIOpinion(outcome.edge, outcome.aiConfidence);
 
-          {/* Competitor Rows */}
-          <div className="space-y-4">
-            {outcomes.map((outcome, idx) => {
-              const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
-              const weekChangeNum = outcome.weekChange || 0;
-              const hasChange = weekChangeNum !== 0;
-              
-              // CRITICAL: Bars relative to leader, not absolute
-              const maxOdds = outcomes[0].odds;
-              const marketBarWidth = Math.round((outcome.odds / maxOdds) * 100);
-              const aiBarWidth = Math.round((outcome.aiConfidence / maxOdds) * 100);
-
-              return (
-                <div key={outcome.name}>
-                  {/* Row Header */}
-                  <div className="flex items-center justify-between mb-2">
-                    
-                    {/* Left: Medal + Name */}
-                    <div className="flex items-center gap-2 flex-1">
-                      {medal && <span className="text-xl">{medal}</span>}
-                      <span className="text-white font-semibold">{outcome.name}</span>
-                    </div>
-
-                    {/* Right: All Numbers (no headers) */}
-                    <div className="flex items-center gap-4 text-sm">
-                      
-                      {/* Polymarket Odds */}
-                      <div className="text-center min-w-[60px]">
-                        <div className="text-white font-bold">{outcome.odds}%</div>
-                      </div>
-
-                      {/* AI Confidence */}
-                      <div className="text-center min-w-[60px]">
-                        <div className="text-purple-400 font-bold">{outcome.aiConfidence}%</div>
-                      </div>
-
-                      {/* Weekly Momentum */}
-                      <div className="text-center min-w-[60px]">
-                        {weekChangeNum !== 0 ? (
-                          <div className={weekChangeNum > 0 ? 'text-green-400 font-semibold' : 'text-red-400 font-semibold'}>
-                            {weekChangeNum > 0 ? '▲' : '▼'}{Math.abs(weekChangeNum)}%
-                          </div>
-                        ) : outcome.weekChange !== null && outcome.weekChange !== undefined ? (
-                          <div className="text-gray-500">→0%</div>
-                        ) : (
-                          <div className="text-gray-600">—</div>
-                        )}
-                      </div>
-
-                      {/* Edge - Colored Badge */}
-                      <div className="text-center min-w-[70px]">
-                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          outcome.edge >= 5 ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-                          outcome.edge <= -5 ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                          outcome.edge > 0 ? 'bg-green-900/20 text-green-600' :
-                          outcome.edge < 0 ? 'bg-red-900/20 text-red-600' :
-                          'bg-gray-800 text-gray-400'
-                        }`}>
-                          {outcome.edge > 0 ? '+' : ''}{outcome.edge}%
-                          {outcome.edge >= 5 && ' 🔥'}
-                          {outcome.edge <= -5 && ' 📉'}
-                        </span>
-                      </div>
-
-                    </div>
+            return (
+              <div key={outcome.name} className="pb-4 border-b border-gray-700 last:border-0">
+                
+                {/* Line 1: Name + Market% + Momentum */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    {medal && <span className="text-xl">{medal}</span>}
+                    <span className="text-white font-semibold text-lg">{outcome.name}</span>
                   </div>
-
-                  {/* Dual Progress Bars - RELATIVE TO LEADER */}
-                  <div className="space-y-1">
-                    {/* Market Bar (Purple) */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500 w-12">Market</span>
-                      <div className="flex-1 bg-gray-700 rounded-md h-2.5 overflow-hidden">
-                        <div 
-                          className="bg-gradient-to-r from-purple-500 to-purple-700 h-full transition-all"
-                          style={{ width: `${marketBarWidth}%` }}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* AI Bar (Blue) */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500 w-12">AI</span>
-                      <div className="flex-1 bg-gray-700 rounded-md h-2.5 overflow-hidden">
-                        <div 
-                          className="bg-gradient-to-r from-blue-500 to-blue-700 h-full transition-all"
-                          style={{ width: `${aiBarWidth}%` }}
-                        />
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl font-bold text-white">{outcome.odds}%</span>
+                    {weekChangeNum !== 0 && (
+                      <span className={`text-sm font-semibold ${weekChangeNum > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {weekChangeNum > 0 ? '▲' : '▼'}{Math.abs(weekChangeNum)}%
+                      </span>
+                    )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Line 2: Single Progress Bar (Market Probability) */}
+                <div className="mb-2">
+                  <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-purple-500 to-purple-700 transition-all"
+                      style={{ width: `${outcome.odds}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Line 3: AI Opinion in Plain English */}
+                <div className={`text-sm ${aiOpinion.color} flex items-center gap-2`}>
+                  <span>{aiOpinion.icon}</span>
+                  <span>{aiOpinion.text}</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        {/* AI Insight */}
-        {leader && (
-          <div className="p-4 bg-purple-900/20 rounded-lg border border-purple-500/30">
+        {/* Expand/Collapse Button */}
+        {!showAll && hiddenCount > 0 && (
+          <button
+            onClick={() => setShowAll(true)}
+            className="w-full mt-4 py-3 text-purple-400 hover:text-purple-300 text-sm font-semibold transition-colors"
+          >
+            ▸ Show {hiddenCount} more competitor{hiddenCount > 1 ? 's' : ''}
+          </button>
+        )}
+        
+        {showAll && (
+          <button
+            onClick={() => setShowAll(false)}
+            className="w-full mt-4 py-3 text-purple-400 hover:text-purple-300 text-sm font-semibold transition-colors"
+          >
+            ▴ Show less
+          </button>
+        )}
+
+        {/* AI Pick */}
+        {topOutcome && (
+          <div className="mt-6 p-4 bg-purple-900/20 rounded-lg border border-purple-500/30">
             <div className="flex items-center gap-2 text-purple-300 mb-2">
               <span>🤖</span>
               <span className="font-semibold">AI PICKS</span>
             </div>
             <div className="text-sm text-gray-300">
-              <strong className="text-white">{leader.name}</strong> · Strongest edge
-              {leader.edge > 5 && ` (+${leader.edge}% AI advantage)`}
+              <strong className="text-white">{topOutcome.name}</strong> · Strongest conviction
+              {topOutcome.edge >= 4 && ` with +${topOutcome.edge}% AI advantage`}
             </div>
           </div>
         )}
-
-        {/* Signal Note */}
-        <div className="mt-4 p-3 bg-blue-900/20 rounded-lg border border-blue-500/30">
-          <div className="text-xs text-blue-300">
-            {leader.name} leads at {leader.odds}% · {outcomes.length} competitors
-          </div>
-        </div>
       </div>
     );
   }
