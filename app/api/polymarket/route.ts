@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('=== POLYMARKET API DEBUG ===');
-    console.log('Fetching slug:', slug);
+    console.log('=== POLYMARKET API ===');
+    console.log('Slug:', slug);
 
     // Fetch event with nested markets
     const eventRes = await fetch(
@@ -38,109 +38,104 @@ export async function GET(request: NextRequest) {
       return Response.json({ error: 'No markets in event' }, { status: 404 });
     }
 
-    console.log('Event title:', event.title);
-    console.log('Total markets:', markets.length);
-    console.log('First market groupItemTitle:', markets[0].groupItemTitle);
+    console.log('Markets:', markets.length);
 
-    // CRITICAL DISCOVERY FROM LOGS:
-    // Categorical markets = multiple Yes/No markets, each with groupItemTitle
-    // Binary market = single Yes/No market, no groupItemTitle
-    
+    // DETECT MARKET TYPE using groupItemTitle
     const hasGroupItems = markets.some(
       (m: any) => m.groupItemTitle && m.groupItemTitle.trim() !== ''
     );
 
-    console.log('Has groupItemTitle (categorical):', hasGroupItems);
-
     if (!hasGroupItems && markets.length === 1) {
       // ═══════════════════════════════════════════
-      // TRUE BINARY MARKET (single Yes/No question)
+      // TYPE 1: TRUE BINARY MARKET
       // ═══════════════════════════════════════════
-      console.log('→ Market type: BINARY');
+      console.log('→ Type: BINARY');
       
       const market = markets[0];
       
-      let prices: string[];
-      try {
-        prices = typeof market.outcomePrices === 'string'
-          ? JSON.parse(market.outcomePrices)
-          : market.outcomePrices;
-      } catch {
-        prices = ['0', '1'];
-      }
-
-      console.log('YES price:', prices[0]);
-      console.log('===========================');
-      
       return Response.json({
+        type: 'binary',
         title: event.title || market.question,
-        volume: event.volume,
+        volume: event.volume || '0',
         markets: [market]
       });
 
     } else {
       // ═══════════════════════════════════════════
-      // CATEGORICAL MARKET (multiple competitors)
+      // TYPE 2: CATEGORICAL/RACE MARKET
       // ═══════════════════════════════════════════
-      // Each market = one competitor's Yes/No question
-      // groupItemTitle = competitor name
-      // outcomePrices[0] = YES = probability they win
+      console.log('→ Type: CATEGORICAL');
       
-      console.log('→ Market type: CATEGORICAL');
-      console.log('Number of competitors:', markets.length);
-      console.log('---');
-
-      const outcomeNames: string[] = [];
-      const outcomePrices: string[] = [];
+      const outcomes: any[] = [];
 
       for (const market of markets) {
-        // Get competitor name from groupItemTitle
-        const name = market.groupItemTitle || market.question || 'Unknown';
+        // Skip if no price data
+        if (!market.outcomePrices) {
+          console.log(`Skip: ${market.groupItemTitle} (no prices)`);
+          continue;
+        }
 
-        // Parse prices array
+        // Parse prices
         let prices: string[];
         try {
           prices = typeof market.outcomePrices === 'string'
             ? JSON.parse(market.outcomePrices)
             : market.outcomePrices;
         } catch {
-          prices = ['0', '1'];
+          console.log(`Skip: ${market.groupItemTitle} (parse error)`);
+          continue;
         }
 
-        // prices[0] = YES = probability THIS competitor wins
+        // Validate prices array
+        if (!prices || !Array.isArray(prices) || prices.length === 0) {
+          console.log(`Skip: ${market.groupItemTitle} (invalid array)`);
+          continue;
+        }
+
+        // Get YES price
         let yesPrice = parseFloat(prices[0] || '0');
         
-        // Handle cents format (31 instead of 0.31)
+        // Skip invalid prices
+        if (isNaN(yesPrice) || yesPrice <= 0) {
+          console.log(`Skip: ${market.groupItemTitle} (invalid price)`);
+          continue;
+        }
+        
+        // Handle cents format
         if (yesPrice > 1 && yesPrice <= 100) {
           yesPrice = yesPrice / 100;
         }
 
+        const name = market.groupItemTitle || market.question || 'Unknown';
         console.log(`  ${name}: ${(yesPrice * 100).toFixed(1)}%`);
 
-        outcomeNames.push(name);
-        outcomePrices.push(String(yesPrice));
+        outcomes.push({
+          name,
+          price: String(yesPrice),
+          volume: market.volume || '0',
+          oneDayPriceChange: market.oneDayPriceChange || 0,
+          oneWeekPriceChange: market.oneWeekPriceChange || 0,
+          lastTradePrice: market.lastTradePrice || String(yesPrice)
+        });
       }
 
-      const totalProb = outcomePrices.reduce((sum, p) => sum + parseFloat(p), 0);
-      console.log('---');
-      console.log('Total probability:', totalProb.toFixed(2), '(expected: ~1.0)');
-      console.log('===========================');
+      // Sort by price descending - highest first
+      outcomes.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
 
-      // Return unified categorical market structure
+      const totalProb = outcomes.reduce((sum, o) => sum + parseFloat(o.price), 0);
+      console.log('Total:', totalProb.toFixed(2));
+      console.log('======================');
+
       return Response.json({
+        type: 'categorical',
         title: event.title,
-        volume: event.volume,
-        markets: [{
-          question: event.title,
-          outcomes: JSON.stringify(outcomeNames),
-          outcomePrices: JSON.stringify(outcomePrices)
-        }]
+        volume: event.volume || '0',
+        outcomes // Pre-sorted, ready to render
       });
     }
 
   } catch (err: any) {
-    console.error('!!! API Error:', err.message);
-    console.error('Stack:', err.stack);
+    console.error('!!! Error:', err.message);
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
