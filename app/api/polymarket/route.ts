@@ -3,6 +3,30 @@ import { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// Detect what kind of outcomes these are based on names
+function detectOutcomeType(names: string[]): 'companies' | 'dates' | 'candidates' | 'options' {
+  if (names.length === 0) return 'options';
+
+  const sample = names.map(n => n.toLowerCase());
+
+  // Date patterns: "March 15", "December 31", "June 30", "Q1 2026" etc.
+  const datePatterns = /^(january|february|march|april|may|june|july|august|september|october|november|december|\d{1,2}\/\d{1,2}|q[1-4]|\d{4})/i;
+  const dateCount = sample.filter(n => datePatterns.test(n) || /\d{1,2}$/.test(n)).length;
+  if (dateCount >= names.length * 0.5) return 'dates';
+
+  // Candidate patterns: often just names (two words, capitalized)
+  const namePattern = /^[a-z]+ [a-z]+$/i;
+  const nameCount = sample.filter(n => namePattern.test(n)).length;
+  if (nameCount >= names.length * 0.6) return 'candidates';
+
+  // Company patterns: known company suffixes or AI/tech names
+  const companyHints = ['ai', 'inc', 'corp', 'openai', 'google', 'anthropic', 'microsoft', 'meta', 'apple', 'amazon', 'nvidia'];
+  const companyCount = sample.filter(n => companyHints.some(h => n.includes(h))).length;
+  if (companyCount >= 2) return 'companies';
+
+  return 'options';
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const slug = searchParams.get('slug');
@@ -12,21 +36,14 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('=== POLYMARKET API ===');
-    console.log('Slug:', slug);
-
-    // Fetch event with nested markets
     const eventRes = await fetch(
       `https://gamma-api.polymarket.com/events?slug=${slug}&limit=1`,
       { headers: { 'Accept': 'application/json' } }
     );
 
-    if (!eventRes.ok) {
-      throw new Error('Event fetch failed');
-    }
-    
+    if (!eventRes.ok) throw new Error('Event fetch failed');
+
     const events = await eventRes.json();
-    
     if (!events || events.length === 0) {
       return Response.json({ error: 'Event not found' }, { status: 404 });
     }
@@ -38,76 +55,41 @@ export async function GET(request: NextRequest) {
       return Response.json({ error: 'No markets in event' }, { status: 404 });
     }
 
-    console.log('Markets:', markets.length);
-
-    // DETECT MARKET TYPE using groupItemTitle
     const hasGroupItems = markets.some(
       (m: any) => m.groupItemTitle && m.groupItemTitle.trim() !== ''
     );
 
     if (!hasGroupItems && markets.length === 1) {
-      // ═══════════════════════════════════════════
-      // TYPE 1: TRUE BINARY MARKET
-      // ═══════════════════════════════════════════
-      console.log('→ Type: BINARY');
-      
-      const market = markets[0];
-      
+      // BINARY
       return Response.json({
         type: 'binary',
-        title: event.title || market.question,
+        title: event.title || markets[0].question,
         volume: event.volume || '0',
-        markets: [market]
+        endDate: event.endDate || '',
+        markets: [markets[0]]
       });
 
     } else {
-      // ═══════════════════════════════════════════
-      // TYPE 2: CATEGORICAL/RACE MARKET
-      // ═══════════════════════════════════════════
-      console.log('→ Type: CATEGORICAL');
-      
+      // CATEGORICAL
       const outcomes: any[] = [];
 
       for (const market of markets) {
-        // Skip if no price data
-        if (!market.outcomePrices) {
-          console.log(`Skip: ${market.groupItemTitle} (no prices)`);
-          continue;
-        }
+        if (!market.outcomePrices) continue;
 
-        // Parse prices
         let prices: string[];
         try {
           prices = typeof market.outcomePrices === 'string'
             ? JSON.parse(market.outcomePrices)
             : market.outcomePrices;
-        } catch {
-          console.log(`Skip: ${market.groupItemTitle} (parse error)`);
-          continue;
-        }
+        } catch { continue; }
 
-        // Validate prices array
-        if (!prices || !Array.isArray(prices) || prices.length === 0) {
-          console.log(`Skip: ${market.groupItemTitle} (invalid array)`);
-          continue;
-        }
+        if (!prices || !Array.isArray(prices) || prices.length === 0) continue;
 
-        // Get YES price
         let yesPrice = parseFloat(prices[0] || '0');
-        
-        // Skip invalid prices
-        if (isNaN(yesPrice) || yesPrice <= 0) {
-          console.log(`Skip: ${market.groupItemTitle} (invalid price)`);
-          continue;
-        }
-        
-        // Handle cents format
-        if (yesPrice > 1 && yesPrice <= 100) {
-          yesPrice = yesPrice / 100;
-        }
+        if (isNaN(yesPrice) || yesPrice <= 0) continue;
+        if (yesPrice > 1 && yesPrice <= 100) yesPrice = yesPrice / 100;
 
         const name = market.groupItemTitle || market.question || 'Unknown';
-        console.log(`  ${name}: ${(yesPrice * 100).toFixed(1)}%`);
 
         outcomes.push({
           name,
@@ -119,23 +101,23 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // Sort by price descending - highest first
       outcomes.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
 
-      const totalProb = outcomes.reduce((sum, o) => sum + parseFloat(o.price), 0);
-      console.log('Total:', totalProb.toFixed(2));
-      console.log('======================');
+      // Detect what kind of outcomes these are
+      const outcomeNames = outcomes.map(o => o.name);
+      const outcomeType = detectOutcomeType(outcomeNames);
 
       return Response.json({
         type: 'categorical',
+        outcomeType, // 'companies' | 'dates' | 'candidates' | 'options'
         title: event.title,
         volume: event.volume || '0',
-        outcomes // Pre-sorted, ready to render
+        endDate: event.endDate || '',
+        outcomes
       });
     }
 
   } catch (err: any) {
-    console.error('!!! Error:', err.message);
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
