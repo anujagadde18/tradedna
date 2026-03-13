@@ -1,76 +1,129 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-const GAMMA_API_URL = 'https://gamma-api.polymarket.com';
+import { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const endpoint = searchParams.get('endpoint') || 'events';
+  const searchParams = request.nextUrl.searchParams;
   const slug = searchParams.get('slug');
-  
+
+  if (!slug) {
+    return Response.json({ error: 'Missing slug parameter' }, { status: 400 });
+  }
+
   try {
-    let url: string;
-    
-    if (slug && endpoint === 'events') {
-      // DIRECT SLUG FETCH - Use official endpoint
-      url = `${GAMMA_API_URL}/events/slug/${slug}`;
-      console.log('[Polymarket API] Fetching event by slug:', url);
-      
-    } else {
-      // SEARCH/LIST - Build query params
-      const params = new URLSearchParams();
-      
-      // Copy all search params except 'endpoint' and 'slug'
-      searchParams.forEach((value, key) => {
-        if (key !== 'endpoint' && key !== 'slug') {
-          params.append(key, value);
-        }
-      });
-      
-      url = `${GAMMA_API_URL}/${endpoint}?${params.toString()}`;
-      console.log('[Polymarket API] Searching:', url);
-    }
-    
-    const response = await fetch(url, {
-      headers: { 
-        'Accept': 'application/json',
-      },
-      cache: 'no-store'
-    });
-    
-    console.log('[Polymarket API] Response status:', response.status);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[Polymarket API] Error:', response.status, errorText);
-      
-      return NextResponse.json(
-        { 
-          error: 'Polymarket API error', 
-          status: response.status,
-          details: errorText 
+    // STEP 1: Get the event (parent) data
+    const eventResponse = await fetch(
+      `https://gamma-api.polymarket.com/events?slug=${slug}`,
+      {
+        headers: {
+          'Accept': 'application/json',
         },
-        { status: response.status }
-      );
-    }
-    
-    const data = await response.json();
-    console.log('[Polymarket API] Success, data keys:', Object.keys(data));
-    
-    return NextResponse.json(data, {
-      status: 200,
-      headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30'
       }
-    });
+    );
+
+    if (!eventResponse.ok) {
+      throw new Error('Failed to fetch event');
+    }
+
+    const events = await eventResponse.json();
     
+    if (!events || events.length === 0) {
+      return Response.json({ error: 'Event not found' }, { status: 404 });
+    }
+
+    const event = events[0];
+
+    // STEP 2: Get ALL markets for this event
+    const marketsResponse = await fetch(
+      `https://gamma-api.polymarket.com/markets?event_slug=${slug}`,
+      {
+        headers: {
+          'Accept': 'application/json',
+        },
+      }
+    );
+
+    if (!marketsResponse.ok) {
+      throw new Error('Failed to fetch markets');
+    }
+
+    const allMarkets = await marketsResponse.json();
+
+    if (!allMarkets || allMarkets.length === 0) {
+      return Response.json({ error: 'No markets found' }, { status: 404 });
+    }
+
+    // STEP 3: Detect market type
+    // Binary market: Single market with "Yes"/"No" outcomes
+    // Categorical market: Multiple markets, each representing one outcome
+    
+    const firstMarket = allMarkets[0];
+    let outcomes;
+    
+    try {
+      outcomes = typeof firstMarket.outcomes === 'string' 
+        ? JSON.parse(firstMarket.outcomes) 
+        : firstMarket.outcomes;
+    } catch {
+      outcomes = firstMarket.outcomes;
+    }
+
+    const isBinary = outcomes && outcomes.length === 2 && 
+      outcomes.some((o: string) => o === "Yes") && 
+      outcomes.some((o: string) => o === "No");
+
+    if (isBinary) {
+      // BINARY MARKET
+      // Return the single market as-is
+      return Response.json({
+        title: event.title || firstMarket.question,
+        volume: event.volume,
+        markets: [firstMarket]
+      });
+
+    } else {
+      // CATEGORICAL MARKET
+      // Each market in allMarkets represents ONE outcome
+      // We need to combine them into a single unified market object
+      
+      // Extract outcome names and prices from each market
+      const outcomeNames: string[] = [];
+      const outcomePrices: string[] = [];
+
+      for (const market of allMarkets) {
+        // The outcome name is in groupItemTitle or question
+        const outcomeName = market.groupItemTitle || market.question || 'Unknown';
+        outcomeNames.push(outcomeName);
+
+        // Get the YES price for this outcome
+        let prices;
+        try {
+          prices = typeof market.outcomePrices === 'string'
+            ? JSON.parse(market.outcomePrices)
+            : market.outcomePrices;
+        } catch {
+          prices = market.outcomePrices;
+        }
+
+        // For categorical outcomes, index [0] is the YES probability
+        const yesPrice = prices && prices[0] ? prices[0] : '0';
+        outcomePrices.push(yesPrice);
+      }
+
+      // Build unified market object
+      return Response.json({
+        title: event.title,
+        volume: event.volume,
+        markets: [{
+          question: event.title,
+          outcomes: JSON.stringify(outcomeNames),
+          outcomePrices: JSON.stringify(outcomePrices)
+        }]
+      });
+    }
+
   } catch (error: any) {
-    console.error('[Polymarket API] Exception:', error);
-    
-    return NextResponse.json(
-      { 
-        error: 'Failed to fetch Polymarket data', 
-        details: error.message
-      },
+    console.error('Polymarket API error:', error);
+    return Response.json(
+      { error: error.message || 'Failed to fetch market data' },
       { status: 500 }
     );
   }
