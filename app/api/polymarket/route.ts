@@ -120,12 +120,11 @@ export async function GET(request: NextRequest) {
 
       return Response.json({
         type: 'categorical',
-        outcomeType, // 'companies' | 'dates' | 'candidates' | 'options'
+        outcomeType,
         title: event.title,
         volume: event.volume || '0',
         endDate: event.endDate || '',
         outcomes,
-        outcomeType
       });
     }
 
