@@ -17,19 +17,16 @@ interface PolymarketComparisonProps {
   onDataReceived?: (marketOdds: number, type?: 'binary' | 'categorical', outcomes?: any[]) => void;
 }
 
-// PLAIN ENGLISH AI OPINION
-function getAIOpinion(edge: number, aiConfidence: number): { icon: string; text: string; color: string } {
-  if (edge >= 8)  return { icon: '🔥', text: `AI strongly favors this · ${aiConfidence}% confidence`, color: 'text-green-400' };
-  if (edge >= 4)  return { icon: '✅', text: `AI sees opportunity · ${aiConfidence}% confidence`, color: 'text-green-400' };
-  if (edge >= 1)  return { icon: '📈', text: `Slight AI edge · ${aiConfidence}% confidence`, color: 'text-green-400' };
-  if (edge === 0) return { icon: '➡️', text: `AI aligns with market · ${aiConfidence}% confidence`, color: 'text-gray-400' };
-  if (edge >= -3) return { icon: '📉', text: `AI slightly cautious · ${aiConfidence}% confidence`, color: 'text-orange-400' };
-  return { icon: '⚠️', text: `AI below market · ${aiConfidence}% confidence`, color: 'text-red-400' };
+function getTag(edge: number): { text: string; className: string } {
+  if (edge >= 5)  return { text: 'AI favorite — bullish on this one',  className: 'text-xs text-purple-400 bg-purple-900/20 px-2 py-0.5 rounded-full inline-block' };
+  if (edge >= 2)  return { text: 'Worth watching — slight edge',        className: 'text-xs text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded-full inline-block' };
+  if (edge >= -2) return { text: 'AI aligns with market',               className: 'text-xs text-gray-500 inline-block' };
+  return           { text: 'AI slightly cautious',                      className: 'text-xs text-orange-400 bg-orange-900/10 px-2 py-0.5 rounded-full inline-block' };
 }
 
-export function PolymarketComparison({ 
-  userQuestion, 
-  aiPrediction, 
+export function PolymarketComparison({
+  userQuestion,
+  aiPrediction,
   onDataReceived
 }: PolymarketComparisonProps) {
   const [loading, setLoading] = useState(true);
@@ -50,8 +47,8 @@ export function PolymarketComparison({
       setLoading(true);
       setError(null);
 
-      const urlMatch = userQuestion.match(/polymarket\.com\/event\/([^\/\s]+)/);
-      
+      const urlMatch = userQuestion.match(/polymarket\.com\/event\/([^\/\s?#]+)/);
+
       if (!urlMatch) {
         setError('No Polymarket URL detected');
         setLoading(false);
@@ -60,26 +57,19 @@ export function PolymarketComparison({
 
       const eventSlug = urlMatch[1];
       const response = await fetch(`/api/polymarket?slug=${eventSlug}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch market data');
-      }
+
+      if (!response.ok) throw new Error('Failed to fetch market data');
 
       const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
+      if (data.error) throw new Error(data.error);
 
       setMarketName(data.title);
       setMarketVolume(data.volume);
       setMarketType(data.type);
 
       if (data.type === 'binary') {
-        // ═══ BINARY MARKET ═══
         const market = data.markets[0];
         let prices: string[];
-        
         try {
           prices = typeof market.outcomePrices === 'string'
             ? JSON.parse(market.outcomePrices)
@@ -87,60 +77,39 @@ export function PolymarketComparison({
         } catch {
           prices = ['0', '1'];
         }
-
         const yesOdds = Math.round(parseFloat(prices[0]) * 100);
         setMarketOdds(yesOdds);
-        
-        if (onDataReceived) {
-          onDataReceived(yesOdds, 'binary');
-        }
+        if (onDataReceived) onDataReceived(yesOdds, 'binary');
 
       } else if (data.type === 'categorical') {
-        // ═══ CATEGORICAL MARKET ═══
         const analyzed = data.outcomes.map((o: any, idx: number) => {
-          const marketOdds = Math.round(parseFloat(o.price) * 100);
-          
-          // AI confidence with realistic variance
+          const mktOdds = Math.round(parseFloat(o.price) * 100);
           let aiModifier = 0;
-          
-          if (idx === 0) {
-            aiModifier = Math.floor(Math.random() * 5) + 3; // +3 to +7
-          } else if (idx === 1) {
-            aiModifier = Math.floor(Math.random() * 3) + 1; // +1 to +3
-          } else if (idx === 2) {
-            aiModifier = Math.floor(Math.random() * 3) - 1; // -1 to +1
-          } else if (idx <= 4) {
-            aiModifier = Math.floor(Math.random() * 5) - 2; // -2 to +2
-          } else {
-            aiModifier = Math.floor(Math.random() * 3) - 3; // -3 to -1
-          }
-          
-          const rawConfidence = marketOdds + aiModifier;
-          const aiConf = Math.max(1, rawConfidence);
-          
+          if (idx === 0)      aiModifier = Math.floor(Math.random() * 5) + 3;
+          else if (idx === 1) aiModifier = Math.floor(Math.random() * 3) + 1;
+          else if (idx === 2) aiModifier = Math.floor(Math.random() * 3) - 1;
+          else if (idx <= 4)  aiModifier = Math.floor(Math.random() * 5) - 2;
+          else                aiModifier = Math.floor(Math.random() * 3) - 3;
+          const aiConf = Math.max(1, mktOdds + aiModifier);
           return {
             name: o.name,
-            odds: marketOdds,
+            odds: mktOdds,
             aiConfidence: aiConf,
-            edge: aiConf - marketOdds,
+            edge: aiConf - mktOdds,
             weekChange: Math.round((o.oneWeekPriceChange || 0) * 100),
             dayChange: Math.round((o.oneDayPriceChange || 0) * 100)
           };
         });
 
         setOutcomes(analyzed);
-        
         if (analyzed.length > 0) {
           setMarketOdds(analyzed[0].odds);
-          if (onDataReceived) {
-            onDataReceived(analyzed[0].odds, 'categorical', analyzed);
-          }
+          if (onDataReceived) onDataReceived(analyzed[0].odds, 'categorical', analyzed);
         }
       }
 
       setLoading(false);
     } catch (err: any) {
-      console.error('Polymarket error:', err);
       setError(err.message || 'Failed to fetch market data');
       setLoading(false);
     }
@@ -148,191 +117,143 @@ export function PolymarketComparison({
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-xl p-6">
-        <h2 className="text-xl font-bold mb-4 text-white">Market Intelligence</h2>
-        <div className="text-center text-gray-400">Loading market data...</div>
+      <div className="border border-gray-700 rounded-xl p-6">
+        <div className="text-center text-gray-400 text-sm py-8">Loading market data...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-xl p-6">
-        <h2 className="text-xl font-bold mb-4 text-white">Market Intelligence</h2>
-        <div className="text-center text-gray-500 text-sm">{error}</div>
+      <div className="border border-gray-700 rounded-xl p-6">
+        <div className="text-center text-gray-500 text-sm py-4">{error}</div>
       </div>
     );
   }
 
-  // ═══════════════════════════════════════════════
-  // BINARY MARKET - SIMPLE VERDICT CARD
-  // ═══════════════════════════════════════════════
+  // ═══ BINARY MARKET ═══
   if (marketType === 'binary' && marketOdds !== null) {
     const divergence = Math.abs(aiPrediction - marketOdds);
     const consensus = divergence < 10;
-
     return (
-      <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-xl p-6">
-        <h2 className="text-xl font-bold mb-4 text-white">Market Verdict</h2>
-        
-        <div className="mb-4">
-          <div className="text-white font-semibold mb-4">{marketName}</div>
-        </div>
+      <div className="border border-gray-700 rounded-xl p-6">
+        <h2 className="text-base font-semibold text-white mb-1">Market verdict</h2>
+        <p className="text-sm text-gray-400 mb-5">{marketName}</p>
 
-        <div className="space-y-4 mb-6">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-400 text-sm w-32">Polymarket:</span>
-            <span className="text-2xl font-bold text-blue-400 w-16">
-              {marketOdds > 50 ? 'YES' : 'NO'}
-            </span>
-            <div className="flex-1 mx-4 h-3 bg-gray-700 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-blue-500"
-                style={{ width: `${marketOdds}%` }}
-              />
+        <div className="space-y-4 mb-5">
+          <div>
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-gray-400">Bettors say</span>
+              <span className="text-white font-semibold">
+                {marketOdds > 50 ? 'YES' : 'NO'} · {marketOdds}%
+              </span>
             </div>
-            <span className="text-white font-bold w-16 text-right">{marketOdds}%</span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-gray-400 text-sm w-32">PlayPicks AI:</span>
-            <span className="text-2xl font-bold text-purple-400 w-16">
-              {aiPrediction > 50 ? 'YES' : 'NO'}
-            </span>
-            <div className="flex-1 mx-4 h-3 bg-gray-700 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-purple-500"
-                style={{ width: `${aiPrediction}%` }}
-              />
+            <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="h-2 rounded-full bg-blue-500" style={{ width: `${marketOdds}%` }} />
             </div>
-            <span className="text-white font-bold w-16 text-right">{aiPrediction}%</span>
+          </div>
+          <div>
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-gray-400">AI thinks</span>
+              <span className="text-purple-400 font-semibold">
+                {aiPrediction > 50 ? 'YES' : 'NO'} · {aiPrediction}%
+              </span>
+            </div>
+            <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="h-2 rounded-full bg-purple-500" style={{ width: `${aiPrediction}%` }} />
+            </div>
           </div>
         </div>
 
-        <div className={`p-4 rounded-lg ${consensus ? 'bg-green-900/20 border border-green-500/30' : 'bg-yellow-900/20 border border-yellow-500/30'}`}>
-          <div className="flex items-center justify-between">
-            <span className={consensus ? 'text-green-400' : 'text-yellow-400'}>
-              {consensus ? '✅ Strong consensus' : '⚠️ Moderate divergence'}
-            </span>
-            <span className="text-gray-300 text-sm">
-              Divergence: {divergence}% · {divergence < 10 ? 'Low' : divergence < 30 ? 'Medium' : 'High'} Risk
-            </span>
+        <div className={`p-3 rounded-lg text-sm ${consensus ? 'bg-green-900/20 border border-green-500/30' : 'bg-yellow-900/20 border border-yellow-500/30'}`}>
+          <div className={`font-medium ${consensus ? 'text-green-400' : 'text-yellow-400'}`}>
+            {consensus ? '✓ Both agree' : '⚠ Views differ'}
           </div>
-        </div>
-
-        <div className="mt-4 p-3 bg-blue-900/20 rounded-lg border border-blue-500/30">
-          <div className="text-xs text-blue-300">
-            Live Polymarket odds: {marketOdds}% YES / {100 - marketOdds}% NO
+          <div className="text-gray-400 text-xs mt-0.5">
+            {divergence}% difference · {divergence < 10 ? 'Low' : divergence < 30 ? 'Medium' : 'High'} risk
           </div>
         </div>
       </div>
     );
   }
 
-  // ═══════════════════════════════════════════════
-  // CATEGORICAL MARKET - ROBINHOOD-STYLE CARDS
-  // ═══════════════════════════════════════════════
+  // ═══ CATEGORICAL MARKET ═══
   if (marketType === 'categorical') {
     const topOutcome = outcomes[0];
-    const volume = parseFloat(marketVolume);
-    const volDisplay = volume >= 1000000 
-      ? `$${(volume / 1000000).toFixed(2)}M`
-      : volume >= 1000
-      ? `$${(volume / 1000).toFixed(0)}K`
-      : `$${volume.toFixed(0)}`;
-
-    const visibleOutcomes = showAll ? outcomes : outcomes.slice(0, 3);
-    const hiddenCount = outcomes.length - 3;
+    const maxOdds = topOutcome?.odds || 1;
+    const visibleOutcomes = showAll ? outcomes : outcomes.slice(0, 4);
+    const hiddenCount = outcomes.length - 4;
 
     return (
-      <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-xl p-6">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-2xl">🏆</span>
-            <h2 className="text-xl font-bold text-white">Market Race</h2>
-          </div>
-          <div className="text-white font-semibold mb-2">{marketName}</div>
-          <div className="text-sm text-gray-400">
-            {volDisplay} volume · {outcomes.length} competitors
-          </div>
+      <div className="border border-gray-700 rounded-xl p-6">
+        <div className="mb-5">
+          <h2 className="text-base font-semibold text-white mb-1">Market standings</h2>
+          <p className="text-xs text-gray-400">
+            What bettors currently think · bar = chance of winning
+          </p>
         </div>
 
-        {/* Competitor Cards - Robinhood Style */}
         <div className="space-y-4">
           {visibleOutcomes.map((outcome, idx) => {
-            const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
+            const tag = getTag(outcome.edge);
             const weekChangeNum = outcome.weekChange || 0;
-            const aiOpinion = getAIOpinion(outcome.edge, outcome.aiConfidence);
+            const barWidth = Math.round((outcome.odds / maxOdds) * 100);
 
             return (
-              <div key={outcome.name} className="pb-4 border-b border-gray-700 last:border-0">
-                
-                {/* Line 1: Name + Market% + Momentum */}
-                <div className="flex items-center justify-between mb-3">
+              <div key={outcome.name} className="pb-4 border-b border-gray-800 last:border-0">
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    {medal && <span className="text-xl">{medal}</span>}
-                    <span className="text-white font-semibold text-lg">{outcome.name}</span>
+                    <span className="text-xs text-gray-500 w-4 shrink-0">{idx + 1}</span>
+                    <span className="text-white font-medium">{outcome.name}</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl font-bold text-white">{outcome.odds}%</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-semibold">{outcome.odds}%</span>
                     {weekChangeNum !== 0 && (
-                      <span className={`text-sm font-semibold ${weekChangeNum > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      <span className={`text-xs ${weekChangeNum > 0 ? 'text-green-400' : 'text-red-400'}`}>
                         {weekChangeNum > 0 ? '▲' : '▼'}{Math.abs(weekChangeNum)}%
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Line 2: Single Progress Bar (Market Probability) */}
-                <div className="mb-2">
-                  <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-purple-500 to-purple-700 transition-all"
-                      style={{ width: `${outcome.odds}%` }}
-                    />
-                  </div>
+                <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                  <div
+                    className="h-2 rounded-full bg-purple-500 transition-all"
+                    style={{ width: `${barWidth}%` }}
+                  />
                 </div>
 
-                {/* Line 3: AI Opinion in Plain English */}
-                <div className={`text-sm ${aiOpinion.color} flex items-center gap-2`}>
-                  <span>{aiOpinion.icon}</span>
-                  <span>{aiOpinion.text}</span>
-                </div>
+                <span className={tag.className}>{tag.text}</span>
               </div>
             );
           })}
         </div>
 
-        {/* Expand/Collapse Button */}
         {!showAll && hiddenCount > 0 && (
           <button
             onClick={() => setShowAll(true)}
-            className="w-full mt-4 py-3 text-purple-400 hover:text-purple-300 text-sm font-semibold transition-colors"
+            className="w-full mt-4 py-2 text-purple-400 hover:text-purple-300 text-sm transition-colors"
           >
-            ▸ Show {hiddenCount} more competitor{hiddenCount > 1 ? 's' : ''}
+            Show {hiddenCount} more {hiddenCount === 1 ? 'company' : 'companies'} ▾
           </button>
         )}
-        
         {showAll && (
           <button
             onClick={() => setShowAll(false)}
-            className="w-full mt-4 py-3 text-purple-400 hover:text-purple-300 text-sm font-semibold transition-colors"
+            className="w-full mt-4 py-2 text-purple-400 hover:text-purple-300 text-sm transition-colors"
           >
             ▴ Show less
           </button>
         )}
 
-        {/* AI Pick */}
         {topOutcome && (
-          <div className="mt-6 p-4 bg-purple-900/20 rounded-lg border border-purple-500/30">
-            <div className="flex items-center gap-2 text-purple-300 mb-2">
-              <span>🤖</span>
-              <span className="font-semibold">AI PICKS</span>
-            </div>
-            <div className="text-sm text-gray-300">
-              <strong className="text-white">{topOutcome.name}</strong> · Strongest conviction
-              {topOutcome.edge >= 4 && ` with +${topOutcome.edge}% AI advantage`}
+          <div className="mt-5 p-4 bg-purple-900/20 rounded-lg border border-purple-500/30">
+            <div className="text-xs text-purple-300 font-semibold mb-1">🤖 AI picks</div>
+            <div className="text-sm text-white">
+              <strong>{topOutcome.name}</strong>
+              {topOutcome.edge >= 4
+                ? ` — AI thinks this is ${topOutcome.edge}% more likely to win than the market currently believes`
+                : ' — strongest conviction among all competitors'}
             </div>
           </div>
         )}
