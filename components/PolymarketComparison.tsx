@@ -275,7 +275,7 @@ export function PolymarketComparison({
                     <span className="text-white font-medium">{outcome.name}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    {outcome.weekChange !== 0 && (
+                    {outcome.weekChange !== undefined && outcome.weekChange !== 0 && (
                       <span className={`text-xs ${changeColor}`}>
                         {outcome.weekChange > 0 ? '+' : ''}{outcome.weekChange}% {changeIcon}
                       </span>
