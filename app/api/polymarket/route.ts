@@ -1,5 +1,8 @@
 import { NextRequest } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const slug = searchParams.get('slug');
@@ -9,83 +12,79 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // STEP 1: Get the event (parent) data
-    const eventResponse = await fetch(
-      `https://gamma-api.polymarket.com/events?slug=${slug}`,
-      {
-        headers: {
-          'Accept': 'application/json',
-        },
-      }
+    console.log('=== POLYMARKET API DEBUG ===');
+    console.log('Fetching slug:', slug);
+
+    // STEP 1: Fetch event using slug
+    // CRITICAL: Markets are NESTED inside the event, not a separate endpoint!
+    const eventRes = await fetch(
+      `https://gamma-api.polymarket.com/events?slug=${slug}&limit=1`,
+      { headers: { 'Accept': 'application/json' } }
     );
 
-    if (!eventResponse.ok) {
-      throw new Error('Failed to fetch event');
+    if (!eventRes.ok) {
+      throw new Error('Event fetch failed');
     }
-
-    const events = await eventResponse.json();
+    
+    const events = await eventRes.json();
+    console.log('Events returned:', events?.length);
     
     if (!events || events.length === 0) {
       return Response.json({ error: 'Event not found' }, { status: 404 });
     }
 
     const event = events[0];
-
-    // STEP 2: Get ALL markets for this event
-    const marketsResponse = await fetch(
-      `https://gamma-api.polymarket.com/markets?event_slug=${slug}`,
-      {
-        headers: {
-          'Accept': 'application/json',
-        },
-      }
-    );
-
-    if (!marketsResponse.ok) {
-      throw new Error('Failed to fetch markets');
+    console.log('Event title:', event.title);
+    console.log('Event ID:', event.id);
+    
+    // STEP 2: Markets are NESTED inside event.markets - NO separate API call!
+    const markets = event.markets;
+    console.log('Markets in event:', markets?.length);
+    
+    if (!markets || markets.length === 0) {
+      return Response.json({ error: 'No markets in event' }, { status: 404 });
     }
 
-    const allMarkets = await marketsResponse.json();
-
-    // COMPREHENSIVE DEBUG LOGGING
-    console.log('====================================');
-    console.log('POLYMARKET API DEBUG');
-    console.log('====================================');
-    console.log('TOTAL MARKETS:', allMarkets.length);
-    console.log('FIRST MARKET KEYS:', Object.keys(allMarkets[0]));
-    console.log('FIRST MARKET FULL:', JSON.stringify(allMarkets[0], null, 2));
-    if (allMarkets.length > 1) {
-      console.log('SECOND MARKET KEYS:', Object.keys(allMarkets[1]));
-      console.log('SECOND MARKET FULL:', JSON.stringify(allMarkets[1], null, 2));
-    }
-    console.log('====================================');
-
-    if (!allMarkets || allMarkets.length === 0) {
-      return Response.json({ error: 'No markets found' }, { status: 404 });
-    }
+    console.log('First market structure:', JSON.stringify(markets[0], null, 2));
 
     // STEP 3: Detect market type
-    // Binary market: Single market with "Yes"/"No" outcomes
-    // Categorical market: Multiple markets, each representing one outcome
-    
-    const firstMarket = allMarkets[0];
-    let outcomes;
+    const firstMarket = markets[0];
+    let firstOutcomes: string[];
     
     try {
-      outcomes = typeof firstMarket.outcomes === 'string' 
-        ? JSON.parse(firstMarket.outcomes) 
+      firstOutcomes = typeof firstMarket.outcomes === 'string'
+        ? JSON.parse(firstMarket.outcomes)
         : firstMarket.outcomes;
     } catch {
-      outcomes = firstMarket.outcomes;
+      firstOutcomes = [];
     }
 
-    const isBinary = outcomes && outcomes.length === 2 && 
-      outcomes.some((o: string) => o === "Yes") && 
-      outcomes.some((o: string) => o === "No");
+    console.log('First market outcomes:', firstOutcomes);
+
+    // Binary = 1 market with Yes/No
+    // Categorical = multiple markets (one per competitor)
+    const isBinary = markets.length === 1 ||
+      (firstOutcomes.length === 2 &&
+        firstOutcomes.includes('Yes') &&
+        firstOutcomes.includes('No'));
 
     if (isBinary) {
-      // BINARY MARKET
-      // Return the single market as-is
+      // ── BINARY MARKET ──────────────────────────────
+      console.log('✓ Market type: BINARY');
+      
+      let prices: string[];
+      try {
+        prices = typeof firstMarket.outcomePrices === 'string'
+          ? JSON.parse(firstMarket.outcomePrices)
+          : firstMarket.outcomePrices;
+      } catch {
+        prices = ['0', '1'];
+      }
+
+      console.log('Binary prices:', prices);
+      console.log('YES probability:', prices[0]);
+      console.log('===========================');
+      
       return Response.json({
         title: event.title || firstMarket.question,
         volume: event.volume,
@@ -93,77 +92,50 @@ export async function GET(request: NextRequest) {
       });
 
     } else {
-      // CATEGORICAL MARKET
-      // Each market in allMarkets represents ONE outcome
-      // We need to combine them into a single unified market object
+      // ── CATEGORICAL MARKET ─────────────────────────
+      console.log('✓ Market type: CATEGORICAL');
+      console.log('Number of outcomes:', markets.length);
       
-      // Extract outcome names and prices from each market
       const outcomeNames: string[] = [];
       const outcomePrices: string[] = [];
 
-      for (const market of allMarkets) {
-        // TRY MULTIPLE FIELD NAMES for outcome label
-        const outcomeName = 
-          market.groupItemTitle ||     // Most common for categorical
-          market.groupItemTitleShort || // Sometimes abbreviated
-          market.title ||              // Alternative field
-          market.question ||           // Fallback to full question
-          market.description ||        // Another fallback
+      for (const market of markets) {
+        // Try multiple field names for outcome label
+        const name =
+          market.groupItemTitle ||
+          market.groupItemTitleShort ||
+          market.title ||
+          market.question ||
           'Unknown';
-        
-        console.log(`Processing outcome: "${outcomeName}"`);
-        outcomeNames.push(outcomeName);
 
-        // Parse prices safely with multiple format support
-        let prices;
+        // Get YES price for this outcome
+        let prices: string[];
         try {
           prices = typeof market.outcomePrices === 'string'
             ? JSON.parse(market.outcomePrices)
             : market.outcomePrices;
         } catch {
-          // If parsing fails, try as comma-separated string
-          if (typeof market.outcomePrices === 'string') {
-            prices = market.outcomePrices.split(',').map((p: string) => p.trim());
-          } else {
-            prices = ['0', '1'];
-          }
+          prices = ['0', '1'];
         }
 
-        console.log(`  Raw prices:`, prices);
-
-        // For categorical outcomes, index [0] is the YES probability
-        let yesPrice = prices && prices[0] ? String(prices[0]) : '0';
+        // prices[0] = probability this outcome wins
+        let yesPrice = parseFloat(prices[0] || '0');
         
-        // Validate and convert to decimal format
-        let numericPrice = parseFloat(yesPrice);
-        
-        // Check if price is in cents (0-100) vs decimal (0-1)
-        if (!isNaN(numericPrice)) {
-          if (numericPrice > 1) {
-            // Price is in cents (e.g., 31 instead of 0.31)
-            numericPrice = numericPrice / 100;
-            yesPrice = String(numericPrice);
-            console.log(`  Converted from cents: ${prices[0]} → ${yesPrice}`);
-          }
-        } else {
-          yesPrice = '0';
+        // Handle cents format (31 instead of 0.31)
+        if (yesPrice > 1 && yesPrice <= 100) {
+          yesPrice = yesPrice / 100;
         }
 
-        // Final validation
-        const validPrice = (!isNaN(numericPrice) && numericPrice >= 0 && numericPrice <= 1)
-          ? yesPrice
-          : '0';
-        
-        console.log(`  Final price: ${validPrice} (${Math.round(parseFloat(validPrice) * 100)}%)`);
-        outcomePrices.push(validPrice);
+        console.log(`  "${name}" → ${(yesPrice * 100).toFixed(1)}% (raw: ${prices[0]})`);
+
+        outcomeNames.push(name);
+        outcomePrices.push(String(yesPrice));
       }
 
-      // Validate total probability
-      const totalProbability = outcomePrices.reduce((sum, p) => sum + parseFloat(p), 0);
-      console.log('====================================');
-      console.log('TOTAL PROBABILITY:', totalProbability.toFixed(2));
-      console.log('EXPECTED: ~1.00 (100%)');
-      console.log('====================================');
+      const totalProb = outcomePrices.reduce((sum, p) => sum + parseFloat(p), 0);
+      console.log('---');
+      console.log('Total probability:', totalProb.toFixed(2), '(expected: ~1.0)');
+      console.log('===========================');
 
       // Build unified market object
       return Response.json({
@@ -177,11 +149,9 @@ export async function GET(request: NextRequest) {
       });
     }
 
-  } catch (error: any) {
-    console.error('Polymarket API error:', error);
-    return Response.json(
-      { error: error.message || 'Failed to fetch market data' },
-      { status: 500 }
-    );
+  } catch (err: any) {
+    console.error('!!! API Error:', err.message);
+    console.error('Stack:', err.stack);
+    return Response.json({ error: err.message }, { status: 500 });
   }
 }
