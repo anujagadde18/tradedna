@@ -5,59 +5,86 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { PolymarketComparison } from '@/components/PolymarketComparison';
 import { calculateIntelligence } from '@/lib/intelligenceEngine';
 
+const MARKETPLACE = {
+  news: [
+    { name: 'Reuters',          desc: 'Global newswire',         url: 'https://feeds.reuters.com' },
+    { name: 'Bloomberg',        desc: 'Financial news',          url: 'https://bloomberg.com' },
+    { name: 'Associated Press', desc: 'Breaking news worldwide', url: 'https://apnews.com' },
+    { name: 'BBC News',         desc: 'International coverage',  url: 'https://bbc.com/news' },
+    { name: 'CoinDesk',         desc: 'Crypto & blockchain',     url: 'https://coindesk.com' },
+    { name: 'ESPN',             desc: 'Sports news',             url: 'https://espn.com' },
+    { name: 'Politico',         desc: 'Politics & policy',       url: 'https://politico.com' },
+    { name: 'Financial Times',  desc: 'Business & finance',      url: 'https://ft.com' },
+  ],
+  social: [
+    { name: 'r/politics',       desc: 'Political discussion',    url: 'https://reddit.com/r/politics' },
+    { name: 'r/investing',      desc: 'Investment sentiment',    url: 'https://reddit.com/r/investing' },
+    { name: 'r/cryptocurrency', desc: 'Crypto community',        url: 'https://reddit.com/r/cryptocurrency' },
+    { name: 'r/sports',         desc: 'Sports discussion',       url: 'https://reddit.com/r/sports' },
+    { name: 'Twitter/X',        desc: 'Real-time sentiment',     url: 'https://twitter.com' },
+    { name: 'StockTwits',       desc: 'Trader sentiment',        url: 'https://stocktwits.com' },
+  ],
+  technical: [
+    { name: 'Kalshi',    desc: 'Prediction market',    url: 'https://kalshi.com' },
+    { name: 'Metaculus', desc: 'Forecasting community',url: 'https://metaculus.com' },
+    { name: 'PredictIt', desc: 'Political markets',    url: 'https://predictit.org' },
+    { name: 'Manifold',  desc: 'Play-money markets',   url: 'https://manifold.markets' },
+    { name: 'Augur',     desc: 'Decentralized markets',url: 'https://augur.net' },
+  ]
+};
+
+function generatePositiveSignals(name: string, weekChange: number, edge: number, rank: number, total: number): string[] {
+  const signals: string[] = [];
+  if (rank === 0) signals.push(`Highest market odds of all ${total} competitors`);
+  if (weekChange > 5) signals.push(`Gaining fast — up ${weekChange}% just this week`);
+  else if (weekChange > 0) signals.push('News coverage is positive this week');
+  if (edge > 5) signals.push('Community sentiment is strongly bullish');
+  else if (edge > 0) signals.push('Community sentiment is bullish');
+  if (signals.length === 0) signals.push(`Leads ${total} competitors in market probability`);
+  return signals;
+}
+
 function ScoresPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const event = searchParams.get('event') || 'Unknown Event';
-  
+
   const [intelligence, setIntelligence] = useState<any>(null);
   const [polymarketOdds, setPolymarketOdds] = useState<number | null>(null);
   const [marketType, setMarketType] = useState<'binary' | 'categorical'>('binary');
   const [categoricalOutcomes, setCategoricalOutcomes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false);
-  
+  const [showDeep, setShowDeep] = useState(false);
+  const [showSources, setShowSources] = useState(false);
+  const [sourceTab, setSourceTab] = useState<'weights' | 'marketplace'>('weights');
+  const [marketplaceTab, setMarketplaceTab] = useState<'news' | 'social' | 'technical'>('news');
+
   const DEFAULT_WEIGHTS = { news: 35, social: 40, technical: 25 };
   const [weights, setWeights] = useState(DEFAULT_WEIGHTS);
   const [activeSources, setActiveSources] = useState<any[]>([]);
-  const [showSources, setShowSources] = useState(false);
+  const [customName, setCustomName] = useState('');
+  const [customUrl, setCustomUrl] = useState('');
+  const [customType, setCustomType] = useState('news');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        const savedWeights = localStorage.getItem('signalWeights');
-        if (savedWeights) setWeights(JSON.parse(savedWeights));
-        
-        const savedSources = localStorage.getItem('customSources');
-        if (savedSources) setActiveSources(JSON.parse(savedSources));
+        const sw = localStorage.getItem('signalWeights');
+        if (sw) setWeights(JSON.parse(sw));
+        const cs = localStorage.getItem('customSources');
+        if (cs) setActiveSources(JSON.parse(cs));
       } catch {}
     }
   }, []);
 
   const runAnalysis = () => {
-    if (marketType === 'categorical') {
-      setLoading(false);
-      return;
-    }
-
-    const baseConfidence = 54;
-    const customSourcesCount = activeSources.filter(s => s.enabled !== false).length;
-    
-    const result = calculateIntelligence(
-      baseConfidence,
-      weights,
-      customSourcesCount,
-      polymarketOdds,
-      event
-    );
-    
+    if (marketType === 'categorical') { setLoading(false); return; }
+    const result = calculateIntelligence(54, weights, activeSources.filter(s => s.enabled !== false).length, polymarketOdds, event);
     setIntelligence(result);
     setLoading(false);
   };
 
-  useEffect(() => {
-    runAnalysis();
-  }, [event, polymarketOdds, marketType]);
+  useEffect(() => { runAnalysis(); }, [event, polymarketOdds, marketType]);
 
   const handlePolymarketData = (odds: number, type?: 'binary' | 'categorical', outcomes?: any[]) => {
     setPolymarketOdds(odds);
@@ -67,316 +94,478 @@ function ScoresPageContent() {
 
   const handleSave = () => {
     if (typeof window === 'undefined') return;
-    
-    const analysis = {
-      id: Date.now().toString(),
-      event,
-      type: marketType,
-      timestamp: Date.now(),
-      polymarketOdds
-    };
-    
+    const analysis = { id: Date.now().toString(), event, type: marketType, timestamp: Date.now(), polymarketOdds };
     try {
       const saved = localStorage.getItem('savedAnalyses');
       const analyses = saved ? JSON.parse(saved) : [];
       analyses.unshift(analysis);
       localStorage.setItem('savedAnalyses', JSON.stringify(analyses));
       alert('✅ Analysis saved!');
-    } catch {
-      alert('❌ Failed to save');
+    } catch { alert('❌ Failed to save'); }
+  };
+
+  const handleWeightChange = (key: string, value: number) => {
+    const remaining = 100 - value;
+    const otherKeys = Object.keys(weights).filter(k => k !== key) as Array<keyof typeof weights>;
+    const otherTotal = otherKeys.reduce((s, k) => s + weights[k], 0);
+    const newWeights = { ...weights, [key]: value };
+    if (otherTotal > 0) {
+      otherKeys.forEach(k => { newWeights[k] = Math.round((weights[k] / otherTotal) * remaining); });
+    }
+    const total = Object.values(newWeights).reduce((s, v) => s + v, 0);
+    if (total !== 100) newWeights[otherKeys[0]] += (100 - total);
+    setWeights(newWeights as typeof weights);
+  };
+
+  const isSourceActive = (name: string) => activeSources.some(s => s.name === name);
+  const toggleSource = (source: any, type: string) => {
+    if (isSourceActive(source.name)) {
+      setActiveSources(activeSources.filter(s => s.name !== source.name));
+    } else {
+      setActiveSources([...activeSources, { ...source, type }]);
     }
   };
 
-  const newsSignal = Math.round((polymarketOdds || 50) * (weights.news / 100));
-  const socialSignal = Math.round((polymarketOdds || 50) * (weights.social / 100));
-  const marketSignal = Math.round((polymarketOdds || 50) * (weights.technical / 100));
-  const totalConfidence = newsSignal + socialSignal + marketSignal;
+  const topOutcome = categoricalOutcomes[0] || { name: 'Unknown', odds: 0, weekChange: 0, aiConfidence: 0, edge: 0 };
 
-  const topOutcome = categoricalOutcomes[0] || { name: 'Unknown', odds: 0, weekChange: 0, aiConfidence: 0 };
+  // Extract plain event title from URL if needed
+  const eventTitle = (() => {
+    try {
+      const match = event.match(/polymarket\.com\/event\/([^\/\s?#]+)/);
+      if (match) {
+        return match[1].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      }
+    } catch {}
+    return event;
+  })();
 
-  const getRiskLevel = () => {
-    if (marketType === 'binary') {
-      return intelligence?.riskLevel || 'Medium Risk';
-    }
-    return 'Medium Risk';
-  };
+  const positiveSignals = marketType === 'categorical'
+    ? generatePositiveSignals(topOutcome.name, topOutcome.weekChange || 0, topOutcome.edge || 0, 0, categoricalOutcomes.length)
+    : intelligence?.confidenceDrivers?.positive?.slice(0, 3) || ['Strong news sentiment', 'Community momentum favorable'];
 
-  const getRiskColor = () => {
-    const risk = getRiskLevel();
-    if (risk === 'Low Risk') return 'text-green-400';
-    if (risk === 'High Risk') return 'text-red-400';
-    return 'text-yellow-400';
-  };
+  const riskLevel = marketType === 'categorical' ? 'Medium' : (intelligence?.riskLevel?.replace(' Risk', '') || 'Medium');
+  const riskColor = riskLevel === 'Low' ? 'text-green-400' : riskLevel === 'High' ? 'text-red-400' : 'text-yellow-400';
+  const riskBg = riskLevel === 'Low' ? 'bg-green-900/20 border-green-700/30' : riskLevel === 'High' ? 'bg-red-900/20 border-red-700/30' : 'bg-amber-900/20 border-amber-700/30';
+  const riskTextColor = riskLevel === 'Low' ? 'text-green-200/80' : riskLevel === 'High' ? 'text-red-200/80' : 'text-amber-200/70';
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
-      <div className="max-w-7xl mx-auto">
-        
+      <div className="max-w-5xl mx-auto">
+
+        {/* NAV */}
+        <div className="flex items-center justify-between mb-6">
+          <button onClick={() => router.push('/')} className="text-gray-400 hover:text-white transition-colors text-sm">
+            ← Back
+          </button>
+          <button onClick={() => router.push('/profile')} className="text-gray-400 hover:text-white text-sm">
+            View Profile →
+          </button>
+        </div>
+
         {/* HEADER */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => router.push('/')}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              ← Back
-            </button>
-            <button
-              onClick={() => router.push('/profile')}
-              className="text-gray-400 hover:text-white text-sm"
-            >
-              View Profile →
-            </button>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold mb-1">PlayPicks AI</h1>
+            <p className="text-gray-400 text-sm">AI-powered prediction analysis</p>
           </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">AI Forecast Engine</h1>
-              <p className="text-gray-400 text-sm">
-                Multi-source prediction engine analyzing market signals
-              </p>
-            </div>
-
-            {/* TOP ACTION BUTTONS */}
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowSources(!showSources)}
-                className="px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold transition-all"
-              >
-                Manage Sources
-              </button>
-              <button
-                onClick={runAnalysis}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition-all"
-              >
-                Re-analyze
-              </button>
-              <button
-                onClick={handleSave}
-                className="px-6 py-3 bg-green-600 hover:bg-green-500 rounded-lg font-semibold transition-all"
-              >
-                Save
-              </button>
-            </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setShowSources(!showSources); }}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
+            >
+              ⚙️ Tune AI sources
+            </button>
+            <button
+              onClick={runAnalysis}
+              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
+            >
+              🔄 Refresh results
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-sm font-semibold transition-all"
+            >
+              🔖 Save
+            </button>
           </div>
         </div>
 
-        {/* Analyzing Event */}
-        <div className="mb-6 bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-xl p-4">
-          <div className="text-gray-400 text-xs mb-1">Analyzing:</div>
-          <div className="text-white text-sm font-mono break-all">{event}</div>
+        {/* QUESTION BAR */}
+        <div className="mb-6 bg-gray-900 border border-gray-700 rounded-xl p-4">
+          <div className="text-xs text-gray-400 mb-1">Analyzing prediction market</div>
+          <div className="text-white font-semibold text-sm mb-1">{eventTitle}</div>
+          <div className="text-xs text-gray-500">
+            Source: Polymarket
+            {categoricalOutcomes.length > 0 && ` · ${categoricalOutcomes.length} competing companies`}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          
-          {/* LEFT COLUMN - MARKET RACE (60%) */}
-          <div className="lg:col-span-3 space-y-6">
-            
-            {/* BINARY: AI Prediction Card */}
-            {marketType === 'binary' && intelligence && !loading && (
-              <div className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-xl p-6">
-                <h2 className="text-white text-xl font-bold mb-6">AI Prediction</h2>
-                
-                <div className="text-center mb-6">
-                  <div className="text-6xl font-bold mb-2">{intelligence.direction}</div>
-                  <div className={`text-4xl font-bold mb-2 ${
-                    intelligence.confidence >= 70 ? 'text-green-400' :
-                    intelligence.confidence >= 55 ? 'text-yellow-400' : 'text-orange-400'
-                  }`}>
-                    {intelligence.confidence}% Confidence
+        {/* TUNE AI SOURCES PANEL */}
+        {showSources && (
+          <div className="mb-6 border border-purple-500/30 rounded-xl p-6 bg-purple-900/10">
+            <div className="flex gap-2 mb-6">
+              <button
+                onClick={() => setSourceTab('weights')}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold ${sourceTab === 'weights' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+              >
+                Adjust weights
+              </button>
+              <button
+                onClick={() => setSourceTab('marketplace')}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold ${sourceTab === 'marketplace' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+              >
+                Add sources {activeSources.length > 0 && `(${activeSources.length} active)`}
+              </button>
+            </div>
+
+            {/* WEIGHTS TAB */}
+            {sourceTab === 'weights' && (
+              <div className="space-y-6">
+                <p className="text-sm text-gray-400">Control how much each signal type influences the AI prediction.</p>
+
+                {[
+                  { key: 'news',      label: '📰 News sources',       desc: 'Reuters, Bloomberg, AP News...' },
+                  { key: 'social',    label: '💬 Social sources',      desc: 'Twitter/X, Reddit, StockTwits...' },
+                  { key: 'technical', label: '📊 Market probability',  desc: 'Polymarket, Kalshi, Metaculus...' },
+                ].map(({ key, label, desc }) => (
+                  <div key={key}>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-gray-300 text-sm">{label}</span>
+                      <span className="text-purple-400 font-bold">{weights[key as keyof typeof weights]}%</span>
+                    </div>
+                    <input
+                      type="range" min="0" max="100"
+                      value={weights[key as keyof typeof weights]}
+                      onChange={e => handleWeightChange(key, parseInt(e.target.value))}
+                      className="w-full accent-purple-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">{desc}</p>
                   </div>
-                  <div className="text-gray-400">{intelligence.probabilityLabel}</div>
+                ))}
+
+                <div className="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
+                  <span className="text-gray-400 text-sm">Total</span>
+                  <span className={`font-bold text-sm ${weights.news + weights.social + weights.technical === 100 ? 'text-green-400' : 'text-red-400'}`}>
+                    {weights.news + weights.social + weights.technical}%
+                    {weights.news + weights.social + weights.technical === 100 ? ' ✓' : ' ✗'}
+                  </span>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setWeights(DEFAULT_WEIGHTS)}
+                    className="flex-1 bg-gray-700 text-gray-300 py-2 rounded-lg text-sm hover:bg-gray-600"
+                  >
+                    Reset to default
+                  </button>
+                  <button
+                    onClick={() => { runAnalysis(); setShowSources(false); }}
+                    className="flex-1 bg-purple-600 text-white py-2 rounded-lg text-sm hover:bg-purple-500"
+                  >
+                    Apply & refresh
+                  </button>
                 </div>
               </div>
             )}
 
-            {/* Polymarket Comparison */}
-            <PolymarketComparison 
+            {/* MARKETPLACE TAB */}
+            {sourceTab === 'marketplace' && (
+              <div>
+                <div className="flex gap-2 mb-4">
+                  {(['news', 'social', 'technical'] as const).map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setMarketplaceTab(cat)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${marketplaceTab === cat ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                    >
+                      {cat === 'news' ? '📰 News' : cat === 'social' ? '💬 Social' : '📊 Technical'}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  {MARKETPLACE[marketplaceTab].map(source => (
+                    <div
+                      key={source.name}
+                      className={`p-3 rounded-lg border ${isSourceActive(source.name) ? 'border-purple-500 bg-purple-900/20' : 'border-gray-700 bg-gray-800/50'}`}
+                    >
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <div className="text-white text-sm font-medium">{source.name}</div>
+                          <div className="text-gray-400 text-xs mt-0.5">{source.desc}</div>
+                        </div>
+                        <button
+                          onClick={() => toggleSource(source, marketplaceTab)}
+                          className={`text-xs px-2 py-1 rounded font-bold shrink-0 ${isSourceActive(source.name) ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-green-600 text-white hover:bg-green-700'}`}
+                        >
+                          {isSourceActive(source.name) ? 'Remove' : '+ Add'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {activeSources.length > 0 && (
+                  <div className="mb-4">
+                    <div className="text-xs text-gray-400 mb-2">Active sources ({activeSources.length})</div>
+                    <div className="space-y-1">
+                      {activeSources.map(s => (
+                        <div key={s.name} className="flex justify-between items-center p-2 bg-gray-800 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-purple-400 uppercase">{s.type}</span>
+                            <span className="text-white text-sm">{s.name}</span>
+                          </div>
+                          <button onClick={() => toggleSource(s, s.type)} className="text-red-400 text-xs hover:text-red-300">Remove</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="border-t border-gray-700 pt-4">
+                  <div className="text-xs text-gray-400 mb-3">+ Add custom source</div>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      value={customName}
+                      onChange={e => setCustomName(e.target.value)}
+                      placeholder="Source name"
+                      className="flex-1 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm border border-gray-600"
+                    />
+                    <select
+                      value={customType}
+                      onChange={e => setCustomType(e.target.value)}
+                      className="bg-gray-800 text-white px-2 py-2 rounded-lg text-sm border border-gray-600"
+                    >
+                      <option value="news">News</option>
+                      <option value="social">Social</option>
+                      <option value="technical">Technical</option>
+                    </select>
+                  </div>
+                  <input
+                    value={customUrl}
+                    onChange={e => setCustomUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full bg-gray-800 text-white px-3 py-2 rounded-lg text-sm border border-gray-600 mb-2"
+                  />
+                  <button
+                    onClick={() => {
+                      if (customName && customUrl) {
+                        setActiveSources([...activeSources, { name: customName, url: customUrl, type: customType, desc: 'Custom source' }]);
+                        setCustomName(''); setCustomUrl('');
+                      }
+                    }}
+                    className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-500"
+                  >
+                    Add custom source
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* MAIN TWO COLUMN LAYOUT */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+          {/* LEFT: MARKET STANDINGS */}
+          <div className="lg:col-span-3">
+            <PolymarketComparison
               userQuestion={event}
               aiPrediction={intelligence?.confidence || 0}
               onDataReceived={handlePolymarketData}
             />
           </div>
 
-          {/* RIGHT COLUMN - AI VERDICT (40%) */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* AI VERDICT CARD - PRIMARY */}
-            <div className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-xl p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">🤖</span>
-                <h2 className="text-xl font-bold text-white">AI Verdict</h2>
+          {/* RIGHT: AI VERDICT */}
+          <div className="lg:col-span-2 space-y-4">
+
+            {/* PRIMARY VERDICT CARD */}
+            <div className="border border-gray-700 rounded-xl p-5">
+              <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">AI verdict</div>
+
+              {marketType === 'categorical' ? (
+                <>
+                  <div className="text-2xl font-bold text-white mb-1">{topOutcome.name}</div>
+                  <div className="text-sm text-gray-400 mb-4">Most likely to win, based on AI analysis</div>
+
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Bettors say</span>
+                      <span className="text-white font-medium">{topOutcome.odds}% chance</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">AI thinks</span>
+                      <span className="text-purple-400 font-medium">
+                        {topOutcome.aiConfidence}% chance
+                        {topOutcome.aiConfidence > topOutcome.odds ? ' — more bullish' : ' — more cautious'}
+                      </span>
+                    </div>
+                    {(topOutcome.weekChange || 0) !== 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-400">Trending</span>
+                        <span className={(topOutcome.weekChange || 0) > 0 ? 'text-green-400' : 'text-red-400'}>
+                          {(topOutcome.weekChange || 0) > 0 ? '▲' : '▼'}{Math.abs(topOutcome.weekChange || 0)}% this week
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : intelligence ? (
+                <>
+                  <div className="text-2xl font-bold text-white mb-1">{intelligence.direction}</div>
+                  <div className="text-sm text-gray-400 mb-4">AI prediction for this market</div>
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Bettors say</span>
+                      <span className="text-white font-medium">{polymarketOdds ?? '—'}% chance</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">AI thinks</span>
+                      <span className="text-purple-400 font-medium">{intelligence.confidence}% chance</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-gray-400 text-sm py-4">Analyzing...</div>
+              )}
+
+              {/* Why AI picked */}
+              <div className="border-t border-gray-700 pt-4 mb-4">
+                <div className="text-xs text-gray-400 font-medium mb-3">
+                  Why AI picked {marketType === 'categorical' ? topOutcome.name : (intelligence?.direction || '...')}
+                </div>
+                <div className="space-y-2">
+                  {positiveSignals.map((signal: string, i: number) => (
+                    <div key={i} className="flex items-start gap-2 text-sm text-gray-300">
+                      <div className="w-4 h-4 rounded-full bg-green-900/40 flex items-center justify-center shrink-0 mt-0.5">
+                        <span className="text-green-400 text-xs">✓</span>
+                      </div>
+                      {signal}
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Overall Confidence */}
-              <div className="mb-6">
-                <div className="text-sm text-gray-400 mb-2">Overall Confidence</div>
-                <div className="text-4xl font-bold text-purple-400 mb-3">
-                  {totalConfidence}%
+              {/* Risk box */}
+              <div className={`border rounded-lg p-3 ${riskBg}`}>
+                <div className={`text-xs font-semibold mb-1 ${riskColor}`}>
+                  ⚠ {riskLevel} risk
                 </div>
-                <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-purple-500 to-purple-700 transition-all"
-                    style={{ width: `${totalConfidence}%` }}
-                  />
+                <div className={`text-xs ${riskTextColor}`}>
+                  {marketType === 'categorical'
+                    ? `${categoricalOutcomes.length} companies are competing. ${topOutcome.odds}% means ${100 - topOutcome.odds}% chance someone else wins.`
+                    : `Market shows ${polymarketOdds ?? '—'}% probability. Review all signals before deciding.`
+                  }
                 </div>
-              </div>
-
-              {/* Signal Breakdown */}
-              <div className="mb-6">
-                <div className="text-sm text-gray-400 mb-3">Based on:</div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">📰 News sentiment</span>
-                    <span className="text-white font-semibold">+{newsSignal}%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">💬 Community signal</span>
-                    <span className="text-white font-semibold">+{socialSignal}%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">📊 Market data</span>
-                    <span className="text-white font-semibold">+{marketSignal}%</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Verdict Summary - Plain English */}
-              <div className="p-4 bg-black/40 rounded-lg mb-4">
-                <div className="text-white text-sm leading-relaxed">
-                  {marketType === 'categorical' ? (
-                    <>
-                      <strong className="text-purple-400">{topOutcome.name}</strong> is the strongest pick. 
-                      Market agrees at <strong>{topOutcome.odds}%</strong>. 
-                      AI confidence: <strong>{topOutcome.aiConfidence}%</strong>
-                      {topOutcome.weekChange !== 0 && (
-                        <>. Momentum: <strong className={topOutcome.weekChange > 0 ? 'text-green-400' : 'text-red-400'}>
-                          {topOutcome.weekChange > 0 ? '▲' : '▼'}{Math.abs(topOutcome.weekChange)}%
-                        </strong> this week</>
-                      )}.
-                    </>
-                  ) : intelligence ? (
-                    <>
-                      Analysis indicates <strong className="text-purple-400">{intelligence.direction}</strong> is probable 
-                      at <strong>{intelligence.confidence}%</strong> confidence. 
-                      {intelligence.riskLevel && ` ${intelligence.riskLevel}.`}
-                    </>
-                  ) : (
-                    'Analysis pending...'
-                  )}
-                </div>
-              </div>
-
-              {/* Risk Badge */}
-              <div className={`px-4 py-3 rounded-lg ${
-                getRiskLevel() === 'Low Risk' ? 'bg-green-900/20 border border-green-500/30' :
-                getRiskLevel() === 'High Risk' ? 'bg-red-900/20 border border-red-500/30' :
-                'bg-yellow-900/20 border border-yellow-500/30'
-              }`}>
-                <div className={`font-bold text-lg ${getRiskColor()}`}>
-                  ⚠️ {getRiskLevel()}
-                </div>
-                {marketType === 'categorical' && (
-                  <div className="text-sm text-gray-300 mt-1">
-                    {categoricalOutcomes.length} active competitors. No dominant leader yet.
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* DETAILED ANALYSIS - COLLAPSED BY DEFAULT */}
-            <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-xl">
-              <button
-                onClick={() => setShowDetailedAnalysis(!showDetailedAnalysis)}
-                className="w-full p-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors rounded-xl"
-              >
-                <span className="text-white font-semibold">See detailed analysis</span>
-                <span className="text-gray-400">
-                  {showDetailedAnalysis ? '▴' : '▾'}
-                </span>
-              </button>
-
-              {showDetailedAnalysis && (
-                <div className="p-6 pt-0 space-y-6">
-                  
-                  {/* Signal Contribution - DETAILED */}
-                  {marketType === 'binary' && intelligence && (
-                    <div>
-                      <h3 className="text-white font-semibold mb-3">Signal Contribution</h3>
-                      <div className="space-y-4">
-                        {intelligence.modelComponents.map((component: any, idx: number) => (
-                          <div key={idx}>
-                            <div className="flex justify-between text-sm mb-1">
-                              <span className="text-gray-300">{component.name}</span>
-                              <span className="text-white font-semibold">
-                                {component.contribution > 0 ? '+' : ''}{component.contribution}%
-                              </span>
-                            </div>
-                            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-green-500 transition-all"
-                                style={{ width: `${Math.abs(component.contribution)}%` }}
-                              />
-                            </div>
-                            <p className="text-xs text-gray-400 mt-1">{component.description}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Confidence Drivers */}
-                  {marketType === 'binary' && intelligence && (
-                    <div>
-                      <h3 className="text-white font-semibold mb-3">Confidence Drivers</h3>
-                      <div className="space-y-4">
-                        <div>
-                          <div className="text-xs text-green-400 font-semibold mb-2 uppercase">Positive Signals</div>
-                          <ul className="space-y-1">
-                            {intelligence.confidenceDrivers.positive.map((driver: string, idx: number) => (
-                              <li key={idx} className="flex items-start gap-2 text-xs text-gray-300">
-                                <span className="text-green-400">✓</span>
-                                <span>{driver}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div>
-                          <div className="text-xs text-orange-400 font-semibold mb-2 uppercase">Negative Signals</div>
-                          <ul className="space-y-1">
-                            {intelligence.confidenceDrivers.negative.map((driver: string, idx: number) => (
-                              <li key={idx} className="flex items-start gap-2 text-xs text-gray-300">
-                                <span className="text-orange-400">⚠</span>
-                                <span>{driver}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Why This Prediction */}
-                  <div>
-                    <h3 className="text-white font-semibold mb-3">Why This Prediction?</h3>
-                    <p className="text-gray-300 text-xs leading-relaxed">
-                      {marketType === 'categorical' ? (
-                        `Market race analysis across news (${weights.news}%), social (${weights.social}%), and market data (${weights.technical}%). 
-                        ${topOutcome.name} leads with ${topOutcome.odds}% market probability across ${categoricalOutcomes.length} competitors.`
-                      ) : (
-                        intelligence?.explanation || 'Analysis pending...'
-                      )}
-                    </p>
-                  </div>
-
+            {/* CURRENT CONFIGURATION */}
+            <div className="border border-gray-700 rounded-xl p-4">
+              <div className="text-xs text-gray-400 font-medium mb-3">Current configuration</div>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">News sources</span>
+                  <span className="text-white">{weights.news}%</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Social sources</span>
+                  <span className="text-white">{weights.social}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Market probability</span>
+                  <span className="text-white">{weights.technical}%</span>
+                </div>
+              </div>
+              {activeSources.length > 0 && (
+                <div className="mt-2 text-xs text-purple-400">{activeSources.length} custom sources active</div>
               )}
             </div>
+
+            {/* DEEP ANALYSIS TOGGLE */}
+            <button
+              onClick={() => setShowDeep(!showDeep)}
+              className="w-full border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-400 flex justify-between items-center hover:bg-gray-900 transition-colors"
+            >
+              <span>🔍 See full signal breakdown</span>
+              <span>{showDeep ? '▴' : '▾'}</span>
+            </button>
+
+            {showDeep && (
+              <div className="border border-gray-700 rounded-xl p-5 space-y-5">
+
+                {/* Signal Contribution */}
+                <div>
+                  <div className="text-sm font-medium text-white mb-3">Signal contribution</div>
+                  <div className="space-y-3">
+                    {[
+                      { label: '📰 News sentiment',    value: Math.round((polymarketOdds || 50) * (weights.news / 100)),      color: 'bg-yellow-500', desc: 'Analyzes sentiment across major outlets' },
+                      { label: '💬 Community signal',  value: Math.round((polymarketOdds || 50) * (weights.social / 100)),    color: 'bg-green-500',  desc: 'Measures public discussion trends' },
+                      { label: '📊 Market probability',value: Math.round((polymarketOdds || 50) * (weights.technical / 100)), color: 'bg-blue-500',   desc: marketType === 'categorical' ? `${topOutcome.name} leads at ${topOutcome.odds}%` : `Live odds: ${polymarketOdds ?? '—'}%` },
+                    ].map(s => (
+                      <div key={s.label}>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-gray-300">{s.label}</span>
+                          <span className="text-white font-medium">+{s.value}%</span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-1.5">
+                          <div className={`${s.color} h-1.5 rounded-full`} style={{ width: `${(s.value / 30) * 100}%` }} />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">{s.desc}</p>
+                      </div>
+                    ))}
+                    <div className="flex justify-between text-sm font-semibold border-t border-gray-700 pt-2">
+                      <span className="text-gray-300">Total confidence</span>
+                      <span className="text-white">
+                        {Math.round((polymarketOdds || 50) * (weights.news / 100)) +
+                         Math.round((polymarketOdds || 50) * (weights.social / 100)) +
+                         Math.round((polymarketOdds || 50) * (weights.technical / 100))}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Confidence Drivers */}
+                <div>
+                  <div className="text-sm font-medium text-white mb-3">Confidence drivers</div>
+                  <div className="mb-3">
+                    <div className="text-xs text-green-400 font-semibold mb-2 uppercase">Positive signals</div>
+                    {(marketType === 'categorical' ? positiveSignals : (intelligence?.confidenceDrivers?.positive || ['Strong news sentiment'])).map((d: string, i: number) => (
+                      <div key={i} className="flex items-start gap-2 text-xs text-gray-300 mb-1">
+                        <span className="text-green-400">✓</span>{d}
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <div className="text-xs text-orange-400 font-semibold mb-2 uppercase">Negative signals</div>
+                    {marketType === 'categorical' ? (
+                      <>
+                        <div className="flex items-start gap-2 text-xs text-gray-300 mb-1"><span className="text-orange-400">⚠</span>Highly competitive — {categoricalOutcomes.length} active competitors</div>
+                        <div className="flex items-start gap-2 text-xs text-gray-300 mb-1"><span className="text-orange-400">⚠</span>No dominant leader ({topOutcome.odds}% is beatable)</div>
+                      </>
+                    ) : (intelligence?.confidenceDrivers?.negative || []).map((d: string, i: number) => (
+                      <div key={i} className="flex items-start gap-2 text-xs text-gray-300 mb-1"><span className="text-orange-400">⚠</span>{d}</div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Why this prediction */}
+                <div>
+                  <div className="text-sm font-medium text-white mb-2">Why this prediction?</div>
+                  <p className="text-xs text-gray-300 leading-relaxed">
+                    {marketType === 'categorical'
+                      ? `Market race analysis across news (${weights.news}%), social (${weights.social}%), and market data (${weights.technical}%). ${topOutcome.name} leads with ${topOutcome.odds}% market probability across ${categoricalOutcomes.length} competitors. Weekly momentum: ${topOutcome.name} ${(topOutcome.weekChange || 0) > 0 ? '▲' : '▼'}${Math.abs(topOutcome.weekChange || 0)}%. AI signals point to ${topOutcome.name} as highest conviction pick.`
+                      : intelligence?.explanation || 'Analysis pending...'
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
 
           </div>
         </div>
 
-        <div className="mt-8 text-center text-sm text-gray-500">
+        <div className="mt-8 text-center text-xs text-gray-600">
           Not financial advice · Research purposes only
         </div>
       </div>
@@ -388,7 +577,7 @@ export default function ScoresPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-purple-400">Loading...</div>
+        <div className="text-purple-400 text-sm">Loading...</div>
       </div>
     }>
       <ScoresPageContent />
