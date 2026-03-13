@@ -47,6 +47,19 @@ export async function GET(request: NextRequest) {
 
     const allMarkets = await marketsResponse.json();
 
+    // COMPREHENSIVE DEBUG LOGGING
+    console.log('====================================');
+    console.log('POLYMARKET API DEBUG');
+    console.log('====================================');
+    console.log('TOTAL MARKETS:', allMarkets.length);
+    console.log('FIRST MARKET KEYS:', Object.keys(allMarkets[0]));
+    console.log('FIRST MARKET FULL:', JSON.stringify(allMarkets[0], null, 2));
+    if (allMarkets.length > 1) {
+      console.log('SECOND MARKET KEYS:', Object.keys(allMarkets[1]));
+      console.log('SECOND MARKET FULL:', JSON.stringify(allMarkets[1], null, 2));
+    }
+    console.log('====================================');
+
     if (!allMarkets || allMarkets.length === 0) {
       return Response.json({ error: 'No markets found' }, { status: 404 });
     }
@@ -89,24 +102,68 @@ export async function GET(request: NextRequest) {
       const outcomePrices: string[] = [];
 
       for (const market of allMarkets) {
-        // The outcome name is in groupItemTitle or question
-        const outcomeName = market.groupItemTitle || market.question || 'Unknown';
+        // TRY MULTIPLE FIELD NAMES for outcome label
+        const outcomeName = 
+          market.groupItemTitle ||     // Most common for categorical
+          market.groupItemTitleShort || // Sometimes abbreviated
+          market.title ||              // Alternative field
+          market.question ||           // Fallback to full question
+          market.description ||        // Another fallback
+          'Unknown';
+        
+        console.log(`Processing outcome: "${outcomeName}"`);
         outcomeNames.push(outcomeName);
 
-        // Get the YES price for this outcome
+        // Parse prices safely with multiple format support
         let prices;
         try {
           prices = typeof market.outcomePrices === 'string'
             ? JSON.parse(market.outcomePrices)
             : market.outcomePrices;
         } catch {
-          prices = market.outcomePrices;
+          // If parsing fails, try as comma-separated string
+          if (typeof market.outcomePrices === 'string') {
+            prices = market.outcomePrices.split(',').map(p => p.trim());
+          } else {
+            prices = ['0', '1'];
+          }
         }
 
+        console.log(`  Raw prices:`, prices);
+
         // For categorical outcomes, index [0] is the YES probability
-        const yesPrice = prices && prices[0] ? prices[0] : '0';
-        outcomePrices.push(yesPrice);
+        let yesPrice = prices && prices[0] ? String(prices[0]) : '0';
+        
+        // Validate and convert to decimal format
+        let numericPrice = parseFloat(yesPrice);
+        
+        // Check if price is in cents (0-100) vs decimal (0-1)
+        if (!isNaN(numericPrice)) {
+          if (numericPrice > 1) {
+            // Price is in cents (e.g., 31 instead of 0.31)
+            numericPrice = numericPrice / 100;
+            yesPrice = String(numericPrice);
+            console.log(`  Converted from cents: ${prices[0]} → ${yesPrice}`);
+          }
+        } else {
+          yesPrice = '0';
+        }
+
+        // Final validation
+        const validPrice = (!isNaN(numericPrice) && numericPrice >= 0 && numericPrice <= 1)
+          ? yesPrice
+          : '0';
+        
+        console.log(`  Final price: ${validPrice} (${Math.round(parseFloat(validPrice) * 100)}%)`);
+        outcomePrices.push(validPrice);
       }
+
+      // Validate total probability
+      const totalProbability = outcomePrices.reduce((sum, p) => sum + parseFloat(p), 0);
+      console.log('====================================');
+      console.log('TOTAL PROBABILITY:', totalProbability.toFixed(2));
+      console.log('EXPECTED: ~1.00 (100%)');
+      console.log('====================================');
 
       // Build unified market object
       return Response.json({
