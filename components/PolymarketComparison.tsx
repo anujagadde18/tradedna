@@ -14,7 +14,7 @@ interface MarketOutcome {
 interface PolymarketComparisonProps {
   userQuestion: string;
   aiPrediction: number;
-  onDataReceived?: (marketOdds: number) => void;
+  onDataReceived?: (marketOdds: number, type?: 'binary' | 'categorical') => void;
 }
 
 // AI Confidence Calculation - NO RANDOM!
@@ -102,7 +102,7 @@ export function PolymarketComparison({
         setMarketOdds(yesOdds);
         
         if (onDataReceived) {
-          onDataReceived(yesOdds);
+          onDataReceived(yesOdds, 'binary');
         }
 
       } else if (data.type === 'categorical') {
@@ -129,7 +129,7 @@ export function PolymarketComparison({
         if (analyzed.length > 0) {
           setMarketOdds(analyzed[0].odds);
           if (onDataReceived) {
-            onDataReceived(analyzed[0].odds);
+            onDataReceived(analyzed[0].odds, 'categorical');
           }
         }
       }
@@ -256,37 +256,47 @@ export function PolymarketComparison({
         </div>
 
         {/* Race Bars */}
-        <div className="space-y-3 mb-6">
+        <div className="space-y-4 mb-6">
           {outcomes.map((outcome, idx) => {
-            const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '   ';
-            const changeColor = 
-              outcome.weekChange && outcome.weekChange > 0 ? 'text-green-400' :
-              outcome.weekChange && outcome.weekChange < 0 ? 'text-red-400' :
-              'text-gray-500';
-            const changeIcon =
-              outcome.weekChange && outcome.weekChange > 0 ? '🔥' :
-              outcome.weekChange && outcome.weekChange < 0 ? '📉' : '';
+            const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
+            const weekChangeNum = outcome.weekChange || 0;
+            const hasChange = weekChangeNum !== 0;
 
             return (
-              <div key={outcome.name} className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <span>{medal}</span>
-                    <span className="text-white font-medium">{outcome.name}</span>
+              <div key={outcome.name}>
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <div className="flex items-center gap-2 flex-1">
+                    {medal && <span className="text-xl">{medal}</span>}
+                    <span className="text-white font-semibold">{outcome.name}</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {outcome.weekChange !== undefined && outcome.weekChange !== 0 && (
-                      <span className={`text-xs ${changeColor}`}>
-                        {outcome.weekChange > 0 ? '+' : ''}{outcome.weekChange}% {changeIcon}
+                  <div className="flex items-center gap-4">
+                    <span className="text-2xl font-bold text-white">{outcome.odds}%</span>
+                    {hasChange && (
+                      <span className={`text-sm ${weekChangeNum > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {weekChangeNum > 0 ? '▲' : '▼'}{Math.abs(weekChangeNum)}% wk
                       </span>
                     )}
-                    <span className="text-white font-bold">{outcome.odds}%</span>
+                    {outcome.edge !== 0 && (
+                      <span className={`text-sm font-semibold ${
+                        outcome.edge > 5 ? 'text-green-400' :
+                        outcome.edge < -5 ? 'text-red-400' :
+                        'text-gray-400'
+                      }`}>
+                        Edge: {outcome.edge > 0 ? '+' : ''}{outcome.edge}%
+                        {outcome.edge > 5 && ' 🔥'}
+                        {outcome.edge < -5 && ' 📉'}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-3 bg-gray-700 rounded-md overflow-hidden">
                   <div 
-                    className={idx === 0 ? 'bg-purple-500' : 'bg-gray-500'}
-                    style={{ width: `${outcome.odds}%`, height: '100%' }}
+                    className={`h-full transition-all ${
+                      idx === 0 
+                        ? 'bg-gradient-to-r from-purple-500 to-purple-700' 
+                        : 'bg-gray-500'
+                    }`}
+                    style={{ width: `${outcome.odds}%` }}
                   />
                 </div>
               </div>
