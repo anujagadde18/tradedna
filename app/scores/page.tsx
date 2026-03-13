@@ -461,10 +461,10 @@ function ScoresPageContent() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           
-          {/* LEFT COLUMN */}
-          <div className="space-y-6">
+          {/* LEFT COLUMN - MARKET RACE (3 cols) */}
+          <div className="lg:col-span-3 space-y-6">
             
             <div className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-lg p-6">
               <div className="text-gray-400 text-sm mb-2">Analyzing Event</div>
@@ -521,8 +521,8 @@ function ScoresPageContent() {
 
           </div>
 
-          {/* RIGHT COLUMN */}
-          <div className="space-y-6">
+          {/* RIGHT COLUMN - SIGNALS & CONFIG (2 cols) */}
+          <div className="lg:col-span-2 space-y-6">
             
             {/* 1. Current Configuration */}
             <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-lg p-6">
