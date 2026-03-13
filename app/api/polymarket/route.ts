@@ -15,8 +15,7 @@ export async function GET(request: NextRequest) {
     console.log('=== POLYMARKET API DEBUG ===');
     console.log('Fetching slug:', slug);
 
-    // STEP 1: Fetch event using slug
-    // CRITICAL: Markets are NESTED inside the event, not a separate endpoint!
+    // Fetch event with nested markets
     const eventRes = await fetch(
       `https://gamma-api.polymarket.com/events?slug=${slug}&limit=1`,
       { headers: { 'Accept': 'application/json' } }
@@ -27,88 +26,78 @@ export async function GET(request: NextRequest) {
     }
     
     const events = await eventRes.json();
-    console.log('Events returned:', events?.length);
     
     if (!events || events.length === 0) {
       return Response.json({ error: 'Event not found' }, { status: 404 });
     }
 
     const event = events[0];
-    console.log('Event title:', event.title);
-    console.log('Event ID:', event.id);
-    
-    // STEP 2: Markets are NESTED inside event.markets - NO separate API call!
     const markets = event.markets;
-    console.log('Markets in event:', markets?.length);
-    
+
     if (!markets || markets.length === 0) {
       return Response.json({ error: 'No markets in event' }, { status: 404 });
     }
 
-    console.log('First market structure:', JSON.stringify(markets[0], null, 2));
+    console.log('Event title:', event.title);
+    console.log('Total markets:', markets.length);
+    console.log('First market groupItemTitle:', markets[0].groupItemTitle);
 
-    // STEP 3: Detect market type
-    const firstMarket = markets[0];
-    let firstOutcomes: string[];
+    // CRITICAL DISCOVERY FROM LOGS:
+    // Categorical markets = multiple Yes/No markets, each with groupItemTitle
+    // Binary market = single Yes/No market, no groupItemTitle
     
-    try {
-      firstOutcomes = typeof firstMarket.outcomes === 'string'
-        ? JSON.parse(firstMarket.outcomes)
-        : firstMarket.outcomes;
-    } catch {
-      firstOutcomes = [];
-    }
+    const hasGroupItems = markets.some(
+      (m: any) => m.groupItemTitle && m.groupItemTitle.trim() !== ''
+    );
 
-    console.log('First market outcomes:', firstOutcomes);
+    console.log('Has groupItemTitle (categorical):', hasGroupItems);
 
-    // Binary = 1 market with Yes/No
-    // Categorical = multiple markets (one per competitor)
-    const isBinary = markets.length === 1 ||
-      (firstOutcomes.length === 2 &&
-        firstOutcomes.includes('Yes') &&
-        firstOutcomes.includes('No'));
-
-    if (isBinary) {
-      // ── BINARY MARKET ──────────────────────────────
-      console.log('✓ Market type: BINARY');
+    if (!hasGroupItems && markets.length === 1) {
+      // ═══════════════════════════════════════════
+      // TRUE BINARY MARKET (single Yes/No question)
+      // ═══════════════════════════════════════════
+      console.log('→ Market type: BINARY');
+      
+      const market = markets[0];
       
       let prices: string[];
       try {
-        prices = typeof firstMarket.outcomePrices === 'string'
-          ? JSON.parse(firstMarket.outcomePrices)
-          : firstMarket.outcomePrices;
+        prices = typeof market.outcomePrices === 'string'
+          ? JSON.parse(market.outcomePrices)
+          : market.outcomePrices;
       } catch {
         prices = ['0', '1'];
       }
 
-      console.log('Binary prices:', prices);
-      console.log('YES probability:', prices[0]);
+      console.log('YES price:', prices[0]);
       console.log('===========================');
       
       return Response.json({
-        title: event.title || firstMarket.question,
+        title: event.title || market.question,
         volume: event.volume,
-        markets: [firstMarket]
+        markets: [market]
       });
 
     } else {
-      // ── CATEGORICAL MARKET ─────────────────────────
-      console.log('✓ Market type: CATEGORICAL');
-      console.log('Number of outcomes:', markets.length);
+      // ═══════════════════════════════════════════
+      // CATEGORICAL MARKET (multiple competitors)
+      // ═══════════════════════════════════════════
+      // Each market = one competitor's Yes/No question
+      // groupItemTitle = competitor name
+      // outcomePrices[0] = YES = probability they win
       
+      console.log('→ Market type: CATEGORICAL');
+      console.log('Number of competitors:', markets.length);
+      console.log('---');
+
       const outcomeNames: string[] = [];
       const outcomePrices: string[] = [];
 
       for (const market of markets) {
-        // Try multiple field names for outcome label
-        const name =
-          market.groupItemTitle ||
-          market.groupItemTitleShort ||
-          market.title ||
-          market.question ||
-          'Unknown';
+        // Get competitor name from groupItemTitle
+        const name = market.groupItemTitle || market.question || 'Unknown';
 
-        // Get YES price for this outcome
+        // Parse prices array
         let prices: string[];
         try {
           prices = typeof market.outcomePrices === 'string'
@@ -118,7 +107,7 @@ export async function GET(request: NextRequest) {
           prices = ['0', '1'];
         }
 
-        // prices[0] = probability this outcome wins
+        // prices[0] = YES = probability THIS competitor wins
         let yesPrice = parseFloat(prices[0] || '0');
         
         // Handle cents format (31 instead of 0.31)
@@ -126,7 +115,7 @@ export async function GET(request: NextRequest) {
           yesPrice = yesPrice / 100;
         }
 
-        console.log(`  "${name}" → ${(yesPrice * 100).toFixed(1)}% (raw: ${prices[0]})`);
+        console.log(`  ${name}: ${(yesPrice * 100).toFixed(1)}%`);
 
         outcomeNames.push(name);
         outcomePrices.push(String(yesPrice));
@@ -137,7 +126,7 @@ export async function GET(request: NextRequest) {
       console.log('Total probability:', totalProb.toFixed(2), '(expected: ~1.0)');
       console.log('===========================');
 
-      // Build unified market object
+      // Return unified categorical market structure
       return Response.json({
         title: event.title,
         volume: event.volume,
