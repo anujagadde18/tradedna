@@ -28,6 +28,16 @@ function getTag(edge: number): { text: string; className: string } {
 // Human-readable outcome type labels
 function getOutcomeLabels(outcomeType: string, count: number) {
   switch (outcomeType) {
+    case 'prices':
+      return {
+        subtitle: 'Price levels bettors think will be hit · bar = probability',
+        unit: count === 1 ? 'price level' : 'price levels',
+        itemLabel: 'price level',
+        aiPickSuffix: (name: string, edge: number) =>
+          edge >= 4
+            ? `AI thinks ${name} is ${edge}% more likely than the market believes`
+            : `${name} has the highest market probability`,
+      };
     case 'dates':
       return {
         subtitle: 'What bettors think is most likely · bar = probability',
@@ -142,7 +152,7 @@ export function PolymarketComparison({
           else if (idx === 2) aiModifier = Math.floor(Math.random() * 3) - 1;
           else if (idx <= 4)  aiModifier = Math.floor(Math.random() * 5) - 2;
           else                aiModifier = Math.floor(Math.random() * 3) - 3;
-          const aiConf = Math.max(1, mktOdds + aiModifier);
+          const aiConf = Math.min(99, Math.max(1, mktOdds + aiModifier));
           return {
             name: o.name,
             odds: mktOdds,
