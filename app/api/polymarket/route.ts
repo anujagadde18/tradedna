@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
         } catch {
           // If parsing fails, try as comma-separated string
           if (typeof market.outcomePrices === 'string') {
-            prices = market.outcomePrices.split(',').map(p => p.trim());
+            prices = market.outcomePrices.split(',').map((p: string) => p.trim());
           } else {
             prices = ['0', '1'];
           }
