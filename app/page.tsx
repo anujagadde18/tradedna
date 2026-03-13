@@ -17,25 +17,25 @@ export default function HomePage() {
   };
 
   const exampleQueries = [
-    { 
-      text: "Will Trump win the 2024 election?", 
-      display: "Will Trump win the 2024 election?",
-      category: "Politics" 
+    {
+      text: 'https://polymarket.com/event/which-company-has-top-ai-model-end-of-june-style-control-on',
+      display: 'Which company has the top AI model by June 2026?',
+      category: 'Technology'
     },
-    { 
-      text: "https://polymarket.com/event/fed-decision-march", 
-      display: "Fed Interest Rate Decision - March",
-      category: "Economics" 
+    {
+      text: 'https://polymarket.com/event/us-x-iran-ceasefire-by',
+      display: 'Will there be a US-Iran ceasefire?',
+      category: 'Geopolitics'
     },
-    { 
-      text: "Will Bitcoin hit $100k in 2025?", 
-      display: "Will Bitcoin hit $100k in 2025?",
-      category: "Crypto" 
+    {
+      text: 'https://polymarket.com/event/will-bitcoin-hit-100k-before-april',
+      display: 'Will Bitcoin hit $100k before April?',
+      category: 'Crypto'
     },
-    { 
-      text: "https://polymarket.com/event/nba-mvp-2024", 
-      display: "NBA MVP Winner 2024",
-      category: "Sports" 
+    {
+      text: 'https://polymarket.com/event/fed-rate-cut-may-2025',
+      display: 'Will the Fed cut rates in May?',
+      category: 'Economics'
     }
   ];
 
@@ -68,7 +68,7 @@ export default function HomePage() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Paste a Polymarket URL or ask any question..."
+                placeholder="Paste a Polymarket URL for live analysis..."
                 className="w-full px-6 py-5 text-lg bg-white/10 border-2 border-purple-500/30 rounded-2xl 
                          text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 
                          transition-all backdrop-blur-sm"
@@ -86,7 +86,7 @@ export default function HomePage() {
             </div>
             
             <div className="mt-4 text-center text-sm text-gray-400">
-              Try pasting a Polymarket event URL or ask any yes/no question
+              Try pasting a Polymarket event URL — best for live market analysis
             </div>
           </form>
 
