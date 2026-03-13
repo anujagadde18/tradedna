@@ -14,14 +14,61 @@ interface MarketOutcome {
 interface PolymarketComparisonProps {
   userQuestion: string;
   aiPrediction: number;
-  onDataReceived?: (marketOdds: number, type?: 'binary' | 'categorical', outcomes?: any[]) => void;
+  onDataReceived?: (marketOdds: number, type?: 'binary' | 'categorical', outcomes?: any[], outcomeType?: string) => void;
 }
 
+// Smart labels based on outcome type
 function getTag(edge: number): { text: string; className: string } {
   if (edge >= 5)  return { text: 'AI favorite — bullish on this one',  className: 'text-xs text-purple-400 bg-purple-900/20 px-2 py-0.5 rounded-full inline-block' };
   if (edge >= 2)  return { text: 'Worth watching — slight edge',        className: 'text-xs text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded-full inline-block' };
   if (edge >= -2) return { text: 'AI aligns with market',               className: 'text-xs text-gray-500 inline-block' };
   return           { text: 'AI slightly cautious',                      className: 'text-xs text-orange-400 bg-orange-900/10 px-2 py-0.5 rounded-full inline-block' };
+}
+
+// Human-readable outcome type labels
+function getOutcomeLabels(outcomeType: string, count: number) {
+  switch (outcomeType) {
+    case 'dates':
+      return {
+        subtitle: 'What bettors think is most likely · bar = probability',
+        unit: count === 1 ? 'date' : 'dates',
+        itemLabel: 'date',
+        aiPickSuffix: (name: string, edge: number) =>
+          edge >= 4
+            ? `AI thinks ${name} is ${edge}% more likely than the market believes`
+            : `${name} has the highest market probability`,
+      };
+    case 'candidates':
+      return {
+        subtitle: 'What bettors currently think · bar = chance of winning',
+        unit: count === 1 ? 'candidate' : 'candidates',
+        itemLabel: 'candidate',
+        aiPickSuffix: (name: string, edge: number) =>
+          edge >= 4
+            ? `AI thinks ${name} is ${edge}% more likely to win than the market believes`
+            : `${name} — strongest conviction among all candidates`,
+      };
+    case 'companies':
+      return {
+        subtitle: 'What bettors currently think · bar = chance of winning',
+        unit: count === 1 ? 'company' : 'companies',
+        itemLabel: 'company',
+        aiPickSuffix: (name: string, edge: number) =>
+          edge >= 4
+            ? `AI thinks ${name} is ${edge}% more likely to win than the market currently believes`
+            : `${name} — strongest conviction among all competitors`,
+      };
+    default:
+      return {
+        subtitle: 'What bettors currently think · bar = probability',
+        unit: count === 1 ? 'outcome' : 'outcomes',
+        itemLabel: 'option',
+        aiPickSuffix: (name: string, edge: number) =>
+          edge >= 4
+            ? `AI thinks ${name} is ${edge}% more likely than the market believes`
+            : `${name} — highest conviction`,
+      };
+  }
 }
 
 export function PolymarketComparison({
@@ -32,11 +79,13 @@ export function PolymarketComparison({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [marketType, setMarketType] = useState<'binary' | 'categorical'>('binary');
+  const [outcomeType, setOutcomeType] = useState<string>('options');
   const [marketOdds, setMarketOdds] = useState<number | null>(null);
   const [marketName, setMarketName] = useState<string>('');
   const [marketVolume, setMarketVolume] = useState<string>('');
   const [outcomes, setOutcomes] = useState<MarketOutcome[]>([]);
   const [showAll, setShowAll] = useState(false);
+  const [hasPolymarketUrl, setHasPolymarketUrl] = useState(false);
 
   useEffect(() => {
     fetchPolymarketData();
@@ -50,11 +99,13 @@ export function PolymarketComparison({
       const urlMatch = userQuestion.match(/polymarket\.com\/event\/([^\/\s?#]+)/);
 
       if (!urlMatch) {
-        setError('No Polymarket URL detected');
+        setHasPolymarketUrl(false);
+        setError('no_url');
         setLoading(false);
         return;
       }
 
+      setHasPolymarketUrl(true);
       const eventSlug = urlMatch[1];
       const response = await fetch(`/api/polymarket?slug=${eventSlug}`);
 
@@ -66,6 +117,7 @@ export function PolymarketComparison({
       setMarketName(data.title);
       setMarketVolume(data.volume);
       setMarketType(data.type);
+      setOutcomeType(data.outcomeType || 'options');
 
       if (data.type === 'binary') {
         const market = data.markets[0];
@@ -79,7 +131,7 @@ export function PolymarketComparison({
         }
         const yesOdds = Math.round(parseFloat(prices[0]) * 100);
         setMarketOdds(yesOdds);
-        if (onDataReceived) onDataReceived(yesOdds, 'binary');
+        if (onDataReceived) onDataReceived(yesOdds, 'binary', [], 'binary');
 
       } else if (data.type === 'categorical') {
         const analyzed = data.outcomes.map((o: any, idx: number) => {
@@ -104,7 +156,7 @@ export function PolymarketComparison({
         setOutcomes(analyzed);
         if (analyzed.length > 0) {
           setMarketOdds(analyzed[0].odds);
-          if (onDataReceived) onDataReceived(analyzed[0].odds, 'categorical', analyzed);
+          if (onDataReceived) onDataReceived(analyzed[0].odds, 'categorical', analyzed, data.outcomeType);
         }
       }
 
@@ -119,6 +171,25 @@ export function PolymarketComparison({
     return (
       <div className="border border-gray-700 rounded-xl p-6">
         <div className="text-center text-gray-400 text-sm py-8">Loading market data...</div>
+      </div>
+    );
+  }
+
+  // No Polymarket URL — plain text question
+  if (error === 'no_url') {
+    return (
+      <div className="border border-gray-700 rounded-xl p-6">
+        <div className="text-sm text-gray-400 mb-3 font-medium">No live market data</div>
+        <p className="text-xs text-gray-500 leading-relaxed">
+          This question doesn&apos;t have a Polymarket URL, so live market odds aren&apos;t available.
+          The AI verdict on the right is based on general signals only — not real betting data.
+        </p>
+        <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
+          <p className="text-xs text-yellow-300">
+            💡 For more accurate analysis, paste a Polymarket URL directly from{' '}
+            <span className="text-yellow-200 underline">polymarket.com</span>
+          </p>
+        </div>
       </div>
     );
   }
@@ -183,14 +254,13 @@ export function PolymarketComparison({
     const maxOdds = topOutcome?.odds || 1;
     const visibleOutcomes = showAll ? outcomes : outcomes.slice(0, 4);
     const hiddenCount = outcomes.length - 4;
+    const labels = getOutcomeLabels(outcomeType, outcomes.length);
 
     return (
       <div className="border border-gray-700 rounded-xl p-6">
         <div className="mb-5">
           <h2 className="text-base font-semibold text-white mb-1">Market standings</h2>
-          <p className="text-xs text-gray-400">
-            What bettors currently think · bar = chance of winning
-          </p>
+          <p className="text-xs text-gray-400">{labels.subtitle}</p>
         </div>
 
         <div className="space-y-4">
@@ -234,7 +304,7 @@ export function PolymarketComparison({
             onClick={() => setShowAll(true)}
             className="w-full mt-4 py-2 text-purple-400 hover:text-purple-300 text-sm transition-colors"
           >
-            Show {hiddenCount} more {hiddenCount === 1 ? 'company' : 'companies'} ▾
+            Show {hiddenCount} more {hiddenCount === 1 ? labels.itemLabel : labels.unit} ▾
           </button>
         )}
         {showAll && (
@@ -251,9 +321,7 @@ export function PolymarketComparison({
             <div className="text-xs text-purple-300 font-semibold mb-1">🤖 AI picks</div>
             <div className="text-sm text-white">
               <strong>{topOutcome.name}</strong>
-              {topOutcome.edge >= 4
-                ? ` — AI thinks this is ${topOutcome.edge}% more likely to win than the market currently believes`
-                : ' — strongest conviction among all competitors'}
+              {' — '}{labels.aiPickSuffix(topOutcome.name, topOutcome.edge)}
             </div>
           </div>
         )}
