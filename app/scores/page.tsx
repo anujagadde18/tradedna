@@ -39,9 +39,14 @@ function generatePositiveSignals(
   rank: number, total: number, outcomeType: string
 ): string[] {
   const signals: string[] = [];
-  const unitLabel = outcomeType === 'dates' ? 'dates' : outcomeType === 'candidates' ? 'candidates' : outcomeType === 'companies' ? 'competitors' : 'outcomes';
 
-  if (rank === 0) signals.push(`Highest market odds of all ${total} ${unitLabel}`);
+  const unitLabel = outcomeType === 'dates' ? 'dates'
+    : outcomeType === 'candidates' ? 'candidates'
+    : outcomeType === 'companies' ? 'competitors'
+    : outcomeType === 'prices' ? 'price levels'
+    : 'outcomes';
+
+  if (rank === 0) signals.push(`Highest probability of all ${total} ${unitLabel}`);
   if (weekChange > 5) signals.push(`Gaining fast — up ${weekChange}% just this week`);
   else if (weekChange > 0) signals.push('Momentum is trending upward this week');
   if (edge > 5) signals.push('AI signals strongly favor this outcome');
@@ -164,7 +169,7 @@ function ScoresPageContent() {
     : intelligence?.confidenceDrivers?.positive?.slice(0, 3) || ['Strong news sentiment', 'Community momentum favorable'];
 
   // Smart unit labels for categorical
-  const unitLabel = outcomeType === 'dates' ? 'dates' : outcomeType === 'candidates' ? 'candidates' : outcomeType === 'companies' ? 'companies' : 'outcomes';
+  const unitLabel = outcomeType === 'dates' ? 'dates' : outcomeType === 'candidates' ? 'candidates' : outcomeType === 'companies' ? 'companies' : outcomeType === 'prices' ? 'price levels' : 'outcomes';
   const competingLabel = categoricalOutcomes.length > 0 ? `${categoricalOutcomes.length} competing ${unitLabel}` : '';
 
   const riskLevel = marketType === 'categorical' ? 'Medium' : (intelligence?.riskLevel?.replace(' Risk', '') || 'Medium');
@@ -175,6 +180,9 @@ function ScoresPageContent() {
   // Risk description smart text
   const riskDescription = (() => {
     if (marketType === 'categorical') {
+      if (outcomeType === 'prices') {
+        return `${categoricalOutcomes.length} price levels tracked. ${topOutcome.odds}% chance the top level is hit — ${100 - topOutcome.odds}% chance it lands elsewhere.`;
+      }
       if (outcomeType === 'dates') {
         return `${categoricalOutcomes.length} dates are possible. ${topOutcome.odds}% means ${100 - topOutcome.odds}% chance it happens on a different date.`;
       }
