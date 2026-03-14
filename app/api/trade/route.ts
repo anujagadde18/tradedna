@@ -1,5 +1,4 @@
 // app/api/trade/route.ts
-// Handles order placement server-side with builder attribution headers
 import { NextRequest } from 'next/server';
 import crypto from 'crypto';
 
@@ -39,21 +38,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const timestamp  = Date.now().toString();
-    const path       = '/order';
-    const bodyStr    = JSON.stringify(orderPayload);
-    const signature  = buildSignature(secret, parseInt(timestamp), 'POST', path, bodyStr);
+    const timestamp = Date.now().toString();
+    const path      = '/order';
+    const bodyStr   = JSON.stringify(orderPayload);
+    const signature = buildSignature(secret, parseInt(timestamp), 'POST', path, bodyStr);
 
-    // Forward to Polymarket CLOB with builder attribution headers
     const response = await fetch('https://clob.polymarket.com/order', {
       method: 'POST',
       headers: {
-        'Content-Type':          'application/json',
-        'POLY_BUILDER_API_KEY':   apiKey,
-        'POLY_BUILDER_TIMESTAMP': timestamp,
+        'Content-Type':           'application/json',
+        'POLY_BUILDER_API_KEY':    apiKey,
+        'POLY_BUILDER_TIMESTAMP':  timestamp,
         'POLY_BUILDER_PASSPHRASE': passphrase,
-        'POLY_BUILDER_SIGNATURE': signature,
-        // User auth headers passed through from client
+        'POLY_BUILDER_SIGNATURE':  signature,
         ...(body.authHeaders || {}),
       },
       body: bodyStr,
