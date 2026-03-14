@@ -1,21 +1,9 @@
+// app/api/builder-sign/route.ts
+// Returns builder attribution headers for client-side use
 import { NextRequest } from 'next/server';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
-
-function buildHmacSignature(
-  secret: string,
-  timestamp: number,
-  method: string,
-  path: string,
-  body?: string
-): string {
-  const message = timestamp + method.toUpperCase() + path + (body || '');
-  return crypto
-    .createHmac('sha256', Buffer.from(secret, 'base64'))
-    .update(message)
-    .digest('base64');
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,7 +21,11 @@ export async function POST(request: NextRequest) {
     }
 
     const timestamp = Date.now().toString();
-    const signature = buildHmacSignature(secret, parseInt(timestamp), method, path, body);
+    const message   = timestamp + method.toUpperCase() + path + (body || '');
+    const signature = crypto
+      .createHmac('sha256', Buffer.from(secret, 'base64'))
+      .update(message)
+      .digest('base64');
 
     return Response.json({
       POLY_BUILDER_API_KEY:    apiKey,
@@ -45,16 +37,4 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     return Response.json({ error: err.message }, { status: 500 });
   }
-}
-
-export async function GET() {
-  const configured = !!(
-    process.env.POLY_BUILDER_API_KEY &&
-    process.env.POLY_BUILDER_SECRET &&
-    process.env.POLY_BUILDER_PASSPHRASE
-  );
-  return Response.json({ 
-    configured, 
-    status: configured ? 'ready' : 'missing credentials' 
-  });
 }
