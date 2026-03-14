@@ -1,5 +1,4 @@
 // app/api/builder-sign/route.ts
-// Returns builder attribution headers for client-side use
 import { NextRequest } from 'next/server';
 import crypto from 'crypto';
 
