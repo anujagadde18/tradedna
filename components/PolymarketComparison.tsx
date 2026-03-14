@@ -17,26 +17,23 @@ interface PolymarketComparisonProps {
   onDataReceived?: (marketOdds: number, type?: 'binary' | 'categorical', outcomes?: any[], outcomeType?: string) => void;
 }
 
-// Smart labels based on outcome type
-function getTag(edge: number): { text: string; className: string } {
-  if (edge >= 5)  return { text: 'AI favorite — bullish on this one',  className: 'text-xs text-purple-400 bg-purple-900/20 px-2 py-0.5 rounded-full inline-block' };
-  if (edge >= 2)  return { text: 'Worth watching — slight edge',        className: 'text-xs text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded-full inline-block' };
-  if (edge >= -2) return { text: 'AI aligns with market',               className: 'text-xs text-gray-500 inline-block' };
-  return           { text: 'AI slightly cautious',                      className: 'text-xs text-orange-400 bg-orange-900/10 px-2 py-0.5 rounded-full inline-block' };
+// Tag — only show "Worth watching" if odds are meaningful (>10%)
+function getTag(edge: number, odds: number): { text: string; className: string } {
+  if (edge >= 5)                return { text: 'AI favorite — bullish on this one', className: 'text-xs text-purple-400 bg-purple-900/20 px-2 py-0.5 rounded-full inline-block' };
+  if (edge >= 2 && odds >= 10)  return { text: 'Worth watching — slight edge',      className: 'text-xs text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded-full inline-block' };
+  if (edge >= -2)               return { text: 'AI aligns with market',              className: 'text-xs text-gray-500 inline-block' };
+  return                               { text: 'AI slightly cautious',               className: 'text-xs text-orange-400 bg-orange-900/10 px-2 py-0.5 rounded-full inline-block' };
 }
 
-// Human-readable outcome type labels
 function getOutcomeLabels(outcomeType: string, count: number) {
   switch (outcomeType) {
     case 'prices':
       return {
-        subtitle: 'Price levels bettors think will be hit · bar = probability',
+        subtitle: 'Price levels with real uncertainty · bar = probability of being hit',
         unit: count === 1 ? 'price level' : 'price levels',
         itemLabel: 'price level',
         aiPickSuffix: (name: string, edge: number) =>
-          edge >= 4
-            ? `AI thinks ${name} is ${edge}% more likely than the market believes`
-            : `${name} has the highest market probability`,
+          edge >= 4 ? `AI thinks ${name} is ${edge}% more likely than market believes` : `${name} has the highest uncertainty`,
       };
     case 'dates':
       return {
@@ -44,9 +41,7 @@ function getOutcomeLabels(outcomeType: string, count: number) {
         unit: count === 1 ? 'date' : 'dates',
         itemLabel: 'date',
         aiPickSuffix: (name: string, edge: number) =>
-          edge >= 4
-            ? `AI thinks ${name} is ${edge}% more likely than the market believes`
-            : `${name} has the highest market probability`,
+          edge >= 4 ? `AI thinks ${name} is ${edge}% more likely than the market believes` : `${name} has the highest market probability`,
       };
     case 'candidates':
       return {
@@ -54,9 +49,7 @@ function getOutcomeLabels(outcomeType: string, count: number) {
         unit: count === 1 ? 'candidate' : 'candidates',
         itemLabel: 'candidate',
         aiPickSuffix: (name: string, edge: number) =>
-          edge >= 4
-            ? `AI thinks ${name} is ${edge}% more likely to win than the market believes`
-            : `${name} — strongest conviction among all candidates`,
+          edge >= 4 ? `AI thinks ${name} is ${edge}% more likely to win than the market believes` : `${name} — strongest conviction among all candidates`,
       };
     case 'companies':
       return {
@@ -64,9 +57,7 @@ function getOutcomeLabels(outcomeType: string, count: number) {
         unit: count === 1 ? 'company' : 'companies',
         itemLabel: 'company',
         aiPickSuffix: (name: string, edge: number) =>
-          edge >= 4
-            ? `AI thinks ${name} is ${edge}% more likely to win than the market currently believes`
-            : `${name} — strongest conviction among all competitors`,
+          edge >= 4 ? `AI thinks ${name} is ${edge}% more likely to win than the market currently believes` : `${name} — strongest conviction among all competitors`,
       };
     default:
       return {
@@ -74,9 +65,7 @@ function getOutcomeLabels(outcomeType: string, count: number) {
         unit: count === 1 ? 'outcome' : 'outcomes',
         itemLabel: 'option',
         aiPickSuffix: (name: string, edge: number) =>
-          edge >= 4
-            ? `AI thinks ${name} is ${edge}% more likely than the market believes`
-            : `${name} — highest conviction`,
+          edge >= 4 ? `AI thinks ${name} is ${edge}% more likely than the market believes` : `${name} — highest conviction`,
       };
   }
 }
@@ -92,14 +81,11 @@ export function PolymarketComparison({
   const [outcomeType, setOutcomeType] = useState<string>('options');
   const [marketOdds, setMarketOdds] = useState<number | null>(null);
   const [marketName, setMarketName] = useState<string>('');
-  const [marketVolume, setMarketVolume] = useState<string>('');
   const [outcomes, setOutcomes] = useState<MarketOutcome[]>([]);
+  const [allOutcomes, setAllOutcomes] = useState<MarketOutcome[]>([]);
   const [showAll, setShowAll] = useState(false);
-  const [hasPolymarketUrl, setHasPolymarketUrl] = useState(false);
 
-  useEffect(() => {
-    fetchPolymarketData();
-  }, [userQuestion]);
+  useEffect(() => { fetchPolymarketData(); }, [userQuestion]);
 
   const fetchPolymarketData = async () => {
     try {
@@ -107,25 +93,20 @@ export function PolymarketComparison({
       setError(null);
 
       const urlMatch = userQuestion.match(/polymarket\.com\/event\/([^\/\s?#]+)/);
-
       if (!urlMatch) {
-        setHasPolymarketUrl(false);
         setError('no_url');
         setLoading(false);
         return;
       }
 
-      setHasPolymarketUrl(true);
       const eventSlug = urlMatch[1];
       const response = await fetch(`/api/polymarket?slug=${eventSlug}`);
-
       if (!response.ok) throw new Error('Failed to fetch market data');
 
       const data = await response.json();
       if (data.error) throw new Error(data.error);
 
       setMarketName(data.title);
-      setMarketVolume(data.volume);
       setMarketType(data.type);
       setOutcomeType(data.outcomeType || 'options');
 
@@ -133,12 +114,8 @@ export function PolymarketComparison({
         const market = data.markets[0];
         let prices: string[];
         try {
-          prices = typeof market.outcomePrices === 'string'
-            ? JSON.parse(market.outcomePrices)
-            : market.outcomePrices;
-        } catch {
-          prices = ['0', '1'];
-        }
+          prices = typeof market.outcomePrices === 'string' ? JSON.parse(market.outcomePrices) : market.outcomePrices;
+        } catch { prices = ['0', '1']; }
         const yesOdds = Math.round(parseFloat(prices[0]) * 100);
         setMarketOdds(yesOdds);
         if (onDataReceived) onDataReceived(yesOdds, 'binary', [], 'binary');
@@ -163,7 +140,17 @@ export function PolymarketComparison({
           };
         });
 
-        setOutcomes(analyzed);
+        setAllOutcomes(analyzed);
+
+        // For price markets: filter to only uncertain levels (5%–95%)
+        // Levels at 100% are already guaranteed, levels at 0% are impossible — not interesting
+        let displayOutcomes = analyzed;
+        if (data.outcomeType === 'prices') {
+          const uncertain = analyzed.filter((o: MarketOutcome) => o.odds >= 5 && o.odds <= 95);
+          displayOutcomes = uncertain.length >= 2 ? uncertain : analyzed;
+        }
+
+        setOutcomes(displayOutcomes);
         if (analyzed.length > 0) {
           setMarketOdds(analyzed[0].odds);
           if (onDataReceived) onDataReceived(analyzed[0].odds, 'categorical', analyzed, data.outcomeType);
@@ -185,7 +172,6 @@ export function PolymarketComparison({
     );
   }
 
-  // No Polymarket URL — plain text question
   if (error === 'no_url') {
     return (
       <div className="border border-gray-700 rounded-xl p-6">
@@ -212,7 +198,7 @@ export function PolymarketComparison({
     );
   }
 
-  // ═══ BINARY MARKET ═══
+  // ═══ BINARY ═══
   if (marketType === 'binary' && marketOdds !== null) {
     const divergence = Math.abs(aiPrediction - marketOdds);
     const consensus = divergence < 10;
@@ -220,14 +206,11 @@ export function PolymarketComparison({
       <div className="border border-gray-700 rounded-xl p-6">
         <h2 className="text-base font-semibold text-white mb-1">Market verdict</h2>
         <p className="text-sm text-gray-400 mb-5">{marketName}</p>
-
         <div className="space-y-4 mb-5">
           <div>
             <div className="flex justify-between text-sm mb-1">
               <span className="text-gray-400">Bettors say</span>
-              <span className="text-white font-semibold">
-                {marketOdds > 50 ? 'YES' : 'NO'} · {marketOdds}%
-              </span>
+              <span className="text-white font-semibold">{marketOdds > 50 ? 'YES' : 'NO'} · {marketOdds}%</span>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2">
               <div className="h-2 rounded-full bg-blue-500" style={{ width: `${marketOdds}%` }} />
@@ -236,16 +219,13 @@ export function PolymarketComparison({
           <div>
             <div className="flex justify-between text-sm mb-1">
               <span className="text-gray-400">AI thinks</span>
-              <span className="text-purple-400 font-semibold">
-                {aiPrediction > 50 ? 'YES' : 'NO'} · {aiPrediction}%
-              </span>
+              <span className="text-purple-400 font-semibold">{aiPrediction > 50 ? 'YES' : 'NO'} · {aiPrediction}%</span>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2">
               <div className="h-2 rounded-full bg-purple-500" style={{ width: `${aiPrediction}%` }} />
             </div>
           </div>
         </div>
-
         <div className={`p-3 rounded-lg text-sm ${consensus ? 'bg-green-900/20 border border-green-500/30' : 'bg-yellow-900/20 border border-yellow-500/30'}`}>
           <div className={`font-medium ${consensus ? 'text-green-400' : 'text-yellow-400'}`}>
             {consensus ? '✓ Both agree' : '⚠ Views differ'}
@@ -258,70 +238,71 @@ export function PolymarketComparison({
     );
   }
 
-  // ═══ CATEGORICAL MARKET ═══
+  // ═══ CATEGORICAL ═══
   if (marketType === 'categorical') {
-    const topOutcome = outcomes[0];
-    const maxOdds = topOutcome?.odds || 1;
+    const topOutcome = outcomes[0] || allOutcomes[0];
+    const maxOdds = Math.max(...outcomes.map(o => o.odds), 1);
     const visibleOutcomes = showAll ? outcomes : outcomes.slice(0, 4);
     const hiddenCount = outcomes.length - 4;
     const labels = getOutcomeLabels(outcomeType, outcomes.length);
+    const filteredCount = allOutcomes.length - outcomes.length;
 
     return (
       <div className="border border-gray-700 rounded-xl p-6">
         <div className="mb-5">
           <h2 className="text-base font-semibold text-white mb-1">Market standings</h2>
           <p className="text-xs text-gray-400">{labels.subtitle}</p>
+          {/* For price markets, explain why some levels are hidden */}
+          {outcomeType === 'prices' && filteredCount > 0 && (
+            <p className="text-xs text-gray-600 mt-1">
+              {filteredCount} already-certain levels hidden · showing only levels with real uncertainty
+            </p>
+          )}
         </div>
 
-        <div className="space-y-4">
-          {visibleOutcomes.map((outcome, idx) => {
-            const tag = getTag(outcome.edge);
-            const weekChangeNum = outcome.weekChange || 0;
-            const barWidth = Math.round((outcome.odds / maxOdds) * 100);
-
-            return (
-              <div key={outcome.name} className="pb-4 border-b border-gray-800 last:border-0">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 w-4 shrink-0">{idx + 1}</span>
-                    <span className="text-white font-medium">{outcome.name}</span>
+        {outcomes.length === 0 ? (
+          <div className="text-gray-500 text-sm py-4 text-center">
+            No uncertain outcomes to display for this market.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {visibleOutcomes.map((outcome, idx) => {
+              const tag = getTag(outcome.edge, outcome.odds);
+              const weekChangeNum = outcome.weekChange || 0;
+              const barWidth = Math.round((outcome.odds / maxOdds) * 100);
+              return (
+                <div key={outcome.name} className="pb-4 border-b border-gray-800 last:border-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500 w-4 shrink-0">{idx + 1}</span>
+                      <span className="text-white font-medium">{outcome.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-semibold">{outcome.odds}%</span>
+                      {weekChangeNum !== 0 && (
+                        <span className={`text-xs ${weekChangeNum > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {weekChangeNum > 0 ? '▲' : '▼'}{Math.abs(weekChangeNum)}%
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-semibold">{outcome.odds}%</span>
-                    {weekChangeNum !== 0 && (
-                      <span className={`text-xs ${weekChangeNum > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {weekChangeNum > 0 ? '▲' : '▼'}{Math.abs(weekChangeNum)}%
-                      </span>
-                    )}
+                  <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                    <div className="h-2 rounded-full bg-purple-500 transition-all" style={{ width: `${barWidth}%` }} />
                   </div>
+                  <span className={tag.className}>{tag.text}</span>
                 </div>
-
-                <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
-                  <div
-                    className="h-2 rounded-full bg-purple-500 transition-all"
-                    style={{ width: `${barWidth}%` }}
-                  />
-                </div>
-
-                <span className={tag.className}>{tag.text}</span>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {!showAll && hiddenCount > 0 && (
-          <button
-            onClick={() => setShowAll(true)}
-            className="w-full mt-4 py-2 text-purple-400 hover:text-purple-300 text-sm transition-colors"
-          >
+          <button onClick={() => setShowAll(true)} className="w-full mt-4 py-2 text-purple-400 hover:text-purple-300 text-sm transition-colors">
             Show {hiddenCount} more {hiddenCount === 1 ? labels.itemLabel : labels.unit} ▾
           </button>
         )}
         {showAll && (
-          <button
-            onClick={() => setShowAll(false)}
-            className="w-full mt-4 py-2 text-purple-400 hover:text-purple-300 text-sm transition-colors"
-          >
+          <button onClick={() => setShowAll(false)} className="w-full mt-4 py-2 text-purple-400 hover:text-purple-300 text-sm transition-colors">
             ▴ Show less
           </button>
         )}
