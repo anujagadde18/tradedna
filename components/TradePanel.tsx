@@ -47,7 +47,9 @@ export function TradePanel({
   // Load Magic SDK lazily — client only
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    import('magic-sdk').then(({ Magic }) => {
+    import('magic-sdk').then((mod) => {
+      const Magic = mod.Magic || mod.default?.Magic || mod.default;
+      if (!Magic) return;
       const m = new Magic('pk_live_8621357A14A8491A', {
         network: { rpcUrl: 'https://polygon-rpc.com', chainId: 137 },
       });
