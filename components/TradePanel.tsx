@@ -1,21 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { suggestBetSize, getConvictionScore, saveTradeToJournal } from '@/lib/polymarket-trade';
 
 interface TradePanelProps {
-  marketUrl: string;
-  marketTitle: string;
-  outcomeName: string;
-  marketOdds: number;
-  aiConfidence: number;
-  edge: number;
-  tokenId?: string;
-  isBinary?: boolean;
+  marketUrl:     string;
+  marketTitle:   string;
+  outcomeName:   string;
+  marketOdds:    number;
+  aiConfidence:  number;
+  edge:          number;
+  tokenId?:      string;
+  isBinary?:     boolean;
 }
 
-type WalletStatus = 'disconnected' | 'connecting' | 'connected' | 'wrong_network';
-type TradeStatus  = 'idle' | 'placing' | 'success' | 'error';
+type AuthStep    = 'idle' | 'enter_email' | 'check_email' | 'authenticated';
+type TradeStatus = 'idle' | 'placing' | 'success' | 'error';
 
 export function TradePanel({
   marketUrl,
@@ -27,69 +27,89 @@ export function TradePanel({
   tokenId,
   isBinary = false,
 }: TradePanelProps) {
-  const [walletStatus, setWalletStatus]     = useState<WalletStatus>('disconnected');
-  const [walletAddress, setWalletAddress]   = useState<string>('');
-  const [selectedAmount, setSelectedAmount] = useState<number>(25);
-  const [customAmount, setCustomAmount]     = useState<string>('');
-  const [tradeSide, setTradeSide]           = useState<'YES' | 'NO'>('YES');
-  const [tradeStatus, setTradeStatus]       = useState<TradeStatus>('idle');
-  const [tradeError, setTradeError]         = useState<string>('');
-  const [txHash, setTxHash]                 = useState<string>('');
+  const [authStep, setAuthStep]           = useState<AuthStep>('idle');
+  const [email, setEmail]                 = useState('');
+  const [userAddress, setUserAddress]     = useState('');
+  const [magic, setMagic]                 = useState<any>(null);
+  const [authLoading, setAuthLoading]     = useState(false);
+  const [selectedAmount, setSelectedAmount] = useState(25);
+  const [customAmount, setCustomAmount]   = useState('');
+  const [tradeSide, setTradeSide]         = useState<'YES' | 'NO'>('YES');
+  const [tradeStatus, setTradeStatus]     = useState<TradeStatus>('idle');
+  const [tradeError, setTradeError]       = useState('');
+  const [txHash, setTxHash]               = useState('');
 
   const conviction    = getConvictionScore(aiConfidence, marketOdds, edge);
   const betSuggestion = suggestBetSize(Math.abs(edge));
   const finalAmount   = customAmount ? parseFloat(customAmount) : selectedAmount;
   const priceDecimal  = marketOdds / 100;
 
-  const connectWallet = async () => {
+  // Load Magic SDK lazily — client only
+  useEffect(() => {
     if (typeof window === 'undefined') return;
-    const eth = (window as any).ethereum;
-
-    if (!eth) {
-      alert('Please install MetaMask to trade directly, or visit polymarket.com to trade there.');
-      return;
-    }
-
-    try {
-      setWalletStatus('connecting');
-      const accounts = await eth.request({ method: 'eth_requestAccounts' });
-      const chainId  = await eth.request({ method: 'eth_chainId' });
-
-      if (parseInt(chainId, 16) !== 137) {
-        try {
-          await eth.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0x89' }],
+    import('magic-sdk').then(({ Magic }) => {
+      const m = new Magic('pk_live_8621357A14A8491A', {
+        network: { rpcUrl: 'https://polygon-rpc.com', chainId: 137 },
+      });
+      setMagic(m);
+      // Check if already logged in
+      m.user.isLoggedIn().then((loggedIn: boolean) => {
+        if (loggedIn) {
+          m.user.getMetadata().then((meta: any) => {
+            setUserAddress(meta.publicAddress || '');
+            setAuthStep('authenticated');
           });
-        } catch {
-          setWalletStatus('wrong_network');
-          return;
         }
-      }
+      }).catch(() => {});
+    }).catch((err: any) => {
+      console.error('Magic SDK load error:', err);
+    });
+  }, []);
 
-      setWalletAddress(accounts[0]);
-      setWalletStatus('connected');
-    } catch {
-      setWalletStatus('disconnected');
+  const handleEmailSubmit = async () => {
+    if (!magic || !email.trim()) return;
+    try {
+      setAuthLoading(true);
+      setAuthStep('check_email');
+      // Sends OTP email — user clicks link in email
+      await magic.auth.loginWithEmailOTP({ email: email.trim() });
+      const meta = await magic.user.getMetadata();
+      setUserAddress(meta.publicAddress || '');
+      setAuthStep('authenticated');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setAuthStep('enter_email');
+    } finally {
+      setAuthLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    if (!magic) return;
+    try {
+      await magic.user.logout();
+      setUserAddress('');
+      setAuthStep('idle');
+    } catch {}
   };
 
   const placeTrade = async () => {
     if (!tokenId) {
+      // No token ID — redirect to Polymarket as fallback
       window.open(marketUrl, '_blank');
       return;
     }
-
-    if (!walletAddress || !finalAmount || finalAmount <= 0) return;
+    if (!userAddress || !finalAmount || finalAmount <= 0) return;
 
     try {
       setTradeStatus('placing');
       setTradeError('');
 
+      // Get builder attribution headers
       const signRes = await fetch('/api/builder-sign', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'POST', path: '/order', body: '' }),
+        body:    JSON.stringify({ method: 'POST', path: '/order', body: '' }),
       });
       const builderHeaders = await signRes.json();
 
@@ -99,13 +119,13 @@ export function TradePanel({
         side:          tradeSide === 'YES' ? 'BUY' : 'SELL',
         size:          finalAmount,
         orderType:     'GTC',
-        funderAddress: walletAddress,
+        funderAddress: userAddress,
       };
 
       const res = await fetch('/api/trade', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderPayload, authHeaders: builderHeaders }),
+        body:    JSON.stringify({ orderPayload, authHeaders: builderHeaders }),
       });
 
       const data = await res.json();
@@ -136,7 +156,7 @@ export function TradePanel({
     }
   };
 
-  // ── SUCCESS STATE ──
+  // ── SUCCESS ──
   if (tradeStatus === 'success') {
     return (
       <div className="border border-green-500/30 rounded-xl p-5 bg-green-900/10">
@@ -216,103 +236,22 @@ export function TradePanel({
       {/* TRADE BODY */}
       <div className="p-4">
 
-        {/* YES / NO selector or outcome display */}
-        {isBinary ? (
-          <div className="flex gap-2 mb-4">
-            <button
-              onClick={() => setTradeSide('YES')}
-              className={'flex-1 py-2 rounded-lg text-sm font-semibold transition-all ' + (
-                tradeSide === 'YES' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-              )}
-            >
-              YES &middot; {marketOdds}%
-            </button>
-            <button
-              onClick={() => setTradeSide('NO')}
-              className={'flex-1 py-2 rounded-lg text-sm font-semibold transition-all ' + (
-                tradeSide === 'NO' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-              )}
-            >
-              NO &middot; {100 - marketOdds}%
-            </button>
-          </div>
-        ) : (
-          <div className="mb-4 p-3 bg-purple-900/20 rounded-lg border border-purple-500/30">
-            <div className="text-xs text-gray-400 mb-0.5">Trading outcome</div>
-            <div className="text-white font-semibold">{outcomeName} wins &middot; {marketOdds}%</div>
-          </div>
-        )}
-
-        {/* Amount selector */}
-        <div className="mb-4">
-          <div className="text-xs text-gray-400 mb-2">
-            Amount (USDC) &middot; {betSuggestion.label}
-          </div>
-          <div className="flex gap-2 mb-2">
-            {betSuggestion.amounts.map((amount: number) => (
-              <button
-                key={amount}
-                onClick={() => { setSelectedAmount(amount); setCustomAmount(''); }}
-                className={'flex-1 py-1.5 rounded-lg text-sm font-medium transition-all ' + (
-                  selectedAmount === amount && !customAmount
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                )}
-              >
-                ${amount}
-              </button>
-            ))}
-          </div>
-          <input
-            type="number"
-            value={customAmount}
-            onChange={e => setCustomAmount(e.target.value)}
-            placeholder="Custom amount..."
-            className="w-full bg-gray-800 text-white px-3 py-2 rounded-lg text-sm border border-gray-600 focus:border-purple-500 focus:outline-none"
-          />
-        </div>
-
-        {/* Payout preview */}
-        {finalAmount > 0 && (
-          <div className="mb-4 p-3 bg-gray-800/50 rounded-lg text-xs text-gray-400">
-            <div className="flex justify-between">
-              <span>You invest</span>
-              <span className="text-white">${finalAmount.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between mt-1">
-              <span>If correct, you get</span>
-              <span className="text-green-400">
-                ${(finalAmount / priceDecimal).toFixed(2)}
-              </span>
-            </div>
-            <div className="flex justify-between mt-1">
-              <span>Potential profit</span>
-              <span className="text-green-400">
-                +${(finalAmount / priceDecimal - finalAmount).toFixed(2)}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Error */}
-        {tradeStatus === 'error' && (
-          <div className="mb-3 p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
-            <div className="text-red-400 text-xs">{tradeError}</div>
-          </div>
-        )}
-
-        {/* Wallet connect / Trade button */}
-        {walletStatus === 'disconnected' || walletStatus === 'wrong_network' ? (
+        {/* ── STEP 1: NOT LOGGED IN — show email input ── */}
+        {authStep === 'idle' && (
           <div>
+            <div className="text-sm text-gray-300 mb-4 text-center">
+              Sign in with your email to trade
+            </div>
+            <div className="text-xs text-gray-500 text-center mb-4">
+              No wallet or crypto experience needed
+            </div>
             <button
-              onClick={connectWallet}
+              onClick={() => setAuthStep('enter_email')}
               className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-sm font-semibold transition-all"
             >
-              {walletStatus === 'wrong_network'
-                ? 'Switch to Polygon network'
-                : 'Connect wallet to trade'}
+              Sign in to trade &#8594;
             </button>
-            <div className="mt-2 text-center">
+            <div className="mt-3 text-center">
               <a
                 href={marketUrl}
                 target="_blank"
@@ -323,23 +262,162 @@ export function TradePanel({
               </a>
             </div>
           </div>
-        ) : walletStatus === 'connecting' ? (
-          <button disabled className="w-full py-3 bg-gray-700 text-gray-400 rounded-lg text-sm font-semibold">
-            Connecting...
-          </button>
-        ) : (
+        )}
+
+        {/* ── STEP 2: EMAIL INPUT ── */}
+        {authStep === 'enter_email' && (
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="text-sm text-gray-300 mb-3 font-medium">
+              Enter your email
+            </div>
+            <div className="text-xs text-gray-500 mb-4">
+              We will send you a one-click login link. No password needed.
+            </div>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleEmailSubmit()}
+              placeholder="you@email.com"
+              className="w-full bg-gray-800 text-white px-3 py-3 rounded-lg text-sm border border-gray-600 focus:border-purple-500 focus:outline-none mb-3"
+              autoFocus
+            />
+            <button
+              onClick={handleEmailSubmit}
+              disabled={!email.trim() || authLoading}
+              className="w-full py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg text-sm font-semibold transition-all"
+            >
+              {authLoading ? 'Sending...' : 'Send login link'}
+            </button>
+            <button
+              onClick={() => setAuthStep('idle')}
+              className="w-full mt-2 py-2 text-xs text-gray-500 hover:text-gray-400"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+
+        {/* ── STEP 3: CHECK EMAIL ── */}
+        {authStep === 'check_email' && (
+          <div className="text-center py-4">
+            <div className="text-2xl mb-3">&#9993;</div>
+            <div className="text-white font-semibold mb-2">Check your email</div>
+            <div className="text-xs text-gray-400 mb-1">
+              We sent a login link to
+            </div>
+            <div className="text-purple-400 text-sm font-medium mb-4">{email}</div>
+            <div className="text-xs text-gray-500">
+              Click the link in the email to continue.
+              This tab will update automatically.
+            </div>
+            <button
+              onClick={() => setAuthStep('enter_email')}
+              className="mt-4 text-xs text-gray-500 hover:text-gray-400"
+            >
+              Use a different email
+            </button>
+          </div>
+        )}
+
+        {/* ── STEP 4: AUTHENTICATED — show trade UI ── */}
+        {authStep === 'authenticated' && (
+          <div>
+            {/* Logged in indicator */}
+            <div className="flex items-center justify-between mb-4 p-2 bg-gray-800/50 rounded-lg">
               <span className="text-xs text-gray-400">
-                Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                &#10003; Signed in as {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
               </span>
               <button
-                onClick={() => { setWalletStatus('disconnected'); setWalletAddress(''); }}
+                onClick={handleLogout}
                 className="text-xs text-gray-600 hover:text-gray-400"
               >
-                Disconnect
+                Sign out
               </button>
             </div>
+
+            {/* YES / NO selector */}
+            {isBinary ? (
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setTradeSide('YES')}
+                  className={'flex-1 py-2 rounded-lg text-sm font-semibold transition-all ' + (
+                    tradeSide === 'YES' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  )}
+                >
+                  YES &middot; {marketOdds}%
+                </button>
+                <button
+                  onClick={() => setTradeSide('NO')}
+                  className={'flex-1 py-2 rounded-lg text-sm font-semibold transition-all ' + (
+                    tradeSide === 'NO' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  )}
+                >
+                  NO &middot; {100 - marketOdds}%
+                </button>
+              </div>
+            ) : (
+              <div className="mb-4 p-3 bg-purple-900/20 rounded-lg border border-purple-500/30">
+                <div className="text-xs text-gray-400 mb-0.5">Trading outcome</div>
+                <div className="text-white font-semibold">{outcomeName} wins &middot; {marketOdds}%</div>
+              </div>
+            )}
+
+            {/* Amount selector */}
+            <div className="mb-4">
+              <div className="text-xs text-gray-400 mb-2">
+                Amount (USDC) &middot; {betSuggestion.label}
+              </div>
+              <div className="flex gap-2 mb-2">
+                {betSuggestion.amounts.map((amount: number) => (
+                  <button
+                    key={amount}
+                    onClick={() => { setSelectedAmount(amount); setCustomAmount(''); }}
+                    className={'flex-1 py-1.5 rounded-lg text-sm font-medium transition-all ' + (
+                      selectedAmount === amount && !customAmount
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    )}
+                  >
+                    ${amount}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="number"
+                value={customAmount}
+                onChange={e => setCustomAmount(e.target.value)}
+                placeholder="Custom amount..."
+                className="w-full bg-gray-800 text-white px-3 py-2 rounded-lg text-sm border border-gray-600 focus:border-purple-500 focus:outline-none"
+              />
+            </div>
+
+            {/* Payout preview */}
+            {finalAmount > 0 && (
+              <div className="mb-4 p-3 bg-gray-800/50 rounded-lg text-xs text-gray-400">
+                <div className="flex justify-between">
+                  <span>You invest</span>
+                  <span className="text-white">${finalAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span>If correct, you get</span>
+                  <span className="text-green-400">${(finalAmount / priceDecimal).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span>Potential profit</span>
+                  <span className="text-green-400">+${(finalAmount / priceDecimal - finalAmount).toFixed(2)}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Error */}
+            {tradeStatus === 'error' && (
+              <div className="mb-3 p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
+                <div className="text-red-400 text-xs">{tradeError}</div>
+              </div>
+            )}
+
+            {/* Trade button */}
             <button
               onClick={placeTrade}
               disabled={tradeStatus === 'placing' || !finalAmount || finalAmount <= 0}
@@ -350,12 +428,12 @@ export function TradePanel({
                   ? 'bg-green-600 hover:bg-green-500 text-white'
                   : conviction.score >= 40
                   ? 'bg-yellow-600 hover:bg-yellow-500 text-white'
-                  : 'bg-gray-700 hover:bg-gray-600 text-white'
+                  : 'bg-purple-600 hover:bg-purple-500 text-white'
               )}
             >
               {tradeStatus === 'placing'
                 ? 'Placing order...'
-                : 'Trade ' + (isBinary ? tradeSide : outcomeName) + ' · $' + (finalAmount || 0)
+                : 'Trade ' + (isBinary ? tradeSide : outcomeName) + ' &middot; $' + (finalAmount || 0)
               }
             </button>
           </div>
