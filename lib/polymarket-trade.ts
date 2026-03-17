@@ -1,10 +1,8 @@
 // lib/polymarket-trade.ts
-// Core trading logic — conviction scoring, bet sizing, trade journal
 
 export const CLOB_HOST = 'https://clob.polymarket.com';
 export const CHAIN_ID  = 137;
 
-// Bet size suggestions based on edge
 export function suggestBetSize(edge: number): {
   label: string;
   amounts: number[];
@@ -32,13 +30,25 @@ export function suggestBetSize(edge: number): {
   };
 }
 
-// Conviction score 0-100
 export function getConvictionScore(
   aiConfidence: number,
   marketOdds: number,
   edge: number
 ): { score: number; label: string; color: string } {
+  // If AI confidence is 0 or not set — no signal available
+  if (!aiConfidence || aiConfidence === 0) {
+    return { score: 0, label: 'No signal', color: 'text-gray-400' };
+  }
+
+  // Edge must be positive for a real conviction
+  // Negative edge means AI is LESS confident than market — that's bearish not bullish
   const absEdge = Math.abs(edge);
+
+  // If edge is negative (AI below market) conviction should reflect caution
+  if (edge < -5) return { score: 15, label: 'Very Low',  color: 'text-red-400' };
+  if (edge < -2) return { score: 25, label: 'Low',       color: 'text-orange-400' };
+
+  // Positive or neutral edge
   if (absEdge >= 10) return { score: 90, label: 'Very High', color: 'text-green-400' };
   if (absEdge >= 7)  return { score: 75, label: 'High',      color: 'text-green-400' };
   if (absEdge >= 4)  return { score: 60, label: 'Medium',    color: 'text-yellow-400' };
@@ -46,7 +56,6 @@ export function getConvictionScore(
   return                    { score: 20, label: 'Very Low',  color: 'text-red-400' };
 }
 
-// Save trade to localStorage
 export function saveTradeToJournal(trade: {
   id: string;
   marketUrl: string;
