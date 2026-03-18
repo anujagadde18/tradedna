@@ -199,7 +199,7 @@ function EvidenceCard({
                     display: "inline-block",
                   }}
                 >
-                  {link.label} ->
+                  {link.label}
                 </a>
               ))}
             </div>
