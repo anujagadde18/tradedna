@@ -17,11 +17,11 @@ export function ShareAnalysisButton({ analysis }: { analysis: AnalysisOutput }) 
     setIsSharing(true);
     
     // Generate shareable text
-    const shareText = `🔵 TradeDNA Analysis: ${analysis.event}
+    const shareText = ` TradeDNA Analysis: ${analysis.event}
 
-📊 Prediction: ${direction} (${confidence}%)
-💪 Conviction: ${analysis.directional.convictionTier}
-🎯 Reliability: ${reliability.score}% ${reliability.emoji}
+ Prediction: ${direction} (${confidence}%)
+ Conviction: ${analysis.directional.convictionTier}
+ Reliability: ${reliability.score}% ${reliability.emoji}
 
 Analyzed with explainable AI - see why at tradedna.vercel.app`;
 
@@ -56,11 +56,11 @@ Analyzed with explainable AI - see why at tradedna.vercel.app`;
     const direction = analysis.directional.yes > 50 ? "YES" : "NO";
     const confidence = analysis.directional.yes > 50 ? analysis.directional.yes : analysis.directional.no;
     
-    const tweetText = `🔵 TradeDNA Analysis: ${analysis.event}
+    const tweetText = ` TradeDNA Analysis: ${analysis.event}
 
-📊 ${direction} (${confidence}%)
-💪 ${analysis.directional.convictionTier} conviction
-🎯 ${reliability.score}% reliability ${reliability.emoji}
+ ${direction} (${confidence}%)
+ ${analysis.directional.convictionTier} conviction
+ ${reliability.score}% reliability ${reliability.emoji}
 
 Built with explainable AI - not a black box!
 
@@ -79,7 +79,7 @@ Built with explainable AI - not a black box!
       border: "1px solid rgba(59, 130, 246, 0.3)"
     }}>
       <div style={{ fontSize: 14, fontWeight: 600, color: "#60a5fa", marginBottom: 10 }}>
-        📤 Share Your Analysis
+         Share Your Analysis
       </div>
       
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -100,7 +100,7 @@ Built with explainable AI - not a black box!
             gap: 8,
           }}
         >
-          {copied ? "✅ Copied!" : isSharing ? "⏳ Sharing..." : "📋 Copy Analysis"}
+          {copied ? "ok Copied!" : isSharing ? " Sharing..." : " Copy Analysis"}
         </button>
 
         <button
@@ -119,7 +119,7 @@ Built with explainable AI - not a black box!
             gap: 8,
           }}
         >
-          𝕏 Share on X
+          X Share on X
         </button>
 
         <button
@@ -140,7 +140,7 @@ Built with explainable AI - not a black box!
             fontWeight: 600,
           }}
         >
-          🔗 Copy Link
+           Copy Link
         </button>
       </div>
 
@@ -165,7 +165,7 @@ export function SharePreviewCard({ analysis }: { analysis: AnalysisOutput }) {
       maxWidth: 500,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-        <div style={{ fontSize: 32 }}>🔵</div>
+        <div style={{ fontSize: 32 }}></div>
         <div>
           <div style={{ fontSize: 11, color: "#60a5fa", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
             TradeDNA Analysis

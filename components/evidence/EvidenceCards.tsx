@@ -22,7 +22,7 @@ export function EvidenceCards({ event, newsData, socialData, isLoading }: Eviden
         {/* Social Card */}
         <EvidenceCard
           title="Social Signals"
-          icon="💬"
+          icon=""
           loading={isLoading}
           data={socialData}
           fallbackLinks={[
@@ -39,9 +39,9 @@ export function EvidenceCards({ event, newsData, socialData, isLoading }: Eviden
               {socialData.estimatedVolume > 0 && (
                 <div style={{ fontSize: 12, color: "#9ca3af" }}>
                   Sentiment: 
-                  <span style={{ color: "#10b981", marginLeft: 6 }}>↑{socialData.sentiment.positive}%</span>
-                  <span style={{ color: "#ef4444", marginLeft: 6 }}>↓{socialData.sentiment.negative}%</span>
-                  <span style={{ color: "#9ca3af", marginLeft: 6 }}>≈{socialData.sentiment.neutral}%</span>
+                  <span style={{ color: "#10b981", marginLeft: 6 }}>up{socialData.sentiment.positive}%</span>
+                  <span style={{ color: "#ef4444", marginLeft: 6 }}>down{socialData.sentiment.negative}%</span>
+                  <span style={{ color: "#9ca3af", marginLeft: 6 }}>~{socialData.sentiment.neutral}%</span>
                 </div>
               )}
             </div>
@@ -51,7 +51,7 @@ export function EvidenceCards({ event, newsData, socialData, isLoading }: Eviden
         {/* News Card with Warning */}
         <EvidenceCard
           title="News Coverage"
-          icon="📰"
+          icon=""
           loading={isLoading}
           data={newsData}
           fallbackLinks={[
@@ -65,7 +65,7 @@ export function EvidenceCards({ event, newsData, socialData, isLoading }: Eviden
               {/* WARNING LABEL */}
               <div style={{ marginBottom: 10, padding: 8, background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.3)", borderRadius: 6 }}>
                 <div style={{ fontSize: 11, color: "#f59e0b", fontWeight: 600 }}>
-                  ⚠️ Auto-fetched from Google News
+                  ! Auto-fetched from Google News
                 </div>
                 <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>
                   Please verify article relevance before trusting
@@ -118,7 +118,7 @@ export function EvidenceCards({ event, newsData, socialData, isLoading }: Eviden
         {/* Technical Card */}
         <EvidenceCard
           title="Technical Data"
-          icon="📈"
+          icon=""
           loading={false}
           fallbackLinks={[
             { label: "TradingView charts", url: `https://www.tradingview.com/search/?text=${q}` },
@@ -174,7 +174,7 @@ function EvidenceCard({
           
           {data?.error && (
             <div style={{ fontSize: 12, color: "#f59e0b", marginTop: 8, marginBottom: 8 }}>
-              ⚠️ {data.error}
+              ! {data.error}
             </div>
           )}
 
@@ -199,7 +199,7 @@ function EvidenceCard({
                     display: "inline-block",
                   }}
                 >
-                  {link.label} →
+                  {link.label} ->
                 </a>
               ))}
             </div>

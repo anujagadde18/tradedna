@@ -24,7 +24,7 @@ export default function HomePage() {
 
   const isPolymarketUrl = (q: string) => /polymarket\.com\/event\//.test(q);
 
-  // Auto-search as user types — debounced 400ms
+  // Auto-search as user types - debounced 400ms
   useEffect(() => {
     if (!query.trim() || isPolymarketUrl(query)) {
       setSearchResults([]);
@@ -108,10 +108,10 @@ export default function HomePage() {
           {/* Top nav */}
           <div className="flex justify-end gap-4 mb-8">
             <button onClick={() => router.push('/journal')} className="text-gray-400 hover:text-white text-sm transition-colors">
-              📒 Trade Journal
+               Trade Journal
             </button>
             <button onClick={() => router.push('/profile')} className="text-gray-400 hover:text-white text-sm transition-colors">
-              👤 Profile
+               Profile
             </button>
           </div>
 
@@ -159,9 +159,9 @@ export default function HomePage() {
             {/* Search hint */}
             <div className="mt-3 text-center text-sm text-gray-400">
               {isPolymarketUrl(query)
-                ? '✓ Polymarket URL detected — full live analysis ready'
+                ? 'ok Polymarket URL detected - full live analysis ready'
                 : isSearching
-                ? '🔍 Searching Polymarket markets...'
+                ? ' Searching Polymarket markets...'
                 : 'Type a question or paste a Polymarket URL'
               }
             </div>
@@ -228,7 +228,7 @@ export default function HomePage() {
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-purple-400 font-semibold">{example.category}</span>
-                    <span className="text-gray-500 group-hover:text-purple-400 transition-colors">→</span>
+                    <span className="text-gray-500 group-hover:text-purple-400 transition-colors">-></span>
                   </div>
                   <div className="text-sm text-gray-300 group-hover:text-white transition-colors">
                     {example.display}
@@ -253,7 +253,7 @@ export default function HomePage() {
           <div className="text-center">
             <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold mx-auto mb-4">2</div>
             <h3 className="text-white font-semibold mb-2">See your conviction score</h3>
-            <p className="text-gray-400 text-sm">AI calculates an edge — where it disagrees with the market and why. You decide if it's worth betting.</p>
+            <p className="text-gray-400 text-sm">AI calculates an edge - where it disagrees with the market and why. You decide if it's worth betting.</p>
           </div>
           <div className="text-center">
             <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold mx-auto mb-4">3</div>
@@ -267,26 +267,26 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto px-6 py-10 pb-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="p-6 bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-xl">
-            <div className="text-3xl mb-4">🎯</div>
+            <div className="text-3xl mb-4"></div>
             <h3 className="text-lg font-bold mb-2 text-white">Multi-Source Intelligence</h3>
-            <p className="text-gray-400 text-sm">News sentiment, community signals, and live Polymarket odds — all in one analysis.</p>
+            <p className="text-gray-400 text-sm">News sentiment, community signals, and live Polymarket odds - all in one analysis.</p>
           </div>
           <div className="p-6 bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-xl">
-            <div className="text-3xl mb-4">⚖️</div>
+            <div className="text-3xl mb-4"></div>
             <h3 className="text-lg font-bold mb-2 text-white">Custom Weighting</h3>
             <p className="text-gray-400 text-sm">Adjust signal weights to match your strategy. Trust markets more? Increase market weight.</p>
           </div>
           <div className="p-6 bg-gradient-to-br from-green-900/20 to-black border border-green-500/30 rounded-xl">
-            <div className="text-3xl mb-4">⚡</div>
+            <div className="text-3xl mb-4"></div>
             <h3 className="text-lg font-bold mb-2 text-white">Conviction-Gated Trading</h3>
             <p className="text-gray-400 text-sm">Only trade after the AI analysis runs. See your edge before placing a single dollar.</p>
           </div>
           <div className="p-6 bg-gradient-to-br from-orange-900/20 to-black border border-orange-500/30 rounded-xl">
-            <div className="text-3xl mb-4">📒</div>
+            <div className="text-3xl mb-4"></div>
             <h3 className="text-lg font-bold mb-2 text-white">Trade Journal</h3>
             <p className="text-gray-400 text-sm">Every trade logged with the AI conviction snapshot. Track your win rate when you followed the edge.</p>
             <button onClick={() => router.push('/journal')} className="mt-3 text-xs text-orange-400 hover:text-orange-300 transition-colors">
-              View journal →
+              View journal ->
             </button>
           </div>
         </div>
@@ -296,11 +296,11 @@ export default function HomePage() {
       <div className="border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-500">Not financial advice • Research purposes only</div>
+            <div className="text-sm text-gray-500">Not financial advice - Research purposes only</div>
             <div className="flex items-center gap-6">
               <button onClick={() => router.push('/journal')} className="text-xs text-gray-500 hover:text-gray-400 transition-colors">Trade Journal</button>
               <button onClick={() => router.push('/profile')} className="text-xs text-gray-500 hover:text-gray-400 transition-colors">Profile</button>
-              <div className="text-xs text-gray-600">Powered by TradeDNA™</div>
+              <div className="text-xs text-gray-600">Powered by TradeDNA</div>
             </div>
           </div>
         </div>

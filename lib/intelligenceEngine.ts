@@ -305,7 +305,7 @@ function generateExplanation(
     
     if (wasAdjusted) {
       parts.push(
-        `⚠️ The AI's initial prediction was adjusted toward the market consensus due to ${Math.abs(marketAnalysis.edge)}% divergence. ` +
+        `! The AI's initial prediction was adjusted toward the market consensus due to ${Math.abs(marketAnalysis.edge)}% divergence. ` +
         `When market certainty is ${marketCertainty}% and divergence is high, the market signal is given greater weight.`
       );
     } else if (Math.abs(marketAnalysis.edge) <= 10) {
@@ -315,7 +315,7 @@ function generateExplanation(
     } else if (Math.abs(marketAnalysis.edge) > 30) {
       if (marketCertainty >= 80) {
         parts.push(
-          `⚠️ WARNING: The market shows ${marketCertainty}% certainty, with ${Math.abs(marketAnalysis.edge)}% divergence from AI signals. ` +
+          `! WARNING: The market shows ${marketCertainty}% certainty, with ${Math.abs(marketAnalysis.edge)}% divergence from AI signals. ` +
           `When markets are this confident, large divergence suggests investigating why the AI differs or trusting the market.`
         );
       } else {

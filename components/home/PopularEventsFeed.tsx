@@ -36,7 +36,7 @@ export function PopularEventsFeed() {
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>
-          {activeTab === "trending" ? "🔥 Trending Analyses" : "⏱️ Recent Analyses"}
+          {activeTab === "trending" ? " Trending Analyses" : " Recent Analyses"}
         </h2>
         
         <div style={{ display: "flex", gap: 8 }}>
@@ -137,13 +137,13 @@ function EventCard({ event, rank, onClick }: { event: PopularEvent; rank: number
           
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontSize: 12 }}>
             <span style={{ color: "#9ca3af" }}>
-              📊 {event.count} {event.count === 1 ? "analysis" : "analyses"}
+               {event.count} {event.count === 1 ? "analysis" : "analyses"}
             </span>
-            <span style={{ color: "#9ca3af" }}>•</span>
+            <span style={{ color: "#9ca3af" }}>-</span>
             <span style={{ color: event.category === "sports" ? "#10b981" : event.category === "crypto" ? "#f59e0b" : "#60a5fa" }}>
               {event.category}
             </span>
-            <span style={{ color: "#9ca3af" }}>•</span>
+            <span style={{ color: "#9ca3af" }}>-</span>
             <span style={{ fontWeight: 600, color: direction === "YES" ? "#10b981" : "#ef4444" }}>
               Avg: {direction} ({confidence}%)
             </span>
@@ -158,7 +158,7 @@ function EventCard({ event, rank, onClick }: { event: PopularEvent; rank: number
           fontWeight: 600,
           color: "#60a5fa"
         }}>
-          Analyze →
+          Analyze ->
         </div>
       </div>
     </div>

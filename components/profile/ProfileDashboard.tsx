@@ -115,7 +115,7 @@ export function ProfileDashboard() {
       {/* Summary Card */}
       <div style={{ marginBottom: 28, padding: 28, borderRadius: 16, background: "linear-gradient(135deg, rgba(147,51,234,0.08) 0%, rgba(168,85,247,0.08) 100%)", border: "1px solid rgba(147,51,234,0.2)" }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: "#a78bfa", marginBottom: 16 }}>
-          🎯 Your Prediction Style
+           Your Prediction Style
         </div>
         <div style={{ fontSize: 16, color: "#e4e4e7", lineHeight: 1.7, marginBottom: 14 }}>
           You trust <strong style={{ color: "#a78bfa" }}>{mostTrusted.source}</strong> the most ({mostTrusted.value.toFixed(0)}% of your decisions).
@@ -144,7 +144,7 @@ export function ProfileDashboard() {
         </div>
         <div style={{ marginTop: 14, padding: 14, borderRadius: 10, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}>
           <div style={{ fontSize: 12, color: "#60a5fa", lineHeight: 1.6 }}>
-            💡 These are your average trust settings across all predictions. You can adjust them for each event.
+             These are your average trust settings across all predictions. You can adjust them for each event.
           </div>
         </div>
       </div>

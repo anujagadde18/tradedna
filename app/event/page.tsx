@@ -34,7 +34,7 @@ function EventContent() {
             marginBottom: 40
           }}
         >
-          ← Back to Home
+           Back to Home
         </a>
 
         {/* Header */}
@@ -73,7 +73,7 @@ function EventContent() {
             alignItems: "center",
             gap: 8
           }}>
-            <span style={{ fontSize: 18 }}>💡</span>
+            <span style={{ fontSize: 18 }}></span>
             How to Use PlayPicks
           </div>
           
@@ -153,7 +153,7 @@ function EventContent() {
               boxShadow: event.trim() ? "0 4px 14px rgba(147,51,234,0.4)" : "none",
             }}
           >
-            Analyze Event →
+            Analyze Event ->
           </button>
         </form>
 
@@ -210,7 +210,7 @@ function EventContent() {
           border: "1px solid rgba(147,51,234,0.2)"
         }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#a78bfa", marginBottom: 10 }}>
-            🎯 What Happens Next?
+             What Happens Next?
           </div>
           <div style={{ fontSize: 13, color: "#d4d4d8", lineHeight: 1.7 }}>
             1. You'll see a clear <strong>YES</strong> or <strong>NO</strong> prediction with confidence %

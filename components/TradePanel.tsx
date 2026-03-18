@@ -44,7 +44,7 @@ export function TradePanel({
   const finalAmount   = customAmount ? parseFloat(customAmount) : selectedAmount;
   const priceDecimal  = marketOdds / 100;
 
-  // Load Magic SDK lazily — client only
+  // Load Magic SDK lazily - client only
   useEffect(() => {
     if (typeof window === 'undefined') return;
     import('magic-sdk').then((mod) => {
@@ -73,7 +73,7 @@ export function TradePanel({
     try {
       setAuthLoading(true);
       setAuthStep('check_email');
-      // Sends OTP email — user clicks link in email
+      // Sends OTP email - user clicks link in email
       await magic.auth.loginWithEmailOTP({ email: email.trim() });
       const meta = await magic.user.getMetadata();
       setUserAddress(meta.publicAddress || '');
@@ -97,7 +97,7 @@ export function TradePanel({
 
   const placeTrade = async () => {
     if (!tokenId) {
-      // No token ID — redirect to Polymarket as fallback
+      // No token ID - redirect to Polymarket as fallback
       window.open(marketUrl, '_blank');
       return;
     }
@@ -158,7 +158,7 @@ export function TradePanel({
     }
   };
 
-  // ── SUCCESS ──
+  // -- SUCCESS --
   if (tradeStatus === 'success') {
     return (
       <div className="border border-green-500/30 rounded-xl p-5 bg-green-900/10">
@@ -238,7 +238,7 @@ export function TradePanel({
       {/* TRADE BODY */}
       <div className="p-4">
 
-        {/* ── STEP 1: NOT LOGGED IN — show email input ── */}
+        {/* -- STEP 1: NOT LOGGED IN - show email input -- */}
         {authStep === 'idle' && (
           <div>
             <div className="text-sm text-gray-300 mb-4 text-center">
@@ -266,7 +266,7 @@ export function TradePanel({
           </div>
         )}
 
-        {/* ── STEP 2: EMAIL INPUT ── */}
+        {/* -- STEP 2: EMAIL INPUT -- */}
         {authStep === 'enter_email' && (
           <div>
             <div className="text-sm text-gray-300 mb-3 font-medium">
@@ -300,7 +300,7 @@ export function TradePanel({
           </div>
         )}
 
-        {/* ── STEP 3: CHECK EMAIL ── */}
+        {/* -- STEP 3: CHECK EMAIL -- */}
         {authStep === 'check_email' && (
           <div className="text-center py-4">
             <div className="text-2xl mb-3">&#9993;</div>
@@ -322,7 +322,7 @@ export function TradePanel({
           </div>
         )}
 
-        {/* ── STEP 4: AUTHENTICATED — show trade UI ── */}
+        {/* -- STEP 4: AUTHENTICATED - show trade UI -- */}
         {authStep === 'authenticated' && (
           <div>
             {/* Logged in indicator */}

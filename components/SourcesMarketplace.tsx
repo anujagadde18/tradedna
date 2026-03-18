@@ -46,9 +46,9 @@ export function SourcesMarketplace({ onAddSource, activeSources }: SourceMarketp
   const [searchQuery, setSearchQuery] = useState('');
 
   const categories = [
-    { id: 'news', label: '📰 News', icon: '📰' },
-    { id: 'social', label: '💬 Social', icon: '💬' },
-    { id: 'technical', label: '📊 Technical', icon: '📊' }
+    { id: 'news', label: ' News', icon: '' },
+    { id: 'social', label: ' Social', icon: '' },
+    { id: 'technical', label: ' Technical', icon: '' }
   ];
 
   const filteredSources = SOURCE_MARKETPLACE[activeCategory].filter(source =>
@@ -110,7 +110,7 @@ export function SourcesMarketplace({ onAddSource, activeSources }: SourceMarketp
                       : 'bg-green-600 hover:bg-green-500 text-white'
                   }`}
                 >
-                  {isActive ? '✓ Added' : '+ Add'}
+                  {isActive ? 'ok Added' : '+ Add'}
                 </button>
               </div>
             </div>

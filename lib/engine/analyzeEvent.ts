@@ -334,10 +334,10 @@ function directionalModel(params: {
   // For crypto, that often skews YES slightly (momentum) but increases volatility penalty later.
   if (t - n >= 20 && t >= 70) pYes += 0.04;
 
-  // If NEWS >> TECH, narrative catalyst might dominate—skew YES slightly.
+  // If NEWS >> TECH, narrative catalyst might dominate-skew YES slightly.
   if (n - t >= 20 && n >= 70) pYes += 0.03;
 
-  // If SOCIAL >> NEWS, crowd sentiment but weak confirmation—tiny skew, but divergence penalty later.
+  // If SOCIAL >> NEWS, crowd sentiment but weak confirmation-tiny skew, but divergence penalty later.
   if (s - n >= 18 && s >= 70) pYes += 0.015;
 
   // Question framing: "increase / cross / reach / above" tends to be directional-up bias.

@@ -8,7 +8,7 @@ function detectOutcomeType(names: string[]): 'companies' | 'dates' | 'candidates
 
   const sample = names.map(n => n.toLowerCase().trim());
 
-  const pricePattern = /^\$[\d,]+|^[↑↓]?\s*\$[\d,]+|^above\s*\$|^below\s*\$|^over\s*\$|^under\s*\$/i;
+  const pricePattern = /^\$[\d,]+|^[updown]?\s*\$[\d,]+|^above\s*\$|^below\s*\$|^over\s*\$|^under\s*\$/i;
   const priceCount = sample.filter(n => pricePattern.test(n)).length;
   if (priceCount >= names.length * 0.4) return 'prices';
 
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
     );
 
     if (!hasGroupItems && markets.length === 1) {
-      // ── BINARY ──
+      // -- BINARY --
       const market = markets[0];
 
       // Extract both YES and NO token IDs for binary markets
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
       });
 
     } else {
-      // ── CATEGORICAL ──
+      // -- CATEGORICAL --
       const outcomes: any[] = [];
 
       for (const market of markets) {
@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
           oneDayPriceChange:  market.oneDayPriceChange  || 0,
           oneWeekPriceChange: market.oneWeekPriceChange || 0,
           lastTradePrice:     market.lastTradePrice     || String(yesPrice),
-          // Token ID for placing orders — null if not available
+          // Token ID for placing orders - null if not available
           clobTokenId:        tokenId,
         });
       }

@@ -51,7 +51,7 @@ export default function JournalPage() {
 
         <h1 className="text-2xl font-bold mb-1">Trade Journal</h1>
         <p className="text-gray-400 text-sm mb-6">
-          Every trade you placed through PlayPicks — with the AI conviction that justified it
+          Every trade you placed through PlayPicks - with the AI conviction that justified it
         </p>
 
         {/* Stats */}
@@ -64,7 +64,7 @@ export default function JournalPage() {
             <div className="bg-gray-900 border border-gray-700 rounded-xl p-4">
               <div className="text-xs text-gray-400 mb-1">Win rate</div>
               <div className={`text-2xl font-bold ${winRate !== null ? (winRate >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-500'}`}>
-                {winRate !== null ? (winRate + '%') : '—'}
+                {winRate !== null ? (winRate + '%') : '-'}
               </div>
             </div>
             <div className="bg-gray-900 border border-gray-700 rounded-xl p-4">
@@ -76,7 +76,7 @@ export default function JournalPage() {
             <div className="bg-gray-900 border border-gray-700 rounded-xl p-4">
               <div className="text-xs text-gray-400 mb-1">AI edge accuracy</div>
               <div className={`text-2xl font-bold ${edgeAccuracy !== null ? (edgeAccuracy >= 50 ? 'text-green-400' : 'text-orange-400') : 'text-gray-500'}`}>
-                {edgeAccuracy !== null ? (edgeAccuracy + '%') : '—'}
+                {edgeAccuracy !== null ? (edgeAccuracy + '%') : '-'}
               </div>
               {edgeAccuracy !== null && (
                 <div className="text-xs text-gray-500 mt-0.5">when edge 5%+</div>
@@ -103,7 +103,7 @@ export default function JournalPage() {
           <div className="border border-gray-700 rounded-xl p-12 text-center">
             <div className="text-gray-500 text-sm mb-2">No trades yet</div>
             <p className="text-gray-600 text-xs mb-4">
-              Analyze a Polymarket event and place a trade through PlayPicks — it will appear here with the full AI conviction snapshot
+              Analyze a Polymarket event and place a trade through PlayPicks - it will appear here with the full AI conviction snapshot
             </p>
             <button
               onClick={() => router.push('/')}

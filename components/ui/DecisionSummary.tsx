@@ -24,15 +24,15 @@ export function calculateReliability(analysis: AnalysisOutput): {
   if (score >= 75) {
     level = "High";
     color = "#10b981";
-    emoji = "🟢";
+    emoji = "";
   } else if (score >= 50) {
     level = "Moderate";
     color = "#f59e0b";
-    emoji = "🟡";
+    emoji = "";
   } else {
     level = "Low";
     color = "#ef4444";
-    emoji = "🔴";
+    emoji = "";
   }
   
   return { score, level, color, emoji };
@@ -81,7 +81,7 @@ export function DecisionSummaryCard({ analysis }: { analysis: AnalysisOutput }) 
       position: "relative"
     }}>
       <div style={{ display: "flex", alignItems: "start", gap: 12 }}>
-        <div style={{ fontSize: 32 }}>🔵</div>
+        <div style={{ fontSize: 32 }}></div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#60a5fa", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>
             TradeDNA Decision Summary
@@ -157,7 +157,7 @@ function MetricsExplainer({ reliability, analysis }: { reliability: ReturnType<t
       border: "1px solid rgba(255,255,255,0.1)"
     }}>
       <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: "#60a5fa" }}>
-        📚 What These Metrics Mean
+         What These Metrics Mean
       </div>
       
       <ExplainerRow
@@ -221,7 +221,7 @@ export function TradeRecommendation({ analysis }: { analysis: AnalysisOutput }) 
       border: `2px solid ${borderColor}`
     }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: reliability.color, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
-        <span>💡</span>
+        <span></span>
         <span>Trade Recommendation</span>
       </div>
       <div style={{ fontSize: 14, lineHeight: 1.6, color: "#e5e7eb" }}>

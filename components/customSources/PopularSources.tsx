@@ -15,7 +15,7 @@ export function PopularSources({ curatedSources, existingSources, onAdd }: Popul
   return (
     <div style={{ marginTop: 20 }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: "#9ca3af", marginBottom: 12 }}>
-        🔥 POPULAR SOURCES
+         POPULAR SOURCES
       </div>
       
       <div style={{ display: "grid", gap: 10 }}>
@@ -61,7 +61,7 @@ export function PopularSources({ curatedSources, existingSources, onAdd }: Popul
                   transition: "all 0.2s"
                 }}
               >
-                {alreadyAdded ? "✓ Added" : "+ Add"}
+                {alreadyAdded ? "ok Added" : "+ Add"}
               </button>
             </div>
           );

@@ -60,7 +60,7 @@ export default function ProfilePage() {
             onClick={() => router.push('/')}
             className="mb-4 text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
           >
-            ← Back to Home
+             Back to Home
           </button>
           
           <h1 className="text-4xl font-bold mb-2">Your Profile</h1>
@@ -75,7 +75,7 @@ export default function ProfilePage() {
           
           {savedAnalyses.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-6xl mb-4">📊</div>
+              <div className="text-6xl mb-4"></div>
               <p className="text-gray-400 mb-4">No saved analyses yet</p>
               <button
                 onClick={() => router.push('/')}

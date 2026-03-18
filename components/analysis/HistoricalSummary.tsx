@@ -24,7 +24,7 @@ export function HistoricalAccuracySummary({ category }: { category: string }) {
     }}>
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>
-          Historical Performance • {category} Events
+          Historical Performance - {category} Events
         </div>
         <div style={{ fontSize: 11, color: "#6b7280" }}>
           Based on backtested data from similar prediction markets
@@ -57,7 +57,7 @@ export function HistoricalAccuracySummary({ category }: { category: string }) {
             >
               <div style={{ fontWeight: 600, color: "#e5e7eb" }}>
                 {acc.name?.charAt(0).toUpperCase() + acc.name?.slice(1)}
-                {isBest && <span style={{ marginLeft: 8, fontSize: 11, color: "#10b981" }}>★ Best</span>}
+                {isBest && <span style={{ marginLeft: 8, fontSize: 11, color: "#10b981" }}>* Best</span>}
               </div>
               <div style={{ textAlign: "right", fontWeight: 700, color: acc.winRate && acc.winRate >= 65 ? "#10b981" : "#f59e0b" }}>
                 {acc.winRate}%

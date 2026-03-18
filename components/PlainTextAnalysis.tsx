@@ -197,7 +197,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
   return (
     <div className="space-y-4">
 
-      {/* ── AI ANALYSIS CARD ── */}
+      {/* -- AI ANALYSIS CARD -- */}
       <div className="border border-gray-700 rounded-xl overflow-hidden">
         <div className="p-5">
           <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">AI Analysis</div>
@@ -246,7 +246,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
           </div>
         </div>
 
-        {/* ── SOURCES SECTION ── */}
+        {/* -- SOURCES SECTION -- */}
         <div className="border-t border-gray-700">
           <button
             onClick={() => setShowAllSources(!showAllSources)}
@@ -353,7 +353,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
         </div>
       </div>
 
-      {/* ── RELATED POLYMARKET MARKETS ── */}
+      {/* -- RELATED POLYMARKET MARKETS -- */}
       <div className="border border-gray-700 rounded-xl p-5">
         <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">People are betting on this</div>
         <div className="text-sm text-gray-300 mb-4">Related Polymarket markets with live odds</div>
@@ -408,7 +408,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
         </div>
       </div>
 
-      {/* ── WANT TO BET? GUIDE ── */}
+      {/* -- WANT TO BET? GUIDE -- */}
       <div className="border border-gray-700 rounded-xl overflow-hidden">
         <button
           onClick={() => setShowBettingGuide(!showBettingGuide)}

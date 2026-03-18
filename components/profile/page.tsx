@@ -14,7 +14,7 @@ function ProfileContent() {
         
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
           <a href="/" style={{ color: "#9ca3af", fontSize: 14, textDecoration: "none" }}>
-            ← Back to Home
+             Back to Home
           </a>
           <button
             onClick={() => router.push("/event")}
@@ -38,10 +38,10 @@ function ProfileContent() {
         {/* Info */}
         <div style={{ marginTop: 40, padding: 20, borderRadius: 14, background: "rgba(147,51,234,0.08)", border: "1px solid rgba(147,51,234,0.2)" }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#a78bfa", marginBottom: 8 }}>
-            📊 Understanding Your Profile
+             Understanding Your Profile
           </div>
           <div style={{ color: "#d4d4d8", fontSize: 14, lineHeight: 1.7 }}>
-            Your profile tracks which signals you trust most when making predictions. Over time, you'll see patterns in how you research events — helping you understand your own decision-making style and improve your accuracy.
+            Your profile tracks which signals you trust most when making predictions. Over time, you'll see patterns in how you research events - helping you understand your own decision-making style and improve your accuracy.
           </div>
         </div>
       </div>

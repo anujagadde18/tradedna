@@ -58,7 +58,7 @@ export function ActiveSourcesBreakdown(props: any) {
             <div style={{ display: "grid", gap: 6 }}>
               {newsSources.map((source: any) => (
                 <div key={source.id} style={{ fontSize: 13, color: "#d4d4d8", display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 16 }}>{source.isDefault ? "📋" : "✨"}</span>
+                  <span style={{ fontSize: 16 }}>{source.isDefault ? "" : ""}</span>
                   <span style={{ fontWeight: 600 }}>{source.name}</span>
                   <span style={{ fontSize: 12, padding: "2px 8px", borderRadius: 4, background: "rgba(147,51,234,0.15)", color: "#a78bfa", fontWeight: 700 }}>
                     {calculateFinal(source, categoryWeights.news)}%
@@ -80,7 +80,7 @@ export function ActiveSourcesBreakdown(props: any) {
             <div style={{ display: "grid", gap: 6 }}>
               {socialSources.map((source: any) => (
                 <div key={source.id} style={{ fontSize: 13, color: "#d4d4d8", display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 16 }}>{source.isDefault ? "📋" : "✨"}</span>
+                  <span style={{ fontSize: 16 }}>{source.isDefault ? "" : ""}</span>
                   <span style={{ fontWeight: 600 }}>{source.name}</span>
                   <span style={{ fontSize: 12, padding: "2px 8px", borderRadius: 4, background: "rgba(59,130,246,0.15)", color: "#60a5fa", fontWeight: 700 }}>
                     {calculateFinal(source, categoryWeights.social)}%
@@ -102,7 +102,7 @@ export function ActiveSourcesBreakdown(props: any) {
             <div style={{ display: "grid", gap: 6 }}>
               {technicalSources.map((source: any) => (
                 <div key={source.id} style={{ fontSize: 13, color: "#d4d4d8", display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 16 }}>{source.isDefault ? "📋" : "✨"}</span>
+                  <span style={{ fontSize: 16 }}>{source.isDefault ? "" : ""}</span>
                   <span style={{ fontWeight: 600 }}>{source.name}</span>
                   <span style={{ fontSize: 12, padding: "2px 8px", borderRadius: 4, background: "rgba(16,185,129,0.15)", color: "#10b981", fontWeight: 700 }}>
                     {calculateFinal(source, categoryWeights.technical)}%
@@ -118,8 +118,8 @@ export function ActiveSourcesBreakdown(props: any) {
       </div>
 
       <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(147,51,234,0.2)", fontSize: 11, color: "#71717a", display: "flex", gap: 16, flexWrap: "wrap" }}>
-        <span>📋 Default</span>
-        <span>✨ Your custom source</span>
+        <span> Default</span>
+        <span> Your custom source</span>
         <span>Percentages show final weight in prediction</span>
       </div>
     </div>

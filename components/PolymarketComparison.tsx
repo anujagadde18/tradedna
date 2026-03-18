@@ -194,7 +194,7 @@ export function PolymarketComparison({
 
         setAllOutcomes(analyzed);
 
-        // For price markets: only show uncertain levels (5–95%)
+        // For price markets: only show uncertain levels (5-95%)
         let displayOutcomes = analyzed;
         if (data.outcomeType === 'prices') {
           const uncertain = analyzed.filter(o => o.odds >= 5 && o.odds <= 95);
@@ -237,7 +237,7 @@ export function PolymarketComparison({
     }
   };
 
-  // ── LOADING ──
+  // -- LOADING --
   if (loading) {
     return (
       <div className="border border-gray-700 rounded-xl p-6">
@@ -246,12 +246,12 @@ export function PolymarketComparison({
     );
   }
 
-  // ── NO URL - return null, PlainTextAnalysis handles the right panel ──
+  // -- NO URL - return null, PlainTextAnalysis handles the right panel --
   if (error === 'no_url') {
     return null;
   }
 
-  // ── ERROR ──
+  // -- ERROR --
   if (error) {
     return (
       <div className="border border-gray-700 rounded-xl p-6">
@@ -260,7 +260,7 @@ export function PolymarketComparison({
     );
   }
 
-  // ── BINARY ──
+  // -- BINARY --
   if (marketType === 'binary' && marketOdds !== null) {
     const divergence = Math.abs(aiPrediction - marketOdds);
     const consensus  = divergence < 10;
@@ -310,7 +310,7 @@ export function PolymarketComparison({
     );
   }
 
-  // ── CATEGORICAL ──
+  // -- CATEGORICAL --
   if (marketType === 'categorical') {
     const topOutcome    = outcomes[0] || allOutcomes[0];
     const maxOdds       = Math.max(...outcomes.map(o => o.odds), 1);
