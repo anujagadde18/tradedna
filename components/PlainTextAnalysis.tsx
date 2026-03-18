@@ -114,7 +114,7 @@ function generateSources(question: string, weights: { news: number; social: numb
     );
   }
 
-  // Market sources — always show prediction market platforms
+  // Market sources - always show prediction market platforms
   marketSources.push(
     { name: 'Polymarket', type: 'market', signal: 'Related markets active', url: 'https://polymarket.com' },
     { name: 'Kalshi',     type: 'market', signal: 'Prediction contracts available', url: 'https://kalshi.com' },
@@ -126,25 +126,25 @@ function generateSources(question: string, weights: { news: number; social: numb
 
 const BETTING_STEPS = [
   {
-    num: '①',
+    num: '1.',
     title: 'Create a Polymarket account',
-    desc:  'Go to polymarket.com — sign up with just your email. Takes 2 minutes.',
+    desc:  'Go to polymarket.com - sign up with just your email. Takes 2 minutes.',
     link:  'https://polymarket.com',
-    cta:   'Go to Polymarket →',
+    cta:   'Go to Polymarket ->',
   },
   {
-    num: '②',
+    num: '2.',
     title: 'Add USDC to your account',
     desc:  'Deposit as little as $5. Use a credit card or crypto wallet.',
     link:  null,
     cta:   null,
   },
   {
-    num: '③',
+    num: '3.',
     title: 'Find your market and place your bet',
     desc:  'Search for your topic on Polymarket, paste the URL here for AI analysis first.',
     link:  'https://polymarket.com',
-    cta:   'Search Polymarket →',
+    cta:   'Search Polymarket ->',
   },
 ];
 
@@ -161,7 +161,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
   useEffect(() => {
     const fetchRelated = async () => {
       try {
-        // Extract meaningful keywords — skip common question words
+        // Extract meaningful keywords - skip common question words
         const stopWords = new Set([
           'will', 'there', 'that', 'this', 'what', 'when', 'have', 'does',
           'with', 'would', 'could', 'should', 'the', 'and', 'for', 'are',
@@ -264,7 +264,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
               {/* News sources */}
               <div>
                 <div className="text-xs text-purple-400 font-semibold uppercase tracking-wide mb-2">
-                  📰 News Sources — {weights.news}% weight
+                  📰 News Sources - {weights.news}% weight
                 </div>
                 <div className="space-y-2">
                   {sources.news.map((s, i) => (
@@ -288,7 +288,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
               {/* Social sources */}
               <div>
                 <div className="text-xs text-blue-400 font-semibold uppercase tracking-wide mb-2">
-                  💬 Social Sources — {weights.social}% weight
+                  💬 Social Sources - {weights.social}% weight
                 </div>
                 <div className="space-y-2">
                   {sources.social.map((s, i) => (
@@ -312,7 +312,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
               {/* Market sources */}
               <div>
                 <div className="text-xs text-green-400 font-semibold uppercase tracking-wide mb-2">
-                  📊 Market Sources — {weights.technical}% weight
+                  📊 Market Sources - {weights.technical}% weight
                 </div>
                 <div className="space-y-2">
                   {sources.market.map((s, i) => (

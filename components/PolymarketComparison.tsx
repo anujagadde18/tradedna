@@ -34,10 +34,10 @@ interface PolymarketComparisonProps {
   }) => void;
 }
 
-// Tag — only show "Worth watching" if odds are meaningful (>10%)
+// Tag - only show "Worth watching" if odds are meaningful (>10%)
 function getTag(edge: number, odds: number): { text: string; className: string } {
-  if (edge >= 5)               return { text: 'AI favorite — bullish on this one', className: 'text-xs text-purple-400 bg-purple-900/20 px-2 py-0.5 rounded-full inline-block' };
-  if (edge >= 2 && odds >= 10) return { text: 'Worth watching — slight edge',      className: 'text-xs text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded-full inline-block' };
+  if (edge >= 5)               return { text: 'AI favorite - bullish on this one', className: 'text-xs text-purple-400 bg-purple-900/20 px-2 py-0.5 rounded-full inline-block' };
+  if (edge >= 2 && odds >= 10) return { text: 'Worth watching - slight edge',      className: 'text-xs text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded-full inline-block' };
   if (edge >= -2)              return { text: 'AI aligns with market',              className: 'text-xs text-gray-500 inline-block' };
   return                              { text: 'AI slightly cautious',               className: 'text-xs text-orange-400 bg-orange-900/10 px-2 py-0.5 rounded-full inline-block' };
 }
@@ -46,7 +46,7 @@ function getOutcomeLabels(outcomeType: string, count: number) {
   switch (outcomeType) {
     case 'prices':
       return {
-        subtitle: 'Price levels with real uncertainty · bar = probability of being hit',
+        subtitle: 'Price levels with real uncertainty - bar = probability of being hit',
         unit: count === 1 ? 'price level' : 'price levels',
         itemLabel: 'price level',
         aiPickSuffix: (name: string, edge: number) =>
@@ -54,7 +54,7 @@ function getOutcomeLabels(outcomeType: string, count: number) {
       };
     case 'dates':
       return {
-        subtitle: 'What bettors think is most likely · bar = probability',
+        subtitle: 'What bettors think is most likely - bar = probability',
         unit: count === 1 ? 'date' : 'dates',
         itemLabel: 'date',
         aiPickSuffix: (name: string, edge: number) =>
@@ -62,27 +62,27 @@ function getOutcomeLabels(outcomeType: string, count: number) {
       };
     case 'candidates':
       return {
-        subtitle: 'What bettors currently think · bar = chance of winning',
+        subtitle: 'What bettors currently think - bar = chance of winning',
         unit: count === 1 ? 'candidate' : 'candidates',
         itemLabel: 'candidate',
         aiPickSuffix: (name: string, edge: number) =>
-          edge >= 4 ? `AI thinks ${name} is ${edge}% more likely to win than the market believes` : `${name} — strongest conviction among all candidates`,
+          edge >= 4 ? `AI thinks ${name} is ${edge}% more likely to win than the market believes` : `${name} - strongest conviction among all candidates`,
       };
     case 'companies':
       return {
-        subtitle: 'What bettors currently think · bar = chance of winning',
+        subtitle: 'What bettors currently think - bar = chance of winning',
         unit: count === 1 ? 'company' : 'companies',
         itemLabel: 'company',
         aiPickSuffix: (name: string, edge: number) =>
-          edge >= 4 ? `AI thinks ${name} is ${edge}% more likely to win than the market currently believes` : `${name} — strongest conviction among all competitors`,
+          edge >= 4 ? `AI thinks ${name} is ${edge}% more likely to win than the market currently believes` : `${name} - strongest conviction among all competitors`,
       };
     default:
       return {
-        subtitle: 'What bettors currently think · bar = probability',
+        subtitle: 'What bettors currently think - bar = probability',
         unit: count === 1 ? 'outcome' : 'outcomes',
         itemLabel: 'option',
         aiPickSuffix: (name: string, edge: number) =>
-          edge >= 4 ? `AI thinks ${name} is ${edge}% more likely than the market believes` : `${name} — highest conviction`,
+          edge >= 4 ? `AI thinks ${name} is ${edge}% more likely than the market believes` : `${name} - highest conviction`,
       };
   }
 }
@@ -246,7 +246,7 @@ export function PolymarketComparison({
     );
   }
 
-  // ── NO URL — return null, PlainTextAnalysis handles the right panel ──
+  // ── NO URL - return null, PlainTextAnalysis handles the right panel ──
   if (error === 'no_url') {
     return null;
   }
@@ -274,7 +274,7 @@ export function PolymarketComparison({
             <div className="flex justify-between text-sm mb-1">
               <span className="text-gray-400">Bettors say</span>
               <span className="text-white font-semibold">
-                {marketOdds > 50 ? 'YES' : 'NO'} · {marketOdds}%
+                {marketOdds > 50 ? 'YES' : 'NO'} - {marketOdds}%
               </span>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2">
@@ -285,7 +285,7 @@ export function PolymarketComparison({
             <div className="flex justify-between text-sm mb-1">
               <span className="text-gray-400">AI thinks</span>
               <span className="text-purple-400 font-semibold">
-                {aiPrediction > 50 ? 'YES' : 'NO'} · {aiPrediction}%
+                {aiPrediction > 50 ? 'YES' : 'NO'} - {aiPrediction}%
               </span>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2">
@@ -303,7 +303,7 @@ export function PolymarketComparison({
             {consensus ? '✓ Both agree' : '⚠ Views differ'}
           </div>
           <div className="text-gray-400 text-xs mt-0.5">
-            {divergence}% difference · {divergence < 10 ? 'Low' : divergence < 30 ? 'Medium' : 'High'} risk
+            {divergence}% difference - {divergence < 10 ? 'Low' : divergence < 30 ? 'Medium' : 'High'} risk
           </div>
         </div>
       </div>
@@ -326,7 +326,7 @@ export function PolymarketComparison({
           <p className="text-xs text-gray-400">{labels.subtitle}</p>
           {outcomeType === 'prices' && filteredCount > 0 && (
             <p className="text-xs text-gray-600 mt-1">
-              {filteredCount} already-certain levels hidden · showing only levels with real uncertainty
+              {filteredCount} already-certain levels hidden - showing only levels with real uncertainty
             </p>
           )}
         </div>
@@ -395,7 +395,7 @@ export function PolymarketComparison({
             <div className="text-xs text-purple-300 font-semibold mb-1">🤖 AI picks</div>
             <div className="text-sm text-white">
               <strong>{topOutcome.name}</strong>
-              {' — '}{labels.aiPickSuffix(topOutcome.name, topOutcome.edge)}
+              {' - '}{labels.aiPickSuffix(topOutcome.name, topOutcome.edge)}
             </div>
           </div>
         )}

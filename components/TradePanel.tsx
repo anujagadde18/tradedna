@@ -164,7 +164,7 @@ export function TradePanel({
       <div className="border border-green-500/30 rounded-xl p-5 bg-green-900/10">
         <div className="text-green-400 font-semibold text-base mb-2">Order placed!</div>
         <div className="text-sm text-gray-300 mb-3">
-          {tradeSide} {outcomeName} · ${finalAmount} at {marketOdds}%
+          {tradeSide} {outcomeName} - ${finalAmount} at {marketOdds}%
         </div>
         <div className="text-xs text-gray-400 mb-4">
           Saved to your trade journal with AI conviction snapshot.
@@ -347,7 +347,7 @@ export function TradePanel({
                     tradeSide === 'YES' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                   )}
                 >
-                  YES · {marketOdds}%
+                  YES - {marketOdds}%
                 </button>
                 <button
                   onClick={() => setTradeSide('NO')}
@@ -355,20 +355,20 @@ export function TradePanel({
                     tradeSide === 'NO' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                   )}
                 >
-                  NO · {100 - marketOdds}%
+                  NO - {100 - marketOdds}%
                 </button>
               </div>
             ) : (
               <div className="mb-4 p-3 bg-purple-900/20 rounded-lg border border-purple-500/30">
                 <div className="text-xs text-gray-400 mb-0.5">Trading outcome</div>
-                <div className="text-white font-semibold">{outcomeName} wins · {marketOdds}%</div>
+                <div className="text-white font-semibold">{outcomeName} wins - {marketOdds}%</div>
               </div>
             )}
 
             {/* Amount selector */}
             <div className="mb-4">
               <div className="text-xs text-gray-400 mb-2">
-                Amount (USDC) · {betSuggestion.label}
+                Amount (USDC) - {betSuggestion.label}
               </div>
               <div className="flex gap-2 mb-2">
                 {betSuggestion.amounts.map((amount: number) => (
@@ -435,14 +435,14 @@ export function TradePanel({
             >
               {tradeStatus === 'placing'
                 ? 'Placing order...'
-                : 'Trade ' + (isBinary ? tradeSide : outcomeName) + ' · $' + (finalAmount || 0)
+                : 'Trade ' + (isBinary ? tradeSide : outcomeName) + ' - $' + (finalAmount || 0)
               }
             </button>
           </div>
         )}
 
         <div className="mt-3 text-xs text-gray-600 text-center">
-          Powered by Polymarket · Not financial advice
+          Powered by Polymarket - Not financial advice
         </div>
       </div>
     </div>
