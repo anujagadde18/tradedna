@@ -83,7 +83,7 @@ function ScoresPageContent() {
         if (cs) setActiveSources(JSON.parse(cs));
       } catch {}
     }
-    setHasPolymarketUrl(/polymarket\.com\/event\//.test(event));
+    setHasPolymarketUrl(event.includes('polymarket.com/event/'));
   }, []);
 
   const runAnalysis = () => {
@@ -150,7 +150,8 @@ function ScoresPageContent() {
 
   const eventTitle = (() => {
     try {
-      const match = event.match(/polymarket.com.event.([^/\s]+)/);
+      const slashIdx = event.indexOf('polymarket.com/event/');
+      const match = slashIdx >= 0 ? [null, event.slice(slashIdx + 21).split('/')[0].split('?')[0]] : null;
       if (match) {
         const skipWords = ['the', 'of', 'and', 'for', 'to', 'a', 'an', 'in', 'by', 'at', 'with', 'will', 'be'];
         return match[1].replace(/-/g, ' ').split(' ').map((word: string, i: number) =>
