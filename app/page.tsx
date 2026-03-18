@@ -124,7 +124,7 @@ export default function HomePage() {
               Pick Feeds. Tweak Weights. Craft Conviction.
             </p>
             <p className="text-gray-500 text-sm">
-              Multi-source prediction engine analyzing news, markets, and community trends
+              Ask any prediction question. Get AI analysis with sources. Trade with conviction.
             </p>
           </div>
 
@@ -138,7 +138,7 @@ export default function HomePage() {
                 onChange={e => setQuery(e.target.value)}
                 onFocus={() => searchResults.length > 0 && setShowResults(true)}
                 onBlur={() => setTimeout(() => setShowResults(false), 200)}
-                placeholder="Ask any prediction question or paste a Polymarket URL..."
+                placeholder="What do you want to predict? Ask anything..."
                 className="w-full px-6 py-5 text-lg bg-white/10 border-2 border-purple-500/30 rounded-2xl
                          text-white placeholder-gray-400 focus:outline-none focus:border-purple-500
                          transition-all backdrop-blur-sm"
@@ -159,10 +159,10 @@ export default function HomePage() {
             {/* Search hint */}
             <div className="mt-3 text-center text-sm text-gray-400">
               {isPolymarketUrl(query)
-                ? '✓ Polymarket URL detected — live market analysis ready'
+                ? '✓ Polymarket URL detected — full live analysis ready'
                 : isSearching
                 ? '🔍 Searching Polymarket markets...'
-                : 'Type any question or paste a Polymarket URL'
+                : 'Type a question or paste a Polymarket URL — both work'
               }
             </div>
 
@@ -206,7 +206,7 @@ export default function HomePage() {
           {/* Example Queries */}
           <div className="max-w-4xl mx-auto">
             <h3 className="text-xl font-semibold mb-6 text-center text-gray-300">
-              Try these examples:
+              Not sure where to start? Try one of these:
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {exampleQueries.map((example, idx) => (
@@ -241,7 +241,7 @@ export default function HomePage() {
           <div className="text-center">
             <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold mx-auto mb-4">1</div>
             <h3 className="text-white font-semibold mb-2">Analyze the market</h3>
-            <p className="text-gray-400 text-sm">Ask any question or paste a Polymarket URL. AI finds the market and scans news, social signals, and live odds in seconds.</p>
+            <p className="text-gray-400 text-sm">Ask any prediction question or paste a Polymarket URL. Either works — AI figures out the rest.</p>
           </div>
           <div className="text-center">
             <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold mx-auto mb-4">2</div>
