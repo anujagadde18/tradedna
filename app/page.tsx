@@ -162,7 +162,7 @@ export default function HomePage() {
                 ? '✓ Polymarket URL detected — full live analysis ready'
                 : isSearching
                 ? '🔍 Searching Polymarket markets...'
-                : 'Type a question or paste a Polymarket URL — both work'
+                : 'Type a question or paste a Polymarket URL'
               }
             </div>
 
@@ -241,7 +241,7 @@ export default function HomePage() {
           <div className="text-center">
             <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold mx-auto mb-4">1</div>
             <h3 className="text-white font-semibold mb-2">Analyze the market</h3>
-            <p className="text-gray-400 text-sm">Ask any prediction question or paste a Polymarket URL. Either works — AI figures out the rest.</p>
+            <p className="text-gray-400 text-sm">Ask any prediction question or paste a Polymarket URL. AI figures out the rest.</p>
           </div>
           <div className="text-center">
             <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold mx-auto mb-4">2</div>
