@@ -253,9 +253,9 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
             className="w-full px-5 py-3 flex items-center justify-between text-sm text-gray-400 hover:bg-gray-900/50 transition-colors"
           >
             <span className="font-medium">
-              📋 Sources used in this analysis ({sources.news.length + sources.social.length + sources.market.length} total)
+              Sources used in this analysis ({sources.news.length + sources.social.length + sources.market.length} total)
             </span>
-            <span>{showAllSources ? '▴' : '▾'}</span>
+            <span>{showAllSources ? '-' : '+'}</span>
           </button>
 
           {showAllSources && (
@@ -336,7 +336,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
               {activeSources.length > 0 && (
                 <div>
                   <div className="text-xs text-orange-400 font-semibold uppercase tracking-wide mb-2">
-                    ⭐ Your Custom Sources ({activeSources.length})
+                    Your Custom Sources ({activeSources.length})
                   </div>
                   <div className="space-y-2">
                     {activeSources.map((s: any, i: number) => (
@@ -415,10 +415,10 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
           className="w-full p-4 flex items-center justify-between hover:bg-gray-900/50 transition-colors"
         >
           <div className="text-left">
-            <div className="text-sm font-medium text-white">💡 Want to bet on this?</div>
+            <div className="text-sm font-medium text-white">Want to bet on this?</div>
             <div className="text-xs text-gray-500 mt-0.5">Learn how to get started on Polymarket</div>
           </div>
-          <span className="text-gray-500">{showBettingGuide ? '▴' : '▾'}</span>
+          <span className="text-gray-500">{showBettingGuide ? '-' : '+'}</span>
         </button>
 
         {showBettingGuide && (
