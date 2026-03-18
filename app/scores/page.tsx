@@ -404,10 +404,10 @@ function ScoresPageContent() {
           </div>
         )}
 
-        {/* MAIN TWO COLUMN LAYOUT */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* MAIN LAYOUT */}
+        <div className={isPlainTextQuery ? "max-w-2xl mx-auto w-full" : "grid grid-cols-1 lg:grid-cols-5 gap-6"}>
 
-          {/* LEFT — hidden for plain text queries since PolymarketComparison returns null */}
+          {/* LEFT — hidden for plain text */}
           {!isPlainTextQuery && (
             <div className="lg:col-span-3">
               <PolymarketComparison
@@ -419,8 +419,8 @@ function ScoresPageContent() {
             </div>
           )}
 
-          {/* RIGHT — full width for plain text, 2/5 for Polymarket URL */}
-          <div className={isPlainTextQuery ? "lg:col-span-5 max-w-2xl mx-auto w-full space-y-4" : "lg:col-span-2 space-y-4"}>
+          {/* RIGHT */}
+          <div className={isPlainTextQuery ? "space-y-4" : "lg:col-span-2 space-y-4"}>
 
             {isPlainTextQuery ? (
               <PlainTextAnalysis
@@ -456,7 +456,7 @@ function ScoresPageContent() {
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-400">Trending</span>
                           <span className={(topOutcome.weekChange || 0) > 0 ? 'text-green-400' : 'text-red-400'}>
-                            {(topOutcome.weekChange || 0) > 0 ? 'up' : 'down'} {Math.abs(topOutcome.weekChange || 0)}% this week
+                            {(topOutcome.weekChange || 0) > 0 ? '▲' : '▼'}{Math.abs(topOutcome.weekChange || 0)}% this week
                           </span>
                         </div>
                       )}
@@ -623,7 +623,7 @@ function ScoresPageContent() {
                   <div className="text-sm font-medium text-white mb-2">Why this prediction?</div>
                   <p className="text-xs text-gray-300 leading-relaxed">
                     {marketType === 'categorical'
-                      ? 'Analysis across news (' + weights.news + '%), social (' + weights.social + '%), and market data (' + weights.technical + '%). ' + topOutcome.name + ' leads with ' + topOutcome.odds + '% market probability across ' + categoricalOutcomes.length + ' ' + unitLabel + '. Weekly momentum: ' + topOutcome.name + ' ' + ((topOutcome.weekChange || 0) > 0 ? 'up' : 'down') + ' ' + Math.abs(topOutcome.weekChange || 0) + '%. AI signals point to ' + topOutcome.name + ' as highest conviction pick.'
+                      ? `Analysis across news (${weights.news}%), social (${weights.social}%), and market data (${weights.technical}%). ${topOutcome.name} leads with ${topOutcome.odds}% market probability across ${categoricalOutcomes.length} ${unitLabel}. Weekly momentum: ${topOutcome.name} ${(topOutcome.weekChange || 0) > 0 ? '▲' : '▼'}${Math.abs(topOutcome.weekChange || 0)}%. AI signals point to ${topOutcome.name} as highest conviction pick.`
                       : intelligence?.explanation || 'Analysis pending...'
                     }
                   </p>
@@ -633,7 +633,8 @@ function ScoresPageContent() {
 
           </div>
         </div>
-      </div>
+
+        </div>{/* closes MAIN LAYOUT grid */}
 
         <div className="mt-8 text-center text-xs text-gray-600">
           Not financial advice · Research purposes only
