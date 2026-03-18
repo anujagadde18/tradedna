@@ -130,7 +130,7 @@ const BETTING_STEPS = [
     title: 'Create a Polymarket account',
     desc:  'Go to polymarket.com - sign up with just your email. Takes 2 minutes.',
     link:  'https://polymarket.com',
-    cta:   'Go to Polymarket ->',
+    cta:   'Go to Polymarket',
   },
   {
     num: '2.',
@@ -144,7 +144,7 @@ const BETTING_STEPS = [
     title: 'Find your market and place your bet',
     desc:  'Search for your topic on Polymarket, paste the URL here for AI analysis first.',
     link:  'https://polymarket.com',
-    cta:   'Search Polymarket ->',
+    cta:   'Search Polymarket',
   },
 ];
 
@@ -397,7 +397,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
             rel="noopener noreferrer"
             className="text-xs text-gray-500 hover:text-purple-400 transition-colors"
           >
-            Browse all markets on Polymarket ->
+            Browse all markets on Polymarket
           </a>
         </div>
       </div>
