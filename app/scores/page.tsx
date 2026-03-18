@@ -115,3 +115,4 @@ export default function ScoresPage() {
     </Suspense>
   );
 }
+
