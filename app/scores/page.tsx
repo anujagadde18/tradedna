@@ -528,6 +528,7 @@ function ScoresPageContent() {
 
       </div>
     </div>
+  </div>
   );
 }
 
