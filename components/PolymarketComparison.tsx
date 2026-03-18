@@ -300,7 +300,7 @@ export function PolymarketComparison({
             : 'bg-yellow-900/20 border border-yellow-500/30'
         }`}>
           <div className={`font-medium ${consensus ? 'text-green-400' : 'text-yellow-400'}`}>
-            {consensus ? '✓ Both agree' : '⚠ Views differ'}
+            {consensus ? 'Both agree' : 'Views differ'}
           </div>
           <div className="text-gray-400 text-xs mt-0.5">
             {divergence}% difference - {divergence < 10 ? 'Low' : divergence < 30 ? 'Medium' : 'High'} risk
@@ -378,7 +378,7 @@ export function PolymarketComparison({
             onClick={() => setShowAll(true)}
             className="w-full mt-4 py-2 text-purple-400 hover:text-purple-300 text-sm transition-colors"
           >
-            Show {hiddenCount} more {hiddenCount === 1 ? labels.itemLabel : labels.unit} ▾
+            Show {hiddenCount} more {hiddenCount === 1 ? labels.itemLabel : labels.unit} +
           </button>
         )}
         {showAll && (
@@ -386,7 +386,7 @@ export function PolymarketComparison({
             onClick={() => setShowAll(false)}
             className="w-full mt-4 py-2 text-purple-400 hover:text-purple-300 text-sm transition-colors"
           >
-            ▴ Show less
+            - Show less
           </button>
         )}
 
