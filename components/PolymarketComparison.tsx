@@ -392,7 +392,7 @@ export function PolymarketComparison({
 
         {topOutcome && (
           <div className="mt-5 p-4 bg-purple-900/20 rounded-lg border border-purple-500/30">
-            <div className="text-xs text-purple-300 font-semibold mb-1">🤖 AI picks</div>
+            <div className="text-xs text-purple-300 font-semibold mb-1">AI picks</div>
             <div className="text-sm text-white">
               <strong>{topOutcome.name}</strong>
               {' - '}{labels.aiPickSuffix(topOutcome.name, topOutcome.edge)}
