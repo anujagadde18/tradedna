@@ -150,16 +150,13 @@ function ScoresPageContent() {
 
   const eventTitle = (() => {
     try {
-      const slashIdx = event.indexOf('polymarket.com/event/');
-      const match = slashIdx >= 0 ? [null, event.slice(slashIdx + 21).split('/')[0].split('?')[0]] : null;
-      if (match) {
-        const skipWords = ['the', 'of', 'and', 'for', 'to', 'a', 'an', 'in', 'by', 'at', 'with', 'will', 'be'];
-        return match[1].split('-').join(' ').split(' ').map((word: string, i: number) =>
-          i === 0 || !skipWords.includes(word.toLowerCase()) ? word.charAt(0).toUpperCase() + word.slice(1) : word
-        ).join(' ');
+      const idx = event.indexOf('polymarket.com/event/');
+      if (idx >= 0) {
+        const slug = event.slice(idx + 21).split('/')[0].split('?')[0];
+        return slug.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
       }
     } catch {}
-    return event;
+    return event.length > 80 ? event.slice(0, 80) : event;
   })();
 
   const unitLabel = outcomeType === 'dates' ? 'dates' : outcomeType === 'candidates' ? 'candidates' : outcomeType === 'companies' ? 'companies' : outcomeType === 'prices' ? 'price levels' : 'outcomes';
