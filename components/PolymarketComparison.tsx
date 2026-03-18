@@ -353,7 +353,7 @@ export function PolymarketComparison({
                       <span className="text-white font-semibold">{outcome.odds}%</span>
                       {weekChangeNum !== 0 && (
                         <span className={`text-xs ${weekChangeNum > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {weekChangeNum > 0 ? '▲' : '▼'}{Math.abs(weekChangeNum)}%
+                          {weekChangeNum > 0 ? 'up' : 'down'}{Math.abs(weekChangeNum)}%
                         </span>
                       )}
                     </div>
