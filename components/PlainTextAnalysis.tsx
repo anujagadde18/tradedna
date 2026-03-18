@@ -226,9 +226,9 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
           {/* Weight breakdown */}
           <div className="grid grid-cols-3 gap-2 mb-4">
             {[
-              { label: '📰 News',    val: weights.news,      color: '#a855f7' },
-              { label: '💬 Social',  val: weights.social,    color: '#3b82f6' },
-              { label: '📊 Market',  val: weights.technical, color: '#22c55e' },
+              { label: 'News',    val: weights.news,      color: '#a855f7' },
+              { label: 'Social',  val: weights.social,    color: '#3b82f6' },
+              { label: 'Market',  val: weights.technical, color: '#22c55e' },
             ].map(w => (
               <div key={w.label} className="bg-gray-800/50 rounded-lg p-2 text-center">
                 <div className="text-xs text-gray-400">{w.label}</div>
@@ -239,7 +239,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
 
           {/* Limited accuracy notice */}
           <div className="p-3 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
-            <div className="text-xs text-yellow-300 font-medium mb-1">⚠ General signals only</div>
+            <div className="text-xs text-yellow-300 font-medium mb-1">! General signals only</div>
             <div className="text-xs text-yellow-200/70">
               For much more accurate analysis with live betting odds, paste a Polymarket URL above.
             </div>
@@ -264,7 +264,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
               {/* News sources */}
               <div>
                 <div className="text-xs text-purple-400 font-semibold uppercase tracking-wide mb-2">
-                  📰 News Sources - {weights.news}% weight
+                  News Sources - {weights.news}% weight
                 </div>
                 <div className="space-y-2">
                   {sources.news.map((s, i) => (
@@ -278,7 +278,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
                       </div>
                       <a href={s.url} target="_blank" rel="noopener noreferrer"
                         className="text-xs text-gray-600 hover:text-purple-400 transition-colors shrink-0">
-                        ↗
+                        ->
                       </a>
                     </div>
                   ))}
@@ -288,7 +288,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
               {/* Social sources */}
               <div>
                 <div className="text-xs text-blue-400 font-semibold uppercase tracking-wide mb-2">
-                  💬 Social Sources - {weights.social}% weight
+                  Social Sources - {weights.social}% weight
                 </div>
                 <div className="space-y-2">
                   {sources.social.map((s, i) => (
@@ -302,7 +302,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
                       </div>
                       <a href={s.url} target="_blank" rel="noopener noreferrer"
                         className="text-xs text-gray-600 hover:text-blue-400 transition-colors shrink-0">
-                        ↗
+                        ->
                       </a>
                     </div>
                   ))}
@@ -312,7 +312,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
               {/* Market sources */}
               <div>
                 <div className="text-xs text-green-400 font-semibold uppercase tracking-wide mb-2">
-                  📊 Market Sources - {weights.technical}% weight
+                  Market Sources - {weights.technical}% weight
                 </div>
                 <div className="space-y-2">
                   {sources.market.map((s, i) => (
@@ -326,7 +326,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
                       </div>
                       <a href={s.url} target="_blank" rel="noopener noreferrer"
                         className="text-xs text-gray-600 hover:text-green-400 transition-colors shrink-0">
-                        ↗
+                        ->
                       </a>
                     </div>
                   ))}
@@ -384,7 +384,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
                     </div>
                   </div>
                   <div className="text-xs text-purple-400 font-medium shrink-0 group-hover:text-purple-300">
-                    Analyze →
+                    Analyze ->
                   </div>
                 </div>
               </button>
@@ -403,7 +403,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
             rel="noopener noreferrer"
             className="text-xs text-gray-500 hover:text-purple-400 transition-colors"
           >
-            Browse all markets on Polymarket →
+            Browse all markets on Polymarket ->
           </a>
         </div>
       </div>
