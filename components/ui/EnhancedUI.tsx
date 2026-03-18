@@ -47,7 +47,7 @@ export function ConfidenceMeter({ yesPercent, noPercent }: { yesPercent: number;
           NO {noPercent}%
         </div>
         <div style={{ fontSize: 11, color: "#6b7280" }}>
-           Neutral (50%) ->
+           Neutral (50%)
         </div>
         <div style={{ fontSize: 13, fontWeight: 600, color: "#10b981" }}>
           YES {yesPercent}%

@@ -20,7 +20,7 @@ export function extractEventFromUrl(input: string): string | null {
     const eventMatch = pathname.match(/\/(event|market)\/([^/?]+)/);
     if (eventMatch) {
       const slug = eventMatch[2];
-      // Convert slug to readable text: "will-trump-win-2024" -> "Will Trump win 2024"
+      // Convert slug to readable text: "will-trump-win-2024" "Will Trump win 2024"
       return slug
         .split('-')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))

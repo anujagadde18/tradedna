@@ -158,7 +158,7 @@ function EventCard({ event, rank, onClick }: { event: PopularEvent; rank: number
           fontWeight: 600,
           color: "#60a5fa"
         }}>
-          Analyze ->
+          Analyze
         </div>
       </div>
     </div>
