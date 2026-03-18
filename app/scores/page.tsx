@@ -47,12 +47,12 @@ function generatePositiveSignals(
     : 'outcomes';
 
   if (outcomeType === 'prices') {
-    signals.push(`Most uncertain level — bettors are split on whether ${name} will be hit`);
+    signals.push('Most uncertain level - bettors are split on whether ' + name + ' will be hit');
     if (weekChange !== 0) signals.push(weekChange > 0 ? 'Probability trending upward this week' : 'Probability trending downward this week');
     return signals;
   }
   if (rank === 0) signals.push(`Highest probability of all ${total} ${unitLabel}`);
-  if (weekChange > 5) signals.push(`Gaining fast — up ${weekChange}% just this week`);
+  if (weekChange > 5) signals.push('Gaining fast - up ' + weekChange + '% just this week');
   else if (weekChange > 0) signals.push('Momentum is trending upward this week');
   if (edge > 5) signals.push('AI signals strongly favor this outcome');
   else if (edge > 0) signals.push('AI signals are bullish on this outcome');
@@ -216,12 +216,12 @@ function ScoresPageContent() {
 
   const riskDescription = (() => {
     if (marketType === 'categorical') {
-      if (outcomeType === 'prices')     return `${categoricalOutcomes.length} price levels tracked. ${topOutcome.odds}% chance the top level is hit — ${100 - topOutcome.odds}% chance it lands elsewhere.`;
+      if (outcomeType === 'prices')     return categoricalOutcomes.length + ' price levels tracked. ' + topOutcome.odds + '% chance the top level is hit - ' + (100 - topOutcome.odds) + '% chance it lands elsewhere.';
       if (outcomeType === 'dates')      return `${categoricalOutcomes.length} dates are possible. ${topOutcome.odds}% means ${100 - topOutcome.odds}% chance it happens on a different date.`;
       if (outcomeType === 'candidates') return `${categoricalOutcomes.length} candidates are running. ${topOutcome.odds}% means ${100 - topOutcome.odds}% chance someone else wins.`;
       return `${categoricalOutcomes.length} ${unitLabel} are competing. ${topOutcome.odds}% means ${100 - topOutcome.odds}% chance a different outcome wins.`;
     }
-    return `Market shows ${polymarketOdds ?? '—'}% probability. Review all signals before deciding.`;
+    return `Market shows ${polymarketOdds ?? '--'}% probability. Review all signals before deciding.`;
   })();
 
   const isPlainTextQuery = hasPolymarketUrl === false;
@@ -237,14 +237,14 @@ function ScoresPageContent() {
         {/* NAV */}
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => router.push('/')} className="text-gray-400 hover:text-white transition-colors text-sm">
-            ← Back
+            &larr; Back
           </button>
           <div className="flex items-center gap-4">
             <button onClick={() => router.push('/journal')} className="text-gray-400 hover:text-white text-sm">
               📒 Journal
             </button>
             <button onClick={() => router.push('/profile')} className="text-gray-400 hover:text-white text-sm">
-              View Profile →
+              View Profile &rarr;
             </button>
           </div>
         </div>
@@ -438,7 +438,7 @@ function ScoresPageContent() {
                   <>
                     <div className="text-2xl font-bold text-white mb-1">{topOutcome.name}</div>
                     <div className="text-sm text-gray-400 mb-4">
-                      {outcomeType === 'prices' ? 'Most uncertain price level — watch this one' : 'Most likely to win, based on AI analysis'}
+                      {outcomeType === 'prices' ? 'Most uncertain price level - watch this one' : 'Most likely to win, based on AI analysis'}
                     </div>
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between text-sm">
@@ -449,7 +449,7 @@ function ScoresPageContent() {
                         <span className="text-gray-400">AI thinks</span>
                         <span className="text-purple-400 font-medium">
                           {topOutcome.aiConfidence}% chance
-                          {topOutcome.aiConfidence > topOutcome.odds ? ' — more bullish' : ' — more cautious'}
+                          {topOutcome.aiConfidence > topOutcome.odds ? ' - more bullish' : ' - more cautious'}
                         </span>
                       </div>
                       {(topOutcome.weekChange || 0) !== 0 && (
@@ -469,7 +469,7 @@ function ScoresPageContent() {
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-400">Bettors say</span>
-                        <span className="text-white font-medium">{polymarketOdds ?? '—'}% chance</span>
+                        <span className="text-white font-medium">{polymarketOdds ?? '--'}% chance</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-400">AI thinks</span>
@@ -564,7 +564,7 @@ function ScoresPageContent() {
                     {[
                       { label: '📰 News sentiment',     value: Math.round((polymarketOdds || 50) * (weights.news / 100)),      color: 'bg-yellow-500', desc: 'Analyzes sentiment across major outlets' },
                       { label: '💬 Community signal',   value: Math.round((polymarketOdds || 50) * (weights.social / 100)),    color: 'bg-green-500',  desc: 'Measures public discussion trends' },
-                      { label: '📊 Market probability', value: Math.round((polymarketOdds || 50) * (weights.technical / 100)), color: 'bg-blue-500',   desc: marketType === 'categorical' ? `${topOutcome.name} leads at ${topOutcome.odds}%` : `Live odds: ${polymarketOdds ?? '—'}%` },
+                      { label: '📊 Market probability', value: Math.round((polymarketOdds || 50) * (weights.technical / 100)), color: 'bg-blue-500',   desc: marketType === 'categorical' ? `${topOutcome.name} leads at ${topOutcome.odds}%` : `Live odds: ${polymarketOdds ?? '--'}%` },
                     ].map(s => (
                       <div key={s.label}>
                         <div className="flex justify-between text-xs mb-1">
@@ -604,7 +604,7 @@ function ScoresPageContent() {
                       <>
                         <div className="flex items-start gap-2 text-xs text-gray-300 mb-1">
                           <span className="text-orange-400">⚠</span>
-                          Highly competitive — {categoricalOutcomes.length} active {unitLabel}
+                          Highly competitive - {categoricalOutcomes.length} active {unitLabel}
                         </div>
                         <div className="flex items-start gap-2 text-xs text-gray-300 mb-1">
                           <span className="text-orange-400">⚠</span>
