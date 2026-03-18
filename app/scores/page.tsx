@@ -407,18 +407,21 @@ function ScoresPageContent() {
         {/* MAIN TWO COLUMN LAYOUT */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-          {/* LEFT */}
-          <div className="lg:col-span-3">
-            <PolymarketComparison
-              userQuestion={event}
-              aiPrediction={intelligence?.confidence || 0}
-              onDataReceived={handlePolymarketData}
-              onTradeReady={handleTradeReady}
-            />
-          </div>
+          {/* LEFT — hidden for plain text queries since PolymarketComparison returns null */}
+          {!isPlainTextQuery && (
+            <div className="lg:col-span-3">
+              <PolymarketComparison
+                userQuestion={event}
+                aiPrediction={intelligence?.confidence || 0}
+                onDataReceived={handlePolymarketData}
+                onTradeReady={handleTradeReady}
+              />
+            </div>
+          )}
 
-          {/* RIGHT */}
-          <div className="lg:col-span-2 space-y-4">
+          {/* RIGHT — full width for plain text, 2/5 for Polymarket URL */}
+          <div className={isPlainTextQuery ? "lg:col-span-5 max-w-2xl mx-auto w-full" : "lg:col-span-2"} style={{alignSelf: 'start'}}>
+            <div className="space-y-4">
 
             {isPlainTextQuery ? (
               <PlainTextAnalysis
