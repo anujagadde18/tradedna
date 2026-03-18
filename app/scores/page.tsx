@@ -519,6 +519,7 @@ function ScoresPageContent() {
 
           </div>
         </div>
+        </div>
 
         <div className="mt-8 text-center text-xs text-gray-600">
           Not financial advice. Research purposes only.
