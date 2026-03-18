@@ -420,8 +420,7 @@ function ScoresPageContent() {
           )}
 
           {/* RIGHT — full width for plain text, 2/5 for Polymarket URL */}
-          <div className={isPlainTextQuery ? "lg:col-span-5 max-w-2xl mx-auto w-full" : "lg:col-span-2"} style={{alignSelf: 'start'}}>
-            <div className="space-y-4">
+          <div className={isPlainTextQuery ? "lg:col-span-5 max-w-2xl mx-auto w-full space-y-4" : "lg:col-span-2 space-y-4"}>
 
             {isPlainTextQuery ? (
               <PlainTextAnalysis
@@ -634,6 +633,7 @@ function ScoresPageContent() {
 
           </div>
         </div>
+      </div>
 
         <div className="mt-8 text-center text-xs text-gray-600">
           Not financial advice · Research purposes only
