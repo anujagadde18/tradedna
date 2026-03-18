@@ -378,7 +378,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
                     </div>
                   </div>
                   <div className="text-xs text-purple-400 font-medium shrink-0 group-hover:text-purple-300">
-                    Analyze ->
+                    Analyze
                   </div>
                 </div>
               </button>
