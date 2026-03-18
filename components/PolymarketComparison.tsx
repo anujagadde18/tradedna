@@ -246,23 +246,9 @@ export function PolymarketComparison({
     );
   }
 
-  // ── NO URL ──
+  // ── NO URL — return null, PlainTextAnalysis handles the right panel ──
   if (error === 'no_url') {
-    return (
-      <div className="border border-gray-700 rounded-xl p-6">
-        <div className="text-sm text-gray-400 mb-3 font-medium">No live market data</div>
-        <p className="text-xs text-gray-500 leading-relaxed">
-          This question doesn&apos;t have a Polymarket URL, so live market odds aren&apos;t available.
-          The AI verdict on the right is based on general signals only — not real betting data.
-        </p>
-        <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
-          <p className="text-xs text-yellow-300">
-            💡 For more accurate analysis, paste a Polymarket URL directly from{' '}
-            <span className="text-yellow-200 underline">polymarket.com</span>
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // ── ERROR ──
