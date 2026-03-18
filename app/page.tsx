@@ -228,7 +228,7 @@ export default function HomePage() {
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-purple-400 font-semibold">{example.category}</span>
-                    <span className="text-gray-500 group-hover:text-purple-400 transition-colors">-></span>
+                    <span className="text-gray-500 group-hover:text-purple-400 transition-colors">&gt;</span>
                   </div>
                   <div className="text-sm text-gray-300 group-hover:text-white transition-colors">
                     {example.display}
@@ -286,7 +286,7 @@ export default function HomePage() {
             <h3 className="text-lg font-bold mb-2 text-white">Trade Journal</h3>
             <p className="text-gray-400 text-sm">Every trade logged with the AI conviction snapshot. Track your win rate when you followed the edge.</p>
             <button onClick={() => router.push('/journal')} className="mt-3 text-xs text-orange-400 hover:text-orange-300 transition-colors">
-              View journal ->
+              View journal
             </button>
           </div>
         </div>

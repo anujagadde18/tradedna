@@ -153,7 +153,7 @@ function EventContent() {
               boxShadow: event.trim() ? "0 4px 14px rgba(147,51,234,0.4)" : "none",
             }}
           >
-            Analyze Event ->
+            Analyze Event
           </button>
         </form>
 

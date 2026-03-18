@@ -277,9 +277,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
                         <div className="text-xs text-gray-500 mt-0.5">{s.signal}</div>
                       </div>
                       <a href={s.url} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-gray-600 hover:text-purple-400 transition-colors shrink-0">
-                        ->
-                      </a>
+                        className="text-xs text-gray-600 hover:text-purple-400 transition-colors shrink-0">&gt;</a>
                     </div>
                   ))}
                 </div>
@@ -301,9 +299,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
                         <div className="text-xs text-gray-500 mt-0.5">{s.signal}</div>
                       </div>
                       <a href={s.url} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-gray-600 hover:text-blue-400 transition-colors shrink-0">
-                        ->
-                      </a>
+                        className="text-xs text-gray-600 hover:text-blue-400 transition-colors shrink-0">&gt;</a>
                     </div>
                   ))}
                 </div>
@@ -325,9 +321,7 @@ export function PlainTextAnalysis({ question, confidence, direction, weights, ac
                         <div className="text-xs text-gray-500 mt-0.5">{s.signal}</div>
                       </div>
                       <a href={s.url} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-gray-600 hover:text-green-400 transition-colors shrink-0">
-                        ->
-                      </a>
+                        className="text-xs text-gray-600 hover:text-green-400 transition-colors shrink-0">&gt;</a>
                     </div>
                   ))}
                 </div>
