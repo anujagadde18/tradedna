@@ -226,9 +226,6 @@ function ScoresPageContent() {
 
   const isPlainTextQuery = hasPolymarketUrl === false;
 
-  const binaryAiConfidence = intelligence?.confidence || 0;
-  const binaryEdge = binaryAiConfidence - (polymarketOdds || 0);
-
   // For binary markets, calculate AI confidence and edge properly
   const binaryAiConfidence = intelligence?.confidence || 0;
   const binaryEdge = binaryAiConfidence - (polymarketOdds || 0);
@@ -554,7 +551,7 @@ function ScoresPageContent() {
             <button onClick={() => setShowDeep(!showDeep)}
               className="w-full border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-400 flex justify-between items-center hover:bg-gray-900 transition-colors">
               <span>🔍 See full signal breakdown</span>
-              <span>{showDeep ? '▴' : '▾'}</span>
+              <span>{showDeep ? '+' : '-'}</span>
             </button>
 
             {showDeep && (
