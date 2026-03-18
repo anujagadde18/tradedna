@@ -75,22 +75,22 @@ export default function HomePage() {
 
   const exampleQueries = [
     {
-      text:     'https://polymarket.com/event/which-company-has-top-ai-model-end-of-june-style-control-on',
+      text:     'Which company has the top AI model by June 2026?',
       display:  'Which company has the top AI model by June 2026?',
       category: 'Technology',
     },
     {
-      text:     'https://polymarket.com/event/us-x-iran-ceasefire-by',
+      text:     'Will there be a US-Iran ceasefire?',
       display:  'Will there be a US-Iran ceasefire?',
       category: 'Geopolitics',
     },
     {
-      text:     'https://polymarket.com/event/will-bitcoin-hit-100k-before-april',
+      text:     'Will Bitcoin hit $100k?',
       display:  'Will Bitcoin hit $100k before April?',
       category: 'Crypto',
     },
     {
-      text:     'https://polymarket.com/event/fed-rate-cut-may-2025',
+      text:     'Will the Fed cut rates in May?',
       display:  'Will the Fed cut rates in May?',
       category: 'Economics',
     },
@@ -215,6 +215,13 @@ export default function HomePage() {
                   onClick={() => {
                     setQuery(example.text);
                     setShowResults(false);
+                    // Auto-submit after short delay so search kicks in
+                    setTimeout(() => {
+                      if (example.text) {
+                        setIsAnalyzing(true);
+                        router.push(`/scores?event=${encodeURIComponent(example.text)}`);
+                      }
+                    }, 100);
                   }}
                   className="p-4 bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-purple-500/50
                            rounded-xl text-left transition-all group"
