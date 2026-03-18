@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PolymarketComparison } from '@/components/PolymarketComparison';
 import { TradePanel } from '@/components/TradePanel';
+import { PlainTextAnalysis } from '@/components/PlainTextAnalysis';
 import { calculateIntelligence } from '@/lib/intelligenceEngine';
 
 const MARKETPLACE = {
@@ -420,24 +421,13 @@ function ScoresPageContent() {
           <div className="lg:col-span-2 space-y-4">
 
             {isPlainTextQuery ? (
-              <div className="border border-gray-700 rounded-xl p-5">
-                <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">AI verdict</div>
-                <div className="text-sm text-gray-400 leading-relaxed mb-4">
-                  No live Polymarket data for this question. The analysis below is based on general AI signals only — not real betting odds.
-                </div>
-                {intelligence && (
-                  <>
-                    <div className="text-2xl font-bold text-white mb-1">{intelligence.direction}</div>
-                    <div className="text-sm text-gray-400 mb-4">General AI signal — no market data</div>
-                    <div className="p-3 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
-                      <div className="text-xs text-yellow-300 font-medium mb-1">⚠ Limited accuracy</div>
-                      <div className="text-xs text-yellow-200/70">
-                        Paste a real Polymarket URL for a much more accurate analysis with live betting odds.
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+              <PlainTextAnalysis
+                question={event}
+                confidence={intelligence?.confidence || 50}
+                direction={intelligence?.direction || 'YES'}
+                weights={weights}
+                activeSources={activeSources}
+              />
             ) : (
               <div className="border border-gray-700 rounded-xl p-5">
                 <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">AI verdict</div>
