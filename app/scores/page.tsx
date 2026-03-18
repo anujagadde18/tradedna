@@ -237,14 +237,14 @@ function ScoresPageContent() {
         {/* NAV */}
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => router.push('/')} className="text-gray-400 hover:text-white transition-colors text-sm">
-            &larr; Back
+            Back
           </button>
           <div className="flex items-center gap-4">
             <button onClick={() => router.push('/journal')} className="text-gray-400 hover:text-white text-sm">
               📒 Journal
             </button>
             <button onClick={() => router.push('/profile')} className="text-gray-400 hover:text-white text-sm">
-              View Profile &rarr;
+              View Profile
             </button>
           </div>
         </div>
@@ -404,10 +404,10 @@ function ScoresPageContent() {
           </div>
         )}
 
-        {/* MAIN LAYOUT */}
-        <div className={isPlainTextQuery ? "max-w-2xl mx-auto w-full" : "grid grid-cols-1 lg:grid-cols-5 gap-6"}>
+        {/* MAIN TWO COLUMN LAYOUT */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-          {/* LEFT — hidden for plain text */}
+          {/* LEFT - hidden for plain text */}
           {!isPlainTextQuery && (
             <div className="lg:col-span-3">
               <PolymarketComparison
@@ -420,7 +420,7 @@ function ScoresPageContent() {
           )}
 
           {/* RIGHT */}
-          <div className={isPlainTextQuery ? "space-y-4" : "lg:col-span-2 space-y-4"}>
+          <div className={isPlainTextQuery ? "lg:col-span-5 max-w-2xl mx-auto w-full space-y-4" : "lg:col-span-2 space-y-4"}>
 
             {isPlainTextQuery ? (
               <PlainTextAnalysis
@@ -438,7 +438,7 @@ function ScoresPageContent() {
                   <>
                     <div className="text-2xl font-bold text-white mb-1">{topOutcome.name}</div>
                     <div className="text-sm text-gray-400 mb-4">
-                      {outcomeType === 'prices' ? 'Most uncertain price level - watch this one' : 'Most likely to win, based on AI analysis'}
+                      {outcomeType === 'prices' ? 'Most uncertain price level' : 'Most likely to win, based on AI analysis'}
                     </div>
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between text-sm">
@@ -449,14 +449,14 @@ function ScoresPageContent() {
                         <span className="text-gray-400">AI thinks</span>
                         <span className="text-purple-400 font-medium">
                           {topOutcome.aiConfidence}% chance
-                          {topOutcome.aiConfidence > topOutcome.odds ? ' - more bullish' : ' - more cautious'}
+                          {topOutcome.aiConfidence > topOutcome.odds ? ' (more bullish)' : ' (more cautious)'}
                         </span>
                       </div>
                       {(topOutcome.weekChange || 0) !== 0 && (
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-400">Trending</span>
                           <span className={(topOutcome.weekChange || 0) > 0 ? 'text-green-400' : 'text-red-400'}>
-                            {(topOutcome.weekChange || 0) > 0 ? 'up' : 'down'} {Math.abs(topOutcome.weekChange || 0)}% this week
+                            {(topOutcome.weekChange || 0) > 0 ? 'up' : 'down'}{Math.abs(topOutcome.weekChange || 0)}% this week
                           </span>
                         </div>
                       )}
@@ -623,7 +623,7 @@ function ScoresPageContent() {
                   <div className="text-sm font-medium text-white mb-2">Why this prediction?</div>
                   <p className="text-xs text-gray-300 leading-relaxed">
                     {marketType === 'categorical'
-                      ? `Analysis across news (${weights.news}%), social (${weights.social}%), and market data (${weights.technical}%). ${topOutcome.name} leads with ${topOutcome.odds}% market probability across ${categoricalOutcomes.length} ${unitLabel}. Weekly momentum: ${topOutcome.name} ${(topOutcome.weekChange || 0) > 0 ? 'up' : 'down'} ${Math.abs(topOutcome.weekChange || 0)}%. AI signals point to ${topOutcome.name} as highest conviction pick.`
+                      ? `Analysis across news (${weights.news}%), social (${weights.social}%), and market data (${weights.technical}%). ${topOutcome.name} leads with ${topOutcome.odds}% market probability across ${categoricalOutcomes.length} ${unitLabel}. Weekly momentum: ${topOutcome.name} ${(topOutcome.weekChange || 0) > 0 ? 'up' : 'down'}${Math.abs(topOutcome.weekChange || 0)}%. AI signals point to ${topOutcome.name} as highest conviction pick.`
                       : intelligence?.explanation || 'Analysis pending...'
                     }
                   </p>
@@ -634,7 +634,7 @@ function ScoresPageContent() {
           </div>
         </div>
 
-        </div>{/* closes MAIN LAYOUT grid */}
+        </div>{/* end grid */}
 
         <div className="mt-8 text-center text-xs text-gray-600">
           Not financial advice · Research purposes only
