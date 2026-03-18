@@ -150,7 +150,7 @@ function ScoresPageContent() {
 
   const eventTitle = (() => {
     try {
-      const match = event.match(/polymarket\.com\/event\/([^\/\s?#]+)/);
+      const match = event.match(/polymarket.com.event.([^/\s]+)/);
       if (match) {
         const skipWords = ['the', 'of', 'and', 'for', 'to', 'a', 'an', 'in', 'by', 'at', 'with', 'will', 'be'];
         return match[1].replace(/-/g, ' ').split(' ').map((word: string, i: number) =>
