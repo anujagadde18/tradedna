@@ -1,5 +1,6 @@
 'use client';
-import { Suspense, useEffect, useState } from 'react';
+
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PolymarketComparison } from '@/components/PolymarketComparison';
 import { TradePanel } from '@/components/TradePanel';
@@ -14,49 +15,47 @@ interface TradeReadyData {
   topOutcome: { name: string; odds: number; aiConfidence: number; edge: number; tokenId?: string; };
 }
 
-const SOURCES = {
-  news: [
-    { name: 'Reuters', desc: 'Global newswire', url: 'https://reuters.com' },
-    { name: 'Bloomberg', desc: 'Financial news', url: 'https://bloomberg.com' },
-    { name: 'Associated Press', desc: 'Breaking news', url: 'https://apnews.com' },
-    { name: 'BBC News', desc: 'International coverage', url: 'https://bbc.com/news' },
-    { name: 'CoinDesk', desc: 'Crypto and blockchain', url: 'https://coindesk.com' },
-    { name: 'Politico', desc: 'Politics and policy', url: 'https://politico.com' },
-    { name: 'Financial Times', desc: 'Business and finance', url: 'https://ft.com' },
-  ],
-  social: [
-    { name: 'Twitter/X', desc: 'Real-time sentiment', url: 'https://twitter.com' },
-    { name: 'r/politics', desc: 'Political discussion', url: 'https://reddit.com/r/politics' },
-    { name: 'r/investing', desc: 'Investment sentiment', url: 'https://reddit.com/r/investing' },
-    { name: 'r/cryptocurrency', desc: 'Crypto community', url: 'https://reddit.com/r/cryptocurrency' },
-    { name: 'StockTwits', desc: 'Trader sentiment', url: 'https://stocktwits.com' },
-  ],
-  technical: [
-    { name: 'Kalshi', desc: 'Prediction market', url: 'https://kalshi.com' },
-    { name: 'Metaculus', desc: 'Forecasting community', url: 'https://metaculus.com' },
-    { name: 'Manifold', desc: 'Play-money markets', url: 'https://manifold.markets' },
-  ]
-};
-
 function ScoresPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const event = searchParams.get('event') || '';
 
-  const [intel, setIntel] = useState<any>(null);
-  const [odds, setOdds] = useState<number | null>(null);
-  const [mtype, setMtype] = useState<'binary'|'categorical'>('binary');
-  const [outcomes, setOutcomes] = useState<any[]>([]);
-  const [otype, setOtype] = useState('options');
-  const [hasUrl, setHasUrl] = useState<boolean|null>(null);
+  const [intel, setIntel]         = useState<any>(null);
+  const [odds, setOdds]           = useState<number | null>(null);
+  const [mtype, setMtype]         = useState<'binary'|'categorical'>('binary');
+  const [outcomes, setOutcomes]   = useState<any[]>([]);
+  const [otype, setOtype]         = useState('options');
+  const [hasUrl, setHasUrl]       = useState<boolean|null>(null);
   const [tradeData, setTradeData] = useState<TradeReadyData|null>(null);
   const [showSources, setShowSources] = useState(false);
   const [sourceTab, setSourceTab] = useState<'weights'|'marketplace'>('weights');
-  const [mktTab, setMktTab] = useState<'news'|'social'|'technical'>('news');
-  const [showDeep, setShowDeep] = useState(false);
+  const [mktTab, setMktTab]       = useState<'news'|'social'|'technical'>('news');
+  const [showDeep, setShowDeep]   = useState(false);
   const [activeSources, setActiveSources] = useState<any[]>([]);
   const DEFAULT_W = { news: 35, social: 40, technical: 25 };
-  const [weights, setWeights] = useState(DEFAULT_W);
+  const [weights, setWeights]     = useState(DEFAULT_W);
+
+  const SOURCES = {
+    news: [
+      { name: 'Reuters', desc: 'Global newswire', url: 'https://reuters.com' },
+      { name: 'Bloomberg', desc: 'Financial news', url: 'https://bloomberg.com' },
+      { name: 'Associated Press', desc: 'Breaking news', url: 'https://apnews.com' },
+      { name: 'BBC News', desc: 'International coverage', url: 'https://bbc.com/news' },
+      { name: 'CoinDesk', desc: 'Crypto and blockchain', url: 'https://coindesk.com' },
+      { name: 'Politico', desc: 'Politics and policy', url: 'https://politico.com' },
+    ],
+    social: [
+      { name: 'Twitter/X', desc: 'Real-time sentiment', url: 'https://twitter.com' },
+      { name: 'r/politics', desc: 'Political discussion', url: 'https://reddit.com/r/politics' },
+      { name: 'r/investing', desc: 'Investment sentiment', url: 'https://reddit.com/r/investing' },
+      { name: 'r/cryptocurrency', desc: 'Crypto community', url: 'https://reddit.com/r/cryptocurrency' },
+    ],
+    technical: [
+      { name: 'Kalshi', desc: 'Prediction market', url: 'https://kalshi.com' },
+      { name: 'Metaculus', desc: 'Forecasting community', url: 'https://metaculus.com' },
+      { name: 'Manifold', desc: 'Play-money markets', url: 'https://manifold.markets' },
+    ],
+  };
 
   useEffect(() => {
     setHasUrl(event.includes('polymarket.com/event/'));
@@ -87,15 +86,15 @@ function ScoresPageContent() {
   };
 
   const isActive = (name: string) => activeSources.some(s => s.name === name);
-  const toggle = (source: any, type: string) => {
+  const toggle   = (source: any, type: string) => {
     if (isActive(source.name)) setActiveSources(activeSources.filter(s => s.name !== source.name));
     else setActiveSources([...activeSources, { ...source, type }]);
   };
 
-  const isPlain = hasUrl === false;
-  const top = outcomes[0] || { name: '', odds: 0, aiConfidence: 0, edge: 0, weekChange: 0 };
-  const unitLabel = otype === 'candidates' ? 'candidates' : otype === 'companies' ? 'companies' : otype === 'dates' ? 'dates' : 'outcomes';
-  const binaryAI = intel?.confidence || 0;
+  const isPlain    = hasUrl === false;
+  const top        = outcomes[0] || { name: '', odds: 0, aiConfidence: 0, edge: 0, weekChange: 0 };
+  const unitLabel  = otype === 'candidates' ? 'candidates' : otype === 'companies' ? 'companies' : otype === 'dates' ? 'dates' : 'outcomes';
+  const binaryAI   = intel?.confidence || 0;
   const binaryEdge = binaryAI - (odds || 0);
 
   const eventTitle = (() => {
@@ -104,117 +103,111 @@ function ScoresPageContent() {
       const slug = event.slice(idx + 21).split('/')[0].split('?')[0];
       return slug.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     }
-    return event.length > 80 ? event.slice(0, 80) : event;
+    return event.length > 100 ? event.slice(0, 100) : event;
   })();
 
+  const edgeVal    = mtype === 'categorical' ? (top.edge || 0) : binaryEdge;
+  const edgeColor  = edgeVal >= 5 ? 'text-green-400' : edgeVal >= 2 ? 'text-yellow-400' : edgeVal >= -2 ? 'text-gray-400' : 'text-red-400';
+  const edgeLabel  = edgeVal >= 10 ? 'Very High' : edgeVal >= 5 ? 'High' : edgeVal >= 2 ? 'Medium' : edgeVal >= -2 ? 'Low' : 'Very Low';
+  const edgeBg     = edgeVal >= 5 ? 'bg-green-900/20 border-green-700/30' : edgeVal >= 2 ? 'bg-yellow-900/20 border-yellow-700/30' : 'bg-gray-900/50 border-gray-700/50';
+
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-black text-white">
 
-        <div className="flex justify-between mb-6">
-          <button onClick={() => router.push('/')} className="text-gray-400 hover:text-white text-sm">Back</button>
-          <div className="flex gap-4">
-            <button onClick={() => router.push('/journal')} className="text-gray-400 hover:text-white text-sm">Journal</button>
-            <button onClick={() => router.push('/profile')} className="text-gray-400 hover:text-white text-sm">View Profile</button>
+      {/* Top nav */}
+      <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-800/50">
+        <button onClick={() => router.push('/')} className="text-gray-500 hover:text-white text-sm transition-colors">
+          Back
+        </button>
+        <div className="text-white font-bold text-sm tracking-tight">PlayPicks AI</div>
+        <div className="flex items-center gap-4">
+          <button onClick={runAnalysis} className="text-gray-500 hover:text-white text-sm transition-colors">Refresh</button>
+          <button onClick={() => setShowSources(!showSources)}
+            className={'text-sm font-medium px-3 py-1.5 rounded-lg transition-all ' + (showSources ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white bg-gray-800/50')}>
+            Tune sources
+          </button>
+          <button onClick={() => router.push('/journal')} className="text-gray-500 hover:text-white text-sm transition-colors">Journal</button>
+        </div>
+      </nav>
+
+      {/* Market banner */}
+      <div className="border-b border-gray-800/50 px-6 py-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-xs text-gray-600 uppercase tracking-widest font-semibold mb-1">Analyzing</div>
+          <div className="text-white font-bold text-lg leading-snug">{eventTitle}</div>
+          <div className="flex items-center gap-3 mt-1.5">
+            <span className="text-xs text-gray-600">Polymarket</span>
+            {outcomes.length > 0 && (
+              <span className="text-xs text-gray-700">{outcomes.length} competing {unitLabel}</span>
+            )}
+            {isPlain && <span className="text-xs text-yellow-600/70">No live market URL</span>}
           </div>
         </div>
+      </div>
 
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold mb-1">PlayPicks AI</h1>
-            <p className="text-gray-400 text-sm">AI-powered prediction analysis</p>
-          </div>
-          <div className="flex gap-2 flex-wrap justify-end">
-            <button onClick={() => setShowSources(!showSources)} className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-semibold">
-              Tune AI sources
-            </button>
-            <button onClick={runAnalysis} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-semibold">
-              Refresh results
-            </button>
-            <button onClick={() => {
-              try {
-                const saved = JSON.parse(localStorage.getItem('savedAnalyses') || '[]');
-                saved.unshift({ id: Date.now(), event, type: mtype, timestamp: Date.now(), odds });
-                localStorage.setItem('savedAnalyses', JSON.stringify(saved));
-                alert('Saved!');
-              } catch {}
-            }} className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-sm font-semibold">
-              Save
-            </button>
-          </div>
-        </div>
-
-        <div className="mb-6 bg-gray-900 border border-gray-700 rounded-xl p-4">
-          <div className="text-xs text-gray-400 mb-1">Analyzing prediction market</div>
-          <div className="text-white font-semibold text-sm">{eventTitle}</div>
-          <div className="text-xs text-gray-500 mt-1">
-            Source: Polymarket
-            {outcomes.length > 0 ? ' - ' + outcomes.length + ' competing ' + unitLabel : ''}
-            {isPlain ? ' - No live market URL' : ''}
-          </div>
-        </div>
-
-        {showSources && (
-          <div className="mb-6 border border-purple-500/30 rounded-xl p-6 bg-purple-900/10">
+      {/* Tune sources panel */}
+      {showSources && (
+        <div className="border-b border-purple-800/30 bg-purple-950/20 px-6 py-6">
+          <div className="max-w-6xl mx-auto">
             <div className="flex gap-2 mb-6">
-              <button onClick={() => setSourceTab('weights')} className={'px-4 py-2 rounded-lg text-sm font-semibold ' + (sourceTab === 'weights' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400')}>
-                Adjust weights
-              </button>
-              <button onClick={() => setSourceTab('marketplace')} className={'px-4 py-2 rounded-lg text-sm font-semibold ' + (sourceTab === 'marketplace' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400')}>
-                {'Add sources' + (activeSources.length > 0 ? ' (' + activeSources.length + ' active)' : '')}
-              </button>
+              {(['weights', 'marketplace'] as const).map(tab => (
+                <button key={tab} onClick={() => setSourceTab(tab)}
+                  className={'px-4 py-2 rounded-lg text-sm font-semibold transition-all ' + (sourceTab === tab ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700')}>
+                  {tab === 'weights' ? 'Adjust weights' : 'Add sources' + (activeSources.length > 0 ? ' (' + activeSources.length + ')' : '')}
+                </button>
+              ))}
             </div>
+
             {sourceTab === 'weights' && (
-              <div className="space-y-6">
-                <p className="text-sm text-gray-400">Control how much each signal type influences the AI prediction.</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
-                  { key: 'news', label: 'News sources', desc: 'Reuters, Bloomberg, AP News...' },
-                  { key: 'social', label: 'Social sources', desc: 'Twitter/X, Reddit, StockTwits...' },
-                  { key: 'technical', label: 'Market probability', desc: 'Polymarket, Kalshi, Metaculus...' },
+                  { key: 'news', label: 'News', desc: 'Reuters, Bloomberg, AP...' },
+                  { key: 'social', label: 'Social', desc: 'Twitter/X, Reddit...' },
+                  { key: 'technical', label: 'Market probability', desc: 'Polymarket, Kalshi...' },
                 ].map(({ key, label, desc }) => (
-                  <div key={key}>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-gray-300 text-sm">{label}</span>
-                      <span className="text-purple-400 font-bold">{weights[key as keyof typeof weights]}%</span>
+                  <div key={key} className="bg-gray-900/50 rounded-xl p-4">
+                    <div className="flex justify-between mb-3">
+                      <span className="text-white text-sm font-medium">{label}</span>
+                      <span className="text-purple-400 font-black text-lg">{weights[key as keyof typeof weights]}%</span>
                     </div>
                     <input type="range" min="0" max="100" value={weights[key as keyof typeof weights]}
                       onChange={e => handleWeightChange(key, parseInt(e.target.value))}
-                      className="w-full accent-purple-500" />
-                    <p className="text-xs text-gray-500 mt-1">{desc}</p>
+                      className="w-full accent-purple-500 mb-2" />
+                    <p className="text-xs text-gray-600">{desc}</p>
                   </div>
                 ))}
-                <div className="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
-                  <span className="text-gray-400 text-sm">Total</span>
-                  <span className={'font-bold text-sm ' + (weights.news + weights.social + weights.technical === 100 ? 'text-green-400' : 'text-red-400')}>
-                    {weights.news + weights.social + weights.technical}%
-                  </span>
-                </div>
-                <div className="flex gap-3">
-                  <button onClick={() => setWeights(DEFAULT_W)} className="flex-1 bg-gray-700 text-gray-300 py-2 rounded-lg text-sm">Reset to default</button>
-                  <button onClick={() => { runAnalysis(); setShowSources(false); }} className="flex-1 bg-purple-600 text-white py-2 rounded-lg text-sm">Apply and refresh</button>
+                <div className="md:col-span-3 flex gap-3">
+                  <button onClick={() => setWeights(DEFAULT_W)} className="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700">
+                    Reset defaults
+                  </button>
+                  <button onClick={() => { runAnalysis(); setShowSources(false); }} className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-500">
+                    Apply and refresh
+                  </button>
                 </div>
               </div>
             )}
+
             {sourceTab === 'marketplace' && (
               <div>
                 <div className="flex gap-2 mb-4">
                   {(['news', 'social', 'technical'] as const).map(cat => (
                     <button key={cat} onClick={() => setMktTab(cat)}
-                      className={'px-3 py-1.5 rounded-lg text-xs font-semibold ' + (mktTab === cat ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400')}>
-                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      className={'px-3 py-1.5 rounded-lg text-xs font-semibold ' + (mktTab === cat ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700')}>
+                      {cat === 'technical' ? 'Markets' : cat.charAt(0).toUpperCase() + cat.slice(1)}
                     </button>
                   ))}
                 </div>
-                <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {SOURCES[mktTab].map(source => (
-                    <div key={source.name} className={'p-3 rounded-lg border ' + (isActive(source.name) ? 'border-purple-500 bg-purple-900/20' : 'border-gray-700 bg-gray-800/50')}>
+                    <div key={source.name} className={'p-3 rounded-xl border transition-all ' + (isActive(source.name) ? 'border-purple-500 bg-purple-900/20' : 'border-gray-700 bg-gray-800/30 hover:border-gray-600')}>
                       <div className="flex justify-between items-start gap-2">
                         <div>
                           <div className="text-white text-sm font-medium">{source.name}</div>
-                          <div className="text-gray-400 text-xs">{source.desc}</div>
+                          <div className="text-gray-500 text-xs">{source.desc}</div>
                         </div>
-                        <button onClick={() => toggle(source, mktTab)} className={'text-xs px-2 py-1 rounded font-bold ' + (isActive(source.name) ? 'bg-red-600 text-white' : 'bg-green-600 text-white')}>
-                          {isActive(source.name) ? 'Remove' : '+ Add'}
+                        <button onClick={() => toggle(source, mktTab)}
+                          className={'text-xs px-2 py-1 rounded-lg font-semibold shrink-0 ' + (isActive(source.name) ? 'bg-red-600/80 text-white' : 'bg-purple-600/80 text-white')}>
+                          {isActive(source.name) ? 'Remove' : 'Add'}
                         </button>
                       </div>
                     </div>
@@ -223,10 +216,23 @@ function ScoresPageContent() {
               </div>
             )}
           </div>
-        )}
+        </div>
+      )}
 
-        <div className={isPlain ? "max-w-2xl mx-auto" : "grid grid-cols-1 lg:grid-cols-5 gap-6"}>
-          {!isPlain && (
+      {/* Main content */}
+      <div className="max-w-6xl mx-auto px-6 py-6">
+        {isPlain ? (
+          <PlainTextAnalysis
+            question={event}
+            confidence={intel?.confidence || 50}
+            direction={intel?.direction || 'YES'}
+            weights={weights}
+            activeSources={activeSources}
+          />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+            {/* LEFT - Market standings */}
             <div className="lg:col-span-3">
               <PolymarketComparison
                 userQuestion={event}
@@ -241,38 +247,34 @@ function ScoresPageContent() {
                 onTradeReady={(data: TradeReadyData) => setTradeData(data)}
               />
             </div>
-          )}
 
-          <div className={isPlain ? "space-y-4" : "lg:col-span-2 space-y-4"}>
-            {isPlain ? (
-              <PlainTextAnalysis
-                question={event}
-                confidence={intel?.confidence || 50}
-                direction={intel?.direction || 'YES'}
-                weights={weights}
-                activeSources={activeSources}
-              />
-            ) : (
-              <div className="border border-gray-700 rounded-xl p-5">
-                <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">AI verdict</div>
+            {/* RIGHT - Verdict + Conviction + Trade */}
+            <div className="lg:col-span-2 space-y-4">
+
+              {/* AI Verdict */}
+              <div className="bg-gray-900 border border-purple-500/30 rounded-2xl p-5">
+                <div className="text-xs text-purple-400 font-semibold uppercase tracking-widest mb-4">AI Verdict</div>
+
                 {mtype === 'categorical' && top.name ? (
                   <div>
-                    <div className="text-2xl font-bold mb-1">{top.name}</div>
-                    <div className="text-sm text-gray-400 mb-4">Most likely to win, based on AI analysis</div>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">Bettors say</span>
-                        <span className="text-white">{top.odds}% chance</span>
+                    <div className="text-2xl font-black text-white mb-1">{top.name}</div>
+                    <div className="text-gray-500 text-sm mb-5">
+                      {otype === 'prices' ? 'Most uncertain price level' : 'Most likely outcome by AI analysis'}
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center p-3 bg-black/30 rounded-xl">
+                        <span className="text-gray-400 text-sm">Bettors say</span>
+                        <span className="text-white font-bold text-lg">{top.odds}%</span>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">AI thinks</span>
-                        <span className="text-purple-400">{top.aiConfidence}% chance {top.aiConfidence > top.odds ? '(more bullish)' : '(more cautious)'}</span>
+                      <div className="flex justify-between items-center p-3 bg-purple-900/20 border border-purple-800/30 rounded-xl">
+                        <span className="text-gray-400 text-sm">AI thinks</span>
+                        <span className="text-purple-400 font-bold text-lg">{top.aiConfidence}%</span>
                       </div>
                       {(top.weekChange || 0) !== 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-400">Trending</span>
-                          <span className={(top.weekChange || 0) > 0 ? 'text-green-400' : 'text-red-400'}>
-                            {(top.weekChange || 0) > 0 ? 'up' : 'down'} {Math.abs(top.weekChange || 0)}% this week
+                        <div className="flex justify-between items-center p-3 bg-black/20 rounded-xl">
+                          <span className="text-gray-400 text-sm">7-day trend</span>
+                          <span className={(top.weekChange || 0) > 0 ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>
+                            {(top.weekChange || 0) > 0 ? '+' : ''}{top.weekChange || 0}%
                           </span>
                         </div>
                       )}
@@ -280,88 +282,121 @@ function ScoresPageContent() {
                   </div>
                 ) : intel ? (
                   <div>
-                    <div className="text-2xl font-bold mb-1">{intel.direction}</div>
-                    <div className="text-sm text-gray-400 mb-4">AI prediction for this market</div>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">Bettors say</span>
-                        <span className="text-white">{odds ?? 0}% chance</span>
+                    <div className="text-2xl font-black text-white mb-1">{intel.direction}</div>
+                    <div className="text-gray-500 text-sm mb-5">AI prediction for this market</div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center p-3 bg-black/30 rounded-xl">
+                        <span className="text-gray-400 text-sm">Bettors say</span>
+                        <span className="text-white font-bold text-lg">{odds ?? 0}%</span>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">AI thinks</span>
-                        <span className="text-purple-400">{intel.confidence}% chance</span>
+                      <div className="flex justify-between items-center p-3 bg-purple-900/20 border border-purple-800/30 rounded-xl">
+                        <span className="text-gray-400 text-sm">AI thinks</span>
+                        <span className="text-purple-400 font-bold text-lg">{intel.confidence}%</span>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-gray-400 text-sm py-4">Analyzing...</div>
+                  <div className="text-gray-600 text-sm py-6 text-center">Loading analysis...</div>
                 )}
-                <div className="p-3 bg-amber-900/20 border border-amber-700/30 rounded-lg">
-                  <div className="text-xs text-yellow-400 font-semibold mb-1">Medium risk</div>
-                  <div className="text-xs text-amber-200/70">
-                    {mtype === 'categorical'
-                      ? outcomes.length + ' ' + unitLabel + ' competing. ' + top.odds + '% means ' + (100 - top.odds) + '% chance a different outcome wins.'
-                      : 'Market shows ' + (odds ?? 0) + '% probability. Review all signals before deciding.'}
+
+                {/* Edge / Conviction */}
+                {(mtype === 'categorical' ? top.name : intel) && (
+                  <div className={'mt-4 p-4 border rounded-xl ' + edgeBg}>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Conviction</span>
+                      <span className={'text-sm font-black ' + edgeColor}>{edgeLabel}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 bg-gray-800 rounded-full h-1.5">
+                        <div className={'h-1.5 rounded-full transition-all ' + (edgeVal >= 5 ? 'bg-green-500' : edgeVal >= 2 ? 'bg-yellow-500' : 'bg-gray-600')}
+                          style={{ width: Math.min(Math.max((edgeVal + 10) / 20 * 100, 0), 100) + '%' }} />
+                      </div>
+                      <span className={'text-xs font-bold ' + edgeColor}>
+                        {edgeVal > 0 ? '+' : ''}{edgeVal.toFixed(1)}% edge
+                      </span>
+                    </div>
                   </div>
+                )}
+              </div>
+
+              {/* Trade Panel */}
+              {tradeData && (mtype === 'categorical' || intel) && (
+                <TradePanel
+                  marketUrl={tradeData.marketUrl}
+                  marketTitle={tradeData.marketTitle}
+                  outcomeName={tradeData.topOutcome.name}
+                  marketOdds={tradeData.topOutcome.odds}
+                  aiConfidence={mtype === 'categorical' ? tradeData.topOutcome.aiConfidence : binaryAI}
+                  edge={mtype === 'categorical' ? tradeData.topOutcome.edge : binaryEdge}
+                  tokenId={tradeData.topOutcome.tokenId}
+                  isBinary={mtype === 'binary'}
+                />
+              )}
+
+              {/* Signal breakdown toggle */}
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                <button onClick={() => setShowDeep(!showDeep)}
+                  className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-800/30 transition-colors">
+                  <div>
+                    <div className="text-sm font-semibold text-white text-left">Signal breakdown</div>
+                    <div className="text-xs text-gray-600 text-left">How each source contributed</div>
+                  </div>
+                  <span className="text-purple-400 font-bold text-lg">{showDeep ? '-' : '+'}</span>
+                </button>
+                {showDeep && (
+                  <div className="border-t border-gray-800 p-5 space-y-3">
+                    {[
+                      { label: 'News sentiment', val: Math.round((odds || 50) * (weights.news / 100)), color: 'bg-purple-500' },
+                      { label: 'Community signal', val: Math.round((odds || 50) * (weights.social / 100)), color: 'bg-blue-500' },
+                      { label: 'Market probability', val: Math.round((odds || 50) * (weights.technical / 100)), color: 'bg-green-500' },
+                    ].map(s => (
+                      <div key={s.label} className="flex items-center gap-3">
+                        <span className="text-gray-400 text-xs w-32 shrink-0">{s.label}</span>
+                        <div className="flex-1 bg-gray-800 rounded-full h-1.5">
+                          <div className={s.color + ' h-1.5 rounded-full'} style={{ width: Math.min((s.val / 30) * 100, 100) + '%' }} />
+                        </div>
+                        <span className="text-white text-xs font-bold w-10 text-right">+{s.val}%</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Config */}
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+                <div className="text-xs text-gray-600 font-semibold uppercase tracking-widest mb-3">Configuration</div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: 'News', val: weights.news, c: 'text-purple-400' },
+                    { label: 'Social', val: weights.social, c: 'text-blue-400' },
+                    { label: 'Market', val: weights.technical, c: 'text-green-400' },
+                  ].map(w => (
+                    <div key={w.label} className="bg-black/30 rounded-xl p-2.5 text-center">
+                      <div className={'text-lg font-black ' + w.c}>{w.val}%</div>
+                      <div className="text-gray-600 text-xs">{w.label}</div>
+                    </div>
+                  ))}
                 </div>
+                {activeSources.length > 0 && (
+                  <div className="mt-2 text-xs text-purple-500">{activeSources.length} custom sources active</div>
+                )}
               </div>
-            )}
 
-            {!isPlain && tradeData && (mtype === 'categorical' || intel) && (
-              <TradePanel
-                marketUrl={tradeData.marketUrl}
-                marketTitle={tradeData.marketTitle}
-                outcomeName={tradeData.topOutcome.name}
-                marketOdds={tradeData.topOutcome.odds}
-                aiConfidence={mtype === 'categorical' ? tradeData.topOutcome.aiConfidence : binaryAI}
-                edge={mtype === 'categorical' ? tradeData.topOutcome.edge : binaryEdge}
-                tokenId={tradeData.topOutcome.tokenId}
-                isBinary={mtype === 'binary'}
-              />
-            )}
-
-            <div className="border border-gray-700 rounded-xl p-4">
-              <div className="text-xs text-gray-400 font-medium mb-3">Current configuration</div>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between"><span className="text-gray-400">News sources</span><span className="text-white">{weights.news}%</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Social sources</span><span className="text-white">{weights.social}%</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Market probability</span><span className="text-white">{weights.technical}%</span></div>
-              </div>
-              {activeSources.length > 0 && <div className="mt-2 text-xs text-purple-400">{activeSources.length} custom sources active</div>}
             </div>
-
-            <button onClick={() => setShowDeep(!showDeep)}
-              className="w-full border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-400 flex justify-between items-center hover:bg-gray-900">
-              <span>See full signal breakdown</span>
-              <span>{showDeep ? '-' : '+'}</span>
-            </button>
-
-            {showDeep && (
-              <div className="border border-gray-700 rounded-xl p-5 space-y-3">
-                <div className="text-sm font-medium text-white">Signal contribution</div>
-                {[
-                  { label: 'News sentiment', value: Math.round((odds || 50) * (weights.news / 100)), color: 'bg-yellow-500' },
-                  { label: 'Community signal', value: Math.round((odds || 50) * (weights.social / 100)), color: 'bg-green-500' },
-                  { label: 'Market probability', value: Math.round((odds || 50) * (weights.technical / 100)), color: 'bg-blue-500' },
-                ].map(s => (
-                  <div key={s.label}>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-300">{s.label}</span>
-                      <span className="text-white">+{s.value}%</span>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-1.5">
-                      <div className={s.color + ' h-1.5 rounded-full'} style={{ width: Math.min((s.value / 30) * 100, 100) + '%' }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
-        </div>
-
-        <div className="mt-8 text-center text-xs text-gray-600">Not financial advice. Research purposes only.</div>
+        )}
       </div>
+
+      </div>{/* end main content */}
+
+      {/* Footer */}
+      <div className="border-t border-gray-800/50 px-6 py-3 mt-8">
+        <p className="text-gray-800 text-xs text-center">Not financial advice. Research purposes only.</p>
+      </div>
+
     </div>
+  </div>
+  </div>
   );
 }
 
