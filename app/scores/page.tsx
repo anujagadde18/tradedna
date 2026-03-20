@@ -14,21 +14,38 @@ interface TradeReadyData {
   topOutcome: { name: string; odds: number; aiConfidence: number; edge: number; tokenId?: string; };
 }
 
-function ScoresPageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const event = searchParams.get('event') || '';
 
-  const [intel, setIntel]         = useState<any>(null);
-  const [odds, setOdds]           = useState<number | null>(null);
-  const [mtype, setMtype]         = useState<'binary'|'categorical'>('binary');
-  const [outcomes, setOutcomes]   = useState<any[]>([]);
-  const [otype, setOtype]         = useState('options');
-  const [hasUrl, setHasUrl]       = useState<boolean|null>(null);
-  const [tradeData, setTradeData] = useState<TradeReadyData|null>(null);
-  const [weights, setWeights]     = useState({ news: 35, social: 40, technical: 25 });
-  const [activeSources]           = useState<any[]>([]);
-  const [showDetails, setShowDetails] = useState(false);
+function Sparkline({ trend }: { trend: number }) {
+  // Generate a simple 7-point trend line from the trend value
+  const pts = [50, 50, 50, 50, 50, 50, 50].map((v, i) => {
+    const noise = Math.sin(i * 1.3) * 8;
+    return v + noise + (trend / 100) * i * 6;
+  });
+  const min = Math.min(...pts);
+  const max = Math.max(...pts);
+  const norm = pts.map(p => max === min ? 30 : 5 + ((p - min) / (max - min)) * 30);
+  const path = norm.map((y, i) => `${i === 0 ? 'M' : 'L'}${i * 10},${35 - y}`).join(' ');
+  const color = trend > 3 ? '#22c55e' : trend < -3 ? '#ef4444' : '#71717a';
+  return (
+    <svg width="60" height="28" viewBox="0 0 60 40" preserveAspectRatio="none">
+      <path d={path} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ScoresPageContent() {
+  const router        = useRouter();
+  const searchParams  = useSearchParams();
+  const event         = searchParams.get('event') || '';
+
+  const [intel, setIntel]             = useState<any>(null);
+  const [odds, setOdds]               = useState<number | null>(null);
+  const [mtype, setMtype]             = useState<'binary'|'categorical'>('binary');
+  const [outcomes, setOutcomes]       = useState<any[]>([]);
+  const [hasUrl, setHasUrl]           = useState<boolean|null>(null);
+  const [tradeData, setTradeData]     = useState<TradeReadyData|null>(null);
+  const [weights, setWeights]         = useState({ news: 35, social: 40, technical: 25 });
+  const [showWhy, setShowWhy]         = useState(false);
 
   useEffect(() => {
     setHasUrl(event.includes('polymarket.com/event/'));
@@ -50,22 +67,19 @@ function ScoresPageContent() {
   const mainAI     = mtype === 'categorical' ? top.aiConfidence : binaryAI;
   const mainName   = mtype === 'categorical' ? top.name : (intel?.direction || 'YES');
 
-  const conviction = edgeVal >= 10 ? 'HIGH' : edgeVal >= 5 ? 'HIGH' : edgeVal >= 2 ? 'MEDIUM' : 'LOW';
-  const convColor  = edgeVal >= 5 ? '#22c55e' : edgeVal >= 2 ? '#eab308' : '#ef4444';
-  const convDot    = edgeVal >= 5 ? 'bg-green-400' : edgeVal >= 2 ? 'bg-yellow-400' : 'bg-red-400';
+  const isHigh   = edgeVal >= 5;
+  const isMed    = edgeVal >= 2 && edgeVal < 5;
+  const isLow    = edgeVal < 2;
+  const convText = isHigh ? 'HIGH' : isMed ? 'MEDIUM' : 'LOW';
+  const convHex  = isHigh ? '#22c55e' : isMed ? '#f59e0b' : '#ef4444';
 
-  const betGuide = edgeVal >= 12 ? 'Strong opportunity - consider $150+' :
-                   edgeVal >= 7  ? 'Good opportunity - consider $50-$150' :
-                   edgeVal >= 2  ? 'Small opportunity - consider $10-$50' :
-                   'Low edge - consider skipping this one';
+  const betGuide = isHigh ? 'Strong edge - consider $100+' :
+                   isMed  ? 'Moderate edge - consider $25-$100' :
+                            'Weak edge - consider skipping';
 
-  const summary = (() => {
-    if (!mainOdds) return 'Loading market data...';
-    if (edgeVal >= 5) return 'AI significantly favors this outcome - market may be underpricing it';
-    if (edgeVal >= 2) return 'AI slightly favors this outcome - small edge detected';
-    if (Math.abs(edgeVal) < 2) return 'AI aligns with market - no strong edge either way';
-    return 'AI is more cautious than market - consider smaller position or skip';
-  })();
+  const summary  = isHigh ? 'AI sees a real edge here. Market may be underpricing this outcome.' :
+                   isMed  ? 'AI slightly disagrees with market. Small opportunity exists.' :
+                            'AI agrees with market. No meaningful edge detected.';
 
   const eventTitle = (() => {
     const idx = event.indexOf('polymarket.com/event/');
@@ -73,32 +87,20 @@ function ScoresPageContent() {
       const slug = event.slice(idx + 21).split('/')[0].split('?')[0];
       return slug.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     }
-    return event.length > 80 ? event.slice(0, 80) : event;
+    return event.length > 100 ? event.slice(0, 100) : event;
   })();
 
-  const handleWeightChange = (key: string, val: number) => {
-    const rem = 100 - val;
-    const others = Object.keys(weights).filter(k => k !== key) as Array<keyof typeof weights>;
-    const otherTotal = others.reduce((s, k) => s + weights[k], 0);
-    const nw = { ...weights, [key]: val };
-    if (otherTotal > 0) others.forEach(k => { nw[k] = Math.round((weights[k] / otherTotal) * rem); });
-    const total = Object.values(nw).reduce((s, v) => s + v, 0);
-    if (total !== 100) nw[others[0]] += (100 - total);
-    setWeights(nw as typeof weights);
-  };
-
   return (
-    <div className="min-h-screen bg-black text-white pb-36">
+    <div className="min-h-screen bg-[#0a0a0a] text-white pb-36">
 
-      <nav className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/60">
-        <button onClick={() => router.push('/')} className="text-zinc-500 hover:text-white text-sm transition-colors">Back</button>
-        <span className="text-white font-bold text-sm">PlayPicks AI</span>
-        <button onClick={() => router.push('/journal')} className="text-zinc-500 hover:text-white text-sm transition-colors">Journal</button>
-      </nav>
-
-      <div className="px-5 pt-3 pb-3 border-b border-zinc-800/40">
-        <div className="text-xs text-zinc-600 uppercase tracking-widest mb-0.5">Analyzing</div>
-        <div className="text-white text-sm font-medium leading-snug">{eventTitle}</div>
+      <div className="flex items-center justify-between px-5 h-14 border-b border-white/5">
+        <button onClick={() => router.push('/')} className="text-zinc-500 hover:text-white text-sm transition-colors">
+          Back
+        </button>
+        <span className="text-white text-sm font-semibold tracking-tight">PlayPicks AI</span>
+        <button onClick={() => router.push('/journal')} className="text-zinc-500 hover:text-white text-sm transition-colors">
+          Journal
+        </button>
       </div>
 
       {isPlain ? (
@@ -108,105 +110,81 @@ function ScoresPageContent() {
             confidence={intel?.confidence || 50}
             direction={intel?.direction || 'YES'}
             weights={weights}
-            activeSources={activeSources}
+            activeSources={[]}
           />
         </div>
       ) : (
-        <div className="px-5">
+        <div>
 
-          <div className="text-center py-10 space-y-2">
+          <div className="px-5 pt-8 pb-6 border-b border-white/5">
+            <p className="text-zinc-500 text-xs uppercase tracking-widest mb-2">{eventTitle}</p>
             {mainName && (
-              <p className="text-zinc-500 text-xs tracking-widest uppercase">{mainName}</p>
+              <h1 className="text-2xl font-black text-white leading-tight mb-1">{mainName}</h1>
             )}
-            <div className="text-9xl font-black leading-none" style={{ color: mainOdds > 0 ? 'white' : '#52525b' }}>
-              {mainOdds > 0 ? mainOdds + '%' : '--'}
-            </div>
-            <p className="text-zinc-600 text-sm">LIKELY</p>
-          </div>
-
-          <div className="bg-zinc-900/60 rounded-2xl p-5 mb-5 border border-zinc-800/60">
-            <div className="flex items-center gap-2 mb-2">
-              <span className={'w-2.5 h-2.5 rounded-full shrink-0 ' + convDot}></span>
-              <span className="font-black text-lg" style={{ color: convColor }}>{conviction} CONVICTION</span>
-              <span className="text-zinc-600 text-sm ml-auto">{edgeVal > 0 ? '+' : ''}{edgeVal.toFixed(1)}% edge</span>
-            </div>
-            <p className="text-zinc-400 text-sm leading-relaxed mb-3">{summary}</p>
-            <div className="border-t border-zinc-800 pt-3">
-              <p className="text-xs text-zinc-600 uppercase tracking-wide mb-1">Suggested action</p>
-              <p className="text-sm font-semibold" style={{ color: convColor }}>{betGuide}</p>
+            <div className="flex items-baseline gap-2 mt-3">
+              <span className="text-6xl font-black text-white leading-none">{mainOdds > 0 ? mainOdds + '%' : '--'}</span>
+              <span className="text-zinc-500 text-sm">market probability</span>
             </div>
           </div>
 
-          <div className="space-y-3 mb-5">
-            <div>
-              <div className="flex justify-between text-sm mb-1.5">
-                <span className="text-zinc-500">Market says</span>
-                <span className="text-white font-bold">{mainOdds}%</span>
-              </div>
-              <div className="h-4 w-full bg-zinc-800 rounded-full overflow-hidden">
-                <div className="h-4 rounded-full bg-zinc-500 transition-all duration-700"
-                  style={{ width: Math.min(mainOdds, 100) + '%' }} />
-              </div>
+          <div className="px-5 py-5 border-b border-white/5">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-zinc-500 uppercase tracking-widest">AI Edge Analysis</span>
             </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1.5">
-                <span className="text-zinc-500">AI thinks</span>
-                <span className="font-bold" style={{ color: convColor }}>{mainAI}%</span>
+            <div className="grid grid-cols-3 mt-4">
+              <div>
+                <div className="text-3xl font-black text-zinc-300">{mainOdds}%</div>
+                <div className="text-xs text-zinc-600 mt-1 uppercase tracking-wide">Market</div>
               </div>
-              <div className="h-4 w-full bg-zinc-800 rounded-full overflow-hidden">
-                <div className="h-4 rounded-full transition-all duration-700"
-                  style={{ width: Math.min(mainAI, 100) + '%', backgroundColor: convColor }} />
+              <div>
+                <div className="text-3xl font-black text-purple-400">{mainAI}%</div>
+                <div className="text-xs text-zinc-600 mt-1 uppercase tracking-wide">AI thinks</div>
+              </div>
+              <div>
+                <div className="text-3xl font-black" style={{ color: convHex }}>
+                  {edgeVal > 0 ? '+' : ''}{edgeVal.toFixed(1)}%
+                </div>
+                <div className="text-xs text-zinc-600 mt-1 uppercase tracking-wide">Edge</div>
               </div>
             </div>
           </div>
 
-          <button onClick={() => setShowDetails(!showDetails)}
-            className="w-full py-3 border-t border-b border-zinc-800/60 flex items-center justify-between mb-5">
-            <span className="text-sm font-semibold text-white">Why this verdict?</span>
-            <span className="text-zinc-500 text-sm">{showDetails ? 'Hide' : 'Show signals'}</span>
-          </button>
-
-          {showDetails && (
-            <div className="mb-5 space-y-5">
-              <div className="space-y-3">
-                <div className="text-xs text-zinc-600 uppercase tracking-widest">Signal weights</div>
-                {[
-                  { key: 'news', label: 'News sources', val: Math.round(mainAI * (weights.news / 100)) },
-                  { key: 'social', label: 'Social signals', val: Math.round(mainAI * (weights.social / 100)) },
-                  { key: 'technical', label: 'Market data', val: Math.round(mainAI * (weights.technical / 100)) },
-                ].map(s => (
-                  <div key={s.key}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-zinc-400">{s.label}</span>
-                      <span className="text-white font-semibold">+{s.val}%</span>
-                    </div>
-                    <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-                      <div className="h-2 rounded-full bg-purple-500"
-                        style={{ width: Math.min((s.val / 35) * 100, 100) + '%' }} />
-                    </div>
-                    <input type="range" min="0" max="100"
-                      value={weights[s.key as keyof typeof weights]}
-                      onChange={e => { handleWeightChange(s.key, parseInt(e.target.value)); setTimeout(runAnalysis, 100); }}
-                      className="w-full accent-purple-500 mt-1" />
-                  </div>
-                ))}
+          <div className="px-5 py-5 border-b border-white/5">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: convHex }}></span>
+                  <span className="text-sm font-black tracking-wider" style={{ color: convHex }}>{convText} CONVICTION</span>
+                </div>
+                <p className="text-zinc-400 text-sm leading-relaxed max-w-xs">{summary}</p>
               </div>
             </div>
-          )}
+            <div className="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
+              <span className="text-xs text-zinc-500">Suggested:</span>
+              <span className="text-sm font-semibold" style={{ color: convHex }}>{betGuide}</span>
+            </div>
+          </div>
 
           {outcomes.length > 0 && (
-            <div className="mb-5">
-              <div className="text-xs text-zinc-600 uppercase tracking-widest mb-4">All outcomes</div>
+            <div className="px-5 py-5 border-b border-white/5">
+              <div className="text-xs text-zinc-500 uppercase tracking-widest mb-4">All outcomes</div>
               <div className="space-y-3">
                 {outcomes.slice(0, 8).map((o: any, i: number) => (
-                  <div key={i}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className={i === 0 ? 'text-white font-semibold' : 'text-zinc-400'}>{o.name}</span>
-                      <span className={i === 0 ? 'font-bold text-white' : 'text-zinc-500'}>{o.odds}%</span>
+                  <div key={i} className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className={'w-2 h-2 rounded-full shrink-0 ' + (i === 0 ? 'bg-purple-400' : 'bg-zinc-700')}></div>
+                      <span className={'text-sm truncate ' + (i === 0 ? 'text-white font-medium' : 'text-zinc-500')}>{o.name}</span>
                     </div>
-                    <div className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
-                      <div className={'h-3 rounded-full transition-all ' + (i === 0 ? 'bg-purple-500' : 'bg-zinc-700')}
-                        style={{ width: Math.min(o.odds, 100) + '%' }} />
+                    {(o.weekChange !== undefined && o.weekChange !== 0) && (
+                      <Sparkline trend={o.weekChange || 0} />
+                    )}
+                    <div className="text-right shrink-0">
+                      <div className={'font-black ' + (i === 0 ? 'text-white text-xl' : 'text-zinc-600 text-sm')}>{o.odds}%</div>
+                      {o.weekChange !== undefined && o.weekChange !== 0 && (
+                        <div className={'text-xs font-medium ' + (o.weekChange > 0 ? 'text-green-500' : 'text-red-500')}>
+                          {o.weekChange > 0 ? '+' : ''}{o.weekChange}%
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -214,7 +192,29 @@ function ScoresPageContent() {
             </div>
           )}
 
-          <div className="mb-5">
+          <div className="px-5 py-5 border-b border-white/5">
+            <button onClick={() => setShowWhy(!showWhy)}
+              className="w-full flex items-center justify-between">
+              <span className="text-xs text-zinc-500 uppercase tracking-widest">Why this verdict?</span>
+              <span className="text-xs text-zinc-600">{showWhy ? 'Hide' : 'Show signals'}</span>
+            </button>
+            {showWhy && (
+              <div className="mt-4 grid grid-cols-3">
+                {[
+                  { label: 'News', val: Math.round(mainAI * (weights.news / 100)), color: 'text-purple-400' },
+                  { label: 'Social', val: Math.round(mainAI * (weights.social / 100)), color: 'text-blue-400' },
+                  { label: 'Market', val: Math.round(mainAI * (weights.technical / 100)), color: 'text-green-400' },
+                ].map(s => (
+                  <div key={s.label}>
+                    <div className={'text-2xl font-black ' + s.color}>+{s.val}%</div>
+                    <div className="text-xs text-zinc-600 mt-1 uppercase tracking-wide">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="px-5 pt-4">
             <PolymarketComparison
               userQuestion={event}
               aiPrediction={intel?.confidence || 0}
@@ -225,7 +225,7 @@ function ScoresPageContent() {
                 if (ot) setOtype(ot);
                 setHasUrl(true);
               }}
-              onTradeReady={(data: TradeReadyData) => setTradeData(data)}
+              onTradeReady={(d: TradeReadyData) => setTradeData(d)}
             />
           </div>
 
@@ -233,7 +233,7 @@ function ScoresPageContent() {
       )}
 
       {!isPlain && tradeData && (
-        <div className="fixed bottom-0 left-0 w-full bg-black border-t border-zinc-800/60 px-5 py-4">
+        <div className="fixed bottom-0 left-0 w-full bg-[#0a0a0a]/95 backdrop-blur-sm border-t border-white/5 px-5 py-4">
           <TradePanel
             marketUrl={tradeData.marketUrl}
             marketTitle={tradeData.marketTitle}
@@ -253,7 +253,7 @@ function ScoresPageContent() {
 
 export default function ScoresPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-black" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0a]" />}>
       <ScoresPageContent />
     </Suspense>
   );
