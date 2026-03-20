@@ -227,6 +227,7 @@ function ScoresPageContent() {
             tokenId={tradeData.topOutcome.tokenId}
             isBinary={mtype === 'binary'}
           />
+        </div>
       )}
 
     </div>
