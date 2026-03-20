@@ -48,15 +48,33 @@ function ConstellationSVG({ aiPct, marketPct }: { aiPct: number; marketPct: numb
   const convBg = edge > 6 ? C.greenBg : edge > 2 ? C.amberBg : C.redBg;
   const convColor = edge > 6 ? C.green : edge > 2 ? C.amber : C.red;
 
-  const nodes = [
-    { cx:260, cy:48,  r:26, glow:32, color:'#4d9de0', name:'Reuters',   contrib:'+22%', tip:'Strong signal - recession narrative up 40% this week in financial press.' },
-    { cx:348, cy:74,  r:22, glow:28, color:'#7c6ff7', name:'Reddit',    contrib:'+18%', tip:'Strong signal - r/economics consensus forming. High engagement threads.' },
-    { cx:364, cy:182, r:20, glow:25, color:'#2ecc8a', name:'Bloomberg', contrib:'+15%', tip:'Moderate signal - economists cautiously leaning toward this outcome.' },
-    { cx:156, cy:182, r:18, glow:23, color:'#f5a623', name:'Polymarket',contrib:'+12%', tip:'Mixed - 95% already priced in. Limits edge significantly.' },
-    { cx:162, cy:108, r:16, glow:20, color:'#f5a623', name:'Kalshi',    contrib:'+8%',  tip:'Weak signal - confirms Polymarket direction but lower volume.' },
-    { cx:346, cy:218, r:15, glow:19, color:'#ef4f6a', name:'Twitter',   contrib:'-3%',  tip:'Contrary - noisy political commentary. Low weight applied.' },
-    { cx:176, cy:234, r:14, glow:18, color:'#a78bfa', name:'Metaculus', contrib:'+6%',  tip:'Weak positive - community forecasters lean this way, high uncertainty.' },
+  // Node positions fixed in orbit layout - inner = strong, outer = weak
+  const NODE_POSITIONS = [
+    { cx:260, cy:48  },
+    { cx:352, cy:74  },
+    { cx:368, cy:186 },
+    { cx:152, cy:186 },
+    { cx:158, cy:106 },
+    { cx:350, cy:222 },
+    { cx:172, cy:236 },
   ];
+  const CAT_COLOR_MAP: Record<string, string> = {
+    news: '#4d9de0', social: '#7c6ff7', market: '#2ecc8a', community: '#f5a623', contrary: '#ef4f6a',
+  };
+  // Build dynamic nodes from active sources, sized by name length
+  const nodes = activeSources.slice(0, 7).map((src, i) => {
+    const pos = NODE_POSITIONS[i];
+    const nameLen = src.name.length;
+    // Radius must fit the name text: ~5.5px per char, min 20, max 34
+    const r = Math.max(20, Math.min(34, Math.ceil(nameLen * 5.5 / 2) + 8));
+    const color = src.type === 'contrary' ? '#ef4f6a' : CAT_COLOR_MAP[src.category] || '#7c6ff7';
+    return {
+      cx: pos.cx, cy: pos.cy, r, glow: r + 6,
+      color, name: src.name,
+      contrib: (src.contribution >= 0 ? '+' : '') + src.contribution + '%',
+      tip: src.sig,
+    };
+  });
 
   return (
     <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:16, padding:22 }}>
@@ -92,14 +110,30 @@ function ConstellationSVG({ aiPct, marketPct }: { aiPct: number; marketPct: numb
           {nodes.map((n,i) => (
             <line key={'l'+i} x1={n.cx} y1={n.cy} x2="260" y2="140" stroke={n.color} strokeWidth="0.8" opacity="0.28"/>
           ))}
-          {nodes.map((n,i) => (
-            <g key={'n'+i} style={{ cursor:'pointer' }} onClick={() => setTip({ name:n.name, body:n.tip, color:n.color })}>
-              <circle cx={n.cx} cy={n.cy} r={n.glow} fill={n.color} opacity="0.08"/>
-              <circle cx={n.cx} cy={n.cy} r={n.r}    fill={n.color} opacity="0.92"/>
-              <text x={n.cx} y={n.cy-3} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="white" fontFamily="Inter,sans-serif">{n.name}</text>
-              <text x={n.cx} y={n.cy+8} textAnchor="middle" fontSize="8"   fill="rgba(255,255,255,0.85)" fontFamily="Inter,sans-serif">{n.contrib}</text>
-            </g>
-          ))}
+          {nodes.map((n,i) => {
+            // Split name into two lines if long
+            const words = n.name.split(' ');
+            const line1 = words.length > 1 ? words.slice(0, Math.ceil(words.length/2)).join(' ') : n.name;
+            const line2 = words.length > 1 ? words.slice(Math.ceil(words.length/2)).join(' ') : null;
+            return (
+              <g key={'n'+i} style={{ cursor:'pointer' }} onClick={() => setTip({ name:n.name, body:n.tip, color:n.color })}>
+                <circle cx={n.cx} cy={n.cy} r={n.glow} fill={n.color} opacity="0.08"/>
+                <circle cx={n.cx} cy={n.cy} r={n.r}    fill={n.color} opacity="0.92"/>
+                {line2 ? (
+                  <>
+                    <text x={n.cx} y={n.cy-6} textAnchor="middle" fontSize="8" fontWeight="600" fill="white" fontFamily="Inter,sans-serif">{line1}</text>
+                    <text x={n.cx} y={n.cy+4} textAnchor="middle" fontSize="8" fontWeight="600" fill="white" fontFamily="Inter,sans-serif">{line2}</text>
+                    <text x={n.cx} y={n.cy+14} textAnchor="middle" fontSize="7.5" fill="rgba(255,255,255,0.85)" fontFamily="Inter,sans-serif">{n.contrib}</text>
+                  </>
+                ) : (
+                  <>
+                    <text x={n.cx} y={n.cy-2} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="white" fontFamily="Inter,sans-serif">{n.name}</text>
+                    <text x={n.cx} y={n.cy+9} textAnchor="middle" fontSize="7.5" fill="rgba(255,255,255,0.85)" fontFamily="Inter,sans-serif">{n.contrib}</text>
+                  </>
+                )}
+              </g>
+            );
+          })}
           <circle cx="260" cy="140" r="42" fill="#7c6ff7" opacity="0.08"/>
           <circle cx="260" cy="140" r="30" fill="#7c6ff7" opacity="0.15"/>
           <circle cx="260" cy="140" r="22" fill="#7c6ff7"/>
@@ -153,7 +187,8 @@ function ScoresPageContent() {
   const [mktAdded, setMktAdded]     = useState<Record<string,boolean>>({});
   const [mktAdding, setMktAdding]   = useState<Record<string,boolean>>({});
 
-  useEffect(() => { setHasUrl(event.includes('polymarket.com/event/')); }, []);
+  const isPolymarketUrl = event.includes('polymarket.com/event/');
+  useEffect(() => { setHasUrl(isPolymarketUrl); }, []);
 
   useEffect(() => {
     const go = async () => {
@@ -192,7 +227,7 @@ function ScoresPageContent() {
     setTimeout(() => setToast(''), 2500);
   };
 
-  const isPlain  = hasUrl === false;
+  const isPlain  = !isPolymarketUrl;
   const top      = outcomes[0] || { name:'', odds:0, aiConfidence:0, edge:0 };
   const binaryAI = intel?.confidence || 0;
   const binEdge  = binaryAI - (odds || 0);
