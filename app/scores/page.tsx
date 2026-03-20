@@ -38,7 +38,7 @@ function SigPill({ type }: { type: 'strong'|'mixed'|'priced'|'contrary' }) {
   return <span style={{ fontSize:9, fontWeight:700, padding:'2px 7px', borderRadius:8, background:m.bg, color:m.color }}>{m.label}</span>;
 }
 
-function ConstellationSVG({ aiPct, marketPct }: { aiPct: number; marketPct: number }) {
+function ConstellationSVG({ aiPct, marketPct, sources }: { aiPct: number; marketPct: number; sources: any[] }) {
   const [tip, setTip] = useState<{name:string;body:string;color:string}|null>(null);
   const edge = aiPct - marketPct;
   const edgeStr = (edge >= 0 ? '+' : '') + edge + '%';
@@ -68,7 +68,7 @@ function ConstellationSVG({ aiPct, marketPct }: { aiPct: number; marketPct: numb
     return Math.max(baseRadius, minForName, minForContrib);
   }
   // FIX 5: Sort by contribution descending so strongest signals get inner positions
-  const sortedSources = [...activeSources]
+  const sortedSources = [...sources]
     .sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
     .slice(0, 7);
   const nodes = sortedSources.map((src, i) => {
@@ -425,7 +425,7 @@ function ScoresPageContent() {
 
             {frame === 'verdict' && (
               <div style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap:16 }}>
-                <ConstellationSVG aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} />
+                <ConstellationSVG aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} sources={activeSources} />
                 <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                   <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:16 }}>
                     <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:8 }}>Market vs AI</div>
