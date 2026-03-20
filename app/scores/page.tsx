@@ -213,7 +213,6 @@ function ScoresPageContent() {
           </div>
 
         </div>
-      </div>
       )}
 
       {!isPlain && tradeData && (
