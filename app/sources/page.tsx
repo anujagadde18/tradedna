@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 const S = {
@@ -86,7 +86,7 @@ function SigPill({ type }: { type: SigType }) {
   );
 }
 
-export default function SourcesPage() {
+function SourcesPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const market = searchParams.get('market') || '';
@@ -412,5 +412,13 @@ export default function SourcesPage() {
       )}
 
     </div>
+  );
+}
+
+export default function SourcesPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight:'100vh', background:'#0a0a0b' }} />}>
+      <SourcesPageInner />
+    </Suspense>
   );
 }
