@@ -389,7 +389,6 @@ function ScoresPageContent() {
 
       </div>
 
-      {/* Footer */}
       <div className="border-t border-gray-800/50 px-6 py-3 mt-8">
         <p className="text-gray-800 text-xs text-center">Not financial advice. Research purposes only.</p>
       </div>
