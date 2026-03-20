@@ -1,224 +1,416 @@
-"use client";
+'use client';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-import { Suspense, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { loadSources, saveSources, addSource, removeSource, toggleSource, updateSourceWeight, getSourcesByType } from "@/lib/customSources/sourceManager";
-import { CURATED_SOURCES } from "@/lib/customSources/curatedSources";
-import { SourceCard } from "@/components/customSources/SourceCard";
-import { PopularSources } from "@/components/customSources/PopularSources";
+const S = {
+  bg: '#0a0a0b', bg2: '#111113', bg3: '#18181c', bg4: '#1f1f25',
+  border: 'rgba(255,255,255,0.07)', border2: 'rgba(255,255,255,0.12)',
+  text: '#f0eff4', text2: '#9998a8', text3: '#5e5d6e',
+  purple: '#7c6ff7', purpleL: '#a89cf8',
+  green: '#2ecc8a', amber: '#f5a623', red: '#ef4f6a', blue: '#4d9de0',
+};
 
-function SourcesContent() {
-  const router = useRouter();
-  const [sources, setSources] = useState<any[]>([]);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [modalType, setModalType] = useState<"news" | "social" | "technical">("news");
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [lastEvent, setLastEvent] = useState<string | null>(null);
+type SigType = 'strong' | 'mixed' | 'contrary' | 'priced';
+type CatType = 'news' | 'social' | 'market' | 'community';
 
-  const categoryWeights = { news: 35, social: 40, technical: 25 };
-
-  useEffect(() => {
-    setSources(loadSources());
-    const savedEvent = localStorage.getItem('lastAnalyzedEvent');
-    setLastEvent(savedEvent);
-  }, []);
-
-  const handleAddCurated = (type: "news" | "social" | "technical", curatedSource: any) => {
-    const newSource = {
-      type,
-      name: curatedSource.name,
-      url: curatedSource.url,
-      description: curatedSource.description
-    };
-    
-    const updated = addSource(sources, newSource);
-    setSources(updated);
-    
-    const categorySources = updated.filter((s: any) => s.type === type && s.enabled);
-    const addedSource = categorySources.find((s: any) => s.name === curatedSource.name);
-    const finalPercentage = addedSource ? Math.round((addedSource.weight / 100) * categoryWeights[type]) : 0;
-    
-    setSuccessMessage(`${curatedSource.name} added! Now gets ${finalPercentage}% of your final prediction.`);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 8000);
-  };
-
-  const handleRemove = (sourceId: string) => {
-    const updated = removeSource(sources, sourceId);
-    setSources(updated);
-  };
-
-  const handleToggle = (sourceId: string) => {
-    const updated = toggleSource(sources, sourceId);
-    setSources(updated);
-  };
-
-  const handleWeightChange = (sourceId: string, weight: number) => {
-    const updated = updateSourceWeight(sources, sourceId, weight);
-    setSources(updated);
-  };
-
-  const handleAddCustom = (type: "news" | "social" | "technical", name: string, url: string) => {
-    const newSource = { type, name, url, description: "Custom source" };
-    const updated = addSource(sources, newSource);
-    setSources(updated);
-    setShowAddModal(false);
-    
-    const categorySources = updated.filter((s: any) => s.type === type && s.enabled);
-    const addedSource = categorySources.find((s: any) => s.name === name);
-    const finalPercentage = addedSource ? Math.round((addedSource.weight / 100) * categoryWeights[type]) : 0;
-    
-    setSuccessMessage(`${name} added! Now gets ${finalPercentage}% of your final prediction.`);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 8000);
-  };
-
-  const handleReanalyze = () => {
-    if (lastEvent) {
-      router.push(`/scores?event=${encodeURIComponent(lastEvent)}`);
-    } else {
-      router.push('/event');
-    }
-  };
-
-  const newsSources = getSourcesByType(sources, "news");
-  const socialSources = getSourcesByType(sources, "social");
-  const technicalSources = getSourcesByType(sources, "technical");
-
-  return (
-    <main style={{ minHeight: "100vh", background: "#0f1419", color: "#fff" }}>
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "40px 24px 80px" }}>
-
-        {showSuccess && (
-          <div style={{ position: "fixed", top: 80, right: 24, left: 24, zIndex: 1000, maxWidth: 500, margin: "0 auto", padding: "16px 20px", borderRadius: 12, background: "rgba(34,197,94,0.95)", border: "1px solid rgba(34,197,94,0.4)", boxShadow: "0 8px 24px rgba(0,0,0,0.4)", backdropFilter: "blur(8px)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 12 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 6 }}>Success!</div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.9)" }}>{successMessage}</div>
-              </div>
-              <button onClick={() => setShowSuccess(false)} style={{ background: "none", border: "none", color: "#fff", fontSize: 18, cursor: "pointer", padding: 0, lineHeight: 1 }}>X</button>
-            </div>
-          </div>
-        )}
-
-        <div style={{ marginBottom: 40 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
-            <a href="/" style={{ color: "#9ca3af", fontSize: 14, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>Back to Home</a>
-            <button onClick={handleReanalyze} style={{ padding: "8px 16px", borderRadius: 8, background: "#9333ea", border: "none", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-              {lastEvent ? `Re-analyze` : 'Analyze Event'}
-            </button>
-          </div>
-
-          <h1 style={{ fontSize: 28, fontWeight: 900, margin: "0 0 8px 0" }}>Custom Data Sources</h1>
-          <p style={{ fontSize: 15, color: "#9ca3af", margin: 0, lineHeight: 1.6 }}>Add your trusted sources. Weights auto-balance within each category.</p>
-          
-          {lastEvent && (
-            <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(147,51,234,0.08)", border: "1px solid rgba(147,51,234,0.2)" }}>
-              <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4 }}>Currently analyzing:</div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#a78bfa" }}>{lastEvent}</div>
-            </div>
-          )}
-        </div>
-
-        <div style={{ marginBottom: 32, padding: 16, borderRadius: 12, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#60a5fa", marginBottom: 8 }}>How It Works</div>
-          <div style={{ fontSize: 13, color: "#d4d4d8", lineHeight: 1.7 }}>Sources within each category split the category's total weight. Add sources, adjust their weights, then click Re-analyze to see updated predictions.</div>
-        </div>
-
-        <CategorySection title="News Sources" description="RSS feeds, blogs, news outlets" sources={newsSources} curatedSources={CURATED_SOURCES.news} type="news" categoryWeight={categoryWeights.news} onAdd={(source: any) => handleAddCurated("news", source)} onRemove={handleRemove} onToggle={handleToggle} onWeightChange={handleWeightChange} onAddCustomClick={() => { setModalType("news"); setShowAddModal(true); }} />
-
-        <CategorySection title="Social Sources" description="Twitter accounts, Reddit, Discord, Telegram" sources={socialSources} curatedSources={CURATED_SOURCES.social} type="social" categoryWeight={categoryWeights.social} onAdd={(source: any) => handleAddCurated("social", source)} onRemove={handleRemove} onToggle={handleToggle} onWeightChange={handleWeightChange} onAddCustomClick={() => { setModalType("social"); setShowAddModal(true); }} />
-
-        <CategorySection title="Technical Sources" description="Market data, charts, APIs" sources={technicalSources} curatedSources={CURATED_SOURCES.technical} type="technical" categoryWeight={categoryWeights.technical} onAdd={(source: any) => handleAddCurated("technical", source)} onRemove={handleRemove} onToggle={handleToggle} onWeightChange={handleWeightChange} onAddCustomClick={() => { setModalType("technical"); setShowAddModal(true); }} />
-
-      </div>
-
-      {showAddModal && <AddCustomSourceModal type={modalType} onAdd={handleAddCustom} onClose={() => setShowAddModal(false)} />}
-    </main>
-  );
+interface ActiveSource {
+  id: string;
+  name: string;
+  category: CatType;
+  signal: string;
+  type: SigType;
+  contribution: number;
 }
 
-function CategorySection({ title, description, sources, curatedSources, type, categoryWeight, onAdd, onRemove, onToggle, onWeightChange, onAddCustomClick }: any) {
-  const enabledSources = sources.filter((s: any) => s.enabled);
-
-  return (
-    <div style={{ marginBottom: 32, padding: 24, borderRadius: 14, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 18, fontWeight: 800, color: "#e4e4e7", marginBottom: 6 }}>{title}</div>
-        <div style={{ fontSize: 13, color: "#9ca3af" }}>{description} - Category weight: {categoryWeight}%</div>
-      </div>
-
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#9ca3af", marginBottom: 10 }}>YOUR SOURCES ({enabledSources.length} active)</div>
-        
-        {sources.length === 0 ? (
-          <div style={{ padding: 20, textAlign: "center", color: "#71717a", fontSize: 13 }}>No sources yet. Add popular sources below.</div>
-        ) : (
-          <div>
-            {sources.map((source: any) => (
-              <SourceCard key={source.id} source={source} categoryWeight={categoryWeight} onRemove={() => onRemove(source.id)} onToggle={() => onToggle(source.id)} onWeightChange={(weight: number) => onWeightChange(source.id, weight)} />
-            ))}
-          </div>
-        )}
-      </div>
-
-      <PopularSources curatedSources={curatedSources} existingSources={sources} onAdd={onAdd} />
-
-      <button onClick={onAddCustomClick} style={{ marginTop: 16, width: "100%", padding: "12px 16px", borderRadius: 10, background: "rgba(147,51,234,0.12)", border: "1px dashed rgba(147,51,234,0.3)", color: "#a78bfa", fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>Add Custom {type === "news" ? "News" : type === "social" ? "Social" : "Technical"} Source</button>
-    </div>
-  );
+interface MarketSource {
+  id: string;
+  name: string;
+  desc: string;
+  category: CatType;
+  added: boolean;
 }
 
-function AddCustomSourceModal({ type, onAdd, onClose }: any) {
-  const [name, setName] = useState("");
-  const [url, setUrl] = useState("");
+const INITIAL_ACTIVE: ActiveSource[] = [
+  { id: 'reuters',    name: 'Reuters',         category: 'news',      signal: 'GDP contraction articles up 40% this week', type: 'strong',   contribution: 22 },
+  { id: 'ft',         name: 'Financial Times', category: 'news',      signal: 'Analysis points to uncertainty, leans toward outcome', type: 'mixed', contribution: 11 },
+  { id: 'bloomberg',  name: 'Bloomberg',       category: 'news',      signal: 'Market watchers cautiously optimistic', type: 'strong', contribution: 15 },
+  { id: 'reddit',     name: 'Reddit',          category: 'social',    signal: 'r/economics - strong consensus forming', type: 'strong', contribution: 18 },
+  { id: 'twitter',    name: 'Twitter/X',       category: 'social',    signal: 'Noisy - political commentary drowning signal', type: 'contrary', contribution: -3 },
+  { id: 'polymarket', name: 'Polymarket',      category: 'market',    signal: '95% consensus - already mostly priced in', type: 'priced', contribution: 12 },
+  { id: 'kalshi',     name: 'Kalshi',          category: 'market',    signal: 'Contracts confirm Polymarket direction', type: 'priced', contribution: 8 },
+  { id: 'metaculus',  name: 'Metaculus',       category: 'community', signal: 'Community forecasters lean positive', type: 'mixed', contribution: 6 },
+];
 
-  const placeholders: any = {
-    news: { name: "Bloomberg Markets", url: "https://feeds.bloomberg.com/markets/news.rss" },
-    social: { name: "@Reuters or r/geopolitics", url: "@Reuters or r/geopolitics" },
-    technical: { name: "TradingView", url: "https://www.tradingview.com" }
-  };
+const MARKETPLACE: MarketSource[] = [
+  { id: 'reuters',    name: 'Reuters',              desc: 'Global financial newswire',           category: 'news',      added: true },
+  { id: 'bloomberg',  name: 'Bloomberg',            desc: 'Markets and finance coverage',        category: 'news',      added: true },
+  { id: 'ft',         name: 'Financial Times',      desc: 'Global business press',               category: 'news',      added: true },
+  { id: 'wsj',        name: 'Wall Street Journal',  desc: 'US business and financial news',      category: 'news',      added: false },
+  { id: 'economist',  name: 'The Economist',        desc: 'Long-form economic analysis',         category: 'news',      added: false },
+  { id: 'politico',   name: 'Politico',             desc: 'Policy and political coverage',       category: 'news',      added: false },
+  { id: 'reddit',     name: 'Reddit',               desc: 'r/economics, r/investing threads',    category: 'social',    added: true },
+  { id: 'twitter',    name: 'Twitter/X',            desc: 'Real-time sentiment and discussion',  category: 'social',    added: true },
+  { id: 'linkedin',   name: 'LinkedIn',             desc: 'Professional network signals',        category: 'social',    added: false },
+  { id: 'hn',         name: 'Hacker News',          desc: 'Tech-adjacent community discussion',  category: 'social',    added: false },
+  { id: 'discord',    name: 'Discord communities',  desc: 'Crypto and prediction market servers', category: 'social',   added: false },
+  { id: 'substack',   name: 'Substack newsletters', desc: 'Expert analyst newsletters',          category: 'social',    added: false },
+  { id: 'polymarket', name: 'Polymarket',           desc: 'Largest prediction market',           category: 'market',    added: true },
+  { id: 'kalshi',     name: 'Kalshi',               desc: 'Regulated prediction contracts',      category: 'market',    added: true },
+  { id: 'manifold',   name: 'Manifold Markets',     desc: 'Play-money forecasting',              category: 'market',    added: false },
+  { id: 'futuur',     name: 'Futuur',               desc: 'Global prediction marketplace',       category: 'market',    added: false },
+  { id: 'metaculus',  name: 'Metaculus',            desc: 'Expert forecasting community',        category: 'community', added: true },
+  { id: 'gjopen',     name: 'Good Judgment Open',   desc: 'Superforecaster community',           category: 'community', added: false },
+  { id: 'cbo',        name: 'CBO Reports',          desc: 'Congressional Budget Office data',    category: 'community', added: false },
+  { id: 'fred',       name: 'Fed Economic Data',    desc: 'Federal Reserve economic datasets',   category: 'community', added: false },
+];
 
-  const handleSubmit = () => {
-    if (!name.trim() || !url.trim()) {
-      alert("Please fill in both fields");
-      return;
-    }
-    onAdd(type, name.trim(), url.trim());
-    setName("");
-    setUrl("");
-  };
+const CAT_COLORS: Record<CatType, string> = {
+  news: S.blue, social: S.purple, market: S.green, community: S.amber,
+};
+const CAT_ICONS: Record<CatType, string> = {
+  news: 'N', social: 'S', market: 'M', community: 'C',
+};
 
+function SigPill({ type }: { type: SigType }) {
+  const m = {
+    strong:  { bg: 'rgba(46,204,138,0.12)',  color: S.green,  label: 'Strong' },
+    mixed:   { bg: 'rgba(245,166,35,0.12)',  color: S.amber,  label: 'Mixed' },
+    contrary:{ bg: 'rgba(239,79,106,0.12)',  color: S.red,    label: 'Contrary' },
+    priced:  { bg: 'rgba(77,157,224,0.12)',  color: S.blue,   label: 'Priced in' },
+  }[type];
   return (
-    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }} onClick={onClose}>
-      <div style={{ maxWidth: 500, width: "100%", background: "#1a1f2e", borderRadius: 16, padding: 28, border: "1px solid rgba(255,255,255,0.1)" }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ fontSize: 20, fontWeight: 800, color: "#e4e4e7", marginBottom: 8 }}>Add Custom {type === "news" ? "News" : type === "social" ? "Social" : "Technical"} Source</div>
-        <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 24 }}>Add any source you trust to improve your predictions</div>
-
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#d4d4d8", marginBottom: 8 }}>Source Name</label>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={placeholders[type].name} style={{ width: "100%", padding: "12px 14px", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: 14, outline: "none" }} />
-        </div>
-
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#d4d4d8", marginBottom: 8 }}>URL or Handle</label>
-          <input type="text" value={url} onChange={(e) => setUrl(e.target.value)} placeholder={placeholders[type].url} style={{ width: "100%", padding: "12px 14px", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: 14, outline: "none" }} />
-        </div>
-
-        <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={handleSubmit} style={{ flex: 1, padding: "12px", borderRadius: 8, background: "#9333ea", border: "none", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Add Source</button>
-          <button onClick={onClose} style={{ flex: 1, padding: "12px", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#9ca3af", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-        </div>
-      </div>
-    </div>
+    <span style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:20, fontSize:10, fontWeight:600, background:m.bg, color:m.color }}>
+      <span style={{ width:5, height:5, borderRadius:'50%', background:m.color, display:'inline-block' }}></span>
+      {m.label}
+    </span>
   );
 }
 
 export default function SourcesPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const market = searchParams.get('market') || '';
+
+  const [active, setActive]         = useState<ActiveSource[]>(INITIAL_ACTIVE);
+  const [market_srcs, setMktSrcs]   = useState<MarketSource[]>(MARKETPLACE);
+  const [weights, setWeights]       = useState({ news: 35, social: 40, market: 25 });
+  const [filter, setFilter]         = useState<CatType | 'all'>('all');
+  const [search, setSearch]         = useState('');
+  const [aiPct, setAiPct]           = useState(97);
+  const [adding, setAdding]         = useState<Record<string,boolean>>({});
+  const [showCustom, setShowCustom] = useState(false);
+  const [customUrl, setCustomUrl]   = useState('');
+  const [customLabel, setCustomLabel] = useState('');
+  const [toast, setToast]           = useState('');
+
+  const marketPct = 95;
+  const edge      = aiPct - marketPct;
+  const edgeColor = edge > 0 ? S.green : S.red;
+
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 2500);
+  }, []);
+
+  const updateVerdict = useCallback((delta: number) => {
+    setAiPct(prev => Math.min(99, Math.max(50, prev + delta)));
+  }, []);
+
+  const removeSource = (id: string) => {
+    setActive(prev => prev.filter(s => s.id !== id));
+    setMktSrcs(prev => prev.map(s => s.id === id ? { ...s, added: false } : s));
+    showToast(id.charAt(0).toUpperCase() + id.slice(1) + ' removed from analysis');
+    updateVerdict(-2);
+  };
+
+  const addFromMarket = (src: MarketSource) => {
+    if (src.added) return;
+    setAdding(prev => ({ ...prev, [src.id]: true }));
+    setTimeout(() => {
+      setMktSrcs(prev => prev.map(s => s.id === src.id ? { ...s, added: true } : s));
+      setAdding(prev => ({ ...prev, [src.id]: false }));
+      const newActive: ActiveSource = {
+        id: src.id, name: src.name, category: src.category,
+        signal: src.name + ' added - scanning for signals',
+        type: 'mixed', contribution: Math.floor(Math.random() * 8) + 3,
+      };
+      setActive(prev => [...prev, newActive]);
+      showToast(src.name + ' added - scanning for signals');
+      updateVerdict(1);
+    }, 800);
+  };
+
+  const handleWeightChange = (key: string, val: number) => {
+    const rem = 100 - val;
+    const others = Object.keys(weights).filter(k => k !== key) as Array<keyof typeof weights>;
+    const ot = others.reduce((s, k) => s + weights[k], 0);
+    const nw = { ...weights, [key]: val };
+    if (ot > 0) others.forEach(k => { nw[k] = Math.round((weights[k] / ot) * rem); });
+    const tot = Object.values(nw).reduce((s, v) => s + v, 0);
+    if (tot !== 100) nw[others[0]] += (100 - tot);
+    setWeights(nw as typeof weights);
+    updateVerdict(Math.floor((val - weights[key as keyof typeof weights]) / 20));
+  };
+
+  const filteredActive = active.filter(s => {
+    const matchCat  = filter === 'all' || s.category === filter;
+    const matchSearch = !search || s.name.toLowerCase().includes(search.toLowerCase()) || s.signal.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchSearch;
+  });
+
+  const filteredMarket = market_srcs.filter(s => {
+    const matchCat  = filter === 'all' || s.category === filter;
+    const matchSearch = !search || s.name.toLowerCase().includes(search.toLowerCase()) || s.desc.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchSearch;
+  });
+
+  const cats: { key: CatType; label: string }[] = [
+    { key: 'news', label: 'News' },
+    { key: 'social', label: 'Social' },
+    { key: 'market', label: 'Market' },
+    { key: 'community', label: 'Community' },
+  ];
+
+  const grouped = cats.map(cat => ({
+    ...cat,
+    items: filteredMarket.filter(s => s.category === cat.key),
+  })).filter(g => g.items.length > 0);
+
+  const topSignals = [...active].sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution)).slice(0, 5);
+
   return (
-    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#0f1419", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}><div>Loading...</div></div>}>
-      <SourcesContent />
-    </Suspense>
+    <div style={{ background: S.bg, minHeight: '100vh', color: S.text, fontFamily: 'system-ui,-apple-system,sans-serif' }}>
+
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: 'rgba(10,10,11,0.9)', backdropFilter: 'blur(12px)', borderBottom: '1px solid ' + S.border, padding: '0 24px', height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <button onClick={() => router.back()} style={{ display: 'flex', alignItems: 'center', gap: 6, color: S.text2, cursor: 'pointer', fontSize: 13, fontWeight: 500, border: 'none', background: 'none' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><polyline points="15 18 9 12 15 6"/></svg>
+          Back to analysis
+        </button>
+        <div style={{ fontSize: 15, fontWeight: 600 }}>PlayPicks AI</div>
+        <div style={{ padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: 'rgba(124,111,247,0.12)', color: S.purpleL, border: '1px solid rgba(124,111,247,0.2)' }}>
+          {active.length} sources active
+        </div>
+      </nav>
+
+      <div style={{ paddingTop: 52 }}>
+        <div style={{ padding: '16px 24px 14px', background: S.bg2, borderBottom: '1px solid ' + S.border, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.5px', marginBottom: 3 }}>Sources & Intelligence</div>
+            <div style={{ fontSize: 13, color: S.text2 }}>Choose which sources feed your AI analysis. Add from the marketplace or paste any URL.</div>
+          </div>
+          <div style={{ display: 'flex', gap: 20 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: S.purpleL }}>{aiPct}%</div>
+              <div style={{ fontSize: 10, color: S.text3, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current verdict</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: edgeColor }}>{edge > 0 ? '+' : ''}{edge}%</div>
+              <div style={{ fontSize: 10, color: S.text3, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Edge</div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding: '12px 24px', background: S.bg2, borderBottom: '1px solid ' + S.border, display: 'flex', gap: 12, flexWrap: 'wrap' as const, alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: S.bg3, border: '1px solid ' + S.border2, borderRadius: 8, padding: '6px 12px', flex: 1, maxWidth: 300 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14, color: S.text3, flexShrink: 0 }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search sources..."
+              style={{ background: 'none', border: 'none', color: S.text, fontSize: 13, outline: 'none', width: '100%', fontFamily: 'inherit' }} />
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
+            {[{ key: 'all', label: 'All' }, ...cats].map(f => (
+              <button key={f.key} onClick={() => setFilter(f.key as CatType | 'all')}
+                style={{ padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: '1px solid ' + (filter === f.key ? 'transparent' : S.border2), background: filter === f.key ? S.purple : 'none', color: filter === f.key ? 'white' : S.text2, transition: 'all 0.15s' }}>
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', minHeight: 'calc(100vh - 130px)' }}>
+
+          <div style={{ padding: '24px 24px 60px', borderRight: '1px solid ' + S.border, overflowY: 'auto' }}>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.8px', color: S.text3, marginBottom: 14 }}>
+              Active sources
+              <span style={{ background: S.bg4, color: S.text3, padding: '2px 7px', borderRadius: 10, fontSize: 10 }}>{active.length}</span>
+              <span style={{ marginLeft: 'auto', fontSize: 10, color: S.text3, fontWeight: 400, textTransform: 'none' as const, cursor: 'pointer' }}>Sorted by contribution</span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 32 }}>
+              {filteredActive.map(src => (
+                <div key={src.id} style={{ background: S.bg3, border: '1px solid ' + S.border, borderRadius: 12, padding: 14, position: 'relative', transition: 'all 0.2s' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: CAT_COLORS[src.category] + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: CAT_COLORS[src.category] }}>
+                      {CAT_ICONS[src.category]}
+                    </div>
+                    <button onClick={() => removeSource(src.id)}
+                      style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(239,79,106,0.1)', border: 'none', cursor: 'pointer', fontSize: 10, color: S.red, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      x
+                    </button>
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{src.name}</div>
+                  <div style={{ fontSize: 11, color: S.text3, marginBottom: 8, lineHeight: 1.4 }}>{src.signal}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <SigPill type={src.type} />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: src.contribution >= 0 ? S.green : S.red }}>{src.contribution >= 0 ? '+' : ''}{src.contribution}%</span>
+                  </div>
+                </div>
+              ))}
+
+              <div onClick={() => setShowCustom(true)}
+                style={{ border: '1px dashed ' + S.border2, borderRadius: 12, padding: 14, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s', minHeight: 120 }}
+                onMouseEnter={e => { (e.currentTarget.style.borderColor = S.purple); (e.currentTarget.style.background = 'rgba(124,111,247,0.05)'); }}
+                onMouseLeave={e => { (e.currentTarget.style.borderColor = S.border2); (e.currentTarget.style.background = 'none'); }}>
+                <div style={{ width: 28, height: 28, borderRadius: '50%', background: S.bg4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: S.text3 }}>+</div>
+                <div style={{ fontSize: 12, color: S.text3, textAlign: 'center', lineHeight: 1.4 }}>Add custom source<br/>Paste any URL</div>
+              </div>
+            </div>
+
+            {showCustom && (
+              <div style={{ background: S.bg2, border: '1px solid ' + S.border2, borderRadius: 14, padding: 20, marginBottom: 28 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Add a custom source</div>
+                <div style={{ fontSize: 12, color: S.text2, marginBottom: 16, lineHeight: 1.5 }}>Paste any news URL, publication name, subreddit, or RSS feed. AI will scrape it and add signals to your analysis.</div>
+                <input value={customUrl} onChange={e => setCustomUrl(e.target.value)} placeholder="https://example.com/article or publication name..."
+                  style={{ width: '100%', background: S.bg3, border: '1px solid ' + S.border2, borderRadius: 8, padding: '10px 14px', color: S.text, fontSize: 13, outline: 'none', fontFamily: 'inherit', marginBottom: 8, boxSizing: 'border-box' as const }} />
+                <input value={customLabel} onChange={e => setCustomLabel(e.target.value)} placeholder="Optional: give it a custom label (e.g. My research)"
+                  style={{ width: '100%', background: S.bg3, border: '1px solid ' + S.border2, borderRadius: 8, padding: '10px 14px', color: S.text, fontSize: 13, outline: 'none', fontFamily: 'inherit', marginBottom: 12, boxSizing: 'border-box' as const }} />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => { if (customUrl) { showToast('Custom source added'); setShowCustom(false); setCustomUrl(''); setCustomLabel(''); updateVerdict(1); } }}
+                    style={{ padding: '8px 18px', background: S.purple, color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                    Add to analysis
+                  </button>
+                  <button onClick={() => setShowCustom(false)}
+                    style={{ padding: '8px 18px', background: 'none', color: S.text2, border: '1px solid ' + S.border2, borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.8px', color: S.text3, marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              Source marketplace
+              <span style={{ fontSize: 10, color: S.text3, fontWeight: 400, textTransform: 'none' as const }}>{market_srcs.filter(s => !s.added).length} available to add</span>
+            </div>
+
+            {grouped.map(cat => (
+              <div key={cat.key} style={{ marginBottom: 28 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: CAT_COLORS[cat.key] }}></div>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: CAT_COLORS[cat.key] }}>
+                      {cat.key === 'news' ? 'News sources' : cat.key === 'social' ? 'Social sources' : cat.key === 'market' ? 'Prediction markets' : 'Community & Research'}
+                    </div>
+                    <div style={{ fontSize: 11, color: S.text3 }}>
+                      {cat.key === 'news' ? 'Financial and political press' : cat.key === 'social' ? 'Community discussion and sentiment' : cat.key === 'market' ? 'Live odds and contract data' : 'Forecasters, researchers, think tanks'}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                  {cat.items.map(src => (
+                    <div key={src.id} style={{ background: src.added ? 'rgba(124,111,247,0.05)' : S.bg3, border: '1px solid ' + (src.added ? 'rgba(124,111,247,0.2)' : S.border), borderRadius: 10, padding: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 8, background: CAT_COLORS[src.category] + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: CAT_COLORS[src.category], flexShrink: 0 }}>
+                        {CAT_ICONS[src.category]}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 1 }}>{src.name}</div>
+                        <div style={{ fontSize: 10, color: S.text3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{src.desc}</div>
+                      </div>
+                      <button
+                        onClick={() => src.added ? removeSource(src.id) : addFromMarket(src)}
+                        disabled={adding[src.id]}
+                        style={{ padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: src.added ? 'pointer' : 'pointer', border: '1px solid', flexShrink: 0, transition: 'all 0.2s',
+                          background: src.added ? 'rgba(46,204,138,0.1)' : adding[src.id] ? 'rgba(124,111,247,0.1)' : 'rgba(124,111,247,0.12)',
+                          color: src.added ? S.green : adding[src.id] ? S.text3 : S.purpleL,
+                          borderColor: src.added ? 'rgba(46,204,138,0.2)' : adding[src.id] ? S.border : 'rgba(124,111,247,0.25)',
+                        }}>
+                        {src.added ? 'Added' : adding[src.id] ? 'Adding...' : '+ Add'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ position: 'sticky', top: 130, height: 'calc(100vh - 130px)', overflowY: 'auto', padding: '20px 20px 40px', background: S.bg2 }}>
+
+            <div style={{ background: S.bg3, border: '1px solid ' + S.border, borderRadius: 14, padding: 18, marginBottom: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.7px', color: S.text3, marginBottom: 4 }}>Source weights</div>
+              <div style={{ fontSize: 11, color: S.text3, marginBottom: 16, lineHeight: 1.5 }}>Control how much each category influences the verdict. Must total 100%.</div>
+              {[
+                { key: 'news', label: 'News', sub: 'Mainstream financial press', color: S.blue },
+                { key: 'social', label: 'Social', sub: 'Reddit, Twitter, community', color: S.purple },
+                { key: 'market', label: 'Market', sub: 'Prediction market odds', color: S.green },
+              ].map(w => (
+                <div key={w.key} style={{ marginBottom: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: w.color }}></div>
+                      <span style={{ fontSize: 12, fontWeight: 600 }}>{w.label}</span>
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 700, fontFamily: 'monospace', color: w.color }}>{weights[w.key as keyof typeof weights]}%</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: S.text3, marginBottom: 4 }}>{w.sub}</div>
+                  <input type="range" min="0" max="100" step="5"
+                    value={weights[w.key as keyof typeof weights]}
+                    onChange={e => handleWeightChange(w.key, parseInt(e.target.value))}
+                    style={{ width: '100%', accentColor: w.color }} />
+                </div>
+              ))}
+              <div style={{ fontSize: 11, fontWeight: 600, color: weights.news + weights.social + weights.market === 100 ? S.green : S.red, marginBottom: 12 }}>
+                Total: {weights.news + weights.social + weights.market}% {weights.news + weights.social + weights.market === 100 ? '- balanced' : '- must equal 100%'}
+              </div>
+              <button style={{ width: '100%', padding: '10px 0', background: S.purple, color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                Apply and re-analyze
+              </button>
+            </div>
+
+            <div style={{ background: S.bg3, border: '1px solid ' + S.border, borderRadius: 14, padding: 18, marginBottom: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.7px', color: S.text3, marginBottom: 16 }}>Live verdict preview</div>
+              <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: '-2px', color: S.purpleL, lineHeight: 1, marginBottom: 4 }}>{aiPct}%</div>
+              <div style={{ fontSize: 12, color: S.text2, marginBottom: 14 }}>AI confidence</div>
+              {[
+                { key: 'Market', val: marketPct + '%', color: S.text2 },
+                { key: 'AI thinks', val: aiPct + '%', color: S.purpleL },
+                { key: 'Edge', val: (edge > 0 ? '+' : '') + edge + '%', color: edgeColor },
+                { key: 'Sources active', val: String(active.length), color: S.text },
+              ].map(r => (
+                <div key={r.key} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '5px 0', borderBottom: '1px solid ' + S.border }}>
+                  <span style={{ color: S.text2 }}>{r.key}</span>
+                  <span style={{ fontWeight: 600, fontFamily: 'monospace', color: r.color }}>{r.val}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ background: S.bg3, border: '1px solid ' + S.border, borderRadius: 14, padding: 18 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.7px', color: S.text3, marginBottom: 14 }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: S.purple }}></div>
+                Signal contribution
+              </div>
+              {topSignals.map(s => (
+                <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: CAT_COLORS[s.category], flexShrink: 0 }}></div>
+                  <div style={{ fontSize: 11, color: S.text2, width: 64, flexShrink: 0 }}>{s.name}</div>
+                  <div style={{ flex: 1, height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{ height: 4, borderRadius: 2, background: CAT_COLORS[s.category], width: Math.min(Math.abs(s.contribution) / 25 * 100, 100) + '%' }} />
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 700, width: 32, textAlign: 'right', flexShrink: 0, color: s.contribution >= 0 ? CAT_COLORS[s.category] : S.red }}>
+                    {s.contribution >= 0 ? '+' : ''}{s.contribution}%
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: S.bg3, border: '1px solid ' + S.border2, borderRadius: 10, padding: '10px 20px', fontSize: 13, color: S.text, zIndex: 200, boxShadow: '0 8px 24px rgba(0,0,0,0.4)', whiteSpace: 'nowrap' as const }}>
+          {toast}
+        </div>
+      )}
+
+    </div>
   );
 }
