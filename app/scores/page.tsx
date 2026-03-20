@@ -334,9 +334,9 @@ function ScoresPageContent() {
           <div style={{ height:44, borderBottom:'1px solid '+C.border, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', flexShrink:0, background:C.bg1 }}>
             <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:C.t3 }}>
               <span>PlayPicks AI</span>
-              <span style={{ color:C.t4 }}>></span>
+              <span style={{ color:C.t4 }}>{">"}</span>
               <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:200 }}>{eventTitle.slice(0,30)}{eventTitle.length>30?'...':''}</span>
-              <span style={{ color:C.t4 }}>></span>
+              <span style={{ color:C.t4 }}>{">"}</span>
               <span style={{ color:C.t1, fontWeight:500 }}>{FRAME_LABELS[curIdx]}</span>
             </div>
             <div style={{ display:'flex', gap:6 }}>
