@@ -114,7 +114,7 @@ function ScoresPageContent() {
   return (
     <div className="min-h-screen bg-black text-white">
 
-      {/* Top nav */}
+      
       <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-800/50">
         <button onClick={() => router.push('/')} className="text-gray-500 hover:text-white text-sm transition-colors">
           Back
@@ -130,7 +130,7 @@ function ScoresPageContent() {
         </div>
       </nav>
 
-      {/* Market banner */}
+      
       <div className="border-b border-gray-800/50 px-6 py-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-xs text-gray-600 uppercase tracking-widest font-semibold mb-1">Analyzing</div>
@@ -145,7 +145,7 @@ function ScoresPageContent() {
         </div>
       </div>
 
-      {/* Tune sources panel */}
+      
       {showSources && (
         <div className="border-b border-purple-800/30 bg-purple-950/20 px-6 py-6">
           <div className="max-w-6xl mx-auto">
@@ -219,7 +219,7 @@ function ScoresPageContent() {
         </div>
       )}
 
-      {/* Main content */}
+      
       <div className="max-w-6xl mx-auto px-6 py-6">
         {isPlain ? (
           <PlainTextAnalysis
@@ -232,7 +232,7 @@ function ScoresPageContent() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-            {/* LEFT - Market standings */}
+            
             <div className="lg:col-span-3">
               <PolymarketComparison
                 userQuestion={event}
@@ -248,10 +248,10 @@ function ScoresPageContent() {
               />
             </div>
 
-            {/* RIGHT - Verdict + Conviction + Trade */}
+            
             <div className="lg:col-span-2 space-y-4">
 
-              {/* AI Verdict */}
+              
               <div className="bg-gray-900 border border-purple-500/30 rounded-2xl p-5">
                 <div className="text-xs text-purple-400 font-semibold uppercase tracking-widest mb-4">AI Verdict</div>
 
@@ -299,7 +299,7 @@ function ScoresPageContent() {
                   <div className="text-gray-600 text-sm py-6 text-center">Loading analysis...</div>
                 )}
 
-                {/* Edge / Conviction */}
+                
                 {(mtype === 'categorical' ? top.name : intel) && (
                   <div className={'mt-4 p-4 border rounded-xl ' + edgeBg}>
                     <div className="flex justify-between items-center mb-1">
@@ -319,7 +319,7 @@ function ScoresPageContent() {
                 )}
               </div>
 
-              {/* Trade Panel */}
+              
               {tradeData && (mtype === 'categorical' || intel) && (
                 <TradePanel
                   marketUrl={tradeData.marketUrl}
@@ -333,7 +333,7 @@ function ScoresPageContent() {
                 />
               )}
 
-              {/* Signal breakdown toggle */}
+              
               <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
                 <button onClick={() => setShowDeep(!showDeep)}
                   className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-800/30 transition-colors">
@@ -362,7 +362,7 @@ function ScoresPageContent() {
                 )}
               </div>
 
-              {/* Config */}
+              
               <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
                 <div className="text-xs text-gray-600 font-semibold uppercase tracking-widest mb-3">Configuration</div>
                 <div className="grid grid-cols-3 gap-2">
