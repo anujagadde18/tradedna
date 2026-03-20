@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PolymarketComparison } from '@/components/PolymarketComparison';
@@ -69,12 +70,12 @@ function ConstellationSVG({ aiPct, marketPct }: { aiPct: number; marketPct: numb
         <div style={{ textAlign:'right' }}>
           <div style={{ fontSize:9, color:C.t3, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:2 }}>Edge over market</div>
           <div style={{ fontSize:28, fontWeight:700, fontFamily:'monospace', letterSpacing:'-1px', color:edgeColor }}>{edgeStr}</div>
-          <div style={{ fontSize:9, color:C.t3, marginTop:2 }}>{edge > 6 ? 'strong opportunity' : edge > 2 ? 'small opportunity' : 'no edge'}</div>
+          <div style={{ fontSize:9, color:C.t3, marginTop:2 }}>{edge > 6 ? 'strong opportunity' : edge > 1 ? 'small opportunity' : edge > 0 ? 'small opportunity' : 'no edge'}</div>
         </div>
       </div>
       <div style={{ fontSize:9, color:C.t3, marginBottom:6 }}>Each signal orbits the verdict. Closer = stronger pull. Click any bubble to inspect.</div>
       <div style={{ position:'relative' }}>
-        <svg width="100%" viewBox="0 0 520 280" style={{ display:'block' }}>
+        <svg width="100%" viewBox="0 0 520 290" style={{ display:'block' }}>
           <defs>
             <radialGradient id="rg1b" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#7c6ff7" stopOpacity="0.14"/>
@@ -143,7 +144,7 @@ function ScoresPageContent() {
   const [outcomes, setOutcomes]     = useState<any[]>([]);
   const [hasUrl, setHasUrl]         = useState<boolean|null>(null);
   const [tradeData, setTradeData]   = useState<TradeReadyData|null>(null);
-  const [weights, setWeights]       = useState({ news:35, social:40, technical:25 });
+  const [weights, setWeights]       = useState({ news:35, social:40, market:25 });
   const [related, setRelated]       = useState<any[]>([]);
   const [srcCount, setSrcCount]     = useState(8);
   const [toast, setToast]           = useState('');
@@ -158,10 +159,23 @@ function ScoresPageContent() {
     const go = async () => {
       try {
         const stop = new Set(['will','there','that','this','what','when','have','does','with','would','the','and','for','are']);
-        const q = event.replace(/[?!.,]/g,'').split(' ').filter((w:string) => w.length > 2 && !stop.has(w.toLowerCase())).slice(0,4).join(' ');
+        const words = event.replace(/[?!.,]/g,'').split(' ').filter((w:string) => w.length > 2 && !stop.has(w.toLowerCase()));
+        const q = words.slice(0,4).join(' ');
         const r = await fetch('/api/search?q=' + encodeURIComponent(q));
         const d = await r.json();
-        if (d.results) setRelated(d.results.slice(0,6));
+        if (d.results) {
+          // Filter out sports markets unless query is about sports
+          const sportTerms = ['nfl','nba','nhl','mlb','soccer','football','basketball','baseball','hockey','tennis','golf','ufc','chess','esport'];
+          const queryLower = event.toLowerCase();
+          const isSportsQuery = sportTerms.some(t => queryLower.includes(t));
+          const filtered = isSportsQuery
+            ? d.results
+            : d.results.filter((m: any) => {
+                const title = (m.title || '').toLowerCase();
+                return !sportTerms.some(t => title.includes(t));
+              });
+          setRelated(filtered.slice(0, 6));
+        }
       } catch {}
     };
     if (event) go();
@@ -216,7 +230,15 @@ function ScoresPageContent() {
   const goFrame = (f: Frame) => { setFrame(f); };
   const curIdx  = FRAMES.indexOf(frame);
 
-  const navItem = (f: Frame, icon: string, label: string, sub: string, color: string, badge?: number) => (
+  const NAV_ICONS: Record<Frame, React.ReactNode> = {
+    verdict:  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>,
+    signals:  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>,
+    sources:  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
+    markets:  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+    trade:    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+  };
+
+  const navItem = (f: Frame, _icon: string, label: string, sub: string, color: string, badge?: number) => (
     <div onClick={() => goFrame(f)}
       style={{ display:'flex', alignItems:'center', gap:9, padding:'7px 10px', borderRadius:9, cursor:'pointer', marginBottom:2, position:'relative',
         background: frame===f ? C.bg3 : 'none',
@@ -224,7 +246,9 @@ function ScoresPageContent() {
         transition:'all .15s',
       }}>
       {frame===f && <div style={{ position:'absolute', left:-8, top:'50%', transform:'translateY(-50%)', width:3, height:20, background:C.purple, borderRadius:'0 3px 3px 0' }}></div>}
-      <div style={{ width:28, height:28, borderRadius:7, background:color, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>{icon}</div>
+      <div style={{ width:28, height:28, borderRadius:7, background:color, display:'flex', alignItems:'center', justifyContent:'center', color: frame===f ? C.purpleL : C.t3, flexShrink:0 }}>
+        {NAV_ICONS[f]}
+      </div>
       <div style={{ flex:1, minWidth:0 }}>
         <div style={{ fontSize:12, fontWeight:500, color: frame===f ? C.t1 : C.t2, display:'block' }}>{label}</div>
         <div style={{ fontSize:10, color:C.t3, marginTop:1, display:'block', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{sub}</div>
@@ -309,19 +333,19 @@ function ScoresPageContent() {
         <div style={{ borderRight:'1px solid '+C.border, background:C.bg1, display:'flex', flexDirection:'column', overflowY:'auto', padding:'12px 8px' }}>
           <div style={{ marginBottom:20 }}>
             <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.8px', color:C.t4, padding:'0 8px', marginBottom:6 }}>Analysis</div>
-            {navItem('verdict',  'V', 'Verdict',         aiPctForDisplay+'% - +'+(edgeVal.toFixed(0))+'% edge', 'rgba(124,111,247,0.12)')}
-            {navItem('signals',  'S', 'Signals',         'News - Social - Market', 'rgba(77,157,224,0.12)')}
-            {navItem('sources',  'D', 'Sources',         srcCount+' active', 'rgba(46,204,138,0.12)', srcCount)}
+            {navItem('verdict',  '*', 'Verdict',         aiPctForDisplay+'% - +'+(edgeVal.toFixed(0))+'% edge', 'rgba(124,111,247,0.12)')}
+            {navItem('signals',  '~', 'Signals',         'News - Social - Market', 'rgba(77,157,224,0.12)')}
+            {navItem('sources',  '=', 'Sources',         srcCount+' active', 'rgba(46,204,138,0.12)', srcCount)}
           </div>
           <div style={{ height:1, background:C.border, margin:'0 4px 12px' }}></div>
           <div style={{ marginBottom:20 }}>
             <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.8px', color:C.t4, padding:'0 8px', marginBottom:6 }}>Explore</div>
-            {navItem('markets', 'M', 'Related markets',  related.length > 0 ? related.length+' found' : '5 related found', 'rgba(245,166,35,0.12)')}
+            {navItem('markets',  '^', 'Related markets',  related.length > 0 ? related.length+' found' : '5 related found', 'rgba(245,166,35,0.12)')}
           </div>
           <div style={{ height:1, background:C.border, margin:'0 4px 12px' }}></div>
           <div>
             <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.8px', color:C.t4, padding:'0 8px', marginBottom:6 }}>Action</div>
-            {navItem('trade', 'T', 'Trade', 'Sign in to place bet', 'rgba(239,79,106,0.12)')}
+            {navItem('trade',    '$', 'Trade', 'Sign in to place bet', 'rgba(239,79,106,0.12)')}
           </div>
           <div style={{ marginTop:'auto', padding:'12px 8px' }}>
             <div style={{ fontSize:9, color:C.t4, lineHeight:1.6, padding:8, background:C.bg2, border:'1px solid '+C.border, borderRadius:8 }}>
@@ -334,9 +358,9 @@ function ScoresPageContent() {
           <div style={{ height:44, borderBottom:'1px solid '+C.border, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', flexShrink:0, background:C.bg1 }}>
             <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:C.t3 }}>
               <span>PlayPicks AI</span>
-              <span style={{ color:C.t4 }}>{">"}</span>
+              <span style={{ color:C.t4 }}>></span>
               <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:200 }}>{eventTitle.slice(0,30)}{eventTitle.length>30?'...':''}</span>
-              <span style={{ color:C.t4 }}>{">"}</span>
+              <span style={{ color:C.t4 }}>></span>
               <span style={{ color:C.t1, fontWeight:500 }}>{FRAME_LABELS[curIdx]}</span>
             </div>
             <div style={{ display:'flex', gap:6 }}>
@@ -421,7 +445,7 @@ function ScoresPageContent() {
                   {[
                     { cat:'News', color:C.blue, type:'strong' as const, weight:weights.news, desc:'Reuters, Bloomberg, FT all showing strong signals. Narrative gaining traction in financial press.', bar:73, contrib:Math.round(aiPctForDisplay*(weights.news/100)) },
                     { cat:'Social', color:C.purpleL, type:'mixed' as const, weight:weights.social, desc:'Reddit broadly agrees. Twitter is noisy and contrary - dragging the social average down slightly.', bar:55, contrib:Math.round(aiPctForDisplay*(weights.social/100)) },
-                    { cat:'Market', color:C.green, type:'priced' as const, weight:weights.technical, desc:'Polymarket and Kalshi both at 95%+ already. Market has priced most of this in - limits edge.', bar:90, contrib:Math.round(aiPctForDisplay*(weights.technical/100)) },
+                    { cat:'Market', color:C.green, type:'priced' as const, weight:weights.market, desc:'Polymarket and Kalshi both at 95%+ already. Market has priced most of this in - limits edge.', bar:90, contrib:Math.round(aiPctForDisplay*(weights.market/100)) },
                   ].map(s => (
                     <div key={s.cat} style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:18 }}>
                       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
@@ -443,7 +467,7 @@ function ScoresPageContent() {
                     {[
                       { v:weights.news+'%', c:C.blue, l:'News weight', d:'Strong positive signal across all major outlets this week' },
                       { v:weights.social+'%', c:C.purpleL, l:'Social weight', d:'Mixed - Reddit positive, Twitter contrary' },
-                      { v:weights.technical+'%', c:C.green, l:'Market weight', d:'Already priced in at '+mktPctForDisplay+'% - edge is minimal here' },
+                      { v:weights.market+'%', c:C.green, l:'Market weight', d:'Already priced in at '+mktPctForDisplay+'% - edge is minimal here' },
                     ].map(x => (
                       <div key={x.l} style={{ textAlign:'center', padding:14, background:'rgba(255,255,255,0.025)', borderRadius:10 }}>
                         <div style={{ fontSize:26, fontWeight:700, fontFamily:'monospace', color:x.c, marginBottom:4 }}>{x.v}</div>
@@ -542,7 +566,7 @@ function ScoresPageContent() {
                   <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:16 }}>
                     <div style={{ fontSize:12, fontWeight:600, marginBottom:3 }}>Source weights</div>
                     <div style={{ fontSize:10, color:C.t2, marginBottom:14, lineHeight:1.5 }}>Adjust how much each category influences the verdict. Must total 100%.</div>
-                    {[{key:'news',label:'News',color:C.blue,desc:'Mainstream financial press'},{key:'social',label:'Social',color:C.purple,desc:'Reddit, Twitter, community'},{key:'technical',label:'Market',color:C.green,desc:'Polymarket and Kalshi odds'}].map(w => (
+                    {[{key:'news',label:'News',color:C.blue,desc:'Mainstream financial press'},{key:'social',label:'Social',color:C.purple,desc:'Reddit, Twitter, community'},{key:'market',label:'Market',color:C.green,desc:'Polymarket and Kalshi odds'}].map(w => (
                       <div key={w.key} style={{ marginBottom:12 }}>
                         <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
                           <span style={{ fontSize:11, fontWeight:500, display:'flex', alignItems:'center', gap:5 }}>
@@ -555,8 +579,8 @@ function ScoresPageContent() {
                         <input type="range" min="0" max="100" step="5" value={weights[w.key as keyof typeof weights]} onChange={e => handleWeight(w.key, parseInt(e.target.value))} style={{ width:'100%', accentColor:w.color }} />
                       </div>
                     ))}
-                    <span style={{ fontSize:9, fontWeight:600, padding:'3px 8px', borderRadius:5, display:'inline-block', background:weights.news+weights.social+weights.technical===100?C.greenBg:C.amberBg, color:weights.news+weights.social+weights.technical===100?C.green:C.amber }}>
-                      Total: {weights.news+weights.social+weights.technical}% {weights.news+weights.social+weights.technical===100?'- balanced':'- adjust to 100%'}
+                    <span style={{ fontSize:9, fontWeight:600, padding:'3px 8px', borderRadius:5, display:'inline-block', background:weights.news+weights.social+weights.market===100?C.greenBg:C.amberBg, color:weights.news+weights.social+weights.market===100?C.green:C.amber }}>
+                      Total: {weights.news+weights.social+weights.market}% {weights.news+weights.social+weights.market===100?'- balanced':'- adjust to 100%'}
                     </span>
                     <button onClick={() => showToast('Weights applied - re-analyzing...')} style={{ width:'100%', marginTop:12, padding:9, background:C.purple, color:'#fff', border:'none', borderRadius:8, fontSize:11, fontWeight:600, cursor:'pointer' }}>Apply and re-analyze</button>
                   </div>
