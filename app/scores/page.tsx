@@ -144,7 +144,7 @@ function ScoresPageContent() {
   const [outcomes, setOutcomes]     = useState<any[]>([]);
   const [hasUrl, setHasUrl]         = useState<boolean|null>(null);
   const [tradeData, setTradeData]   = useState<TradeReadyData|null>(null);
-  const [weights, setWeights]       = useState({ news:35, social:40, market:25 });
+  const [weights, setWeights]       = useState({ news:35, social:40, technical:25 });
   const [related, setRelated]       = useState<any[]>([]);
   const [srcCount, setSrcCount]     = useState(8);
   const [toast, setToast]           = useState('');
@@ -445,7 +445,7 @@ function ScoresPageContent() {
                   {[
                     { cat:'News', color:C.blue, type:'strong' as const, weight:weights.news, desc:'Reuters, Bloomberg, FT all showing strong signals. Narrative gaining traction in financial press.', bar:73, contrib:Math.round(aiPctForDisplay*(weights.news/100)) },
                     { cat:'Social', color:C.purpleL, type:'mixed' as const, weight:weights.social, desc:'Reddit broadly agrees. Twitter is noisy and contrary - dragging the social average down slightly.', bar:55, contrib:Math.round(aiPctForDisplay*(weights.social/100)) },
-                    { cat:'Market', color:C.green, type:'priced' as const, weight:weights.market, desc:'Polymarket and Kalshi both at 95%+ already. Market has priced most of this in - limits edge.', bar:90, contrib:Math.round(aiPctForDisplay*(weights.market/100)) },
+                    { cat:'Market', color:C.green, type:'priced' as const, weight:weights.technical, desc:'Polymarket and Kalshi both at 95%+ already. Market has priced most of this in - limits edge.', bar:90, contrib:Math.round(aiPctForDisplay*(weights.technical/100)) },
                   ].map(s => (
                     <div key={s.cat} style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:18 }}>
                       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
@@ -467,7 +467,7 @@ function ScoresPageContent() {
                     {[
                       { v:weights.news+'%', c:C.blue, l:'News weight', d:'Strong positive signal across all major outlets this week' },
                       { v:weights.social+'%', c:C.purpleL, l:'Social weight', d:'Mixed - Reddit positive, Twitter contrary' },
-                      { v:weights.market+'%', c:C.green, l:'Market weight', d:'Already priced in at '+mktPctForDisplay+'% - edge is minimal here' },
+                      { v:weights.technical+'%', c:C.green, l:'Market weight', d:'Already priced in at '+mktPctForDisplay+'% - edge is minimal here' },
                     ].map(x => (
                       <div key={x.l} style={{ textAlign:'center', padding:14, background:'rgba(255,255,255,0.025)', borderRadius:10 }}>
                         <div style={{ fontSize:26, fontWeight:700, fontFamily:'monospace', color:x.c, marginBottom:4 }}>{x.v}</div>
@@ -579,8 +579,8 @@ function ScoresPageContent() {
                         <input type="range" min="0" max="100" step="5" value={weights[w.key as keyof typeof weights]} onChange={e => handleWeight(w.key, parseInt(e.target.value))} style={{ width:'100%', accentColor:w.color }} />
                       </div>
                     ))}
-                    <span style={{ fontSize:9, fontWeight:600, padding:'3px 8px', borderRadius:5, display:'inline-block', background:weights.news+weights.social+weights.market===100?C.greenBg:C.amberBg, color:weights.news+weights.social+weights.market===100?C.green:C.amber }}>
-                      Total: {weights.news+weights.social+weights.market}% {weights.news+weights.social+weights.market===100?'- balanced':'- adjust to 100%'}
+                    <span style={{ fontSize:9, fontWeight:600, padding:'3px 8px', borderRadius:5, display:'inline-block', background:weights.news+weights.social+weights.technical===100?C.greenBg:C.amberBg, color:weights.news+weights.social+weights.technical===100?C.green:C.amber }}>
+                      Total: {weights.news+weights.social+weights.technical}% {weights.news+weights.social+weights.technical===100?'- balanced':'- adjust to 100%'}
                     </span>
                     <button onClick={() => showToast('Weights applied - re-analyzing...')} style={{ width:'100%', marginTop:12, padding:9, background:C.purple, color:'#fff', border:'none', borderRadius:8, fontSize:11, fontWeight:600, cursor:'pointer' }}>Apply and re-analyze</button>
                   </div>
