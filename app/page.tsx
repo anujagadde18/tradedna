@@ -1,311 +1,173 @@
 'use client';
-
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface SearchResult {
-  slug:    string;
-  title:   string;
-  url:     string;
-  volume:  number;
-  endDate: string;
-  markets: number;
+  slug: string; title: string; url: string; volume: number; endDate: string; markets: number;
 }
 
 export default function HomePage() {
   const router = useRouter();
-  const [query, setQuery]               = useState('');
-  const [isAnalyzing, setIsAnalyzing]   = useState(false);
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [isSearching, setIsSearching]   = useState(false);
-  const [showResults, setShowResults]   = useState(false);
-  const searchTimer                     = useRef<NodeJS.Timeout | null>(null);
-  const inputRef                        = useRef<HTMLInputElement>(null);
+  const [query, setQuery]             = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [results, setResults]         = useState<SearchResult[]>([]);
+  const [searching, setSearching]     = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const timer                         = useRef<NodeJS.Timeout | null>(null);
 
-  const isPolymarketUrl = (q: string) => /polymarket\.com\/event\//.test(q);
+  const isUrl = (q: string) => q.includes('polymarket.com/event/');
 
-  // Auto-search as user types — debounced 400ms
   useEffect(() => {
-    if (!query.trim() || isPolymarketUrl(query)) {
-      setSearchResults([]);
-      setShowResults(false);
-      return;
+    if (!query.trim() || isUrl(query) || query.trim().length < 3) {
+      setResults([]); setShowResults(false); return;
     }
-    if (query.trim().length < 3) return;
-
-    if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(async () => {
-      setIsSearching(true);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(async () => {
+      setSearching(true);
       try {
-        const res  = await fetch(`/api/search?q=${encodeURIComponent(query.trim())}`);
-        const data = await res.json();
-        if (data.results && data.results.length > 0) {
-          setSearchResults(data.results);
-          setShowResults(true);
-        } else {
-          setSearchResults([]);
-          setShowResults(false);
-        }
+        const r = await fetch('/api/search?q=' + encodeURIComponent(query.trim()));
+        const d = await r.json();
+        if (d.results?.length > 0) { setResults(d.results); setShowResults(true); }
+        else { setResults([]); setShowResults(false); }
       } catch {}
-      setIsSearching(false);
+      setSearching(false);
     }, 400);
-
-    return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
+    return () => { if (timer.current) clearTimeout(timer.current); };
   }, [query]);
 
-  const handleAnalyze = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
-    setIsAnalyzing(true);
-    setShowResults(false);
-    router.push(`/scores?event=${encodeURIComponent(query.trim())}`);
+  const go = (q: string) => {
+    setIsAnalyzing(true); setShowResults(false);
+    router.push('/scores?event=' + encodeURIComponent(q));
   };
 
-  const handleSelectResult = (result: SearchResult) => {
-    setShowResults(false);
-    setIsAnalyzing(true);
-    router.push(`/scores?event=${encodeURIComponent(result.url)}`);
-  };
+  const fmtVol = (v: number) => v >= 1_000_000 ? '$'+(v/1_000_000).toFixed(1)+'M' : v >= 1_000 ? '$'+(v/1_000).toFixed(0)+'K' : '$'+v;
 
-  const formatVolume = (vol: number) => {
-    if (vol >= 1_000_000) return `$${(vol / 1_000_000).toFixed(1)}M`;
-    if (vol >= 1_000)     return `$${(vol / 1_000).toFixed(0)}K`;
-    return `$${vol.toFixed(0)}`;
-  };
-
-  const exampleQueries = [
-    {
-      text:     'Which company has the top AI model by June 2026?',
-      display:  'Which company has the top AI model by June 2026?',
-      category: 'Technology',
-    },
-    {
-      text:     'Will there be a US-Iran ceasefire?',
-      display:  'Will there be a US-Iran ceasefire?',
-      category: 'Geopolitics',
-    },
-    {
-      text:     'Will Bitcoin hit $100k?',
-      display:  'Will Bitcoin hit $100k before April?',
-      category: 'Crypto',
-    },
-    {
-      text:     'Will the Fed cut rates in May?',
-      display:  'Will the Fed cut rates in May?',
-      category: 'Economics',
-    },
+  const examples = [
+    { cat: 'Technology', q: 'Which company will have the top AI model by June 2026?' },
+    { cat: 'Geopolitics', q: 'Will there be a US-Iran ceasefire?' },
+    { cat: 'Crypto', q: 'Will Bitcoin hit $100k before April?' },
+    { cat: 'Economics', q: 'Will the Fed cut rates in May?' },
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div style={{ background: '#0a0a0b', minHeight: '100vh', color: '#f0eff4', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
 
-      {/* HERO */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-blue-900/20" />
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: 'rgba(10,10,11,0.85)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.3px' }}>PlayPicks AI</div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button onClick={() => router.push('/journal')} style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#9998a8', cursor: 'pointer', border: 'none', background: 'none' }}>Trade Journal</button>
+          <button onClick={() => router.push('/profile')} style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#9998a8', cursor: 'pointer', border: 'none', background: 'none' }}>Profile</button>
+        </div>
+      </nav>
 
-        <div className="relative max-w-7xl mx-auto px-6 py-20">
+      <div style={{ paddingTop: 56 }}>
+        <div style={{ minHeight: 'calc(100vh - 56px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 32px 60px', textAlign: 'center', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 600, height: 400, background: 'radial-gradient(ellipse at center, rgba(124,111,247,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-          {/* Top nav */}
-          <div className="flex justify-end gap-4 mb-8">
-            <button onClick={() => router.push('/journal')} className="text-gray-400 hover:text-white text-sm transition-colors">
-              📒 Trade Journal
-            </button>
-            <button onClick={() => router.push('/profile')} className="text-gray-400 hover:text-white text-sm transition-colors">
-              👤 Profile
-            </button>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(124,111,247,0.12)', border: '1px solid rgba(124,111,247,0.25)', borderRadius: 20, padding: '5px 14px', fontSize: 12, color: '#9d98f8', marginBottom: 28 }}>
+            <span style={{ width: 6, height: 6, background: '#7c6ff7', borderRadius: '50%', display: 'inline-block' }}></span>
+            AI-powered prediction markets
           </div>
 
-          {/* Logo */}
-          <div className="text-center mb-12">
-            <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-              PlayPicks AI
-            </h1>
-            <p className="text-2xl text-gray-300 mb-2">
-              Pick Feeds. Tweak Weights. Craft Conviction.
-            </p>
-            <p className="text-gray-500 text-sm">
-              Ask any prediction question. Get AI analysis with sources. Trade with conviction.
-            </p>
-          </div>
+          <h1 style={{ fontSize: 'clamp(48px, 8vw, 80px)', fontWeight: 700, letterSpacing: '-2px', lineHeight: 1.05, marginBottom: 20, color: '#f0eff4' }}>
+            Pick Feeds.<br /><em style={{ fontStyle: 'italic', color: '#7c6ff7' }}>Craft Conviction.</em>
+          </h1>
+          <p style={{ fontSize: 17, color: '#9998a8', maxWidth: 520, lineHeight: 1.6, marginBottom: 40 }}>
+            Ask any prediction question. Get AI analysis from news, social, and market signals. Trade with conviction.
+          </p>
 
-          {/* SEARCH INPUT */}
-          <form onSubmit={handleAnalyze} className="max-w-3xl mx-auto mb-6">
-            <div className="relative">
+          <div style={{ width: '100%', maxWidth: 600, position: 'relative', marginBottom: 12 }}>
+            <div style={{ display: 'flex', background: '#111113', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, overflow: 'visible', boxShadow: '0 0 0 0', position: 'relative' }}>
               <input
-                ref={inputRef}
-                type="text"
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                onFocus={() => searchResults.length > 0 && setShowResults(true)}
-                onBlur={() => setTimeout(() => setShowResults(false), 200)}
+                type="text" value={query} onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && query.trim() && go(query.trim())}
                 placeholder="What do you want to predict? Ask anything..."
-                className="w-full px-6 py-5 text-lg bg-white/10 border-2 border-purple-500/30 rounded-2xl
-                         text-white placeholder-gray-400 focus:outline-none focus:border-purple-500
-                         transition-all backdrop-blur-sm"
-                disabled={isAnalyzing}
-                autoComplete="off"
+                autoFocus
+                style={{ flex: 1, background: 'transparent', border: 'none', padding: '16px 20px', fontSize: 15, color: '#f0eff4', outline: 'none', fontFamily: 'inherit' }}
               />
-              <button
-                type="submit"
-                disabled={!query.trim() || isAnalyzing}
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-8 py-3 bg-purple-600
-                         hover:bg-purple-500 disabled:bg-gray-600 disabled:cursor-not-allowed
-                         rounded-xl font-semibold transition-all"
-              >
+              <button onClick={() => query.trim() && go(query.trim())} disabled={isAnalyzing || !query.trim()}
+                style={{ margin: 6, padding: '0 24px', background: '#7c6ff7', color: 'white', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', opacity: (!query.trim() || isAnalyzing) ? 0.5 : 1 }}>
                 {isAnalyzing ? 'Analyzing...' : 'Analyze'}
               </button>
             </div>
-
-            {/* Search hint */}
-            <div className="mt-3 text-center text-sm text-gray-400">
-              {isPolymarketUrl(query)
-                ? '✓ Polymarket URL detected — full live analysis ready'
-                : isSearching
-                ? '🔍 Searching Polymarket markets...'
-                : 'Type a question or paste a Polymarket URL'
-              }
-            </div>
-
-            {/* AUTO-SEARCH RESULTS DROPDOWN */}
-            {showResults && searchResults.length > 0 && (
-              <div className="absolute left-0 right-0 mt-2 bg-gray-900 border border-purple-500/30 rounded-xl overflow-hidden z-50 shadow-xl">
-                <div className="px-4 py-2 border-b border-gray-700">
-                  <span className="text-xs text-purple-400 font-medium">
-                    {searchResults.length} Polymarket market{searchResults.length > 1 ? 's' : ''} found
-                  </span>
+            {showResults && results.length > 0 && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, background: '#111113', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, overflow: 'hidden', zIndex: 50, boxShadow: '0 16px 40px rgba(0,0,0,0.4)' }}>
+                <div style={{ padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, color: '#5e5d6e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Live Polymarket markets</span>
+                  {searching && <span style={{ fontSize: 11, color: '#7c6ff7' }}>Searching...</span>}
                 </div>
-                {searchResults.map((result, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onMouseDown={() => handleSelectResult(result)}
-                    className="w-full px-4 py-3 text-left hover:bg-purple-900/30 transition-colors border-b border-gray-800 last:border-0"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="text-sm text-white font-medium truncate flex-1">
-                        {result.title}
-                      </div>
-                      <div className="text-xs text-purple-400 shrink-0 font-medium">
-                        {formatVolume(result.volume)} vol
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500 mt-0.5">
-                      polymarket.com/event/{result.slug}
-                    </div>
+                {results.map((r, i) => (
+                  <button key={i} onClick={() => go(r.url)} style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#18181c')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                    <div style={{ fontSize: 13, color: '#f0eff4', fontWeight: 500, marginBottom: 2 }}>{r.title}</div>
+                    <div style={{ fontSize: 11, color: '#5e5d6e' }}>{fmtVol(r.volume)} volume</div>
                   </button>
                 ))}
-                <div className="px-4 py-2 bg-gray-800/50">
-                  <span className="text-xs text-gray-500">
-                    Click a market to analyze it with PlayPicks AI
-                  </span>
-                </div>
               </div>
             )}
-          </form>
-
-          {/* Example Queries */}
-          <div className="max-w-4xl mx-auto">
-            <h3 className="text-xl font-semibold mb-6 text-center text-gray-300">
-              Not sure where to start? Try one of these:
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {exampleQueries.map((example, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setQuery(example.text);
-                    setShowResults(false);
-                    // Auto-submit after short delay so search kicks in
-                    setTimeout(() => {
-                      if (example.text) {
-                        setIsAnalyzing(true);
-                        router.push(`/scores?event=${encodeURIComponent(example.text)}`);
-                      }
-                    }, 100);
-                  }}
-                  className="p-4 bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-purple-500/50
-                           rounded-xl text-left transition-all group"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-purple-400 font-semibold">{example.category}</span>
-                    <span className="text-gray-500 group-hover:text-purple-400 transition-colors">→</span>
-                  </div>
-                  <div className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                    {example.display}
-                  </div>
-                </button>
-              ))}
-            </div>
           </div>
+          <p style={{ fontSize: 12, color: '#5e5d6e', marginBottom: 48 }}>Type a question or paste a Polymarket URL</p>
 
-        </div>
-      </div>
-
-      {/* HOW IT WORKS */}
-      <div className="max-w-4xl mx-auto px-6 py-16">
-        <h2 className="text-2xl font-bold text-center text-white mb-10">How it works</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold mx-auto mb-4">1</div>
-            <h3 className="text-white font-semibold mb-2">Analyze the market</h3>
-            <p className="text-gray-400 text-sm">Ask any prediction question or paste a Polymarket URL. AI figures out the rest.</p>
-          </div>
-          <div className="text-center">
-            <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold mx-auto mb-4">2</div>
-            <h3 className="text-white font-semibold mb-2">See your conviction score</h3>
-            <p className="text-gray-400 text-sm">AI calculates an edge — where it disagrees with the market and why. You decide if it's worth betting.</p>
-          </div>
-          <div className="text-center">
-            <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold mx-auto mb-4">3</div>
-            <h3 className="text-white font-semibold mb-2">Trade with conviction</h3>
-            <p className="text-gray-400 text-sm">Place orders directly through PlayPicks. Every trade is logged with the AI reasoning that justified it.</p>
+          <p style={{ fontSize: 12, color: '#5e5d6e', textTransform: 'uppercase', letterSpacing: '0.6px', fontWeight: 600, marginBottom: 16 }}>Not sure where to start?</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, maxWidth: 560, width: '100%' }}>
+            {examples.map((ex, i) => (
+              <button key={i} onClick={() => go(ex.q)}
+                style={{ padding: '16px 18px', background: '#111113', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}
+                onMouseEnter={e => { (e.currentTarget.style.background = '#18181c'); (e.currentTarget.style.borderColor = 'rgba(124,111,247,0.3)'); }}
+                onMouseLeave={e => { (e.currentTarget.style.background = '#111113'); (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'); }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#7c6ff7', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>{ex.cat}</div>
+                <div style={{ fontSize: 13, color: '#9998a8', lineHeight: 1.4 }}>{ex.q}</div>
+              </button>
+            ))}
           </div>
         </div>
-      </div>
 
-      {/* FEATURES */}
-      <div className="max-w-7xl mx-auto px-6 py-10 pb-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-xl">
-            <div className="text-3xl mb-4">🎯</div>
-            <h3 className="text-lg font-bold mb-2 text-white">Multi-Source Intelligence</h3>
-            <p className="text-gray-400 text-sm">News sentiment, community signals, and live Polymarket odds — all in one analysis.</p>
+        <div style={{ padding: '80px 40px', borderTop: '1px solid rgba(255,255,255,0.07)', maxWidth: 960, margin: '0 auto' }}>
+          <h2 style={{ fontSize: 28, fontWeight: 700, textAlign: 'center', letterSpacing: '-0.5px', marginBottom: 48 }}>How it works</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+            {[
+              { n: '1', t: 'Analyze the market', d: 'Ask any prediction question or paste a Polymarket URL. AI figures out the rest and pulls live signals.' },
+              { n: '2', t: 'See your conviction score', d: 'AI calculates an edge - where it disagrees with the market and why. Tune the weights to match your strategy.' },
+              { n: '3', t: 'Trade with conviction', d: 'Place orders directly through PlayPicks. Every trade is logged with the AI conviction snapshot that justified it.' },
+            ].map(s => (
+              <div key={s.n} style={{ background: '#111113', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '28px 24px' }}>
+                <div style={{ width: 36, height: 36, background: 'rgba(124,111,247,0.15)', border: '1px solid rgba(124,111,247,0.25)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#7c6ff7', marginBottom: 16 }}>{s.n}</div>
+                <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{s.t}</div>
+                <div style={{ fontSize: 13, color: '#9998a8', lineHeight: 1.6 }}>{s.d}</div>
+              </div>
+            ))}
           </div>
-          <div className="p-6 bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/30 rounded-xl">
-            <div className="text-3xl mb-4">⚖️</div>
-            <h3 className="text-lg font-bold mb-2 text-white">Custom Weighting</h3>
-            <p className="text-gray-400 text-sm">Adjust signal weights to match your strategy. Trust markets more? Increase market weight.</p>
+        </div>
+
+        <div style={{ padding: '0 40px 80px', maxWidth: 960, margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+            {[
+              { icon: 'Multi-Source Intelligence', desc: 'News sentiment, community signals, and live Polymarket odds - all in one analysis.' },
+              { icon: 'Custom Weighting', desc: 'Adjust signal weights to match your strategy. Trust markets more? Increase market weight.' },
+              { icon: 'Conviction-Gated Trading', desc: 'Only trade after AI analysis runs. See your edge before placing a single dollar.' },
+              { icon: 'Trade Journal', desc: 'Every trade logged with the AI conviction snapshot. Track your win rate when you followed the edge.', link: true },
+            ].map((f, i) => (
+              <div key={i} style={{ background: '#111113', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px 20px' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: '#f0eff4' }}>{f.icon}</div>
+                <div style={{ fontSize: 12, color: '#9998a8', lineHeight: 1.6 }}>{f.desc}</div>
+                {f.link && (
+                  <button onClick={() => router.push('/journal')} style={{ marginTop: 12, fontSize: 12, color: '#f97316', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View journal</button>
+                )}
+              </div>
+            ))}
           </div>
-          <div className="p-6 bg-gradient-to-br from-green-900/20 to-black border border-green-500/30 rounded-xl">
-            <div className="text-3xl mb-4">⚡</div>
-            <h3 className="text-lg font-bold mb-2 text-white">Conviction-Gated Trading</h3>
-            <p className="text-gray-400 text-sm">Only trade after the AI analysis runs. See your edge before placing a single dollar.</p>
-          </div>
-          <div className="p-6 bg-gradient-to-br from-orange-900/20 to-black border border-orange-500/30 rounded-xl">
-            <div className="text-3xl mb-4">📒</div>
-            <h3 className="text-lg font-bold mb-2 text-white">Trade Journal</h3>
-            <p className="text-gray-400 text-sm">Every trade logged with the AI conviction snapshot. Track your win rate when you followed the edge.</p>
-            <button onClick={() => router.push('/journal')} className="mt-3 text-xs text-orange-400 hover:text-orange-300 transition-colors">
-              View journal →
-            </button>
+        </div>
+
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '20px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: 12, color: '#5e5d6e' }}>Not financial advice. Research purposes only.</span>
+          <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+            <button onClick={() => router.push('/journal')} style={{ fontSize: 12, color: '#5e5d6e', background: 'none', border: 'none', cursor: 'pointer' }}>Trade Journal</button>
+            <button onClick={() => router.push('/profile')} style={{ fontSize: 12, color: '#5e5d6e', background: 'none', border: 'none', cursor: 'pointer' }}>Profile</button>
+            <span style={{ fontSize: 12, color: '#5e5d6e' }}>Powered by TradeDNA</span>
           </div>
         </div>
       </div>
-
-      {/* FOOTER */}
-      <div className="border-t border-gray-800">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-500">Not financial advice • Research purposes only</div>
-            <div className="flex items-center gap-6">
-              <button onClick={() => router.push('/journal')} className="text-xs text-gray-500 hover:text-gray-400 transition-colors">Trade Journal</button>
-              <button onClick={() => router.push('/profile')} className="text-xs text-gray-500 hover:text-gray-400 transition-colors">Profile</button>
-              <div className="text-xs text-gray-600">Powered by TradeDNA™</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
   );
 }
