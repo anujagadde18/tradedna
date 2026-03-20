@@ -4,7 +4,6 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PolymarketComparison } from '@/components/PolymarketComparison';
 import { TradePanel } from '@/components/TradePanel';
-import { PlainTextAnalysis } from '@/components/PlainTextAnalysis';
 import { calculateIntelligence } from '@/lib/intelligenceEngine';
 
 interface TradeReadyData {
@@ -48,28 +47,36 @@ function ConstellationSVG({ aiPct, marketPct }: { aiPct: number; marketPct: numb
   const convBg = edge > 6 ? C.greenBg : edge > 2 ? C.amberBg : C.redBg;
   const convColor = edge > 6 ? C.green : edge > 2 ? C.amber : C.red;
 
-  // Node positions fixed in orbit layout - inner = strong, outer = weak
   const NODE_POSITIONS = [
     { cx:260, cy:48  },
-    { cx:352, cy:74  },
-    { cx:368, cy:186 },
-    { cx:152, cy:186 },
-    { cx:158, cy:106 },
-    { cx:350, cy:222 },
-    { cx:172, cy:236 },
+    { cx:354, cy:74  },
+    { cx:370, cy:188 },
+    { cx:150, cy:188 },
+    { cx:156, cy:106 },
+    { cx:352, cy:224 },
+    { cx:170, cy:238 },
   ];
   const CAT_COLOR_MAP: Record<string, string> = {
     news: '#4d9de0', social: '#7c6ff7', market: '#2ecc8a', community: '#f5a623', contrary: '#ef4f6a',
   };
-  // Build dynamic nodes from active sources, sized by name length
-  const nodes = activeSources.slice(0, 7).map((src, i) => {
+  function nodeRadius(name: string, contribution: number): number {
+    const abs = Math.abs(contribution);
+    const baseRadius = abs >= 20 ? 28 : abs >= 14 ? 24 : abs >= 8 ? 20 : 17;
+    const longestWord = name.split(' ').reduce((a: string, b: string) => a.length > b.length ? a : b, '');
+    const minForName = Math.ceil(longestWord.length * 5.2 / 2) + 10;
+    const minForContrib = Math.ceil(5 * 5.2 / 2) + 8;
+    return Math.max(baseRadius, minForName, minForContrib);
+  }
+  // FIX 5: Sort by contribution descending so strongest signals get inner positions
+  const sortedSources = [...activeSources]
+    .sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
+    .slice(0, 7);
+  const nodes = sortedSources.map((src, i) => {
     const pos = NODE_POSITIONS[i];
-    const nameLen = src.name.length;
-    // Radius must fit the name text: ~5.5px per char, min 20, max 34
-    const r = Math.max(20, Math.min(34, Math.ceil(nameLen * 5.5 / 2) + 8));
+    const r = nodeRadius(src.name, src.contribution);
     const color = src.type === 'contrary' ? '#ef4f6a' : CAT_COLOR_MAP[src.category] || '#7c6ff7';
     return {
-      cx: pos.cx, cy: pos.cy, r, glow: r + 6,
+      cx: pos.cx, cy: pos.cy, r, glow: r + 7,
       color, name: src.name,
       contrib: (src.contribution >= 0 ? '+' : '') + src.contribution + '%',
       tip: src.sig,
@@ -107,9 +114,13 @@ function ConstellationSVG({ aiPct, marketPct }: { aiPct: number; marketPct: numb
           <text x="328" y="138" fontSize="7.5" fill="rgba(255,255,255,0.1)" fontFamily="Inter,sans-serif">strong</text>
           <text x="368" y="138" fontSize="7.5" fill="rgba(255,255,255,0.1)" fontFamily="Inter,sans-serif">mixed</text>
           <text x="400" y="138" fontSize="7.5" fill="rgba(255,255,255,0.1)" fontFamily="Inter,sans-serif">weak</text>
-          {nodes.map((n,i) => (
-            <line key={'l'+i} x1={n.cx} y1={n.cy} x2="260" y2="140" stroke={n.color} strokeWidth="0.8" opacity="0.28"/>
-          ))}
+          {nodes.map((n,i) => {
+            const cx2 = 260, cy2 = 140;
+            const angle = Math.atan2(cy2 - n.cy, cx2 - n.cx);
+            const x1 = n.cx + n.r * Math.cos(angle);
+            const y1 = n.cy + n.r * Math.sin(angle);
+            return <line key={'l'+i} x1={x1} y1={y1} x2={cx2} y2={cy2} stroke={n.color} strokeWidth="0.8" opacity="0.28"/>;
+          })}
           {nodes.map((n,i) => {
             // Split name into two lines if long
             const words = n.name.split(' ');
@@ -193,23 +204,41 @@ function ScoresPageContent() {
   useEffect(() => {
     const go = async () => {
       try {
-        const stop = new Set(['will','there','that','this','what','when','have','does','with','would','the','and','for','are']);
+        // Classify query topic
+        const q = event.toLowerCase();
+        const TOPICS: Record<string, string[]> = {
+          technology: ['ai','model','company','tech','gpt','llm','software','openai','google','microsoft','apple','meta','amazon'],
+          economics:  ['gdp','fed','rates','recession','inflation','unemployment','economy','treasury','dollar','market'],
+          crypto:     ['bitcoin','eth','crypto','blockchain','btc','ethereum','solana','coin','defi','nft'],
+          geopolitics:['war','ceasefire','election','treaty','president','minister','nato','china','russia','iran','ukraine'],
+          sports:     ['nfl','nba','nhl','mlb','soccer','football','basketball','baseball','hockey','tennis','golf','ufc','chess','nascar','super bowl'],
+        };
+        let detectedTopic = '';
+        for (const [topic, kws] of Object.entries(TOPICS)) {
+          if (kws.some(kw => q.includes(kw))) { detectedTopic = topic; break; }
+        }
+        // Build search query from key content words
+        const stop = new Set(['will','there','that','this','what','when','have','does','with','would','the','and','for','are','by','in','on','at','to','of']);
         const words = event.replace(/[?!.,]/g,'').split(' ').filter((w:string) => w.length > 2 && !stop.has(w.toLowerCase()));
-        const q = words.slice(0,4).join(' ');
-        const r = await fetch('/api/search?q=' + encodeURIComponent(q));
+        const searchQ = words.slice(0,4).join(' ');
+        const r = await fetch('/api/search?q=' + encodeURIComponent(searchQ));
         const d = await r.json();
         if (d.results) {
-          // Filter out sports markets unless query is about sports
-          const sportTerms = ['nfl','nba','nhl','mlb','soccer','football','basketball','baseball','hockey','tennis','golf','ufc','chess','esport'];
-          const queryLower = event.toLowerCase();
-          const isSportsQuery = sportTerms.some(t => queryLower.includes(t));
-          const filtered = isSportsQuery
-            ? d.results
-            : d.results.filter((m: any) => {
-                const title = (m.title || '').toLowerCase();
-                return !sportTerms.some(t => title.includes(t));
-              });
-          setRelated(filtered.slice(0, 6));
+          const sportTerms = TOPICS.sports;
+          const isSports = detectedTopic === 'sports';
+          const topicKws = detectedTopic ? TOPICS[detectedTopic] : [];
+          const filtered = d.results.filter((m: any) => {
+            const title = (m.title || '').toLowerCase();
+            // Always remove sports from non-sports queries
+            if (!isSports && sportTerms.some(t => title.includes(t))) return false;
+            // If we have a detected topic, prefer markets matching it
+            if (topicKws.length > 0) return topicKws.some(kw => title.includes(kw));
+            return true;
+          });
+          setRelated((filtered.length > 0 ? filtered : d.results.filter((m:any) => {
+            const title = (m.title||'').toLowerCase();
+            return !sportTerms.some(t => title.includes(t));
+          })).slice(0, 6));
         }
       } catch {}
     };
@@ -637,7 +666,7 @@ function ScoresPageContent() {
                         <div style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:C.t2 }}>{Math.floor(30+Math.random()*50)}%</div>
                       </td>
                       <td style={{ padding:'12px 14px', borderTop:'1px solid '+C.border, borderBottom:'1px solid '+C.border, borderRight:'1px solid '+C.border, borderRadius:'0 10px 10px 0', whiteSpace:'nowrap' }}>
-                        <button onClick={() => router.push('/scores?event='+(m.url||encodeURIComponent(m.title)))} style={{ background:C.purpleBg, color:C.purpleL, border:'1px solid rgba(124,111,247,0.15)', borderRadius:6, padding:'4px 10px', fontSize:10, fontWeight:600, cursor:'pointer' }}>Analyze</button>
+                        <button onClick={() => router.push('/scores?event='+encodeURIComponent(m.url||('https://polymarket.com/event/'+(m.slug||m.title))))} style={{ background:C.purpleBg, color:C.purpleL, border:'1px solid rgba(124,111,247,0.15)', borderRadius:6, padding:'4px 10px', fontSize:10, fontWeight:600, cursor:'pointer' }}>Analyze</button>
                       </td>
                     </tr>
                   ))}
