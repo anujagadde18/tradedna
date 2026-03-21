@@ -704,7 +704,7 @@ function ScoresPageContent() {
                         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
                           {mktSources.slice(ci*2, ci*2+2).concat(ci===0?mktSources.slice(2,4):[]).slice(0,2).map(s => (
                             <div key={s.id} style={{ background:C.bg2, border:'1px solid '+(mktAdded[s.id]?'rgba(46,204,138,0.2)':C.border), borderRadius:10, padding:'10px 12px', display:'flex', alignItems:'center', gap:10, transition:'all .15s' }}>
-                              <SourceAvatar name={s.name} category={s.category||'news'} />
+                              <SourceAvatar name={s.name} category={(s as any).category||'news'} />
                               <div style={{ flex:1, minWidth:0 }}>
                                 <div style={{ fontSize:11, fontWeight:600 }}>{s.name}</div>
                                 <div style={{ fontSize:9, color:C.t3, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.desc}</div>
