@@ -175,7 +175,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
               return (
                 <div key={i} style={{ display:'flex', alignItems:'center', gap:10 }}>
                   <div style={{ width:6, height:6, borderRadius:'50%', background:color, flexShrink:0 }}></div>
-                  <div style={{ width:100, fontSize:11, fontWeight:500, color:C.t2, flexShrink:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={r.name}>{({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'Twitter','Associated Press':'AP News','Good Judgment Open':'GJ Open'} as Record<string,string>)[r.name]||r.name}</div>
+                  <div style={{ width:100, fontSize:11, fontWeight:500, color:C.t2, flexShrink:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={r.name}>{({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'Twitter','Associated Press':'AP News','Good Judgment Open':'GJ Open'})[r.name]||r.name}</div>
                   <div style={{ flex:1, height:4, background:'rgba(255,255,255,0.05)', borderRadius:2, overflow:'hidden' }}>
                     <div style={{ height:4, borderRadius:2, background:color, width:barW+'%', opacity:0.85 }} />
                   </div>
@@ -279,11 +279,11 @@ function ScoresPageContent() {
   const isPolymarketUrl = event.includes('polymarket.com/event/');
   useEffect(() => {
     setHasUrl(isPolymarketUrl);
-    // Clear stale data on new query
     setOdds(null);
     setOutcomes([]);
     setTradeData(null);
     setRelated([]);
+    setFrame('verdict'); // Always go to verdict on new query
   }, [event]);
 
   useEffect(() => {
@@ -297,27 +297,35 @@ function ScoresPageContent() {
           .map((w:string) => w.toLowerCase());
 
         // Detect topic and get search terms
+        // Ordered priority: tech FIRST to prevent "company"/"model" matching economics
         const TOPIC_SIGNALS: Record<string, string[]> = {
-          technology: ['ai','artificial intelligence','model','company','tech','gpt','llm','openai','google','microsoft','anthropic','chatgpt','gemini'],
-          economics:  ['gdp','fed','recession','inflation','unemployment','rate','economy','dollar','treasury'],
-          crypto:     ['bitcoin','btc','ethereum','eth','crypto','blockchain','solana'],
-          geopolitics:['election','president','nato','war','ceasefire','ukraine','russia','iran','china','treaty'],
-          sports:     ['nfl','nba','super bowl','world cup','championship','playoffs','season'],
+          technology: ['ai','artificial intelligence','gpt','llm','openai','google gemini','anthropic','chatgpt','claude','gemini','language model','ai model','tech company','machine learning'],
+          crypto:     ['bitcoin','btc','ethereum','eth','crypto','blockchain','solana','coinbase','defi'],
+          geopolitics:['election','president','nato','ceasefire','ukraine','russia','iran','china','treaty','war crimes','sanctions'],
+          sports:     ['nfl','nba','super bowl','world cup','championship','playoffs','nhl','mlb'],
+          economics:  ['gdp','federal reserve','recession','inflation','unemployment','interest rate','treasury','fed funds'],
+        };
+        const TOPIC_SEARCH: Record<string, string> = {
+          technology: 'AI model OpenAI GPT Anthropic artificial intelligence 2026',
+          crypto:     'Bitcoin Ethereum crypto price 2026',
+          geopolitics:'election president war ceasefire 2026',
+          sports:     queryWords.slice(0,3).join(' '),
+          economics:  'GDP recession inflation Fed rates 2026',
         };
         let detectedTopic = '';
         let topicKws: string[] = [];
-        for (const [topic, sigs] of Object.entries(TOPIC_SIGNALS)) {
-          if (sigs.some(s => q.includes(s))) { detectedTopic = topic; topicKws = sigs; break; }
+        // Check each topic in priority order
+        const topicOrder = ['technology','crypto','geopolitics','sports','economics'];
+        for (const topic of topicOrder) {
+          if (TOPIC_SIGNALS[topic].some((s:string) => q.includes(s))) {
+            detectedTopic = topic;
+            topicKws = TOPIC_SIGNALS[topic];
+            break;
+          }
         }
 
         // Use topic-specific search terms for better API results
-        const TOPIC_SEARCH: Record<string, string> = {
-          technology: 'AI model artificial intelligence 2026',
-          economics:  'GDP recession inflation Fed rates',
-          crypto:     'Bitcoin crypto Ethereum',
-          geopolitics:'election president war ceasefire',
-          sports:     queryWords.slice(0,3).join(' '),
-        };
+
         const searchQ = detectedTopic ? TOPIC_SEARCH[detectedTopic] : queryWords.slice(0,3).join(' ');
 
         const r = await fetch('/api/search?q=' + encodeURIComponent(searchQ));
@@ -350,7 +358,9 @@ function ScoresPageContent() {
 
   const runAnalysis = () => {
     if (mtype === 'categorical') return;
-    setIntel(calculateIntelligence(54, weights, 0, odds, event));
+    const seed = event.split('').reduce((acc:number, c:string) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0);
+    const baseConf = 45 + Math.abs(seed % 35);
+    setIntel(calculateIntelligence(baseConf, weights, 0, odds, event));
   };
   useEffect(() => { runAnalysis(); }, [event, odds, mtype, weights]);
 
@@ -450,8 +460,8 @@ function ScoresPageContent() {
     { id:'gjopen',    name:'Good Judgment Open',  desc:'Superforecasters',            color:'rgba(245,166,35,0.12)' },
   ];
 
-  const aiPctForDisplay = mainAI || 97;
-  const mktPctForDisplay = mainOdds || 95;
+  const aiPctForDisplay = mainAI || 0;
+  const mktPctForDisplay = mainOdds || 0;
 
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100vh', background:C.bg0, color:C.t1, fontFamily:'system-ui,-apple-system,sans-serif', overflow:'hidden' }}>
@@ -694,7 +704,7 @@ function ScoresPageContent() {
                         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
                           {mktSources.slice(ci*2, ci*2+2).concat(ci===0?mktSources.slice(2,4):[]).slice(0,2).map(s => (
                             <div key={s.id} style={{ background:C.bg2, border:'1px solid '+(mktAdded[s.id]?'rgba(46,204,138,0.2)':C.border), borderRadius:10, padding:'10px 12px', display:'flex', alignItems:'center', gap:10, transition:'all .15s' }}>
-                              <SourceAvatar name={s.name} category={(s as any).category||'news'} />
+                              <SourceAvatar name={s.name} category={s.category||'news'} />
                               <div style={{ flex:1, minWidth:0 }}>
                                 <div style={{ fontSize:11, fontWeight:600 }}>{s.name}</div>
                                 <div style={{ fontSize:9, color:C.t3, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.desc}</div>
@@ -771,7 +781,7 @@ function ScoresPageContent() {
                         <div style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:C.t2 }}>{Math.floor(30+Math.random()*50)}%</div>
                       </td>
                       <td style={{ padding:'12px 14px', borderTop:'1px solid '+C.border, borderBottom:'1px solid '+C.border, borderRight:'1px solid '+C.border, borderRadius:'0 10px 10px 0', whiteSpace:'nowrap' }}>
-                        <button onClick={() => router.push('/scores?event='+encodeURIComponent(m.url||('https://polymarket.com/event/'+(m.slug||m.title))))} style={{ background:C.purpleBg, color:C.purpleL, border:'1px solid rgba(124,111,247,0.15)', borderRadius:6, padding:'4px 10px', fontSize:10, fontWeight:600, cursor:'pointer' }}>Analyze</button>
+                        <button onClick={() => (() => { router.push('/scores?event='+encodeURIComponent(m.url||('https://polymarket.com/event/'+(m.slug||m.title)))); goFrame('verdict'); })()} style={{ background:C.purpleBg, color:C.purpleL, border:'1px solid rgba(124,111,247,0.15)', borderRadius:6, padding:'4px 10px', fontSize:10, fontWeight:600, cursor:'pointer' }}>Analyze</button>
                       </td>
                     </tr>
                   ))}
