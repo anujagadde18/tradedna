@@ -175,7 +175,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
               return (
                 <div key={i} style={{ display:'flex', alignItems:'center', gap:10 }}>
                   <div style={{ width:6, height:6, borderRadius:'50%', background:color, flexShrink:0 }}></div>
-                  <div style={{ width:100, fontSize:11, fontWeight:500, color:C.t2, flexShrink:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={r.name}>{({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'Twitter','Associated Press':'AP News','Good Judgment Open':'GJ Open'} as Record<string,string>)[r.name]||r.name}</div>
+                  <div style={{ width:100, fontSize:11, fontWeight:500, color:C.t2, flexShrink:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={r.name}>{({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'Twitter','Associated Press':'AP News','Good Judgment Open':'GJ Open'})[r.name]||r.name}</div>
                   <div style={{ flex:1, height:4, background:'rgba(255,255,255,0.05)', borderRadius:2, overflow:'hidden' }}>
                     <div style={{ height:4, borderRadius:2, background:color, width:barW+'%', opacity:0.85 }} />
                   </div>
@@ -289,42 +289,60 @@ function ScoresPageContent() {
   useEffect(() => {
     const go = async () => {
       try {
-        // Classify query topic
         const q = event.toLowerCase();
-        const TOPICS: Record<string, string[]> = {
-          technology: ['ai','model','company','tech','gpt','llm','software','openai','google','microsoft','apple','meta','amazon'],
-          economics:  ['gdp','fed','rates','recession','inflation','unemployment','economy','treasury','dollar','market'],
-          crypto:     ['bitcoin','eth','crypto','blockchain','btc','ethereum','solana','coin','defi','nft'],
-          geopolitics:['war','ceasefire','election','treaty','president','minister','nato','china','russia','iran','ukraine'],
-          sports:     ['nfl','nba','nhl','mlb','soccer','football','basketball','baseball','hockey','tennis','golf','ufc','chess','nascar','super bowl'],
+        // Extract meaningful keywords from query
+        const stop = new Set(['will','there','that','this','what','when','have','does','with','would','the','and','for','are','by','in','on','at','to','of','a','an','be','is','it']);
+        const queryWords = event.replace(/[?!.,]/g,'').split(' ')
+          .filter((w:string) => w.length > 2 && !stop.has(w.toLowerCase()))
+          .map((w:string) => w.toLowerCase());
+
+        // Detect topic and get search terms
+        const TOPIC_SIGNALS: Record<string, string[]> = {
+          technology: ['ai','artificial intelligence','model','company','tech','gpt','llm','openai','google','microsoft','anthropic','chatgpt','gemini'],
+          economics:  ['gdp','fed','recession','inflation','unemployment','rate','economy','dollar','treasury'],
+          crypto:     ['bitcoin','btc','ethereum','eth','crypto','blockchain','solana'],
+          geopolitics:['election','president','nato','war','ceasefire','ukraine','russia','iran','china','treaty'],
+          sports:     ['nfl','nba','super bowl','world cup','championship','playoffs','season'],
         };
         let detectedTopic = '';
-        for (const [topic, kws] of Object.entries(TOPICS)) {
-          if (kws.some(kw => q.includes(kw))) { detectedTopic = topic; break; }
+        let topicKws: string[] = [];
+        for (const [topic, sigs] of Object.entries(TOPIC_SIGNALS)) {
+          if (sigs.some(s => q.includes(s))) { detectedTopic = topic; topicKws = sigs; break; }
         }
-        // Build search query from key content words
-        const stop = new Set(['will','there','that','this','what','when','have','does','with','would','the','and','for','are','by','in','on','at','to','of']);
-        const words = event.replace(/[?!.,]/g,'').split(' ').filter((w:string) => w.length > 2 && !stop.has(w.toLowerCase()));
-        const searchQ = words.slice(0,4).join(' ');
+
+        // Use topic-specific search terms for better API results
+        const TOPIC_SEARCH: Record<string, string> = {
+          technology: 'AI model artificial intelligence 2026',
+          economics:  'GDP recession inflation Fed rates',
+          crypto:     'Bitcoin crypto Ethereum',
+          geopolitics:'election president war ceasefire',
+          sports:     queryWords.slice(0,3).join(' '),
+        };
+        const searchQ = detectedTopic ? TOPIC_SEARCH[detectedTopic] : queryWords.slice(0,3).join(' ');
+
         const r = await fetch('/api/search?q=' + encodeURIComponent(searchQ));
         const d = await r.json();
-        if (d.results) {
-          const sportTerms = TOPICS.sports;
-          const isSports = detectedTopic === 'sports';
-          const topicKws = detectedTopic ? TOPICS[detectedTopic] : [];
-          const filtered = d.results.filter((m: any) => {
-            const title = (m.title || '').toLowerCase();
-            // Always remove sports from non-sports queries
-            if (!isSports && sportTerms.some(t => title.includes(t))) return false;
-            // If we have a detected topic, prefer markets matching it
-            if (topicKws.length > 0) return topicKws.some(kw => title.includes(kw));
-            return true;
-          });
-          setRelated((filtered.length > 0 ? filtered : d.results.filter((m:any) => {
-            const title = (m.title||'').toLowerCase();
-            return !sportTerms.some(t => title.includes(t));
-          })).slice(0, 6));
-        }
+        if (!d.results) return;
+
+        const sportTerms = TOPIC_SIGNALS.sports;
+        const isSports = detectedTopic === 'sports';
+
+        // Strict filter: title must contain at least one topic keyword
+        // AND must not be an expired/old market (check endDate)
+        const now = new Date();
+        const filtered = d.results.filter((m: any) => {
+          const title = (m.title || '').toLowerCase();
+          // Never show sports for non-sports
+          if (!isSports && sportTerms.some(t => title.includes(t))) return false;
+          // Filter expired markets
+          if (m.endDate && new Date(m.endDate) < now) return false;
+          // Must match topic keywords
+          if (topicKws.length > 0) return topicKws.some(kw => title.includes(kw.toLowerCase()));
+          // Fallback: match at least one query word
+          return queryWords.some(w => w.length > 3 && title.includes(w));
+        });
+
+        setRelated(filtered.slice(0, 6));
       } catch {}
     };
     if (event) go();
@@ -422,14 +440,14 @@ function ScoresPageContent() {
   ];
 
   const mktSources = [
-    { id:'wsj',       name:'Wall Street Journal', desc:'US finance and markets',      category:'news',      color:'rgba(77,157,224,0.12)' },
-    { id:'economist', name:'The Economist',       desc:'Long-form global analysis',   category:'news',      color:'rgba(77,157,224,0.12)' },
-    { id:'politico',  name:'Politico',            desc:'Policy developments',         category:'news',      color:'rgba(77,157,224,0.12)' },
-    { id:'nyt',       name:'NY Times',            desc:'US news and analysis',        category:'news',      color:'rgba(77,157,224,0.12)' },
-    { id:'linkedin',  name:'LinkedIn',            desc:'Professional opinion',        category:'social',    color:'rgba(124,111,247,0.12)' },
-    { id:'substack',  name:'Substack',            desc:'Analyst newsletters',         category:'social',    color:'rgba(124,111,247,0.12)' },
-    { id:'manifold',  name:'Manifold Markets',    desc:'Community markets',           category:'market',    color:'rgba(46,204,138,0.12)' },
-    { id:'gjopen',    name:'Good Judgment Open',  desc:'Superforecasters',            category:'community', color:'rgba(245,166,35,0.12)' },
+    { id:'wsj',       name:'Wall Street Journal', desc:'US finance and markets',      color:'rgba(77,157,224,0.12)' },
+    { id:'economist', name:'The Economist',       desc:'Long-form global analysis',   color:'rgba(77,157,224,0.12)' },
+    { id:'politico',  name:'Politico',            desc:'Policy developments',         color:'rgba(77,157,224,0.12)' },
+    { id:'nyt',       name:'NY Times',            desc:'US news and analysis',        color:'rgba(77,157,224,0.12)' },
+    { id:'linkedin',  name:'LinkedIn',            desc:'Professional opinion',        color:'rgba(124,111,247,0.12)' },
+    { id:'substack',  name:'Substack',            desc:'Analyst newsletters',         color:'rgba(124,111,247,0.12)' },
+    { id:'manifold',  name:'Manifold Markets',    desc:'Community markets',           color:'rgba(46,204,138,0.12)' },
+    { id:'gjopen',    name:'Good Judgment Open',  desc:'Superforecasters',            color:'rgba(245,166,35,0.12)' },
   ];
 
   const aiPctForDisplay = mainAI || 97;
@@ -559,7 +577,7 @@ function ScoresPageContent() {
                       <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, textAlign:'center', marginBottom:5 }}>Place a trade</div>
                       <div style={{ fontSize:10, color:C.t3, textAlign:'center', marginBottom:10 }}>No wallet or crypto needed</div>
                       <div style={{ fontSize:11, fontWeight:700, color:C.amber, textAlign:'center', marginBottom:10 }}>Suggested: {betAmt}</div>
-                      <button style={{ width:'100%', padding:11, background:C.purple, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:8 }}>Sign in to trade</button>
+                      <button style={{ width:'100%', padding:11, background:C.purple, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:8 }} onClick={() => setShowMagicModal(true)}>Sign in to trade</button>
                       <a href="https://polymarket.com" target="_blank" rel="noopener noreferrer" style={{ fontSize:11, color:C.t3, textDecoration:"none", display:"block", textAlign:"center", cursor:"pointer" }}>Or trade directly on Polymarket</a>
                     </div>
                   )}
@@ -792,7 +810,7 @@ function ScoresPageContent() {
                     <div style={{ fontSize:13, fontWeight:600, marginBottom:4 }}>Sign in with your email</div>
                     <div style={{ fontSize:11, color:C.t3, marginBottom:14 }}>No wallet or crypto experience needed. Magic Link - just your email.</div>
                     <div style={{ fontSize:13, fontWeight:700, color:C.amber, marginBottom:14 }}>Suggested: {betAmt}</div>
-                    <button style={{ width:'100%', padding:12, background:C.purple, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:8 }}>Sign in to trade</button>
+                    <button style={{ width:'100%', padding:12, background:C.purple, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:8 }} onClick={() => setShowMagicModal(true)}>Sign in to trade</button>
                     <a href="https://polymarket.com" target="_blank" rel="noopener noreferrer" style={{ fontSize:11, color:C.t3, textDecoration:"none", display:"block", textAlign:"center", cursor:"pointer" }}>Or trade directly on Polymarket</a>
                     <div style={{ fontSize:9, color:C.t4, marginTop:6 }}>Powered by Polymarket. Not financial advice.</div>
                   </div>
