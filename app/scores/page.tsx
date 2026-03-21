@@ -422,14 +422,14 @@ function ScoresPageContent() {
   ];
 
   const mktSources = [
-    { id:'wsj',       name:'Wall Street Journal', desc:'US finance and markets',      color:'rgba(77,157,224,0.12)' },
-    { id:'economist', name:'The Economist',       desc:'Long-form global analysis',   color:'rgba(77,157,224,0.12)' },
-    { id:'politico',  name:'Politico',            desc:'Policy developments',         color:'rgba(77,157,224,0.12)' },
-    { id:'nyt',       name:'NY Times',            desc:'US news and analysis',        color:'rgba(77,157,224,0.12)' },
-    { id:'linkedin',  name:'LinkedIn',            desc:'Professional opinion',        color:'rgba(124,111,247,0.12)' },
-    { id:'substack',  name:'Substack',            desc:'Analyst newsletters',         color:'rgba(124,111,247,0.12)' },
-    { id:'manifold',  name:'Manifold Markets',    desc:'Community markets',           color:'rgba(46,204,138,0.12)' },
-    { id:'gjopen',    name:'Good Judgment Open',  desc:'Superforecasters',            color:'rgba(245,166,35,0.12)' },
+    { id:'wsj',       name:'Wall Street Journal', desc:'US finance and markets',      category:'news',      color:'rgba(77,157,224,0.12)' },
+    { id:'economist', name:'The Economist',       desc:'Long-form global analysis',   category:'news',      color:'rgba(77,157,224,0.12)' },
+    { id:'politico',  name:'Politico',            desc:'Policy developments',         category:'news',      color:'rgba(77,157,224,0.12)' },
+    { id:'nyt',       name:'NY Times',            desc:'US news and analysis',        category:'news',      color:'rgba(77,157,224,0.12)' },
+    { id:'linkedin',  name:'LinkedIn',            desc:'Professional opinion',        category:'social',    color:'rgba(124,111,247,0.12)' },
+    { id:'substack',  name:'Substack',            desc:'Analyst newsletters',         category:'social',    color:'rgba(124,111,247,0.12)' },
+    { id:'manifold',  name:'Manifold Markets',    desc:'Community markets',           category:'market',    color:'rgba(46,204,138,0.12)' },
+    { id:'gjopen',    name:'Good Judgment Open',  desc:'Superforecasters',            category:'community', color:'rgba(245,166,35,0.12)' },
   ];
 
   const aiPctForDisplay = mainAI || 97;
