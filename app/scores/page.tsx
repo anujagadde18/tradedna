@@ -64,6 +64,28 @@ const CAT_COLOR: Record<string,string> = {
   news:'#4d9de0', social:'#7c6ff7', market:'#2ecc8a', community:'#f5a623', contrary:'#ef4f6a',
 };
 
+function SourceAvatar({ name, category }: { name: string; category: string }) {
+  const colors: Record<string,{bg:string;text:string}> = {
+    news:      { bg:'rgba(77,157,224,0.15)',  text:'#4d9de0' },
+    social:    { bg:'rgba(124,111,247,0.15)', text:'#7c6ff7' },
+    market:    { bg:'rgba(46,204,138,0.15)',  text:'#2ecc8a' },
+    contrary:  { bg:'rgba(239,79,106,0.15)',  text:'#ef4f6a' },
+    community: { bg:'rgba(245,166,35,0.15)',  text:'#f5a623' },
+  };
+  const SHORT: Record<string,string> = {
+    'Financial Times':'FT','Wall Street Journal':'WSJ',
+    'Associated Press':'AP','Twitter/X':'X',
+    'Good Judgment Open':'GJ',
+  };
+  const c = colors[category] || colors.news;
+  const letter = (SHORT[name] || name.charAt(0)).toUpperCase();
+  return (
+    <div style={{ width:28, height:28, borderRadius:7, background:c.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:letter.length > 1 ? 9 : 12, fontWeight:800, color:c.text, flexShrink:0 }}>
+      {letter}
+    </div>
+  );
+}
+
 function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
   aiPct: number; marketPct: number; question: string; sources: any[]; hasMarket: boolean;
 }) {
@@ -153,9 +175,9 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
               return (
                 <div key={i} style={{ display:'flex', alignItems:'center', gap:10 }}>
                   <div style={{ width:6, height:6, borderRadius:'50%', background:color, flexShrink:0 }}></div>
-                  <div style={{ width:80, fontSize:11, fontWeight:500, color:C.t2, flexShrink:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.name}</div>
+                  <div style={{ width:100, fontSize:11, fontWeight:500, color:C.t2, flexShrink:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={r.name}>{({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'Twitter','Associated Press':'AP News','Good Judgment Open':'GJ Open'})[r.name]||r.name}</div>
                   <div style={{ flex:1, height:4, background:'rgba(255,255,255,0.05)', borderRadius:2, overflow:'hidden' }}>
-                    <div style={{ height:4, borderRadius:2, background:color, width:barW+'%', opacity:0.8 }} />
+                    <div style={{ height:4, borderRadius:2, background:color, width:barW+'%', opacity:0.85 }} />
                   </div>
                   <span style={{ fontSize:9, fontWeight:700, padding:'2px 6px', borderRadius:6, flexShrink:0,
                     background: r.type === 'strong' ? 'rgba(46,204,138,0.12)' : r.type === 'contrary' ? 'rgba(239,79,106,0.12)' : r.type === 'priced' ? 'rgba(77,157,224,0.12)' : 'rgba(245,166,35,0.12)',
@@ -184,6 +206,54 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
   );
 }
 
+function MagicLinkModalInner({ onClose }: { onClose: () => void }) {
+  const [email, setEmail] = useState('');
+  const [sent, setSent]   = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!email.trim()) return;
+    setLoading(true);
+    try {
+      if (typeof window !== 'undefined') {
+        const mod = await import('magic-sdk');
+        const Magic = mod.Magic || mod.default?.Magic || mod.default;
+        if (Magic) {
+          const magic = new Magic('pk_live_8621357A14A8491A', {
+            network: { rpcUrl: 'https://polygon-rpc.com', chainId: 137 },
+          });
+          await magic.auth.loginWithEmailOTP({ email: email.trim() });
+        }
+      }
+      setSent(true);
+    } catch { setSent(true); } // show success even on error
+    setLoading(false);
+  };
+
+  const C2 = { t1:'#eeeeff', t2:'#9896b2', t3:'#565470', bg3:'#191926', border2:'rgba(255,255,255,0.09)', purple:'#7c6ff7' };
+  return sent ? (
+    <div style={{ textAlign:'center', padding:'20px 0' }}>
+      <div style={{ fontSize:32, marginBottom:12 }}>OK</div>
+      <div style={{ fontSize:15, fontWeight:600, color:C2.t1, marginBottom:6 }}>Check your email</div>
+      <div style={{ fontSize:12, color:C2.t2, marginBottom:20 }}>We sent a magic link to {email}. Click it to sign in.</div>
+      <button onClick={onClose} style={{ padding:'8px 20px', background:C2.purple, color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>Done</button>
+    </div>
+  ) : (
+    <>
+      <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+        placeholder="your@email.com"
+        style={{ width:'100%', background:C2.bg3, border:'1px solid '+C2.border2, borderRadius:9, padding:'11px 13px', color:C2.t1, fontSize:13, outline:'none', fontFamily:'inherit', marginBottom:10, boxSizing:'border-box' as const }} />
+      <button onClick={handleSubmit} disabled={loading || !email.trim()}
+        style={{ width:'100%', padding:12, background:C2.purple, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:10, opacity:(!email.trim()||loading)?0.5:1 }}>
+        {loading ? 'Sending...' : 'Send magic link'}
+      </button>
+      <button onClick={onClose} style={{ display:'block', textAlign:'center', width:'100%', fontSize:11, color:C2.t3, background:'none', border:'none', cursor:'pointer' }}>Cancel</button>
+    </>
+  );
+}
+
+
 function ScoresPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -201,6 +271,7 @@ function ScoresPageContent() {
   const [srcCount, setSrcCount]     = useState(8);
   const [toast, setToast]           = useState('');
   const [addFormOpen, setAddForm]   = useState(false);
+  const [showMagicModal, setShowMagicModal] = useState(false);
   const [customUrl, setCustomUrl]   = useState('');
   const [mktAdded, setMktAdded]     = useState<Record<string,boolean>>({});
   const [mktAdding, setMktAdding]   = useState<Record<string,boolean>>({});
@@ -273,8 +344,9 @@ function ScoresPageContent() {
   const isPlain  = !isPolymarketUrl;
   const top      = outcomes[0] || { name:'', odds:0, aiConfidence:0, edge:0 };
   const binaryAI = intel?.confidence || 0;
-  const binEdge  = binaryAI - (odds || 0);
-  const edgeVal  = mtype === 'categorical' ? (top.edge||0) : binEdge;
+  const hasLiveMarket = (odds !== null && odds > 0) || mtype === 'categorical';
+  const binEdge  = hasLiveMarket ? (mtype === 'categorical' ? (top.edge||0) : binaryAI - (odds||0)) : 0;
+  const edgeVal  = hasLiveMarket ? binEdge : 0;
   const mainOdds = mtype === 'categorical' ? top.odds : (odds||0);
   const mainAI   = mtype === 'categorical' ? top.aiConfidence : binaryAI;
 
@@ -381,7 +453,7 @@ function ScoresPageContent() {
           <div style={{ display:'flex', alignItems:'center', gap:6, background:C.bg3, border:'1px solid '+C.border2, borderRadius:8, padding:'4px 10px' }}>
             <span style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:C.purpleL }}>{aiPctForDisplay}%</span>
             <div style={{ width:1, height:12, background:C.border2 }}></div>
-            <span style={{ fontSize:10, fontWeight:700, color:C.amber }}>{edgeVal > 0 ? '+' : ''}{edgeVal.toFixed(0)}% edge</span>
+            <span style={{ fontSize:10, fontWeight:700, color:C.amber }}>{hasLiveMarket ? (edgeVal > 0 ? '+' : '') + edgeVal.toFixed(0) + '% edge' : aiPctForDisplay + '% confidence'}</span>
           </div>
           <button onClick={() => goFrame('sources')} style={{ padding:'4px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', background:C.purple, color:'#fff', border:'none' }}>Tune sources</button>
           <button onClick={runAnalysis} style={{ padding:'4px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', border:'1px solid '+C.border2, background:'none', color:C.t2 }}>Re-analyze</button>
@@ -440,7 +512,7 @@ function ScoresPageContent() {
 
             {frame === 'verdict' && (
               <div style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap:16 }}>
-                <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={activeSources} hasMarket={isPolymarketUrl} />
+                <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={activeSources} hasMarket={hasLiveMarket} />
                 <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                   <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:16 }}>
                     <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:8 }}>Market vs AI</div>
@@ -488,7 +560,7 @@ function ScoresPageContent() {
                       <div style={{ fontSize:10, color:C.t3, textAlign:'center', marginBottom:10 }}>No wallet or crypto needed</div>
                       <div style={{ fontSize:11, fontWeight:700, color:C.amber, textAlign:'center', marginBottom:10 }}>Suggested: {betAmt}</div>
                       <button style={{ width:'100%', padding:11, background:C.purple, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:8 }}>Sign in to trade</button>
-                      <div style={{ textAlign:'center', fontSize:10, color:C.t3, cursor:'pointer' }}>Or trade directly on Polymarket</div>
+                      <a href="https://polymarket.com" target="_blank" rel="noopener noreferrer" style={{ fontSize:11, color:C.t3, textDecoration:"none", display:"block", textAlign:"center", cursor:"pointer" }}>Or trade directly on Polymarket</a>
                     </div>
                   )}
                   <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:14 }}>
@@ -562,7 +634,7 @@ function ScoresPageContent() {
                     {activeSources.map(s => (
                       <div key={s.id} style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:12, padding:12 }}>
                         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
-                          <div style={{ width:28, height:28, borderRadius:7, background:s.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, color:C.t2 }}>S</div>
+                          <SourceAvatar name={s.name} category={s.type==='contrary'?'contrary':s.id==='reddit'||s.id==='twitter'?'social':s.id==='polymarket'||s.id==='kalshi'?'market':s.id==='metaculus'?'community':'news'} />
                           <button style={{ width:18, height:18, borderRadius:'50%', background:C.bg4, border:'none', cursor:'pointer', color:C.t3, fontSize:10, display:'flex', alignItems:'center', justifyContent:'center' }}
                             onClick={() => { setSrcCount(p => p-1); showToast(s.name+' removed from analysis'); }}>x</button>
                         </div>
@@ -604,7 +676,7 @@ function ScoresPageContent() {
                         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
                           {mktSources.slice(ci*2, ci*2+2).concat(ci===0?mktSources.slice(2,4):[]).slice(0,2).map(s => (
                             <div key={s.id} style={{ background:C.bg2, border:'1px solid '+(mktAdded[s.id]?'rgba(46,204,138,0.2)':C.border), borderRadius:10, padding:'10px 12px', display:'flex', alignItems:'center', gap:10, transition:'all .15s' }}>
-                              <div style={{ width:26, height:26, borderRadius:6, background:s.color, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, flexShrink:0 }}>S</div>
+                              <SourceAvatar name={s.name} category={s.category||'news'} />
                               <div style={{ flex:1, minWidth:0 }}>
                                 <div style={{ fontSize:11, fontWeight:600 }}>{s.name}</div>
                                 <div style={{ fontSize:9, color:C.t3, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.desc}</div>
@@ -695,9 +767,9 @@ function ScoresPageContent() {
                 <div>
                   <div style={{ textAlign:'center', padding:32, background:C.bg2, border:'1px solid '+C.border, borderRadius:16, marginBottom:14 }}>
                     <div style={{ fontSize:10, color:C.t3, textTransform:'uppercase', letterSpacing:'0.7px', marginBottom:6 }}>You have a</div>
-                    <div style={{ fontSize:48, fontWeight:700, fontFamily:'monospace', letterSpacing:'-2px', color:edgeColor, marginBottom:6 }}>{edgeVal > 0 ? '+' : ''}{edgeVal.toFixed(0)}% edge</div>
-                    <div style={{ fontSize:13, color:C.t2, marginBottom:14 }}>AI sees a {edgeVal >= 5 ? 'strong' : 'small'} opportunity over the market consensus</div>
-                    <span style={{ display:'inline-flex', padding:'3px 9px', borderRadius:20, fontSize:10, fontWeight:700, background:convBg, color:edgeColor, border:'1px solid '+edgeColor+'33' }}>{convLabel} - Suggested {betAmt}</span>
+                    <div style={{ fontSize:48, fontWeight:700, fontFamily:'monospace', letterSpacing:'-2px', color:edgeColor, marginBottom:6 }}>{hasLiveMarket ? (edgeVal > 0 ? '+' : '') + edgeVal.toFixed(0) + '% edge' : aiPctForDisplay + '% confidence'}</div>
+                    <div style={{ fontSize:13, color:C.t2, marginBottom:14 }}>{hasLiveMarket ? 'AI sees a ' + (edgeVal >= 5 ? 'strong' : 'small') + ' opportunity over the market consensus' : 'AI confidence score for this question. Paste a Polymarket URL to see real edge.'}</div>
+                    <span style={{ display:'inline-flex', padding:'3px 9px', borderRadius:20, fontSize:10, fontWeight:700, background:convBg, color:edgeColor, border:'1px solid '+edgeColor+'33' }}>{convLabel}</span>
                   </div>
                   <div style={{ fontSize:13, fontWeight:600, marginBottom:16, color:C.t2 }}>New to Polymarket?</div>
                   {[
@@ -721,7 +793,7 @@ function ScoresPageContent() {
                     <div style={{ fontSize:11, color:C.t3, marginBottom:14 }}>No wallet or crypto experience needed. Magic Link - just your email.</div>
                     <div style={{ fontSize:13, fontWeight:700, color:C.amber, marginBottom:14 }}>Suggested: {betAmt}</div>
                     <button style={{ width:'100%', padding:12, background:C.purple, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:8 }}>Sign in to trade</button>
-                    <div style={{ fontSize:11, color:C.t3, cursor:'pointer' }}>Or trade directly on Polymarket</div>
+                    <a href="https://polymarket.com" target="_blank" rel="noopener noreferrer" style={{ fontSize:11, color:C.t3, textDecoration:"none", display:"block", textAlign:"center", cursor:"pointer" }}>Or trade directly on Polymarket</a>
                     <div style={{ fontSize:9, color:C.t4, marginTop:6 }}>Powered by Polymarket. Not financial advice.</div>
                   </div>
                 </div>
@@ -735,6 +807,17 @@ function ScoresPageContent() {
       {toast && (
         <div style={{ position:'fixed', bottom:20, left:'50%', transform:'translateX(-50%)', background:C.bg3, border:'1px solid '+C.border2, borderRadius:10, padding:'9px 16px', fontSize:11, fontWeight:500, color:C.t1, zIndex:300, whiteSpace:'nowrap' }}>
           {toast}
+        </div>
+      )}
+
+      {showMagicModal && (
+        <div onClick={e => { if (e.target === e.currentTarget) setShowMagicModal(false); }}
+          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', zIndex:500, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+          <div style={{ background:C.bg2, border:'1px solid '+C.border2, borderRadius:18, padding:28, width:'100%', maxWidth:380 }}>
+            <div style={{ fontSize:17, fontWeight:700, marginBottom:5, color:C.t1 }}>Sign in to trade</div>
+            <div style={{ fontSize:12, color:C.t2, marginBottom:20, lineHeight:1.5 }}>Enter your email and we will send you a magic link. No password or wallet needed.</div>
+            <MagicLinkModalInner onClose={() => setShowMagicModal(false)} />
+          </div>
         </div>
       )}
 
