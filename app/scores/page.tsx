@@ -175,7 +175,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
               return (
                 <div key={i} style={{ display:'flex', alignItems:'center', gap:10 }}>
                   <div style={{ width:6, height:6, borderRadius:'50%', background:color, flexShrink:0 }}></div>
-                  <div style={{ width:100, fontSize:11, fontWeight:500, color:C.t2, flexShrink:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={r.name}>{(({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'Twitter','Associated Press':'AP News','Good Judgment Open':'GJ Open'} as Record<string,string>)[r.name]||r.name}</div>
+                  <div style={({"Financial Times":"FT","Wall Street Journal":"WSJ","Twitter/X":"Twitter","Associated Press":"AP News","Good Judgment Open":"GJ Open"} as Record<string,string>)[r.name]||r.name}</div>
                   <div style={{ flex:1, height:4, background:'rgba(255,255,255,0.05)', borderRadius:2, overflow:'hidden' }}>
                     <div style={{ height:4, borderRadius:2, background:color, width:barW+'%', opacity:0.85 }} />
                   </div>
