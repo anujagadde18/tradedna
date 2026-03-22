@@ -58,7 +58,7 @@ function ScoresPageContent() {
   };
 
   useEffect(() => {
-    setHasUrl(event.includes('polymarket.com/event/'));
+    setHasUrl(event.includes("polymarket.com/event/"));
     try {
       const sw = localStorage.getItem('signalWeights');
       if (sw) setWeights(JSON.parse(sw));
@@ -98,7 +98,7 @@ function ScoresPageContent() {
   const binaryEdge = binaryAI - (odds || 0);
 
   const eventTitle = (() => {
-    const idx = event.indexOf('polymarket.com/event/');
+    const idx = event.indexOf("polymarket.com/event/");
     if (idx >= 0) {
       const slug = event.slice(idx + 21).split('/')[0].split('?')[0];
       return slug.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
@@ -199,14 +199,14 @@ function ScoresPageContent() {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {SOURCES[mktTab].map(source => (
-                    <div key={source.name} className={'p-3 rounded-xl border transition-all ' + (isActive(source.name) ? 'border-purple-500 bg-purple-900/20' : 'border-gray-700 bg-gray-800/30 hover:border-gray-600')}>
+                    <div key={source.name} className={'p-3 rounded-xl border transition-all ' + (isActive(source.name) ? "border-purple-500 bg-purple-900/20" : "border-gray-700 bg-gray-800/30 hover:border-gray-600")}>
                       <div className="flex justify-between items-start gap-2">
                         <div>
                           <div className="text-white text-sm font-medium">{source.name}</div>
                           <div className="text-gray-500 text-xs">{source.desc}</div>
                         </div>
                         <button onClick={() => toggle(source, mktTab)}
-                          className={'text-xs px-2 py-1 rounded-lg font-semibold shrink-0 ' + (isActive(source.name) ? 'bg-red-600/80 text-white' : 'bg-purple-600/80 text-white')}>
+                          className={'text-xs px-2 py-1 rounded-lg font-semibold shrink-0 ' + (isActive(source.name) ? "bg-red-600/80 text-white" : "bg-purple-600/80 text-white")}>
                           {isActive(source.name) ? 'Remove' : 'Add'}
                         </button>
                       </div>
@@ -309,7 +309,7 @@ function ScoresPageContent() {
                     <div className="flex items-center gap-3">
                       <div className="flex-1 bg-gray-800 rounded-full h-1.5">
                         <div className={'h-1.5 rounded-full transition-all ' + (edgeVal >= 5 ? 'bg-green-500' : edgeVal >= 2 ? 'bg-yellow-500' : 'bg-gray-600')}
-                          style={{ width: Math.min(Math.max((edgeVal + 10) / 20 * 100, 0), 100) + '%' }} />
+                          style={{ width: Math.min(Math.max((edgeVal + 10) / 20 * 100, 0), 100) + "%" }} />
                       </div>
                       <span className={'text-xs font-bold ' + edgeColor}>
                         {edgeVal > 0 ? '+' : ''}{edgeVal.toFixed(1)}% edge
@@ -353,7 +353,7 @@ function ScoresPageContent() {
                       <div key={s.label} className="flex items-center gap-3">
                         <span className="text-gray-400 text-xs w-32 shrink-0">{s.label}</span>
                         <div className="flex-1 bg-gray-800 rounded-full h-1.5">
-                          <div className={s.color + ' h-1.5 rounded-full'} style={{ width: Math.min((s.val / 30) * 100, 100) + '%' }} />
+                          <div className={s.color + " h-1.5 rounded-full"} style={{ width: Math.min((s.val / 30) * 100, 100) + "%" }} />
                         </div>
                         <span className="text-white text-xs font-bold w-10 text-right">+{s.val}%</span>
                       </div>
