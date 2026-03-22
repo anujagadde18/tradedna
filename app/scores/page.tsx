@@ -387,7 +387,6 @@ function ScoresPageContent() {
         )}
       </div>
 
-      </div>
 
       {/* Footer */}
       <div className="border-t border-gray-800/50 px-6 py-3 mt-8">
