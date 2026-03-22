@@ -175,7 +175,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
               return (
                 <div key={i} style={{ display:'flex', alignItems:'center', gap:10 }}>
                   <div style={{ width:6, height:6, borderRadius:'50%', background:color, flexShrink:0 }}></div>
-                  <div style={{ width:100, fontSize:11, fontWeight:500, color:C.t2, flexShrink:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={r.name}>{({"Financial Times":"FT","Wall Street Journal":"WSJ","Twitter/X":"Twitter","Associated Press":"AP News","Good Judgment Open":"GJ Open"} as Record<string,string>)[r.name]||r.name}</div>
+                  <div style={{ width:100, fontSize:11, fontWeight:500, color:C.t2, flexShrink:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={r.name}>{(({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'Twitter','Associated Press':'AP News','Good Judgment Open':'GJ Open'} as Record<string,string>)[r.name]||r.name}</div>
                   <div style={{ flex:1, height:4, background:'rgba(255,255,255,0.05)', borderRadius:2, overflow:'hidden' }}>
                     <div style={{ height:4, borderRadius:2, background:color, width:barW+'%', opacity:0.85 }} />
                   </div>
@@ -261,6 +261,7 @@ function ScoresPageContent() {
 
   const [frame, setFrame]           = useState<Frame>('verdict');
   const [intel, setIntel]           = useState<any>(null);
+  const [realSources, setRealSources] = useState<any[]>([]);
   const [odds, setOdds]             = useState<number|null>(null);
   const [mtype, setMtype]           = useState<'binary'|'categorical'>('binary');
   const [outcomes, setOutcomes]     = useState<any[]>([]);
@@ -283,7 +284,9 @@ function ScoresPageContent() {
     setOutcomes([]);
     setTradeData(null);
     setRelated([]);
-    setFrame('verdict'); // Always go to verdict on new query
+    setRealSources([]);
+    setIntel(null);
+    setFrame('verdict');
   }, [event]);
 
   useEffect(() => {
@@ -356,11 +359,30 @@ function ScoresPageContent() {
     if (event) go();
   }, [event]);
 
-  const runAnalysis = () => {
+  const runAnalysis = async () => {
     if (mtype === 'categorical') return;
-    const seed = event.split('').reduce((acc:number, c:string) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0);
-    const baseConf = 45 + Math.abs(seed % 35);
-    setIntel(calculateIntelligence(baseConf, weights, 0, odds, event));
+    if (!event) return;
+    try {
+      const res  = await fetch('/api/analyse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: event, marketOdds: odds }),
+      });
+      const data = await res.json();
+      if (data.confidence) {
+        setIntel(calculateIntelligence(data.confidence, weights, 0, odds, event));
+        if (data.sources && data.sources.length > 0) {
+          setRealSources(data.sources);
+        }
+      } else {
+        // fallback to hash seed
+        const seed = event.split('').reduce((acc:number, c:string) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0);
+        setIntel(calculateIntelligence(45 + Math.abs(seed % 35), weights, 0, odds, event));
+      }
+    } catch {
+      const seed = event.split('').reduce((acc:number, c:string) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0);
+      setIntel(calculateIntelligence(45 + Math.abs(seed % 35), weights, 0, odds, event));
+    }
   };
   useEffect(() => { runAnalysis(); }, [event, odds, mtype, weights]);
 
@@ -540,7 +562,7 @@ function ScoresPageContent() {
 
             {frame === 'verdict' && (
               <div style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap:16 }}>
-                <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={activeSources} hasMarket={hasLiveMarket} />
+                <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources.length > 0 ? realSources : activeSources} hasMarket={hasLiveMarket} />
                 <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                   <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:16 }}>
                     <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:8 }}>Market vs AI</div>
