@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { PolymarketComparison } from '@/components/PolymarketComparison';
-import { TradePanel } from '@/components/TradePanel';
-import { PlainTextAnalysis } from '@/components/PlainTextAnalysis';
-import { calculateIntelligence } from '@/lib/intelligenceEngine';
+import { useRouter, useSearchParams } from "next/navigation";
+import { PolymarketComparison } from "@/components/PolymarketComparison";
+import { TradePanel } from "@/components/TradePanel";
+import { PlainTextAnalysis } from "@/components/PlainTextAnalysis";
+import { calculateIntelligence } from "@/lib/intelligenceEngine";
 
 interface TradeReadyData {
   marketTitle: string;
@@ -100,7 +100,7 @@ function ScoresPageContent() {
   const eventTitle = (() => {
     const idx = event.indexOf("polymarket.com/event/");
     if (idx >= 0) {
-      const slug = event.slice(idx + 21).split('/')[0].split('?')[0];
+      const slug = event.slice(idx + 21).split("/")[0].split('?')[0];
       return slug.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     }
     return event.length > 100 ? event.slice(0, 100) : event;
@@ -116,7 +116,7 @@ function ScoresPageContent() {
 
       {/* Top nav */}
       <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-800/50">
-        <button onClick={() => router.push('/')} className="text-gray-500 hover:text-white text-sm transition-colors">
+        <button onClick={() => router.push("/")} className="text-gray-500 hover:text-white text-sm transition-colors">
           Back
         </button>
         <div className="text-white font-bold text-sm tracking-tight">PlayPicks AI</div>
@@ -126,7 +126,7 @@ function ScoresPageContent() {
             className={'text-sm font-medium px-3 py-1.5 rounded-lg transition-all ' + (showSources ? 'bg-purple-600 text-white' : "text-gray-400 hover:text-white bg-gray-800/50")}>
             Tune sources
           </button>
-          <button onClick={() => router.push('/journal')} className="text-gray-500 hover:text-white text-sm transition-colors">Journal</button>
+          <button onClick={() => router.push("/journal")} className="text-gray-500 hover:text-white text-sm transition-colors">Journal</button>
         </div>
       </nav>
 
