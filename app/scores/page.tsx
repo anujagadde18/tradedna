@@ -175,7 +175,6 @@ function ScoresPageContent() {
                       className="w-full accent-purple-500 mb-2" />
                     <p className="text-xs text-gray-600">{desc}</p>
                   </div>
-                  <div style={{ width:100, fontSize:11, fontWeight:500, color:C.t2, flexShrink:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={r.name}>{({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'Twitter','Associated Press':'AP News','Good Judgment Open':'GJ Open'} as Record<string,string>)[r.name]||r.name}</div>
                 <div className="md:col-span-3 flex gap-3">
                   <button onClick={() => setWeights(DEFAULT_W)} className="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700">
                     Reset defaults
