@@ -109,7 +109,7 @@ function ScoresPageContent() {
   const edgeVal    = mtype === 'categorical' ? (top.edge || 0) : binaryEdge;
   const edgeColor  = edgeVal >= 5 ? 'text-green-400' : edgeVal >= 2 ? 'text-yellow-400' : edgeVal >= -2 ? 'text-gray-400' : 'text-red-400';
   const edgeLabel  = edgeVal >= 10 ? 'Very High' : edgeVal >= 5 ? 'High' : edgeVal >= 2 ? 'Medium' : edgeVal >= -2 ? 'Low' : 'Very Low';
-  const edgeBg     = edgeVal >= 5 ? 'bg-green-900/20 border-green-700/30' : edgeVal >= 2 ? 'bg-yellow-900/20 border-yellow-700/30' : 'bg-gray-900/50 border-gray-700/50';
+  const edgeBg     = edgeVal >= 5 ? "bg-green-900/20 border-green-700/30" : edgeVal >= 2 ? "bg-yellow-900/20 border-yellow-700/30" : "bg-gray-900/50 border-gray-700/50";
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -123,7 +123,7 @@ function ScoresPageContent() {
         <div className="flex items-center gap-4">
           <button onClick={runAnalysis} className="text-gray-500 hover:text-white text-sm transition-colors">Refresh</button>
           <button onClick={() => setShowSources(!showSources)}
-            className={'text-sm font-medium px-3 py-1.5 rounded-lg transition-all ' + (showSources ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white bg-gray-800/50')}>
+            className={'text-sm font-medium px-3 py-1.5 rounded-lg transition-all ' + (showSources ? 'bg-purple-600 text-white' : "text-gray-400 hover:text-white bg-gray-800/50")}>
             Tune sources
           </button>
           <button onClick={() => router.push('/journal')} className="text-gray-500 hover:text-white text-sm transition-colors">Journal</button>
