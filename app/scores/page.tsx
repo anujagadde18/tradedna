@@ -37,23 +37,23 @@ function ScoresPageContent() {
 
   const SOURCES = {
     news: [
-      { name: 'Reuters', desc: 'Global newswire', url: 'https://reuters.com' },
-      { name: 'Bloomberg', desc: 'Financial news', url: 'https://bloomberg.com' },
-      { name: 'Associated Press', desc: 'Breaking news', url: 'https://apnews.com' },
-      { name: 'BBC News', desc: 'International coverage', url: 'https://bbc.com/news' },
-      { name: 'CoinDesk', desc: 'Crypto and blockchain', url: 'https://coindesk.com' },
-      { name: 'Politico', desc: 'Politics and policy', url: 'https://politico.com' },
+      { name: 'Reuters', desc: 'Global newswire', url: "https://reuters.com" },
+      { name: 'Bloomberg', desc: 'Financial news', url: "https://bloomberg.com" },
+      { name: 'Associated Press', desc: 'Breaking news', url: "https://apnews.com" },
+      { name: 'BBC News', desc: 'International coverage', url: "https://bbc.com/news" },
+      { name: 'CoinDesk', desc: 'Crypto and blockchain', url: "https://coindesk.com" },
+      { name: 'Politico', desc: 'Politics and policy', url: "https://politico.com" },
     ],
     social: [
-      { name: 'Twitter/X', desc: 'Real-time sentiment', url: 'https://twitter.com' },
-      { name: 'r/politics', desc: 'Political discussion', url: 'https://reddit.com/r/politics' },
-      { name: 'r/investing', desc: 'Investment sentiment', url: 'https://reddit.com/r/investing' },
-      { name: 'r/cryptocurrency', desc: 'Crypto community', url: 'https://reddit.com/r/cryptocurrency' },
+      { name: 'TwitterX', desc: 'Real-time sentiment', url: "https://twitter.com" },
+      { name: 'r-politics', desc: 'Political discussion', url: "https://reddit.com/r/politics" },
+      { name: 'r-investing', desc: 'Investment sentiment', url: "https://reddit.com/r/investing" },
+      { name: 'r-cryptocurrency', desc: 'Crypto community', url: "https://reddit.com/r/cryptocurrency" },
     ],
     technical: [
-      { name: 'Kalshi', desc: 'Prediction market', url: 'https://kalshi.com' },
-      { name: 'Metaculus', desc: 'Forecasting community', url: 'https://metaculus.com' },
-      { name: 'Manifold', desc: 'Play-money markets', url: 'https://manifold.markets' },
+      { name: 'Kalshi', desc: 'Prediction market', url: "https://kalshi.com" },
+      { name: 'Metaculus', desc: 'Forecasting community', url: "https://metaculus.com" },
+      { name: 'Manifold', desc: 'Play-money markets', url: "https://manifold.markets" },
     ],
   };
 
