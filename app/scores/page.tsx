@@ -345,15 +345,21 @@ function ScoresPageContent() {
                 </button>
                 {showDeep && (
                   <div className="border-t border-gray-800 p-5 space-y-3">
-                    {[
-                      { label: 'News sentiment', val: Math.round((odds || 50) * (weights.news / 100)), color: 'bg-purple-500' },
-                      { label: 'Community signal', val: Math.round((odds || 50) * (weights.social / 100)), color: 'bg-blue-500' },
-                      { label: 'Market probability', val: Math.round((odds || 50) * (weights.technical / 100)), color: 'bg-green-500' },
-                    ].map(s => (
+                    {(() => {
+                      const base = odds || 50;
+                      const newsVal = Math.round(base * weights.news * 0.01);
+                      const socialVal = Math.round(base * weights.social * 0.01);
+                      const techVal = Math.round(base * weights.technical * 0.01);
+                      return [
+                        { label: 'News sentiment', val: newsVal, color: 'bg-purple-500' },
+                        { label: 'Community signal', val: socialVal, color: 'bg-blue-500' },
+                        { label: 'Market probability', val: techVal, color: 'bg-green-500' },
+                      ];
+                    })().map(s => (
                       <div key={s.label} className="flex items-center gap-3">
                         <span className="text-gray-400 text-xs w-32 shrink-0">{s.label}</span>
                         <div className="flex-1 bg-gray-800 rounded-full h-1.5">
-                          <div className={s.color + " h-1.5 rounded-full"} style={{ width: Math.min((s.val / 30) * 100, 100) + "%" }} />
+                          <div className={s.color + " h-1.5 rounded-full"} style={{ width: Math.min(s.val * 100 * 0.033, 100) + "%" }} />
                         </div>
                         <span className="text-white text-xs font-bold w-10 text-right">+{s.val}%</span>
                       </div>
