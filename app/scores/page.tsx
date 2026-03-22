@@ -162,7 +162,7 @@ function ScoresPageContent() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
                   { key: 'news', label: 'News', desc: 'Reuters, Bloomberg, AP...' },
-                  { key: 'social', label: 'Social', desc: 'Twitter/X, Reddit...' },
+                  { key: 'social', label: 'Social', desc: 'Twitter, Reddit...' },
                   { key: 'technical', label: 'Market probability', desc: 'Polymarket, Kalshi...' },
                 ].map(({ key, label, desc }) => (
                   <div key={key} className="bg-gray-900/50 rounded-xl p-4">
