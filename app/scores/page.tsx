@@ -175,7 +175,7 @@ function ScoresPageContent() {
                       className="w-full accent-purple-500 mb-2" />
                     <p className="text-xs text-gray-600">{desc}</p>
                   </div>
-                </div>
+                )}
                 <div className="md:col-span-3 flex gap-3">
                   <button onClick={() => setWeights(DEFAULT_W)} className="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700">
                     Reset defaults
