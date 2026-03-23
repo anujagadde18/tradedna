@@ -175,7 +175,6 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
         {skipBet && (
           <div style={{ fontSize:11, color:C.t3, marginTop:8 }}>No edge detected — skip this market or wait for better odds.</div>
         )}
-                  <div style={{ width:100, fontSize:11, fontWeight:500, color:C.t2, flexShrink:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={r.name}>{({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'Twitter','Associated Press':'AP News','Good Judgment Open':'GJ Open'} as Record<string,string>)[r.name]||r.name}</div>
           <div style={{ fontSize:11, fontWeight:700, color:C.amber, marginTop:8 }}>Suggested position: {suggestedAmt}</div>
         )}
       </div>
