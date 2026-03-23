@@ -112,14 +112,14 @@ export function PolymarketComparison({
 
       const urlMatch = userQuestion.match(/polymarket\.com\/event\/([^\/\s?#]+)/);
       if (!urlMatch) {
-        setError('no_url');
+        setError('paste_url');
         setLoading(false);
         return;
       }
 
       const eventSlug = urlMatch[1];
       const response  = await fetch(`/api/polymarket?slug=${eventSlug}`);
-      if (!response.ok) throw new Error('Failed to fetch market data');
+      if (!response.ok) throw new Error(error === 'paste_url' ? 'Paste a Polymarket URL to see live odds and edge calculation' : 'Failed to fetch market data');
 
       const data = await response.json();
       if (data.error) throw new Error(data.error);
@@ -232,7 +232,7 @@ export function PolymarketComparison({
 
       setLoading(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch market data');
+      setError(err.message || error === 'paste_url' ? 'Paste a Polymarket URL to see live odds and edge calculation' : 'Failed to fetch market data');
       setLoading(false);
     }
   };
