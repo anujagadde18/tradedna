@@ -585,7 +585,7 @@ function ScoresPageContent() {
               <div style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap:16 }}>
                 {invalidQuestion ? (
                 <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:300, textAlign:'center', gap:16, padding:40 }}>
-                  <div style={{ fontSize:48 }}>🤔</div>
+                  <div style={{ fontSize:48 }}>?</div>
                   <div style={{ fontSize:20, fontWeight:700, color:C.t1, letterSpacing:'-0.4px' }}>This doesn't look like a real prediction</div>
                   <div style={{ fontSize:13, color:C.t2, maxWidth:380, lineHeight:1.6 }}>PlayPicks AI analyzes real verifiable world events. Try asking about something that could actually happen.</div>
                   <div style={{ width:'100%', maxWidth:380 }}>
