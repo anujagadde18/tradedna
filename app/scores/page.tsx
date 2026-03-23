@@ -178,7 +178,6 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
         {suggestedAmt && (
           <div style={{ fontSize:11, fontWeight:700, color:C.amber, marginTop:8 }}>Suggested position: {suggestedAmt}</div>
         )}
-        )}
 
       {displayRows.length > 0 && (
         <div style={{ borderTop:'1px solid '+C.border, paddingTop:16 }}>
