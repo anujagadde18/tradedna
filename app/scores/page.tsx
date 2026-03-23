@@ -175,11 +175,11 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
         {skipBet && (
           <div style={{ fontSize:11, color:C.t3, marginTop:8 }}>No edge detected — skip this market or wait for better odds.</div>
         )}
-        {suggestedAmt && (
+                  <div style={{ width:100, fontSize:11, fontWeight:500, color:C.t2, flexShrink:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={r.name}>{({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'Twitter','Associated Press':'AP News','Good Judgment Open':'GJ Open'} as Record<string,string>)[r.name]||r.name}</div>
           <div style={{ fontSize:11, fontWeight:700, color:C.amber, marginTop:8 }}>Suggested position: {suggestedAmt}</div>
         )}
-
       </div>
+
       {displayRows.length > 0 && (
         <div style={{ borderTop:'1px solid '+C.border, paddingTop:16 }}>
           <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:12 }}>Signal breakdown</div>
@@ -592,7 +592,7 @@ function ScoresPageContent() {
                   <div style={{ width:'100%', maxWidth:380 }}>
                     <div style={{ fontSize:10, color:C.t3, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:8 }}>Try one of these instead</div>
                     {(invalidQuestion.examples||[]).map((s:string) => (
-                      <button key={s} onClick={() => router.push('/scores?event='+encodeURIComponent(s))}
+                      <button key={s} onClick={() => { router.push('/scores?event='+encodeURIComponent(s)); setFrame('verdict'); }}
                         style={{ display:'block', width:'100%', background:C.bg3, border:'1px solid '+C.border2, borderRadius:10, padding:'10px 16px', color:C.t2, fontSize:12, cursor:'pointer', textAlign:'left', marginBottom:6 }}>
                         {s}
                       </button>
@@ -605,6 +605,11 @@ function ScoresPageContent() {
               ) : (
                 <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources.length > 0 ? realSources : activeSources} hasMarket={hasLiveMarket} />
               )}
+                {invalidQuestion ? (
+                  <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100%', padding:24, gap:12, textAlign:'center', background:C.bg2, border:'1px solid '+C.border, borderRadius:16 }}>
+                    <div style={{ fontSize:12, color:C.t3, lineHeight:1.6 }}>Ask a real prediction market question to see the AI verdict, conviction score, and trade recommendation.</div>
+                  </div>
+                ) : (
                 <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                   <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:16 }}>
                     <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:8 }}>Market vs AI</div>
@@ -659,6 +664,7 @@ function ScoresPageContent() {
                     <PolymarketComparison userQuestion={event} aiPrediction={intel?.confidence||0} onDataReceived={(o,t,outs,ot) => { setOdds(o); if(t) setMtype(t); if(outs) setOutcomes(outs); setHasUrl(true); }} onTradeReady={(d:TradeReadyData) => setTradeData(d)} />
                   </div>
                 </div>
+                )}
               </div>
             )}
 
