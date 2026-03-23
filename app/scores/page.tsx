@@ -262,6 +262,7 @@ function ScoresPageContent() {
   const [frame, setFrame]           = useState<Frame>('verdict');
   const [intel, setIntel]           = useState<any>(null);
   const [realSources, setRealSources] = useState<any[]>([]);
+  const [invalidQuestion, setInvalidQuestion] = useState<{reason:string;examples:string[]}|null>(null);
   const [odds, setOdds]             = useState<number|null>(null);
   const [mtype, setMtype]           = useState<'binary'|'categorical'>('binary');
   const [outcomes, setOutcomes]     = useState<any[]>([]);
@@ -286,6 +287,7 @@ function ScoresPageContent() {
     setRelated([]);
     setRealSources([]);
     setIntel(null);
+    setInvalidQuestion(null);
     setFrame('verdict');
   }, [event]);
 
@@ -369,13 +371,17 @@ function ScoresPageContent() {
         body: JSON.stringify({ query: event, marketOdds: odds }),
       });
       const data = await res.json();
+      if (data.valid === false) {
+        setInvalidQuestion({ reason: data.reason, examples: data.examples || [] });
+        return;
+      }
+      setInvalidQuestion(null);
       if (data.confidence) {
         setIntel(calculateIntelligence(data.confidence, weights, 0, odds, event));
         if (data.sources && data.sources.length > 0) {
           setRealSources(data.sources);
         }
       } else {
-        // fallback to hash seed
         const seed = event.split('').reduce((acc:number, c:string) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0);
         setIntel(calculateIntelligence(45 + Math.abs(seed % 35), weights, 0, odds, event));
       }
@@ -562,7 +568,27 @@ function ScoresPageContent() {
 
             {frame === 'verdict' && (
               <div style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap:16 }}>
+                {invalidQuestion ? (
+                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:300, textAlign:'center', gap:16, padding:40 }}>
+                  <div style={{ fontSize:48 }}>🤔</div>
+                  <div style={{ fontSize:20, fontWeight:700, color:C.t1, letterSpacing:'-0.4px' }}>This doesn't look like a real prediction</div>
+                  <div style={{ fontSize:13, color:C.t2, maxWidth:380, lineHeight:1.6 }}>PlayPicks AI analyzes real verifiable world events. Try asking about something that could actually happen.</div>
+                  <div style={{ width:'100%', maxWidth:380 }}>
+                    <div style={{ fontSize:10, color:C.t3, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:8 }}>Try one of these instead</div>
+                    {(invalidQuestion.examples||[]).map((s:string) => (
+                      <button key={s} onClick={() => router.push('/scores?event='+encodeURIComponent(s))}
+                        style={{ display:'block', width:'100%', background:C.bg3, border:'1px solid '+C.border2, borderRadius:10, padding:'10px 16px', color:C.t2, fontSize:12, cursor:'pointer', textAlign:'left', marginBottom:6 }}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={() => router.back()} style={{ background:C.purple, color:'#fff', border:'none', borderRadius:10, padding:'10px 24px', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                    Try a different question
+                  </button>
+                </div>
+              ) : (
                 <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources.length > 0 ? realSources : activeSources} hasMarket={hasLiveMarket} />
+              )}
                 <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                   <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:16 }}>
                     <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:8 }}>Market vs AI</div>
