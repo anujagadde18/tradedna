@@ -179,6 +179,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
           <div style={{ fontSize:11, fontWeight:700, color:C.amber, marginTop:8 }}>Suggested position: {suggestedAmt}</div>
         )}
 
+      </div>
       {displayRows.length > 0 && (
         <div style={{ borderTop:'1px solid '+C.border, paddingTop:16 }}>
           <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:12 }}>Signal breakdown</div>
