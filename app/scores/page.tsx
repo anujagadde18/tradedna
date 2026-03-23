@@ -101,10 +101,13 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
     : edge > 3 ? `Small but real edge. AI slightly disagrees with market. Keep position modest.`
     : `AI agrees with the market. No meaningful edge detected.`;
 
-  const suggestedAmt = edge === null ? null
-    : edge > 8 ? '$75 - $200'
-    : edge > 3 ? '$25 - $75'
+  const suggestedAmt = (edge === null || edge <= 0) ? null
+    : edge >= 15 ? '$100 - $300'
+    : edge >= 8  ? '$75 - $200'
+    : edge >= 4  ? '$25 - $75'
+    : edge >= 1  ? '$10 - $25'
     : null;
+  const skipBet = edge !== null && edge <= 0;
 
   // Parse contribution number from string like "+22%" or "-3%"
   function parseContrib(s: any): number {
@@ -114,13 +117,23 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
   }
 
   const rows = sources
-    .map(src => ({
-      name: src.name,
-      category: src.category || (src.type === 'contrary' ? 'contrary' : 'news'),
-      sig: src.sig || src.signal || '',
-      type: src.type || 'mixed',
-      contribution: parseContrib(src.contrib ?? src.contribution ?? src.weight ?? 0),
-    }))
+    .map(src => {
+      // Derive category from name if not set
+      const name = src.name || '';
+      let cat = src.category || 'news';
+      if (!src.category) {
+        if (['Reddit','Twitter','Hacker News','TwitterX'].some(n => name.includes(n))) cat = 'social';
+        else if (['Polymarket','Kalshi','Metaculus','Manifold'].some(n => name.includes(n))) cat = name === 'Metaculus' ? 'community' : 'market';
+        else if (src.type === 'contrary') cat = 'contrary';
+      }
+      return {
+        name,
+        category: cat,
+        sig: src.sig || src.signal || '',
+        type: src.type || 'mixed',
+        contribution: parseContrib(src.contrib ?? src.contribution ?? src.weight ?? 0),
+      };
+    })
     .filter(r => r.contribution !== 0)
     .sort((a,b) => Math.abs(b.contribution) - Math.abs(a.contribution));
 
@@ -159,7 +172,10 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
         <div style={{ fontSize:11, color:C.t2, lineHeight:1.65, padding:'10px 12px', background:'rgba(255,255,255,0.025)', borderRadius:8, borderLeft:'2px solid '+C.border2, marginTop:12 }}>
           {soWhat}
         </div>
-        {suggestedAmt && (
+        {skipBet && (
+          <div style={{ fontSize:11, color:C.t3, marginTop:8 }}>No edge detected — skip this market or wait for better odds.</div>
+        )}
+                  <div style={{ width:100, fontSize:11, fontWeight:500, color:C.t2, flexShrink:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={r.name}>{({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'Twitter','Associated Press':'AP News','Good Judgment Open':'GJ Open'} as Record<string,string>)[r.name]||r.name}</div>
           <div style={{ fontSize:11, fontWeight:700, color:C.amber, marginTop:8 }}>Suggested position: {suggestedAmt}</div>
         )}
       </div>
