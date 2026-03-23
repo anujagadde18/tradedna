@@ -37,10 +37,51 @@ function extractKeywords(query: string): string {
 }
 
 // ── Main handler ───────────────────────────────────────────────
+
+function isValidQuestion(query: string): { valid: boolean; reason?: string } {
+  if (query.length < 10) return { valid: false, reason: "Question too short" };
+  
+  const q = query.toLowerCase();
+  
+  // Must have question-like words
+  const questionWords = ['will','would','could','can','should','when','what',
+    'who','which','how','is','are','does','did','has','have','by','before','after'];
+  if (!questionWords.some(w => q.includes(w)))
+    return { valid: false, reason: "Doesn't look like a prediction question" };
+
+  // Check for nonsense — real questions mention real things
+  const realSignals = ['president','election','fed','rate','bitcoin','crypto',
+    'war','ceasefire','gdp','inflation','ai','model','company','market',
+    'price','stock','iran','china','russia','ukraine','us ','uk ','2025','2026',
+    'january','february','march','april','may','june','july','august',
+    'september','october','november','december','percent','%','dollar','euro'];
+  
+  // If very short and no real signals, likely nonsense
+  if (query.length < 30 && !realSignals.some(w => q.includes(w)))
+    return { valid: false, reason: "Question doesn't appear to be about a real verifiable event" };
+
+  return { valid: true };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { query, marketOdds } = await request.json();
     if (!query) return Response.json({ error: 'Missing query' }, { status: 400 });
+
+    const validation = isValidQuestion(query);
+    if (!validation.valid) {
+      return Response.json({
+        valid: false,
+        confidence: 0,
+        reason: validation.reason,
+        message: 'This doesn\'t appear to be a real prediction market question. Try asking about a verifiable world event.',
+        examples: [
+          'Will the Fed cut rates in May?',
+          'Will Bitcoin hit $100k before April?',
+          'Will there be a US-Iran ceasefire?'
+        ]
+      });
+    }
 
     const keywords = extractKeywords(query);
 
