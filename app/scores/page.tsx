@@ -175,9 +175,10 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
         {skipBet && (
           <div style={{ fontSize:11, color:C.t3, marginTop:8 }}>No edge detected — skip this market or wait for better odds.</div>
         )}
+        {suggestedAmt && (
           <div style={{ fontSize:11, fontWeight:700, color:C.amber, marginTop:8 }}>Suggested position: {suggestedAmt}</div>
         )}
-      </div>
+        )}
 
       {displayRows.length > 0 && (
         <div style={{ borderTop:'1px solid '+C.border, paddingTop:16 }}>
