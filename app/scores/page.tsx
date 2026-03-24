@@ -399,11 +399,11 @@ function ScoresPageContent() {
         }
       } else {
         const seed = event.split('').reduce((acc:number, c:string) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0);
-        setIntel(calculateIntelligence(45 + Math.abs(seed % 35), weights, 0, odds, event));
+        setIntel(calculateIntelligence(45 + ((seed % 35 + 35) % 35), weights, 0, odds, event));
       }
     } catch {
       const seed = event.split('').reduce((acc:number, c:string) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0);
-      setIntel(calculateIntelligence(45 + Math.abs(seed % 35), weights, 0, odds, event));
+      setIntel(calculateIntelligence(45 + ((seed % 35 + 35) % 35), weights, 0, odds, event));
     }
   };
   useEffect(() => { runAnalysis(); }, [event, odds, mtype, weights]);
@@ -848,7 +848,7 @@ function ScoresPageContent() {
                         <div style={{ fontSize:10, color:C.t3, marginTop:2 }}>{fmtVol(m.volume)} volume</div>
                       </td>
                       <td style={{ padding:'12px 14px', borderTop:'1px solid '+C.border, borderBottom:'1px solid '+C.border }}>
-                        <div style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:C.t2 }}>{Math.floor(30+Math.random()*50)}%</div>
+                        <div style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:C.t2 }}>{m.probability||Math.floor(((m.slug||m.title||"").split("").reduce((a:number,c:string)=>((a<<5)-a+c.charCodeAt(0))|0,0)%50+50)%50+30)}%</div>
                       </td>
                       <td style={{ padding:'12px 14px', borderTop:'1px solid '+C.border, borderBottom:'1px solid '+C.border, borderRight:'1px solid '+C.border, borderRadius:'0 10px 10px 0', whiteSpace:'nowrap' }}>
                         <button onClick={() => (() => { router.push('/scores?event='+encodeURIComponent(m.url||('https://polymarket.com/event/'+(m.slug||m.title)))); goFrame('verdict'); })()} style={{ background:C.purpleBg, color:C.purpleL, border:'1px solid rgba(124,111,247,0.15)', borderRadius:6, padding:'4px 10px', fontSize:10, fontWeight:600, cursor:'pointer' }}>Analyze</button>
