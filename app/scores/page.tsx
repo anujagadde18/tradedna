@@ -656,7 +656,7 @@ function ScoresPageContent() {
                       <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, textAlign:'center', marginBottom:5 }}>Place a trade</div>
                       <div style={{ fontSize:10, color:C.t3, textAlign:'center', marginBottom:10 }}>No wallet or crypto needed</div>
                       <div style={{ fontSize:11, fontWeight:700, color:C.amber, textAlign:'center', marginBottom:10 }}>{hasLiveMarket && edgeVal > 0 ? 'Suggested: ' + betAmt : 'Paste a Polymarket URL to calculate real edge'}</div>
-                      <button style={{ width:'100%', padding:11, background:C.purple, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:8 }} onClick={() => setShowMagicModal(true)}>Sign in to trade</button>
+                      <button style={{ width:'100%', padding:11, background:C.purple, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:8 }} onClick={() => window.open(isPolymarketUrl ? event : 'https://polymarket.com', '_blank')}>Trade on Polymarket</button>
                       <a href="https://polymarket.com" target="_blank" rel="noopener noreferrer" style={{ fontSize:11, color:C.t3, textDecoration:"none", display:"block", textAlign:"center", cursor:"pointer" }}>Or trade directly on Polymarket</a>
                     </div>
                   )}
@@ -890,7 +890,7 @@ function ScoresPageContent() {
                     <div style={{ fontSize:13, fontWeight:600, marginBottom:4 }}>Sign in with your email</div>
                     <div style={{ fontSize:11, color:C.t3, marginBottom:14 }}>No wallet or crypto experience needed. Magic Link - just your email.</div>
                     <div style={{ fontSize:13, fontWeight:700, color:C.amber, marginBottom:14 }}>{hasLiveMarket && edgeVal > 0 ? 'Suggested: ' + betAmt : 'Paste a Polymarket URL to calculate real edge'}</div>
-                    <button style={{ width:'100%', padding:12, background:C.purple, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:8 }} onClick={() => setShowMagicModal(true)}>Sign in to trade</button>
+                    <button style={{ width:'100%', padding:12, background:C.purple, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:8 }} onClick={() => window.open(isPolymarketUrl ? event : 'https://polymarket.com', '_blank')}>Trade on Polymarket</button>
                     <a href="https://polymarket.com" target="_blank" rel="noopener noreferrer" style={{ fontSize:11, color:C.t3, textDecoration:"none", display:"block", textAlign:"center", cursor:"pointer" }}>Or trade directly on Polymarket</a>
                     <div style={{ fontSize:9, color:C.t4, marginTop:6 }}>Powered by Polymarket. Not financial advice.</div>
                   </div>
