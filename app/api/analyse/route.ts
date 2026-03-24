@@ -23,6 +23,7 @@ const REAL_SIGNALS = [
 ];
 
 function validateQuestion(query: string): { valid: boolean; reason?: string } {
+  // Always valid if Polymarket URL
   if (!query || query.trim().length < 8)
     return { valid: false, reason: 'too_short' };
 
