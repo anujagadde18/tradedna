@@ -24,6 +24,7 @@ const REAL_SIGNALS = [
 
 function validateQuestion(query: string): { valid: boolean; reason?: string } {
   // Always valid if Polymarket URL
+  if (query.includes("polymarket.com") || query.includes("/event/")) return { valid: true };
   if (!query || query.trim().length < 8)
     return { valid: false, reason: 'too_short' };
 
