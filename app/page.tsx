@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { SportsFeed } from '@/components/home/SportsFeed';
 
 interface SearchResult { slug:string; title:string; url:string; volume:number; endDate:string; markets:number; }
 interface TrendingEvent {
@@ -11,23 +10,20 @@ interface TrendingEvent {
 
 const C = {
   bg0:'#06060a',bg1:'#0e0e14',bg2:'#14141c',bg3:'#1a1a24',bg4:'#22222e',
-  border:'rgba(255,255,255,0.06)',border2:'rgba(255,255,255,0.1)',border3:'rgba(255,255,255,0.15)',
+  border:'rgba(255,255,255,0.06)',border2:'rgba(255,255,255,0.1)',
   t1:'#f2f0ff',t2:'#9996b8',t3:'#5c5a78',t4:'#2e2c44',
   purple:'#7c6ff7',purpleL:'#a89cf8',purpleBg:'rgba(124,111,247,0.1)',purpleBorder:'rgba(124,111,247,0.25)',
-  green:'#2ecc8a',greenBg:'rgba(46,204,138,0.1)',
-  amber:'#f5a623',
-  red:'#ef4f6a',
-  blue:'#4d9de0',
+  green:'#2ecc8a',amber:'#f5a623',red:'#ef4f6a',blue:'#4d9de0',
 };
 
 const CATEGORIES = [
-  { id:'all',    label:'All' },
-  { id:'sports', label:'Sports' },
-  { id:'crypto', label:'Crypto' },
-  { id:'politics', label:'Politics' },
-  { id:'technology', label:'Tech' },
-  { id:'economics', label:'Economics' },
-  { id:'geopolitics', label:'World' },
+  { id:'all', label:'All' },
+  { id:'sports', label:'🏆 Sports' },
+  { id:'crypto', label:'₿ Crypto' },
+  { id:'politics', label:'🗳️ Politics' },
+  { id:'technology', label:'🤖 Tech' },
+  { id:'economics', label:'📈 Economics' },
+  { id:'geopolitics', label:'🌍 World' },
 ];
 
 const CAT_COLORS: Record<string, { color:string; bg:string }> = {
@@ -72,7 +68,12 @@ export default function HomePage() {
 
   useEffect(() => {
     setTrendingLoading(true);
-    const url = activeCategory === 'all' ? '/api/trending' : '/api/trending?category='+activeCategory;
+    // For sports use the dedicated sports API which has better sport detection
+    const url = activeCategory === 'sports'
+      ? '/api/sports'
+      : activeCategory === 'all'
+      ? '/api/trending'
+      : '/api/trending?category='+activeCategory;
     fetch(url)
       .then(r => r.json())
       .then(d => { setTrending(d.results || []); setTrendingLoading(false); })
@@ -84,39 +85,54 @@ export default function HomePage() {
 
   return (
     <div style={{background:C.bg0,minHeight:'100vh',color:C.t1,fontFamily:"'Inter',system-ui,sans-serif"}}>
-      <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:52,background:'rgba(6,6,10,0.92)',backdropFilter:'blur(20px)',borderBottom:'1px solid '+C.border,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 24px'}}>
-        <div style={{display:'flex',alignItems:'center',gap:8}}>
-          <div style={{width:22,height:22,background:C.purple,borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:'white'}}>P</div>
-          <span style={{fontSize:14,fontWeight:700,letterSpacing:'-0.3px'}}>PlayPicks AI</span>
+
+      {/* NAV */}
+      <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:56,background:'rgba(6,6,10,0.95)',backdropFilter:'blur(20px)',borderBottom:'1px solid '+C.border,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 28px'}}>
+        {/* Logo */}
+        <div style={{display:'flex',alignItems:'center',gap:10,cursor:'pointer'}} onClick={()=>router.push('/')}>
+          <div style={{
+            width:32,height:32,borderRadius:9,
+            background:'linear-gradient(135deg,#7c6ff7 0%,#a89cf8 100%)',
+            display:'flex',alignItems:'center',justifyContent:'center',
+            fontSize:16,fontWeight:900,color:'white',
+            boxShadow:'0 0 16px rgba(124,111,247,0.4)',
+            letterSpacing:'-0.5px',
+          }}>P</div>
+          <div>
+            <div style={{fontSize:15,fontWeight:800,letterSpacing:'-0.5px',lineHeight:1}}>PlayPicks</div>
+            <div style={{fontSize:9,fontWeight:600,color:C.purpleL,letterSpacing:'0.8px',textTransform:'uppercase',lineHeight:1,marginTop:2}}>AI</div>
+          </div>
         </div>
-        <div style={{display:'flex',gap:4}}>
-          <button onClick={()=>router.push('/journal')} style={{padding:'5px 14px',borderRadius:8,fontSize:13,fontWeight:500,color:C.t2,border:'none',background:'none',cursor:'pointer'}}>Journal</button>
-          <button onClick={()=>router.push('/sources')} style={{padding:'5px 14px',borderRadius:8,fontSize:13,fontWeight:500,color:C.t2,border:'none',background:'none',cursor:'pointer'}}>Sources</button>
-          <button onClick={()=>router.push('/profile')} style={{padding:'5px 14px',borderRadius:8,fontSize:13,fontWeight:500,color:C.t2,border:'none',background:'none',cursor:'pointer'}}>Profile</button>
+        <div style={{display:'flex',gap:2}}>
+          <button onClick={()=>router.push('/journal')} style={{padding:'6px 14px',borderRadius:8,fontSize:12,fontWeight:500,color:C.t2,border:'none',background:'none',cursor:'pointer'}}>Journal</button>
+          <button onClick={()=>router.push('/sources')} style={{padding:'6px 14px',borderRadius:8,fontSize:12,fontWeight:500,color:C.t2,border:'none',background:'none',cursor:'pointer'}}>Sources</button>
+          <button onClick={()=>router.push('/profile')} style={{padding:'6px 14px',borderRadius:8,fontSize:12,fontWeight:500,color:C.t2,border:'none',background:'none',cursor:'pointer'}}>Profile</button>
         </div>
       </nav>
 
-      <div style={{paddingTop:52}}>
-        <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'72px 24px 48px',textAlign:'center',position:'relative',overflow:'hidden'}}>
+      <div style={{paddingTop:56}}>
+        {/* HERO */}
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'68px 24px 44px',textAlign:'center',position:'relative',overflow:'hidden'}}>
           <div style={{position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',width:900,height:600,background:'radial-gradient(ellipse,rgba(124,111,247,0.08) 0%,transparent 65%)',pointerEvents:'none'}}></div>
 
-          <div style={{display:'inline-flex',alignItems:'center',gap:6,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,padding:'4px 12px',borderRadius:100,fontSize:11,fontWeight:600,letterSpacing:'0.4px',textTransform:'uppercase',marginBottom:28}}>
-            <span style={{width:5,height:5,background:C.purple,borderRadius:'50%',display:'block'}}></span>
+          <div style={{display:'inline-flex',alignItems:'center',gap:6,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,padding:'4px 12px',borderRadius:100,fontSize:11,fontWeight:600,letterSpacing:'0.4px',textTransform:'uppercase',marginBottom:24}}>
+            <span style={{width:5,height:5,background:C.red,borderRadius:'50%',display:'block',boxShadow:'0 0 6px #ef4f6a'}}></span>
             Live AI predictions
           </div>
 
-          <h1 style={{fontSize:'clamp(40px,6.5vw,72px)',fontWeight:700,letterSpacing:'-2.5px',lineHeight:1.02,marginBottom:16,maxWidth:700}}>
+          <h1 style={{fontSize:'clamp(38px,6vw,68px)',fontWeight:800,letterSpacing:'-2.5px',lineHeight:1.02,marginBottom:14,maxWidth:680}}>
             AI odds for anything<br /><span style={{color:C.purpleL}}>happening right now.</span>
           </h1>
-          <p style={{fontSize:16,color:C.t2,maxWidth:460,lineHeight:1.7,marginBottom:40}}>
+          <p style={{fontSize:15,color:C.t2,maxWidth:440,lineHeight:1.75,marginBottom:36}}>
             Ask any question or paste a Polymarket link. Get AI-powered probability from real news, social, and market signals. Tune the weights yourself.
           </p>
 
+          {/* SEARCH */}
           <div style={{width:'100%',maxWidth:620,position:'relative',marginBottom:10}}>
             <div style={{position:'relative'}}>
               <input type="text" value={query} onChange={e=>setQuery(e.target.value)}
                 onKeyDown={e=>e.key==='Enter'&&query.trim()&&go(query.trim())}
-                placeholder="Ask anything — sports, crypto, politics, news..."
+                placeholder="Ask anything — IPL, NBA, crypto, politics..."
                 autoFocus
                 style={{width:'100%',padding:'16px 140px 16px 20px',background:C.bg2,border:'1px solid '+C.border2,borderRadius:16,color:C.t1,fontSize:14,outline:'none',fontFamily:'inherit',boxSizing:'border-box'}} />
               <button onClick={()=>query.trim()&&go(query.trim())} disabled={isAnalyzing||!query.trim()}
@@ -124,7 +140,6 @@ export default function HomePage() {
                 {isAnalyzing?'Analyzing...':'Analyze'}
               </button>
             </div>
-
             {showResults && results.length > 0 && (
               <div style={{position:'absolute',top:'100%',left:0,right:0,marginTop:4,background:C.bg2,border:'1px solid '+C.border2,borderRadius:12,overflow:'hidden',zIndex:50,boxShadow:'0 16px 40px rgba(0,0,0,0.6)'}}>
                 <div style={{padding:'7px 16px',borderBottom:'1px solid '+C.border,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
@@ -144,14 +159,16 @@ export default function HomePage() {
           <p style={{fontSize:11,color:C.t3}}>Type a question or paste a Polymarket URL</p>
         </div>
 
-        {/* Trending Feed */}
+        {/* UNIFIED FEED */}
         <div style={{maxWidth:960,margin:'0 auto',padding:'0 24px 80px'}}>
+          {/* Header */}
           <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:20}}>
             <span style={{width:6,height:6,background:C.red,borderRadius:'50%',display:'block',boxShadow:'0 0 6px #ef4f6a'}}></span>
-            <span style={{fontSize:13,fontWeight:700,color:C.t1,letterSpacing:'-0.2px'}}>Trending now</span>
-            <span style={{fontSize:11,color:C.t3}}>· live from Polymarket</span>
+            <span style={{fontSize:13,fontWeight:700,color:C.t1}}>Trending now</span>
+            <span style={{fontSize:11,color:C.t3}}>· live markets</span>
           </div>
 
+          {/* Category tabs */}
           <div style={{display:'flex',gap:6,marginBottom:20,flexWrap:'wrap'}}>
             {CATEGORIES.map(cat=>(
               <button key={cat.id} onClick={()=>setActiveCategory(cat.id)}
@@ -161,14 +178,17 @@ export default function HomePage() {
             ))}
           </div>
 
+          {/* Cards */}
           {trendingLoading ? (
             <div style={{display:'grid',gap:8}}>
-              {[...Array(6)].map((_,i)=>(
-                <div key={i} style={{height:72,background:C.bg2,borderRadius:12,border:'1px solid '+C.border,opacity:0.3+i*0.1}}></div>
+              {[...Array(8)].map((_,i)=>(
+                <div key={i} style={{height:72,background:C.bg2,borderRadius:12,border:'1px solid '+C.border,opacity:0.2+i*0.08}}/>
               ))}
             </div>
           ) : trending.length === 0 ? (
-            <div style={{textAlign:'center',padding:'48px 0',color:C.t3,fontSize:13}}>No trending markets in this category right now.</div>
+            <div style={{textAlign:'center',padding:'48px 0',color:C.t3,fontSize:13}}>
+              No live markets in this category right now.
+            </div>
           ) : (
             <div style={{display:'grid',gap:8}}>
               {trending.map((event,i)=>{
@@ -179,7 +199,7 @@ export default function HomePage() {
                     onMouseEnter={e=>{e.currentTarget.style.background=C.bg3;e.currentTarget.style.borderColor=C.border2;}}
                     onMouseLeave={e=>{e.currentTarget.style.background=C.bg2;e.currentTarget.style.borderColor=C.border;}}>
                     <div style={{fontSize:11,fontWeight:700,color:C.t3,minWidth:20,textAlign:'right'}}>{i+1}</div>
-                    <div style={{fontSize:18,minWidth:24,textAlign:'center'}}>{event.icon}</div>
+                    <div style={{fontSize:18,minWidth:26,textAlign:'center'}}>{event.icon}</div>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:13,fontWeight:500,color:C.t1,lineHeight:1.4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{event.title}</div>
                       <div style={{display:'flex',alignItems:'center',gap:8,marginTop:4}}>
@@ -204,12 +224,7 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Sports Feed */}
-        <div style={{borderTop:'1px solid '+C.border,paddingTop:48}}>
-          <SportsFeed />
-        </div>
-
-        {/* How it works */}
+        {/* HOW IT WORKS */}
         <div style={{borderTop:'1px solid '+C.border,padding:'72px 40px'}}>
           <h2 style={{fontSize:22,fontWeight:700,letterSpacing:'-0.5px',textAlign:'center',marginBottom:8}}>How it works</h2>
           <p style={{textAlign:'center',color:C.t2,fontSize:14,marginBottom:40}}>Three steps from question to conviction</p>
@@ -229,7 +244,7 @@ export default function HomePage() {
           <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,maxWidth:900,margin:'0 auto'}}>
             {[
               {t:'Multi-source signals',d:'NewsAPI, GDELT, HackerNews, Metaculus and live Polymarket odds all in one view.'},
-              {t:'Custom weights',d:'Trust markets more? Bump the market weight. Sports fan? Weight your sources higher. Your strategy.'},
+              {t:'Custom weights',d:'Trust markets more? Bump the market weight. Sports fan? Weight your sources higher.'},
               {t:'Any question',d:'Sports, crypto, politics, tech — if the world is predicting it, PlayPicks can analyze it.'},
               {t:'Prediction journal',d:'Every analysis logged with the AI conviction snapshot. Track your edge over time.',link:true},
             ].map((f,i)=>(
@@ -242,7 +257,8 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div style={{borderTop:'1px solid '+C.border,padding:'16px 40px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        {/* FOOTER */}
+        <div style={{borderTop:'1px solid '+C.border,padding:'16px 28px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <span style={{fontSize:11,color:C.t3}}>Not financial advice. Research purposes only.</span>
           <div style={{display:'flex',gap:16,alignItems:'center'}}>
             <button onClick={()=>router.push('/journal')} style={{fontSize:11,color:C.t3,background:'none',border:'none',cursor:'pointer'}}>Journal</button>
