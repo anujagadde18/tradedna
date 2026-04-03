@@ -97,8 +97,8 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
 
   const soWhat = edge === null
     ? `AI analyzed sources and has ${aiPct}% confidence on this question. Paste a Polymarket URL to compare against live odds and calculate your edge.`
-    : edge > 8 ? `Strong edge detected. AI significantly disagrees with the market. Real opportunity here.`
-    : edge > 3 ? `Small but real edge. AI slightly disagrees with market. Keep position modest.`
+    : edge > 8 ? `Strong edge detected. AI significantly disagrees with the market — real opportunity here.`
+    : edge > 3 ? `Small but real edge. AI slightly disagrees with the market. Keep position modest.`
     : `AI agrees with the market. No meaningful edge detected.`;
 
   const suggestedAmt = (edge === null || edge <= 0) ? null
@@ -109,7 +109,6 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
     : null;
   const skipBet = edge !== null && edge <= 0;
 
-  // Parse contribution number from string like "+22%" or "-3%"
   function parseContrib(s: any): number {
     if (typeof s === 'number') return s;
     if (typeof s === 'string') return parseFloat(s.replace('%','').replace('+','')) || 0;
@@ -118,7 +117,6 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
 
   const rows = sources
     .map(src => {
-      // Derive category from name if not set
       const name = src.name || '';
       let cat = src.category || 'news';
       if (!src.category) {
@@ -139,69 +137,85 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
 
   const displayRows = showAll ? rows : rows.slice(0, 6);
 
+  // Big gauge color
+  const gaugeColor = aiPct >= 70 ? C.green : aiPct >= 45 ? C.amber : C.red;
+  const gaugeBg = aiPct >= 70 ? 'rgba(46,204,138,0.08)' : aiPct >= 45 ? 'rgba(245,166,35,0.08)' : 'rgba(239,79,106,0.08)';
+
   return (
-    <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:16, padding:22, userSelect:'none' }}>
-      <div style={{ marginBottom:20 }}>
-        <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:6 }}>AI Analysis</div>
-        <div style={{ fontSize:11, color:C.t2, marginBottom:10, lineHeight:1.4, maxWidth:400 }}>{question}</div>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
-          <div>
-            <div style={{ fontSize:52, fontWeight:700, letterSpacing:'-3px', lineHeight:1, fontFamily:'monospace', color:C.t1, marginBottom:4 }}>{aiPct}%</div>
-            <div style={{ fontSize:14, fontWeight:600, color:C.t2, marginBottom:10 }}>{verdictText}</div>
-            <span style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 12px', borderRadius:20, fontSize:10, fontWeight:700, background:conv.bg, color:conv.color, border:'1px solid '+conv.border }}>
-              <span style={{ width:6, height:6, borderRadius:'50%', background:conv.color, display:'inline-block' }}></span>
-              {conv.label}
-            </span>
-          </div>
-          <div style={{ textAlign:'right' }}>
-            {edgeStr !== null ? (
-              <>
-                <div style={{ fontSize:9, color:C.t3, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:2 }}>Edge over market</div>
-                <div style={{ fontSize:32, fontWeight:700, fontFamily:'monospace', letterSpacing:'-1px', color:edge! > 3 ? C.green : edge! > 0 ? C.amber : C.red }}>{edgeStr}</div>
-                <div style={{ fontSize:9, color:C.t3, marginTop:2 }}>{edge! > 8 ? 'strong opportunity' : edge! > 3 ? 'small opportunity' : 'no edge'}</div>
-              </>
-            ) : (
-              <>
-                <div style={{ fontSize:9, color:C.t3, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:4 }}>Confidence</div>
-                <div style={{ fontSize:32, fontWeight:700, fontFamily:'monospace', color:C.purpleL }}>{aiPct}%</div>
-                <div style={{ fontSize:9, color:C.t3, marginTop:2, lineHeight:1.4, maxWidth:100 }}>Paste Polymarket URL for edge</div>
-              </>
+    <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:16, overflow:'hidden', userSelect:'none' }}>
+
+      {/* Big probability hero */}
+      <div style={{ background:gaugeBg, borderBottom:'1px solid '+C.border, padding:'28px 24px 20px' }}>
+        <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:10 }}>AI Analysis</div>
+        <div style={{ fontSize:11, color:C.t2, marginBottom:16, lineHeight:1.5, maxWidth:420 }}>{question}</div>
+
+        {/* Probability bar — the hero element */}
+        <div style={{ marginBottom:16 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:8 }}>
+            <div style={{ fontSize:64, fontWeight:900, letterSpacing:'-4px', lineHeight:1, color:gaugeColor, fontFamily:'monospace' }}>{aiPct}<span style={{ fontSize:32, letterSpacing:'-1px' }}>%</span></div>
+            {edgeStr !== null && (
+              <div style={{ textAlign:'right' }}>
+                <div style={{ fontSize:9, color:C.t3, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:2 }}>vs market</div>
+                <div style={{ fontSize:28, fontWeight:800, fontFamily:'monospace', color:edge! > 3 ? C.green : edge! > 0 ? C.amber : C.red }}>{edgeStr}</div>
+              </div>
             )}
           </div>
+          {/* Progress bar */}
+          <div style={{ height:8, background:'rgba(255,255,255,0.05)', borderRadius:4, overflow:'hidden', marginBottom:8 }}>
+            <div style={{ height:'100%', borderRadius:4, background:gaugeColor, width:aiPct+'%', transition:'width 0.8s cubic-bezier(0.16,1,0.3,1)', boxShadow:`0 0 12px ${gaugeColor}66` }} />
+          </div>
+          <div style={{ display:'flex', justifyContent:'space-between' }}>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 12px', borderRadius:20, fontSize:11, fontWeight:700, background:conv.bg, color:conv.color, border:'1px solid '+conv.color+'33' }}>
+              <span style={{ width:6, height:6, borderRadius:'50%', background:conv.color, display:'inline-block', boxShadow:`0 0 6px ${conv.color}` }}></span>
+              {conv.label}
+            </div>
+            <span style={{ fontSize:12, color:C.t2, fontWeight:500 }}>{verdictText}</span>
+          </div>
         </div>
-        <div style={{ fontSize:11, color:C.t2, lineHeight:1.65, padding:'10px 12px', background:'rgba(255,255,255,0.025)', borderRadius:8, borderLeft:'2px solid '+C.border2, marginTop:12 }}>
+
+        <div style={{ fontSize:12, color:C.t2, lineHeight:1.65, padding:'10px 14px', background:'rgba(0,0,0,0.2)', borderRadius:10, borderLeft:'3px solid '+gaugeColor }}>
           {soWhat}
         </div>
-        {skipBet && (
-          <div style={{ fontSize:11, color:C.t3, marginTop:8 }}>No edge detected — skip this market or wait for better odds.</div>
-        )}
         {suggestedAmt && (
-          <div style={{ fontSize:11, fontWeight:700, color:C.amber, marginTop:8 }}>Suggested position: {suggestedAmt}</div>
+          <div style={{ marginTop:10, display:'inline-flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:8, background:'rgba(245,166,35,0.12)', border:'1px solid rgba(245,166,35,0.2)' }}>
+            <span style={{ fontSize:10, color:C.amber, fontWeight:700 }}>💰 Suggested position: {suggestedAmt}</span>
+          </div>
+        )}
+        {skipBet && (
+          <div style={{ marginTop:10, fontSize:11, color:C.t3 }}>No edge detected — skip this market or wait for better odds.</div>
         )}
       </div>
 
+      {/* Signal breakdown — redesigned */}
       {displayRows.length > 0 && (
-        <div style={{ borderTop:'1px solid '+C.border, paddingTop:16 }}>
-          <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:12 }}>Signal breakdown</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+        <div style={{ padding:'16px 24px 20px' }}>
+          <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:14 }}>Signal breakdown</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
             {displayRows.map((r,i) => {
-              const color = r.type === 'contrary' ? '#ef4f6a' : CAT_COLOR[r.category] || '#7c6ff7';
-              const barW = Math.min(Math.abs(r.contribution) / 25 * 100, 100);
+              const color = r.type === 'contrary' ? C.red : CAT_COLOR[r.category] || C.purple;
               const isPos = r.contribution >= 0;
+              const barW = Math.min(Math.abs(r.contribution) / 30 * 100, 100);
+              const shortName = ({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'X','Associated Press':'AP','Good Judgment Open':'GJ Open'} as Record<string,string>)[r.name] || r.name;
               return (
-                <div key={i} style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <div style={{ width:6, height:6, borderRadius:'50%', background:color, flexShrink:0 }}></div>
-                  <div style={{ width:100, fontSize:11, fontWeight:500, color:C.t2, flexShrink:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={r.name}>{({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'Twitter','Associated Press':'AP News','Good Judgment Open':'GJ Open'} as Record<string,string>)[r.name]||r.name}</div>
-                  <div style={{ flex:1, height:4, background:'rgba(255,255,255,0.05)', borderRadius:2, overflow:'hidden' }}>
-                    <div style={{ height:4, borderRadius:2, background:color, width:barW+'%', opacity:0.85 }} />
+                <div key={i} style={{ display:'grid', alignItems:'center', gridTemplateColumns:'110px 1fr auto auto', gap:10 }}>
+                  {/* Source name with dot */}
+                  <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+                    <div style={{ width:8, height:8, borderRadius:'50%', background:color, flexShrink:0, boxShadow:`0 0 6px ${color}88` }}></div>
+                    <span style={{ fontSize:11, fontWeight:500, color:C.t2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{shortName}</span>
                   </div>
-                  <span style={{ fontSize:9, fontWeight:700, padding:'2px 6px', borderRadius:6, flexShrink:0,
+                  {/* Bar */}
+                  <div style={{ height:6, background:'rgba(255,255,255,0.05)', borderRadius:3, overflow:'hidden' }}>
+                    <div style={{ height:'100%', borderRadius:3, background:color, width:barW+'%', opacity:0.9, transition:'width 0.5s ease', boxShadow:`0 0 8px ${color}44` }} />
+                  </div>
+                  {/* Signal type pill */}
+                  <span style={{ fontSize:9, fontWeight:700, padding:'2px 7px', borderRadius:6, whiteSpace:'nowrap',
                     background: r.type === 'strong' ? 'rgba(46,204,138,0.12)' : r.type === 'contrary' ? 'rgba(239,79,106,0.12)' : r.type === 'priced' ? 'rgba(77,157,224,0.12)' : 'rgba(245,166,35,0.12)',
-                    color: r.type === 'strong' ? '#2ecc8a' : r.type === 'contrary' ? '#ef4f6a' : r.type === 'priced' ? '#4d9de0' : '#f5a623',
+                    color: r.type === 'strong' ? C.green : r.type === 'contrary' ? C.red : r.type === 'priced' ? C.blue : C.amber,
                   }}>
-                    {r.type === 'strong' ? 'Strong' : r.type === 'contrary' ? 'Contrary' : r.type === 'priced' ? 'Priced in' : 'Mixed'}
+                    {r.type === 'strong' ? '↑ Strong' : r.type === 'contrary' ? '↓ Contrary' : r.type === 'priced' ? '~ Priced' : '→ Mixed'}
                   </span>
-                  <div style={{ fontSize:11, fontWeight:700, fontFamily:'monospace', color:isPos ? C.green : C.red, flexShrink:0, minWidth:36, textAlign:'right' }}>
+                  {/* Contribution */}
+                  <div style={{ fontSize:11, fontWeight:700, fontFamily:'monospace', color:isPos ? C.green : C.red, minWidth:36, textAlign:'right' }}>
                     {isPos ? '+' : ''}{r.contribution}%
                   </div>
                 </div>
@@ -209,12 +223,9 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
             })}
           </div>
           {rows.length > 6 && (
-            <button onClick={() => setShowAll(!showAll)} style={{ marginTop:10, fontSize:10, color:C.t3, background:'none', border:'none', cursor:'pointer' }}>
-              {showAll ? 'Show less' : `Show ${rows.length - 6} more sources`}
+            <button onClick={() => setShowAll(!showAll)} style={{ marginTop:12, fontSize:10, color:C.t3, background:'none', border:'none', cursor:'pointer', padding:0 }}>
+              {showAll ? 'Show less' : `+ Show ${rows.length - 6} more sources`}
             </button>
-          )}
-          {rows.length === 0 && sources.length > 0 && (
-            <div style={{ fontSize:11, color:C.t3 }}>Loading signals...</div>
           )}
         </div>
       )}
