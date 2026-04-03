@@ -5,7 +5,9 @@
 import { NextRequest } from 'next/server';
 import { ethers, JsonRpcProvider, Wallet } from 'ethers';
 import { RelayClient, RelayerTxType } from '@polymarket/builder-relayer-client';
-import { BuilderConfig, BuilderApiKeyCreds } from '@polymarket/builder-relayer-client/node_modules/@polymarket/builder-signing-sdk/dist/config';
+// Use the relayer client's bundled version to avoid type mismatch
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { BuilderConfig } = require('@polymarket/builder-relayer-client/node_modules/@polymarket/builder-signing-sdk/dist/config');
 import { ClobClient } from '@polymarket/clob-client';
 
 export const dynamic = 'force-dynamic';
@@ -13,8 +15,8 @@ export const dynamic = 'force-dynamic';
 const RELAYER_URL = 'https://relayer-v2.polymarket.com/';
 const CHAIN_ID    = 137; // Polygon
 
-function getBuilderConfig(): BuilderConfig {
-  const creds: BuilderApiKeyCreds = {
+function getBuilderConfig() {
+  const creds = {
     key:        process.env.POLY_BUILDER_API_KEY!,
     secret:     process.env.POLY_BUILDER_SECRET!,
     passphrase: process.env.POLY_BUILDER_PASSPHRASE!,
