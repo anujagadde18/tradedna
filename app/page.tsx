@@ -259,6 +259,39 @@ export default function HomePage() {
           )}
         </div>
 
+        {/* HOW IT WORKS */}
+        <div style={{borderTop:'1px solid '+C.border,padding:'64px 40px'}}>
+          <h2 style={{fontSize:22,fontWeight:700,letterSpacing:'-0.5px',textAlign:'center',marginBottom:6}}>How it works</h2>
+          <p style={{textAlign:'center',color:C.t2,fontSize:14,marginBottom:40}}>Three steps from question to conviction</p>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,maxWidth:900,margin:'0 auto 40px'}}>
+            {[
+              {n:'1',t:'Ask anything',d:'Type any question or paste a Polymarket URL. AI pulls live signals from news, social, and market data instantly.'},
+              {n:'2',t:'Get AI probability',d:'See a confidence score with every source behind it. Plain English — no trader jargon. Tune signal weights yourself.'},
+              {n:'3',t:'Track your record',d:'Every prediction saved in your journal with the AI snapshot. See if your picks actually work over time.'},
+            ].map(s=>(
+              <div key={s.n} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'22px'}}>
+                <div style={{width:30,height:30,background:C.purpleBg,border:'1px solid '+C.purpleBorder,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:C.purple,marginBottom:14}}>{s.n}</div>
+                <div style={{fontSize:14,fontWeight:600,marginBottom:6}}>{s.t}</div>
+                <div style={{fontSize:12,color:C.t2,lineHeight:1.65}}>{s.d}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,maxWidth:900,margin:'0 auto'}}>
+            {[
+              {t:'Multi-source signals',d:'NewsAPI, GDELT, HackerNews, Metaculus and live Polymarket odds — all in one place.'},
+              {t:'Custom weights',d:'Trust markets more? Bump the weight. Sports fan? Weight Cricbuzz higher. Your call.'},
+              {t:'Any question',d:'Sports, crypto, politics, tech — if the world is predicting it, PlayPicks can analyze it.'},
+              {t:'Prediction journal',d:'Every analysis logged with AI conviction snapshot. Track your edge over time.',link:true},
+            ].map((f,i)=>(
+              <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'14px'}}>
+                <div style={{fontSize:12,fontWeight:600,marginBottom:5,color:C.t1}}>{f.t}</div>
+                <div style={{fontSize:11,color:C.t2,lineHeight:1.6}}>{f.d}</div>
+                {f.link&&<button onClick={()=>router.push('/journal')} style={{marginTop:8,fontSize:11,color:C.amber,background:'none',border:'none',cursor:'pointer',padding:0}}>View journal →</button>}
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* FOOTER */}
         <div style={{borderTop:'1px solid '+C.border,padding:'14px 24px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <span style={{fontSize:11,color:C.t3}}>Not financial advice. Research only.</span>
