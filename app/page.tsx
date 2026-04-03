@@ -24,15 +24,15 @@ const CAT_COLORS: Record<string,{color:string;bg:string}> = {
 };
 
 const FEATURED: {q:string;cat:string;emoji:string;odds:number|null;url:string}[] = [
-  { q:'Will Bitcoin hit $100k before July 2025?',   cat:'crypto',     emoji:'₿',  odds:32, url:'https://polymarket.com/event/will-bitcoin-hit-100k' },
-  { q:'Will the Fed cut rates in May 2025?',        cat:'economics',  emoji:'📈', odds:17, url:'https://polymarket.com/event/fed-cut-may-2025' },
-  { q:'Will Trump impose tariffs above 10% in April?', cat:'politics', emoji:'🗳️', odds:78, url:'https://polymarket.com/event/trump-tariffs-april-2025' },
-  { q:'Will Ethereum reach $4k in 2025?',           cat:'crypto',     emoji:'⟠',  odds:28, url:'https://polymarket.com/event/ethereum-4k-2025' },
-  { q:'Will there be a US recession in 2025?',      cat:'economics',  emoji:'📉', odds:45, url:'https://polymarket.com/event/us-recession-2025' },
-  { q:'Will Ukraine ceasefire happen in 2025?',     cat:'geopolitics',emoji:'🌍', odds:52, url:'https://polymarket.com/event/ukraine-ceasefire-2025' },
-  { q:'Will OpenAI release GPT-5 in 2025?',         cat:'technology', emoji:'🤖', odds:71, url:'https://polymarket.com/event/openai-gpt5-2025' },
-  { q:'Will Dogecoin hit $1 in 2025?',              cat:'crypto',     emoji:'🐕', odds:19, url:'https://polymarket.com/event/dogecoin-1-dollar-2025' },
-  { q:'Will US avoid a government shutdown in 2025?', cat:'politics', emoji:'🏛️', odds:63, url:'https://polymarket.com/event/government-shutdown-2025' },
+  { q:'Will Mumbai Indians win IPL 2025?',              cat:'sports',     emoji:'🏏', odds:18, url:'https://polymarket.com/event/ipl-2025-winner' },
+  { q:'Will OKC Thunder win the NBA Finals 2025?',      cat:'sports',     emoji:'🏀', odds:35, url:'https://polymarket.com/event/nba-champion-2024-25' },
+  { q:'Will RCB win IPL 2025?',                         cat:'sports',     emoji:'🏏', odds:12, url:'https://polymarket.com/event/ipl-2025-winner' },
+  { q:'Will Bitcoin hit $100k before July 2025?',       cat:'crypto',     emoji:'₿',  odds:32, url:'https://polymarket.com/event/will-bitcoin-hit-100k' },
+  { q:'Will there be a US recession in 2025?',          cat:'economics',  emoji:'📉', odds:45, url:'https://polymarket.com/event/us-recession-2025' },
+  { q:'Will Ukraine ceasefire happen in 2025?',         cat:'geopolitics',emoji:'🌍', odds:52, url:'https://polymarket.com/event/ukraine-ceasefire-2025' },
+  { q:'Will Trump impose tariffs above 10% in April?',  cat:'politics',   emoji:'🗳️', odds:78, url:'https://polymarket.com/event/trump-tariffs-april-2025' },
+  { q:'Will OpenAI release GPT-5 in 2025?',             cat:'technology', emoji:'🤖', odds:71, url:'https://polymarket.com/event/openai-gpt5-2025' },
+  { q:'Will the Fed cut rates in May 2025?',            cat:'economics',  emoji:'📈', odds:17, url:'https://polymarket.com/event/fed-cut-may-2025' },
 ];
 
 export default function HomePage() {

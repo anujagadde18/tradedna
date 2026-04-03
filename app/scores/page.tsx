@@ -442,9 +442,6 @@ function ScoresPageContent() {
   const runAnalysis = async () => {
     if (mtype === 'categorical') return;
     if (!event) return;
-    // If it's a Polymarket URL, wait for odds to load before analyzing
-    // This prevents the 65% default showing before real odds arrive
-    if (isPolymarketUrl && odds === null) return;
     try {
       const res  = await fetch('/api/analyse', {
         method: 'POST',
@@ -575,11 +572,11 @@ function ScoresPageContent() {
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100vh', background:C.bg0, color:C.t1, fontFamily:'system-ui,-apple-system,sans-serif', overflow:'hidden' }}>
 
-      <nav style={{ height:48, borderBottom:'1px solid '+C.border, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 16px', background:C.bg0, flexShrink:0, zIndex:100 }}>
+      <nav style={{ height:52, borderBottom:'1px solid '+C.border, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 16px', background:C.bg0, flexShrink:0, zIndex:100 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <button onClick={() => router.push('/')} style={{ display:'flex', alignItems:'center', gap:4, color:C.t3, background:'none', border:'none', cursor:'pointer', fontSize:12, fontWeight:500 }}>
+          <button onClick={() => router.push('/')} style={{ display:'flex', alignItems:'center', gap:6, color:C.t1, background:C.bg2, border:'1px solid '+C.border2, borderRadius:8, cursor:'pointer', fontSize:12, fontWeight:600, padding:'5px 12px' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-            Back
+            Home
           </button>
           <div style={{ width:1, height:16, background:C.border2 }}></div>
           <span style={{ fontSize:14, fontWeight:800, letterSpacing:'-0.3px', display:'flex', alignItems:'center', gap:9 }}>
@@ -599,7 +596,21 @@ function ScoresPageContent() {
             PlayPicks AI
           </span>
           <div style={{ width:1, height:16, background:C.border2 }}></div>
-          <span style={{ fontSize:11, color:C.t3, maxWidth:260, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{eventTitle}</span>
+          <span style={{ fontSize:11, color:C.t3, maxWidth:180, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{eventTitle}</span>
+        </div>
+        {/* Quick search in nav */}
+        <div style={{ flex:1, maxWidth:320, margin:'0 16px', position:'relative' }}>
+          <input
+            type="text"
+            placeholder="Ask another question..."
+            onKeyDown={e => {
+              if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                router.push('/scores?event='+encodeURIComponent(e.currentTarget.value.trim()));
+                e.currentTarget.value = '';
+              }
+            }}
+            style={{ width:'100%', padding:'6px 12px', background:C.bg2, border:'1px solid '+C.border, borderRadius:8, color:C.t1, fontSize:12, outline:'none', fontFamily:'inherit', boxSizing:'border-box' as const }}
+          />
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
           <div style={{ display:'flex', alignItems:'center', gap:6, background:C.bg3, border:'1px solid '+C.border2, borderRadius:8, padding:'4px 10px' }}>
