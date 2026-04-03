@@ -24,15 +24,15 @@ const CAT_COLORS: Record<string,{color:string;bg:string}> = {
 };
 
 const FEATURED: {q:string;cat:string;emoji:string;searchQ:string}[] = [
-  { q:'Will Mumbai Indians win IPL 2025?',          cat:'sports',     emoji:'🏏', searchQ:'Mumbai Indians IPL' },
-  { q:'Will OKC Thunder win the NBA Finals?',       cat:'sports',     emoji:'🏀', searchQ:'Oklahoma City Thunder NBA Finals' },
-  { q:'Will Bitcoin reach $100k before June 2025?', cat:'crypto',     emoji:'₿',  searchQ:'Bitcoin 100k 2025' },
-  { q:'Will Trump impose new tariffs in April?',    cat:'politics',   emoji:'🗳️', searchQ:'Trump tariffs April 2025' },
-  { q:'Will OpenAI lead the AI race in 2025?',      cat:'technology', emoji:'🤖', searchQ:'OpenAI best AI model 2025' },
+  { q:'Will Bitcoin hit $100k before June 2025?',   cat:'crypto',     emoji:'₿',  searchQ:'Bitcoin 100k June 2025' },
   { q:'Will the Fed cut rates in May 2025?',        cat:'economics',  emoji:'📈', searchQ:'Fed cut rates May 2025' },
+  { q:'Will Trump impose tariffs above 10%?',       cat:'politics',   emoji:'🗳️', searchQ:'Trump tariffs 10 percent' },
+  { q:'Will Ethereum reach $4k in 2025?',           cat:'crypto',     emoji:'⟠',  searchQ:'Ethereum 4000 2025' },
+  { q:'Will there be a US recession in 2025?',      cat:'economics',  emoji:'📉', searchQ:'US recession 2025' },
   { q:'Will Ukraine ceasefire happen in 2025?',     cat:'geopolitics',emoji:'🌍', searchQ:'Ukraine ceasefire 2025' },
-  { q:'Will Ethereum reach $5k in 2025?',           cat:'crypto',     emoji:'⟠',  searchQ:'Ethereum 5000 2025' },
-  { q:'Will Champions League be won by Real Madrid?',cat:'sports',    emoji:'⚽', searchQ:'Real Madrid Champions League 2025' },
+  { q:'Will OpenAI release GPT-5 in 2025?',         cat:'technology', emoji:'🤖', searchQ:'OpenAI GPT-5 release 2025' },
+  { q:'Will Dogecoin hit $1 in 2025?',              cat:'crypto',     emoji:'🐕', searchQ:'Dogecoin 1 dollar 2025' },
+  { q:'Will US avoid a government shutdown?',       cat:'politics',   emoji:'🏛️', searchQ:'government shutdown 2025' },
 ];
 
 export default function HomePage() {
@@ -85,16 +85,21 @@ export default function HomePage() {
         const ev = await fetch('/api/polymarket?slug='+slug);
         const ed = await ev.json();
         let odds: number|null = null;
-        // Only use binary markets with valid yes price
-        if (ed.type === 'binary' && ed.markets?.[0]) {
+        // Only show odds for true binary YES/NO markets
+        if (ed.type === 'binary' && ed.markets?.length === 1) {
           const mkt = ed.markets[0];
           const prices = mkt.outcomePrices
             ? (typeof mkt.outcomePrices === 'string' ? JSON.parse(mkt.outcomePrices) : mkt.outcomePrices)
             : null;
-          if (prices && prices[0]) {
-            const p = parseFloat(prices[0]);
-            if (!isNaN(p) && p > 0 && p < 100) {
-              odds = p > 1 ? Math.round(p) : Math.round(p * 100);
+          if (prices && prices[0] && prices[1]) {
+            const yes = parseFloat(prices[0]);
+            const no  = parseFloat(prices[1]);
+            // Sanity check — yes + no should roughly equal 1 (or 100)
+            const sum = yes + no;
+            if (!isNaN(yes) && sum > 0.9 && sum < 1.1 && yes > 0.01 && yes < 0.99) {
+              odds = Math.round(yes * 100);
+            } else if (!isNaN(yes) && sum > 90 && sum < 110 && yes > 1 && yes < 99) {
+              odds = Math.round(yes);
             }
           }
         }
