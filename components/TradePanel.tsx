@@ -38,6 +38,7 @@ export function TradePanel({
   const [tradeStatus, setTradeStatus]     = useState<TradeStatus>('idle');
   const [tradeError, setTradeError]       = useState('');
   const [txHash, setTxHash]               = useState('');
+  const [wasGasless, setWasGasless]       = useState(false);
 
   const conviction    = getConvictionScore(aiConfidence, marketOdds, edge);
   const betSuggestion = suggestBetSize(Math.abs(edge));
@@ -107,14 +108,6 @@ export function TradePanel({
       setTradeStatus('placing');
       setTradeError('');
 
-      // Get builder attribution headers
-      const signRes = await fetch('/api/builder-sign', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ method: 'POST', path: '/order', body: '' }),
-      });
-      const builderHeaders = await signRes.json();
-
       const orderPayload = {
         tokenID:       tokenId,
         price:         priceDecimal,
@@ -124,10 +117,11 @@ export function TradePanel({
         funderAddress: userAddress,
       };
 
+      // Trade route tries gasless relayer first, falls back to direct CLOB
       const res = await fetch('/api/trade', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ orderPayload, authHeaders: builderHeaders }),
+        body:    JSON.stringify({ orderPayload }),
       });
 
       const data = await res.json();
@@ -149,6 +143,7 @@ export function TradePanel({
         timestamp:       Date.now(),
       });
 
+      setWasGasless(data.gasless === true);
       setTxHash(data.result?.transactionHash || data.orderId || '');
       setTradeStatus('success');
 
@@ -163,6 +158,9 @@ export function TradePanel({
     return (
       <div className="border border-green-500/30 rounded-xl p-5 bg-green-900/10">
         <div className="text-green-400 font-semibold text-base mb-2">Order placed!</div>
+        {wasGasless && (
+          <div className="text-xs text-purple-400 mb-2 font-medium">⚡ Gasless transaction via Polymarket relayer</div>
+        )}
         <div className="text-sm text-gray-300 mb-3">
           {tradeSide} {outcomeName} - ${finalAmount} at {marketOdds}%
         </div>
@@ -180,7 +178,7 @@ export function TradePanel({
           </a>
         )}
         <button
-          onClick={() => { setTradeStatus('idle'); setTxHash(''); }}
+          onClick={() => { setTradeStatus('idle'); setTxHash(''); setWasGasless(false); }}
           className="mt-3 w-full text-xs text-gray-500 hover:text-gray-400"
         >
           Place another trade

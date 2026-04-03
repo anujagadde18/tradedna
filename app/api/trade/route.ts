@@ -1,27 +1,20 @@
 // app/api/trade/route.ts
+// Tries gasless relayer first, falls back to direct CLOB with builder attribution
+
 import { NextRequest } from 'next/server';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
-function buildSignature(
-  secret: string,
-  timestamp: number,
-  method: string,
-  path: string,
-  body: string
-): string {
+function buildSignature(secret: string, timestamp: number, method: string, path: string, body: string): string {
   const message = timestamp + method.toUpperCase() + path + (body || '');
-  return crypto
-    .createHmac('sha256', Buffer.from(secret, 'base64'))
-    .update(message)
-    .digest('base64');
+  return crypto.createHmac('sha256', Buffer.from(secret, 'base64')).update(message).digest('base64');
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { orderPayload } = body;
+    const { orderPayload, useRelayer } = body;
 
     if (!orderPayload) {
       return Response.json({ error: 'Missing orderPayload' }, { status: 400 });
@@ -30,21 +23,56 @@ export async function POST(request: NextRequest) {
     const apiKey     = process.env.POLY_BUILDER_API_KEY;
     const secret     = process.env.POLY_BUILDER_SECRET;
     const passphrase = process.env.POLY_BUILDER_PASSPHRASE;
+    const magicPk    = process.env.POLYMARKET_MAGIC_PK;
 
     if (!apiKey || !secret || !passphrase) {
-      return Response.json(
-        { error: 'Builder credentials not configured on server' },
-        { status: 500 }
-      );
+      return Response.json({ error: 'Builder credentials not configured' }, { status: 500 });
     }
 
+    // ── PATH 1: Gasless relayer (if POLYMARKET_MAGIC_PK is set and useRelayer not false) ──
+    if (magicPk && useRelayer !== false) {
+      try {
+        const relayRes = await fetch(
+          new URL('/api/relay', request.url).toString(),
+          {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action:        'place_order',
+              tokenID:       orderPayload.tokenID,
+              price:         orderPayload.price,
+              side:          orderPayload.side === 'BUY' ? 'YES' : 'NO',
+              size:          orderPayload.size,
+              orderType:     orderPayload.orderType || 'GTC',
+              funderAddress: orderPayload.funderAddress,
+            }),
+          }
+        );
+
+        if (relayRes.ok) {
+          const relayData = await relayRes.json();
+          return Response.json({
+            success:  true,
+            orderId:  relayData.orderId,
+            result:   relayData.response,
+            gasless:  true,
+          });
+        }
+        // If relayer fails, fall through to direct CLOB
+        console.warn('Relayer failed, falling back to direct CLOB');
+      } catch (relayErr) {
+        console.warn('Relayer error, falling back:', relayErr);
+      }
+    }
+
+    // ── PATH 2: Direct CLOB with builder attribution headers ──
     const timestamp = Date.now().toString();
     const path      = '/order';
     const bodyStr   = JSON.stringify(orderPayload);
     const signature = buildSignature(secret, parseInt(timestamp), 'POST', path, bodyStr);
 
     const response = await fetch('https://clob.polymarket.com/order', {
-      method: 'POST',
+      method:  'POST',
       headers: {
         'Content-Type':           'application/json',
         'POLY_BUILDER_API_KEY':    apiKey,
@@ -65,7 +93,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return Response.json({ success: true, orderId: result.orderID, result });
+    return Response.json({ success: true, orderId: result.orderID, result, gasless: false });
 
   } catch (err: any) {
     return Response.json({ error: err.message }, { status: 500 });
