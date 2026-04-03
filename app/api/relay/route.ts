@@ -3,7 +3,7 @@
 // Uses Magic Link + Proxy Wallet path (auto-deploys on first tx)
 
 import { NextRequest } from 'next/server';
-import { ethers } from 'ethers';
+import { ethers, JsonRpcProvider, Wallet } from 'ethers';
 import { RelayClient, RelayerTxType } from '@polymarket/builder-relayer-client';
 import { BuilderConfig, BuilderApiKeyCreds } from '@polymarket/builder-signing-sdk';
 import { ClobClient } from '@polymarket/clob-client';
@@ -25,10 +25,10 @@ function getBuilderConfig(): BuilderConfig {
 function getWallet() {
   const pk = process.env.POLYMARKET_MAGIC_PK;
   if (!pk) throw new Error('POLYMARKET_MAGIC_PK not configured');
-  const provider = new ethers.providers.JsonRpcProvider(
+  const provider = new JsonRpcProvider(
     process.env.NEXT_PUBLIC_POLYGON_RPC_URL || 'https://polygon-rpc.com'
   );
-  return new ethers.Wallet(pk, provider);
+  return new Wallet(pk, provider);
 }
 
 // POST /api/relay
