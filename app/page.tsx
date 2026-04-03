@@ -102,8 +102,8 @@ export default function HomePage() {
     <div style={{background:C.bg0,minHeight:'100vh',color:C.t1,fontFamily:"'Inter',system-ui,sans-serif"}}>
       {/* NAV */}
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:52,background:'rgba(6,6,10,0.95)',backdropFilter:'blur(20px)',borderBottom:'1px solid '+C.border,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 24px'}}>
-        <div style={{display:'flex',alignItems:'center',gap:10,cursor:'pointer'}} onClick={()=>router.push('/')}>
-          <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
+        <div style={{display:'flex',alignItems:'center',gap:12,cursor:'pointer'}} onClick={()=>router.push('/')}>
+          <svg width="40" height="40" viewBox="0 0 36 36" fill="none">
             <rect width="36" height="36" rx="9" fill="#0e0e18"/>
             <rect x="6" y="24" width="3" height="6" rx="1.5" fill="#2e2c44"/>
             <rect x="11" y="20" width="3" height="10" rx="1.5" fill="#3a3860"/>
@@ -117,8 +117,8 @@ export default function HomePage() {
             <circle cx="27.5" cy="7" r="2.5" fill="#2ecc8a"/>
           </svg>
           <div>
-            <div style={{fontSize:14,fontWeight:800,letterSpacing:'-0.4px',lineHeight:1}}>PlayPicks</div>
-            <div style={{fontSize:8,fontWeight:600,color:C.purpleL,letterSpacing:'1px',textTransform:'uppercase',lineHeight:1,marginTop:2}}>AI</div>
+            <div style={{fontSize:17,fontWeight:900,letterSpacing:'-0.6px',lineHeight:1}}>PlayPicks</div>
+            <div style={{fontSize:9,fontWeight:700,color:C.purpleL,letterSpacing:'1.5px',textTransform:'uppercase',lineHeight:1,marginTop:3}}>AI</div>
           </div>
         </div>
         <div style={{display:'flex',gap:4}}>

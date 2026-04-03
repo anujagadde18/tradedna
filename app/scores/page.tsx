@@ -540,8 +540,8 @@ function ScoresPageContent() {
             Back
           </button>
           <div style={{ width:1, height:16, background:C.border2 }}></div>
-          <span style={{ fontSize:13, fontWeight:700, letterSpacing:'-0.3px', display:'flex', alignItems:'center', gap:7 }}>
-            <svg width="24" height="24" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <span style={{ fontSize:14, fontWeight:800, letterSpacing:'-0.3px', display:'flex', alignItems:'center', gap:9 }}>
+            <svg width="30" height="30" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="36" height="36" rx="9" fill="#0e0e18"/>
               <rect x="6" y="24" width="3" height="6" rx="1.5" fill="#2e2c44"/>
               <rect x="11" y="20" width="3" height="10" rx="1.5" fill="#3a3860"/>
