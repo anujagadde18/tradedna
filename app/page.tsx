@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { LiveSportsFeed } from '@/components/home/LiveSportsFeed';
 
 interface SearchResult { slug:string; title:string; url:string; volume:number; endDate:string; markets:number; }
-interface LiveCard { q:string; cat:string; emoji:string; odds:number|null; url:string; }
 
 const C = {
   bg0:'#06060a',bg1:'#0e0e14',bg2:'#14141c',bg3:'#1a1a24',bg4:'#22222e',
@@ -23,18 +23,6 @@ const CAT_COLORS: Record<string,{color:string;bg:string}> = {
   other:      {color:'#9996b8',bg:'rgba(153,150,184,0.08)'},
 };
 
-const FEATURED: {q:string;cat:string;emoji:string;odds:number|null;url:string}[] = [
-  { q:'Will Mumbai Indians win IPL 2025?',              cat:'sports',     emoji:'🏏', odds:18, url:'https://polymarket.com/event/ipl-2025-winner' },
-  { q:'Will OKC Thunder win the NBA Finals 2025?',      cat:'sports',     emoji:'🏀', odds:35, url:'https://polymarket.com/event/nba-champion-2024-25' },
-  { q:'Will RCB win IPL 2025?',                         cat:'sports',     emoji:'🏏', odds:12, url:'https://polymarket.com/event/ipl-2025-winner' },
-  { q:'Will Bitcoin hit $100k before July 2025?',       cat:'crypto',     emoji:'₿',  odds:32, url:'https://polymarket.com/event/will-bitcoin-hit-100k' },
-  { q:'Will there be a US recession in 2025?',          cat:'economics',  emoji:'📉', odds:45, url:'https://polymarket.com/event/us-recession-2025' },
-  { q:'Will Ukraine ceasefire happen in 2025?',         cat:'geopolitics',emoji:'🌍', odds:52, url:'https://polymarket.com/event/ukraine-ceasefire-2025' },
-  { q:'Will Trump impose tariffs above 10% in April?',  cat:'politics',   emoji:'🗳️', odds:78, url:'https://polymarket.com/event/trump-tariffs-april-2025' },
-  { q:'Will OpenAI release GPT-5 in 2025?',             cat:'technology', emoji:'🤖', odds:71, url:'https://polymarket.com/event/openai-gpt5-2025' },
-  { q:'Will the Fed cut rates in May 2025?',            cat:'economics',  emoji:'📈', odds:17, url:'https://polymarket.com/event/fed-cut-may-2025' },
-];
-
 export default function HomePage() {
   const router = useRouter();
   const [query, setQuery]   = useState('');
@@ -42,7 +30,6 @@ export default function HomePage() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [cards] = useState<LiveCard[]>(FEATURED);
   const timer = useRef<NodeJS.Timeout|null>(null);
 
   const isUrl = (q:string) => q.includes('polymarket.com/event/');
@@ -140,42 +127,8 @@ export default function HomePage() {
           <p style={{fontSize:11,color:C.t3}}>Type anything or paste a Polymarket URL</p>
         </div>
 
-        {/* FEATURED PREDICTIONS — with live odds */}
-        <div style={{maxWidth:960,margin:'0 auto',padding:'0 24px 48px'}}>
-          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:20}}>
-            <span style={{width:6,height:6,background:C.red,borderRadius:'50%',display:'block',boxShadow:'0 0 6px #ef4f6a'}}/>
-            <span style={{fontSize:13,fontWeight:700,color:C.t1}}>What people are predicting now</span>
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
-            {cards.map((card,i)=>{
-              const cs = CAT_COLORS[card.cat] || CAT_COLORS.other;
-              const isYes = card.odds !== null && card.odds >= 50;
-              return (
-                <button key={i} onClick={()=>go(card.url)}
-                  style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:14,padding:'16px',textAlign:'left',cursor:'pointer',transition:'all 0.15s',display:'flex',flexDirection:'column',gap:10}}
-                  onMouseEnter={e=>{e.currentTarget.style.background=C.bg3;e.currentTarget.style.borderColor=C.border2;}}
-                  onMouseLeave={e=>{e.currentTarget.style.background=C.bg2;e.currentTarget.style.borderColor=C.border;}}>
-                  <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:8}}>
-                    <span style={{fontSize:22}}>{card.emoji}</span>
-                    {card.odds !== null ? (
-                      <div style={{textAlign:'right'}}>
-                        <div style={{fontSize:22,fontWeight:900,fontFamily:'monospace',color:isYes?C.green:C.red,lineHeight:1}}>{card.odds}%</div>
-                        <div style={{fontSize:9,color:C.t3,marginTop:1}}>chance YES</div>
-                      </div>
-                    ) : (
-                      <div style={{fontSize:11,fontWeight:600,color:C.purple,padding:'4px 10px',borderRadius:8,border:'1px solid '+C.purpleBorder,background:C.purpleBg}}>Get odds</div>
-                    )}
-                  </div>
-                  <div style={{fontSize:13,fontWeight:500,color:C.t1,lineHeight:1.4,flex:1}}>{card.q}</div>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                    <span style={{fontSize:10,fontWeight:600,padding:'2px 8px',borderRadius:6,background:cs.bg,color:cs.color}}>{card.cat}</span>
-                    <span style={{fontSize:11,color:C.t3}}>AI analysis →</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        {/* LIVE SPORTS FEED — real data from Polymarket */}
+        <LiveSportsFeed />
 
         {/* HOW IT WORKS */}
         <div style={{borderTop:'1px solid '+C.border,padding:'64px 40px'}}>
