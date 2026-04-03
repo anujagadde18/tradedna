@@ -75,6 +75,7 @@ export async function GET(request: NextRequest) {
 
   const batches = await Promise.all(QUERIES.map(q => searchPolymarket(q)));
 
+  const allTitles: string[] = [];
   const seen = new Set<string>();
   const matchEvents: any[] = [];
   const futureEvents: any[] = [];
@@ -83,6 +84,7 @@ export async function GET(request: NextRequest) {
     for (const event of batch) {
       if (!event.slug || !event.title || seen.has(event.slug)) continue;
       seen.add(event.slug);
+      allTitles.push(event.title + ' [markets:' + (event.markets||[]).length + ']');
 
       const sportType = classifySport(event.title);
       if (!sportType) continue;
@@ -154,6 +156,7 @@ export async function GET(request: NextRequest) {
     totalEventsFound: [...batches].reduce((a, b) => a + b.length, 0),
     matchesFound: matchEvents.length,
     futuresFound: futureEvents.length,
+    sampleTitles: allTitles.slice(0, 30),
   };
 
   return Response.json({
