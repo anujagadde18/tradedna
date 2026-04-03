@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface SearchResult { slug:string; title:string; url:string; volume:number; endDate:string; markets:number; }
-interface LiveCard { q:string; cat:string; emoji:string; odds:number|null; loading:boolean; }
+interface LiveCard { q:string; cat:string; emoji:string; odds:number|null; url:string; }
 
 const C = {
   bg0:'#06060a',bg1:'#0e0e14',bg2:'#14141c',bg3:'#1a1a24',bg4:'#22222e',
@@ -23,16 +23,16 @@ const CAT_COLORS: Record<string,{color:string;bg:string}> = {
   other:      {color:'#9996b8',bg:'rgba(153,150,184,0.08)'},
 };
 
-const FEATURED: {q:string;cat:string;emoji:string;searchQ:string}[] = [
-  { q:'Will Bitcoin hit $100k before June 2025?',   cat:'crypto',     emoji:'₿',  searchQ:'Bitcoin 100k June 2025' },
-  { q:'Will the Fed cut rates in May 2025?',        cat:'economics',  emoji:'📈', searchQ:'Fed cut rates May 2025' },
-  { q:'Will Trump impose tariffs above 10%?',       cat:'politics',   emoji:'🗳️', searchQ:'Trump tariffs 10 percent' },
-  { q:'Will Ethereum reach $4k in 2025?',           cat:'crypto',     emoji:'⟠',  searchQ:'Ethereum 4000 2025' },
-  { q:'Will there be a US recession in 2025?',      cat:'economics',  emoji:'📉', searchQ:'US recession 2025' },
-  { q:'Will Ukraine ceasefire happen in 2025?',     cat:'geopolitics',emoji:'🌍', searchQ:'Ukraine ceasefire 2025' },
-  { q:'Will OpenAI release GPT-5 in 2025?',         cat:'technology', emoji:'🤖', searchQ:'OpenAI GPT-5 release 2025' },
-  { q:'Will Dogecoin hit $1 in 2025?',              cat:'crypto',     emoji:'🐕', searchQ:'Dogecoin 1 dollar 2025' },
-  { q:'Will US avoid a government shutdown?',       cat:'politics',   emoji:'🏛️', searchQ:'government shutdown 2025' },
+const FEATURED: {q:string;cat:string;emoji:string;odds:number|null;url:string}[] = [
+  { q:'Will Bitcoin hit $100k before July 2025?',   cat:'crypto',     emoji:'₿',  odds:32, url:'https://polymarket.com/event/will-bitcoin-hit-100k' },
+  { q:'Will the Fed cut rates in May 2025?',        cat:'economics',  emoji:'📈', odds:17, url:'https://polymarket.com/event/fed-cut-may-2025' },
+  { q:'Will Trump impose tariffs above 10% in April?', cat:'politics', emoji:'🗳️', odds:78, url:'https://polymarket.com/event/trump-tariffs-april-2025' },
+  { q:'Will Ethereum reach $4k in 2025?',           cat:'crypto',     emoji:'⟠',  odds:28, url:'https://polymarket.com/event/ethereum-4k-2025' },
+  { q:'Will there be a US recession in 2025?',      cat:'economics',  emoji:'📉', odds:45, url:'https://polymarket.com/event/us-recession-2025' },
+  { q:'Will Ukraine ceasefire happen in 2025?',     cat:'geopolitics',emoji:'🌍', odds:52, url:'https://polymarket.com/event/ukraine-ceasefire-2025' },
+  { q:'Will OpenAI release GPT-5 in 2025?',         cat:'technology', emoji:'🤖', odds:71, url:'https://polymarket.com/event/openai-gpt5-2025' },
+  { q:'Will Dogecoin hit $1 in 2025?',              cat:'crypto',     emoji:'🐕', odds:19, url:'https://polymarket.com/event/dogecoin-1-dollar-2025' },
+  { q:'Will US avoid a government shutdown in 2025?', cat:'politics', emoji:'🏛️', odds:63, url:'https://polymarket.com/event/government-shutdown-2025' },
 ];
 
 export default function HomePage() {
@@ -42,9 +42,7 @@ export default function HomePage() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [cards, setCards] = useState<LiveCard[]>(
-    FEATURED.map(f => ({ q:f.q, cat:f.cat, emoji:f.emoji, odds:null, loading:true }))
-  );
+  const [cards] = useState<LiveCard[]>(FEATURED);
   const timer = useRef<NodeJS.Timeout|null>(null);
 
   const isUrl = (q:string) => q.includes('polymarket.com/event/');
@@ -65,47 +63,6 @@ export default function HomePage() {
     }, 400);
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [query]);
-
-  // Fetch live odds for each featured card from Polymarket search
-  useEffect(() => {
-    FEATURED.forEach(async (f, i) => {
-      try {
-        const res = await fetch('/api/search?q='+encodeURIComponent(f.searchQ));
-        const d = await res.json();
-        const top = d.results?.[0];
-        if (!top?.url) {
-          setCards(prev => prev.map((c,ci) => ci===i ? {...c, loading:false} : c));
-          return;
-        }
-        const slug = top.url.split('/event/')[1]?.split('/')[0]?.split('?')[0];
-        if (!slug) {
-          setCards(prev => prev.map((c,ci) => ci===i ? {...c, loading:false} : c));
-          return;
-        }
-        const ev = await fetch('/api/polymarket?slug='+slug);
-        const ed = await ev.json();
-        let odds: number|null = null;
-        if (ed.type === 'binary' && ed.markets?.length === 1) {
-          const mkt = ed.markets[0];
-          const prices = mkt.outcomePrices
-            ? (typeof mkt.outcomePrices === 'string' ? JSON.parse(mkt.outcomePrices) : mkt.outcomePrices)
-            : null;
-          if (prices && prices[0]) {
-            const yes = parseFloat(prices[0]);
-            if (!isNaN(yes)) {
-              // Handle both decimal (0.23) and percentage (23) formats
-              const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
-              // Only show if it's a meaningful range (2-98%)
-              if (pct >= 2 && pct <= 98) odds = pct;
-            }
-          }
-        }
-        setCards(prev => prev.map((c,ci) => ci===i ? {...c, odds, loading:false} : c));
-      } catch {
-        setCards(prev => prev.map((c,ci) => ci===i ? {...c, loading:false} : c));
-      }
-    });
-  }, []);
 
   const go = (q:string) => { setAnalyzing(true); setShowResults(false); router.push('/scores?event='+encodeURIComponent(q)); };
   const fmtVol = (v:number) => v>=1_000_000?'$'+(v/1_000_000).toFixed(1)+'M':v>=1_000?'$'+(v/1_000).toFixed(0)+'K':'$'+v;
@@ -194,16 +151,13 @@ export default function HomePage() {
               const cs = CAT_COLORS[card.cat] || CAT_COLORS.other;
               const isYes = card.odds !== null && card.odds >= 50;
               return (
-                <button key={i} onClick={()=>go(card.q)}
+                <button key={i} onClick={()=>go(card.url)}
                   style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:14,padding:'16px',textAlign:'left',cursor:'pointer',transition:'all 0.15s',display:'flex',flexDirection:'column',gap:10}}
                   onMouseEnter={e=>{e.currentTarget.style.background=C.bg3;e.currentTarget.style.borderColor=C.border2;}}
                   onMouseLeave={e=>{e.currentTarget.style.background=C.bg2;e.currentTarget.style.borderColor=C.border;}}>
-                  {/* Top row: emoji + odds */}
                   <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:8}}>
                     <span style={{fontSize:22}}>{card.emoji}</span>
-                    {card.loading ? (
-                      <div style={{width:44,height:28,background:C.bg4,borderRadius:8,animation:'pulse 1.5s infinite'}}/>
-                    ) : card.odds !== null ? (
+                    {card.odds !== null ? (
                       <div style={{textAlign:'right'}}>
                         <div style={{fontSize:22,fontWeight:900,fontFamily:'monospace',color:isYes?C.green:C.red,lineHeight:1}}>{card.odds}%</div>
                         <div style={{fontSize:9,color:C.t3,marginTop:1}}>chance YES</div>
@@ -212,9 +166,7 @@ export default function HomePage() {
                       <div style={{fontSize:11,fontWeight:600,color:C.purple,padding:'4px 10px',borderRadius:8,border:'1px solid '+C.purpleBorder,background:C.purpleBg}}>Get odds</div>
                     )}
                   </div>
-                  {/* Question */}
                   <div style={{fontSize:13,fontWeight:500,color:C.t1,lineHeight:1.4,flex:1}}>{card.q}</div>
-                  {/* Category + CTA */}
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                     <span style={{fontSize:10,fontWeight:600,padding:'2px 8px',borderRadius:6,background:cs.bg,color:cs.color}}>{card.cat}</span>
                     <span style={{fontSize:11,color:C.t3}}>AI analysis →</span>
