@@ -24,15 +24,15 @@ const CAT_COLORS: Record<string,{color:string;bg:string}> = {
 };
 
 const FEATURED: {q:string;cat:string;emoji:string;searchQ:string}[] = [
-  { q:'Will Mumbai Indians win IPL 2025?',          cat:'sports',     emoji:'🏏', searchQ:'IPL 2025 winner Mumbai' },
-  { q:'Will OKC Thunder win the NBA championship?', cat:'sports',     emoji:'🏀', searchQ:'NBA champion 2025' },
-  { q:'Will Bitcoin reach $100k before June 2025?', cat:'crypto',     emoji:'₿',  searchQ:'Bitcoin 100k' },
-  { q:'Will Trump impose new tariffs in April?',    cat:'politics',   emoji:'🗳️', searchQ:'Trump tariffs' },
-  { q:'Which AI company will lead by end of 2025?', cat:'technology', emoji:'🤖', searchQ:'AI model company 2025' },
-  { q:'Will the Fed cut rates in May 2025?',        cat:'economics',  emoji:'📈', searchQ:'Fed rates May 2025' },
-  { q:'Will Ukraine-Russia ceasefire happen?',      cat:'geopolitics',emoji:'🌍', searchQ:'Ukraine Russia ceasefire' },
-  { q:'Will Ethereum hit $5k in 2025?',             cat:'crypto',     emoji:'⟠',  searchQ:'Ethereum price 5000' },
-  { q:'Will Champions League final be an upset?',   cat:'sports',     emoji:'⚽', searchQ:'Champions League winner 2025' },
+  { q:'Will Mumbai Indians win IPL 2025?',          cat:'sports',     emoji:'🏏', searchQ:'Mumbai Indians IPL' },
+  { q:'Will OKC Thunder win the NBA Finals?',       cat:'sports',     emoji:'🏀', searchQ:'Oklahoma City Thunder NBA Finals' },
+  { q:'Will Bitcoin reach $100k before June 2025?', cat:'crypto',     emoji:'₿',  searchQ:'Bitcoin 100k 2025' },
+  { q:'Will Trump impose new tariffs in April?',    cat:'politics',   emoji:'🗳️', searchQ:'Trump tariffs April 2025' },
+  { q:'Will OpenAI lead the AI race in 2025?',      cat:'technology', emoji:'🤖', searchQ:'OpenAI best AI model 2025' },
+  { q:'Will the Fed cut rates in May 2025?',        cat:'economics',  emoji:'📈', searchQ:'Fed cut rates May 2025' },
+  { q:'Will Ukraine ceasefire happen in 2025?',     cat:'geopolitics',emoji:'🌍', searchQ:'Ukraine ceasefire 2025' },
+  { q:'Will Ethereum reach $5k in 2025?',           cat:'crypto',     emoji:'⟠',  searchQ:'Ethereum 5000 2025' },
+  { q:'Will Champions League be won by Real Madrid?',cat:'sports',    emoji:'⚽', searchQ:'Real Madrid Champions League 2025' },
 ];
 
 export default function HomePage() {
@@ -73,18 +73,28 @@ export default function HomePage() {
         const res = await fetch('/api/search?q='+encodeURIComponent(f.searchQ));
         const d = await res.json();
         const top = d.results?.[0];
+        if (!top?.url) {
+          setCards(prev => prev.map((c,ci) => ci===i ? {...c, loading:false} : c));
+          return;
+        }
+        const slug = top.url.split('/event/')[1]?.split('/')[0]?.split('?')[0];
+        if (!slug) {
+          setCards(prev => prev.map((c,ci) => ci===i ? {...c, loading:false} : c));
+          return;
+        }
+        const ev = await fetch('/api/polymarket?slug='+slug);
+        const ed = await ev.json();
         let odds: number|null = null;
-        if (top?.url) {
-          // Try to get yes price from the search result
-          const slug = top.url.split('/event/')[1]?.split('/')[0]?.split('?')[0];
-          if (slug) {
-            const ev = await fetch('/api/polymarket?slug='+slug);
-            const ed = await ev.json();
-            if (ed.type === 'binary' && ed.markets?.[0]?.outcomePrices) {
-              const prices = typeof ed.markets[0].outcomePrices === 'string'
-                ? JSON.parse(ed.markets[0].outcomePrices) : ed.markets[0].outcomePrices;
-              const p = parseFloat(prices[0]);
-              if (!isNaN(p)) odds = p > 1 ? Math.round(p) : Math.round(p * 100);
+        // Only use binary markets with valid yes price
+        if (ed.type === 'binary' && ed.markets?.[0]) {
+          const mkt = ed.markets[0];
+          const prices = mkt.outcomePrices
+            ? (typeof mkt.outcomePrices === 'string' ? JSON.parse(mkt.outcomePrices) : mkt.outcomePrices)
+            : null;
+          if (prices && prices[0]) {
+            const p = parseFloat(prices[0]);
+            if (!isNaN(p) && p > 0 && p < 100) {
+              odds = p > 1 ? Math.round(p) : Math.round(p * 100);
             }
           }
         }
