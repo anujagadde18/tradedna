@@ -90,14 +90,24 @@ export default function HomePage() {
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:56,background:'rgba(6,6,10,0.95)',backdropFilter:'blur(20px)',borderBottom:'1px solid '+C.border,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 28px'}}>
         {/* Logo */}
         <div style={{display:'flex',alignItems:'center',gap:10,cursor:'pointer'}} onClick={()=>router.push('/')}>
-          <div style={{
-            width:32,height:32,borderRadius:9,
-            background:'linear-gradient(135deg,#7c6ff7 0%,#a89cf8 100%)',
-            display:'flex',alignItems:'center',justifyContent:'center',
-            fontSize:16,fontWeight:900,color:'white',
-            boxShadow:'0 0 16px rgba(124,111,247,0.4)',
-            letterSpacing:'-0.5px',
-          }}>P</div>
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="36" height="36" rx="9" fill="#0e0e18"/>
+            {/* Bars — rising left to right */}
+            <rect x="6" y="24" width="3" height="6" rx="1.5" fill="#2e2c44"/>
+            <rect x="11" y="20" width="3" height="10" rx="1.5" fill="#3a3860"/>
+            <rect x="16" y="16" width="3" height="14" rx="1.5" fill="#564ea0"/>
+            <rect x="21" y="11" width="3" height="19" rx="1.5" fill="#7c6ff7"/>
+            <rect x="26" y="7" width="3" height="23" rx="1.5" fill="#a89cf8"/>
+            {/* Slingshot fork */}
+            <line x1="9" y1="23" x2="6.5" y2="30" stroke="#4a4880" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="9" y1="23" x2="11.5" y2="30" strokeWidth="1.5" strokeLinecap="round" stroke="#4a4880"/>
+            {/* Arc trajectory */}
+            <path d="M 7.5 19 Q 14 10 27.5 7.5" fill="none" stroke="#2ecc8a" strokeWidth="1.8" strokeLinecap="round"/>
+            {/* Ball */}
+            <circle cx="7.5" cy="19" r="3" fill="#ef4f6a"/>
+            {/* Impact dot on top bar */}
+            <circle cx="27.5" cy="7" r="2.5" fill="#2ecc8a"/>
+          </svg>
           <div>
             <div style={{fontSize:15,fontWeight:800,letterSpacing:'-0.5px',lineHeight:1}}>PlayPicks</div>
             <div style={{fontSize:9,fontWeight:600,color:C.purpleL,letterSpacing:'0.8px',textTransform:'uppercase',lineHeight:1,marginTop:2}}>AI</div>

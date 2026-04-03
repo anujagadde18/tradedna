@@ -521,7 +521,22 @@ function ScoresPageContent() {
             Back
           </button>
           <div style={{ width:1, height:16, background:C.border2 }}></div>
-          <span style={{ fontSize:13, fontWeight:700, letterSpacing:'-0.3px' }}>PlayPicks AI</span>
+          <span style={{ fontSize:13, fontWeight:700, letterSpacing:'-0.3px', display:'flex', alignItems:'center', gap:7 }}>
+            <svg width="24" height="24" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="36" height="36" rx="9" fill="#0e0e18"/>
+              <rect x="6" y="24" width="3" height="6" rx="1.5" fill="#2e2c44"/>
+              <rect x="11" y="20" width="3" height="10" rx="1.5" fill="#3a3860"/>
+              <rect x="16" y="16" width="3" height="14" rx="1.5" fill="#564ea0"/>
+              <rect x="21" y="11" width="3" height="19" rx="1.5" fill="#7c6ff7"/>
+              <rect x="26" y="7" width="3" height="23" rx="1.5" fill="#a89cf8"/>
+              <line x1="9" y1="23" x2="6.5" y2="30" stroke="#4a4880" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="9" y1="23" x2="11.5" y2="30" stroke="#4a4880" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M 7.5 19 Q 14 10 27.5 7.5" fill="none" stroke="#2ecc8a" strokeWidth="1.8" strokeLinecap="round"/>
+              <circle cx="7.5" cy="19" r="3" fill="#ef4f6a"/>
+              <circle cx="27.5" cy="7" r="2.5" fill="#2ecc8a"/>
+            </svg>
+            PlayPicks AI
+          </span>
           <div style={{ width:1, height:16, background:C.border2 }}></div>
           <span style={{ fontSize:11, color:C.t3, maxWidth:260, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{eventTitle}</span>
         </div>
