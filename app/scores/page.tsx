@@ -241,9 +241,16 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
               );
             })}
           </div>
-          {/* Share section */}
-        <ShareButtons question={question} aiPct={aiPct} marketPct={marketPct} hasMarket={hasMarket} />
-      </div>
+          {rows.length > 6 && (
+            <button onClick={() => setShowAll(!showAll)} style={{ marginTop:12, fontSize:11, color:C.t3, background:'none', border:'none', cursor:'pointer', padding:0 }}>
+              {showAll ? 'Show less' : '+ Show ' + (rows.length - 6) + ' more sources'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Share section — always visible */}
+      <ShareButtons question={question} aiPct={aiPct} marketPct={marketPct} hasMarket={hasMarket} />
     </div>
   );
 }
@@ -253,7 +260,8 @@ function ShareButtons({ question, aiPct, marketPct, hasMarket }: { question:stri
   const verdict = aiPct >= 65 ? 'Very likely YES' : aiPct >= 50 ? 'Probably YES' : aiPct >= 35 ? 'Probably NO' : 'Very likely NO';
   const emoji = aiPct >= 65 ? '✅' : aiPct >= 50 ? '🟡' : '❌';
 
-  const shareText = `${emoji} PlayPicks AI: ${aiPct}% chance YES\n\n"${question}"\n\n${verdict}${hasMarket && marketPct > 0 ? `\nMarket says: ${marketPct}%` : ''}\n\nGet AI odds on anything → playpicks.ai\n#PlayPicks #PredictionMarkets`;
+  const marketLine = hasMarket && marketPct > 0 ? '\nMarket says: ' + marketPct + '%' : '';
+  const shareText = emoji + ' PlayPicks AI: ' + aiPct + '% chance YES\n\n"' + question + '"\n\n' + verdict + marketLine + '\n\nGet AI odds on anything → tradedna.vercel.app\n#PlayPicks #PredictionMarkets';
 
   function onX() {
     window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(shareText), '_blank', 'width=550,height=420');
