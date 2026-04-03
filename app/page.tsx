@@ -85,21 +85,18 @@ export default function HomePage() {
         const ev = await fetch('/api/polymarket?slug='+slug);
         const ed = await ev.json();
         let odds: number|null = null;
-        // Only show odds for true binary YES/NO markets
         if (ed.type === 'binary' && ed.markets?.length === 1) {
           const mkt = ed.markets[0];
           const prices = mkt.outcomePrices
             ? (typeof mkt.outcomePrices === 'string' ? JSON.parse(mkt.outcomePrices) : mkt.outcomePrices)
             : null;
-          if (prices && prices[0] && prices[1]) {
+          if (prices && prices[0]) {
             const yes = parseFloat(prices[0]);
-            const no  = parseFloat(prices[1]);
-            // Sanity check — yes + no should roughly equal 1 (or 100)
-            const sum = yes + no;
-            if (!isNaN(yes) && sum > 0.9 && sum < 1.1 && yes > 0.01 && yes < 0.99) {
-              odds = Math.round(yes * 100);
-            } else if (!isNaN(yes) && sum > 90 && sum < 110 && yes > 1 && yes < 99) {
-              odds = Math.round(yes);
+            if (!isNaN(yes)) {
+              // Handle both decimal (0.23) and percentage (23) formats
+              const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
+              // Only show if it's a meaningful range (2-98%)
+              if (pct >= 2 && pct <= 98) odds = pct;
             }
           }
         }
