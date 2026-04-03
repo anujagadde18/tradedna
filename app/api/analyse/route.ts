@@ -182,29 +182,61 @@ export async function POST(request: NextRequest) {
     if (relevantArticles.length === 0 && !metaculus.probability && !marketOdds) {
       return Response.json({
         valid: true,
-        confidence: 40,
+        confidence: 35,
         keywords,
         articleCount: 0,
         sources: [],
         noData: true,
-        message: 'No relevant news found for this question. Confidence is based on market signals only.',
+        message: 'No relevant news found. Try pasting a Polymarket URL for live odds.',
+      });
+    }
+
+    // If no articles but we have market odds, use market as primary signal
+    if (relevantArticles.length === 0 && marketOdds && marketOdds > 0) {
+      return Response.json({
+        valid: true,
+        confidence: marketOdds,
+        keywords,
+        articleCount: 0,
+        sources: [{
+          name: 'Polymarket',
+          sig: `Live market at ${marketOdds}% — crowd consensus`,
+          url: '',
+          category: 'market',
+          type: 'priced',
+          contribution: Math.round((marketOdds - 50) / 5),
+        }],
       });
     }
 
     let newsConfidence = 50;
     if (relevantArticles.length > 0) {
       const scores = relevantArticles.map(a => scoreHeadline(a.title, a.desc));
+      const positives = scores.filter(s => s > 0).length;
+      const negatives = scores.filter(s => s < 0).length;
       const total = scores.reduce((a, b) => a + b, 0);
       const maxScore = relevantArticles.length * 2;
       const normalized = (total + maxScore) / (maxScore * 2);
-      newsConfidence = Math.round(35 + normalized * 50);
+      // More aggressive spread — don't cluster around 50
+      newsConfidence = Math.round(25 + normalized * 65);
+      // Bias based on article count direction
+      if (positives > negatives * 2) newsConfidence = Math.min(85, newsConfidence + 10);
+      if (negatives > positives * 2) newsConfidence = Math.max(20, newsConfidence - 10);
     }
 
-    const signals: { value: number; weight: number }[] = [
-      { value: newsConfidence, weight: 0.4 },
-    ];
-    if (metaculus.probability !== null) signals.push({ value: metaculus.probability, weight: 0.3 });
-    if (marketOdds && marketOdds > 0) signals.push({ value: marketOdds, weight: 0.3 });
+    // If marketOdds exists, weight it heavily — it's the ground truth
+    const signals: { value: number; weight: number }[] = [];
+    if (marketOdds && marketOdds > 0) {
+      signals.push({ value: marketOdds, weight: 0.45 });
+      signals.push({ value: newsConfidence, weight: 0.35 });
+      if (metaculus.probability !== null) signals.push({ value: metaculus.probability, weight: 0.2 });
+    } else if (metaculus.probability !== null) {
+      signals.push({ value: newsConfidence, weight: 0.5 });
+      signals.push({ value: metaculus.probability, weight: 0.5 });
+    } else {
+      // News only — use it directly but add variance
+      signals.push({ value: newsConfidence, weight: 1.0 });
+    }
 
     const totalWeight = signals.reduce((a, s) => a + s.weight, 0);
     let finalConfidence = Math.round(

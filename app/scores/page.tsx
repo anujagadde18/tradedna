@@ -241,13 +241,44 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
               );
             })}
           </div>
-          {rows.length > 6 && (
-            <button onClick={() => setShowAll(!showAll)} style={{ marginTop:12, fontSize:11, color:C.t3, background:'none', border:'none', cursor:'pointer', padding:0 }}>
-              {showAll ? 'Show less' : `+ Show ${rows.length - 6} more sources`}
-            </button>
-          )}
-        </div>
-      )}
+          {/* Share section */}
+        <ShareButtons question={question} aiPct={aiPct} marketPct={marketPct} hasMarket={hasMarket} />
+      </div>
+    </div>
+  );
+}
+
+function ShareButtons({ question, aiPct, marketPct, hasMarket }: { question:string; aiPct:number; marketPct:number; hasMarket:boolean }) {
+  const [copied, setCopied] = useState(false);
+  const verdict = aiPct >= 65 ? 'Very likely YES' : aiPct >= 50 ? 'Probably YES' : aiPct >= 35 ? 'Probably NO' : 'Very likely NO';
+  const emoji = aiPct >= 65 ? '✅' : aiPct >= 50 ? '🟡' : '❌';
+
+  const shareText = `${emoji} PlayPicks AI: ${aiPct}% chance YES\n\n"${question}"\n\n${verdict}${hasMarket && marketPct > 0 ? `\nMarket says: ${marketPct}%` : ''}\n\nGet AI odds on anything → playpicks.ai\n#PlayPicks #PredictionMarkets`;
+
+  function onX() {
+    window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(shareText), '_blank', 'width=550,height=420');
+  }
+  function onWhatsApp() {
+    window.open('https://wa.me/?text='+encodeURIComponent(shareText), '_blank');
+  }
+  async function onCopy() {
+    try { await navigator.clipboard.writeText(shareText); setCopied(true); setTimeout(()=>setCopied(false),2000); } catch {}
+  }
+
+  return (
+    <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:14, marginTop:6 }}>
+      <div style={{ fontSize:10, fontWeight:700, color:'#5c5a78', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:10 }}>Share this prediction</div>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        <button onClick={onX} style={{ padding:'7px 14px', borderRadius:9, background:'#000', border:'1px solid rgba(255,255,255,0.15)', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:600 }}>
+          𝕏 Post on X
+        </button>
+        <button onClick={onWhatsApp} style={{ padding:'7px 14px', borderRadius:9, background:'rgba(37,211,102,0.12)', border:'1px solid rgba(37,211,102,0.25)', color:'#25d366', cursor:'pointer', fontSize:12, fontWeight:600 }}>
+          WhatsApp
+        </button>
+        <button onClick={onCopy} style={{ padding:'7px 14px', borderRadius:9, background:copied?'rgba(46,204,138,0.12)':'rgba(124,111,247,0.1)', border:'1px solid '+(copied?'rgba(46,204,138,0.3)':'rgba(124,111,247,0.25)'), color:copied?'#2ecc8a':'#a89cf8', cursor:'pointer', fontSize:12, fontWeight:600 }}>
+          {copied ? '✓ Copied!' : 'Copy text'}
+        </button>
+      </div>
     </div>
   );
 }
