@@ -5,7 +5,7 @@
 import { NextRequest } from 'next/server';
 import { ethers, JsonRpcProvider, Wallet } from 'ethers';
 import { RelayClient, RelayerTxType } from '@polymarket/builder-relayer-client';
-import { BuilderConfig, BuilderApiKeyCreds } from '@polymarket/builder-signing-sdk';
+import { BuilderConfig, BuilderApiKeyCreds } from '@polymarket/builder-relayer-client/node_modules/@polymarket/builder-signing-sdk/dist/config';
 import { ClobClient } from '@polymarket/clob-client';
 
 export const dynamic = 'force-dynamic';
