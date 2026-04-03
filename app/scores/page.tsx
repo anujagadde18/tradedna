@@ -356,27 +356,20 @@ function ScoresPageContent() {
           }
         }
 
-        // Use topic-specific search terms for better API results
-
         const searchQ = detectedTopic ? TOPIC_SEARCH[detectedTopic] : queryWords.slice(0,3).join(' ');
 
         const r = await fetch('/api/search?q=' + encodeURIComponent(searchQ));
         const d = await r.json();
         if (!d.results) return;
 
-        const sportTerms = TOPIC_SIGNALS.sports;
-        const isSports = detectedTopic === 'sports';
-
         // Strict filter: title must contain at least one topic keyword
         // AND must not be an expired/old market (check endDate)
         const now = new Date();
         const filtered = d.results.filter((m: any) => {
           const title = (m.title || '').toLowerCase();
-          // Never show sports for non-sports
-          if (!isSports && sportTerms.some(t => title.includes(t))) return false;
           // Filter expired markets
           if (m.endDate && new Date(m.endDate) < now) return false;
-          // Must match topic keywords
+          // If we have topic keywords, at least one must match
           if (topicKws.length > 0) return topicKws.some(kw => title.includes(kw.toLowerCase()));
           // Fallback: match at least one query word
           return queryWords.some(w => w.length > 3 && title.includes(w));
