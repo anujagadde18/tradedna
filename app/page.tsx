@@ -3,10 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface SearchResult { slug:string; title:string; url:string; volume:number; endDate:string; markets:number; }
-interface TrendingEvent {
-  slug:string; title:string; url:string; volume:number; volumeFormatted:string;
-  category:string; icon:string; yesPrice:number|null; marketCount:number;
-}
+interface LiveCard { q:string; cat:string; emoji:string; odds:number|null; loading:boolean; }
 
 const C = {
   bg0:'#06060a',bg1:'#0e0e14',bg2:'#14141c',bg3:'#1a1a24',bg4:'#22222e',
@@ -15,16 +12,6 @@ const C = {
   purple:'#7c6ff7',purpleL:'#a89cf8',purpleBg:'rgba(124,111,247,0.1)',purpleBorder:'rgba(124,111,247,0.25)',
   green:'#2ecc8a',amber:'#f5a623',red:'#ef4f6a',blue:'#4d9de0',
 };
-
-const CATEGORIES = [
-  { id:'all', label:'All' },
-  { id:'sports', label:'🏆 Sports' },
-  { id:'crypto', label:'₿ Crypto' },
-  { id:'politics', label:'🗳️ Politics' },
-  { id:'technology', label:'🤖 Tech' },
-  { id:'economics', label:'📈 Economics' },
-  { id:'geopolitics', label:'🌍 World' },
-];
 
 const CAT_COLORS: Record<string,{color:string;bg:string}> = {
   sports:     {color:'#2ecc8a',bg:'rgba(46,204,138,0.1)'},
@@ -36,30 +23,33 @@ const CAT_COLORS: Record<string,{color:string;bg:string}> = {
   other:      {color:'#9996b8',bg:'rgba(153,150,184,0.08)'},
 };
 
-// Hot questions always visible — no loading needed
-const HOT_QUESTIONS = [
-  { q:'Will Mumbai Indians win IPL 2025?',      cat:'sports',     emoji:'🏏' },
-  { q:'Will OKC Thunder win the NBA championship?', cat:'sports',  emoji:'🏀' },
-  { q:'Will Bitcoin hit $100k before June?',    cat:'crypto',     emoji:'₿'  },
-  { q:'Will Trump impose new tariffs in April?', cat:'politics',  emoji:'🗳️' },
-  { q:'Which AI company will lead by end of 2025?', cat:'technology', emoji:'🤖' },
-  { q:'Will the Fed cut rates in May 2025?',    cat:'economics',  emoji:'📈' },
+const FEATURED: {q:string;cat:string;emoji:string;searchQ:string}[] = [
+  { q:'Will Mumbai Indians win IPL 2025?',          cat:'sports',     emoji:'🏏', searchQ:'IPL 2025 winner Mumbai' },
+  { q:'Will OKC Thunder win the NBA championship?', cat:'sports',     emoji:'🏀', searchQ:'NBA champion 2025' },
+  { q:'Will Bitcoin reach $100k before June 2025?', cat:'crypto',     emoji:'₿',  searchQ:'Bitcoin 100k' },
+  { q:'Will Trump impose new tariffs in April?',    cat:'politics',   emoji:'🗳️', searchQ:'Trump tariffs' },
+  { q:'Which AI company will lead by end of 2025?', cat:'technology', emoji:'🤖', searchQ:'AI model company 2025' },
+  { q:'Will the Fed cut rates in May 2025?',        cat:'economics',  emoji:'📈', searchQ:'Fed rates May 2025' },
+  { q:'Will Ukraine-Russia ceasefire happen?',      cat:'geopolitics',emoji:'🌍', searchQ:'Ukraine Russia ceasefire' },
+  { q:'Will Ethereum hit $5k in 2025?',             cat:'crypto',     emoji:'⟠',  searchQ:'Ethereum price 5000' },
+  { q:'Will Champions League final be an upset?',   cat:'sports',     emoji:'⚽', searchQ:'Champions League winner 2025' },
 ];
 
 export default function HomePage() {
   const router = useRouter();
-  const [query, setQuery]             = useState('');
-  const [isAnalyzing, setAnalyzing]   = useState(false);
-  const [results, setResults]         = useState<SearchResult[]>([]);
-  const [searching, setSearching]     = useState(false);
+  const [query, setQuery]   = useState('');
+  const [isAnalyzing, setAnalyzing] = useState(false);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [trending, setTrending]       = useState<TrendingEvent[]>([]);
-  const [trendingLoading, setTrendingLoading] = useState(true);
-  const [activeCategory, setActiveCategory]   = useState('all');
+  const [cards, setCards] = useState<LiveCard[]>(
+    FEATURED.map(f => ({ q:f.q, cat:f.cat, emoji:f.emoji, odds:null, loading:true }))
+  );
   const timer = useRef<NodeJS.Timeout|null>(null);
 
   const isUrl = (q:string) => q.includes('polymarket.com/event/');
 
+  // Autocomplete
   useEffect(() => {
     if (!query.trim() || isUrl(query) || query.trim().length < 3) { setResults([]); setShowResults(false); return; }
     if (timer.current) clearTimeout(timer.current);
@@ -76,14 +66,34 @@ export default function HomePage() {
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [query]);
 
+  // Fetch live odds for each featured card from Polymarket search
   useEffect(() => {
-    setTrendingLoading(true);
-    const url = '/api/trending' + (activeCategory !== 'all' ? '?category='+activeCategory : '');
-    fetch(url)
-      .then(r => r.json())
-      .then(d => { setTrending(d.results || []); setTrendingLoading(false); })
-      .catch(() => setTrendingLoading(false));
-  }, [activeCategory]);
+    FEATURED.forEach(async (f, i) => {
+      try {
+        const res = await fetch('/api/search?q='+encodeURIComponent(f.searchQ));
+        const d = await res.json();
+        const top = d.results?.[0];
+        let odds: number|null = null;
+        if (top?.url) {
+          // Try to get yes price from the search result
+          const slug = top.url.split('/event/')[1]?.split('/')[0]?.split('?')[0];
+          if (slug) {
+            const ev = await fetch('/api/polymarket?slug='+slug);
+            const ed = await ev.json();
+            if (ed.type === 'binary' && ed.markets?.[0]?.outcomePrices) {
+              const prices = typeof ed.markets[0].outcomePrices === 'string'
+                ? JSON.parse(ed.markets[0].outcomePrices) : ed.markets[0].outcomePrices;
+              const p = parseFloat(prices[0]);
+              if (!isNaN(p)) odds = p > 1 ? Math.round(p) : Math.round(p * 100);
+            }
+          }
+        }
+        setCards(prev => prev.map((c,ci) => ci===i ? {...c, odds, loading:false} : c));
+      } catch {
+        setCards(prev => prev.map((c,ci) => ci===i ? {...c, loading:false} : c));
+      }
+    });
+  }, []);
 
   const go = (q:string) => { setAnalyzing(true); setShowResults(false); router.push('/scores?event='+encodeURIComponent(q)); };
   const fmtVol = (v:number) => v>=1_000_000?'$'+(v/1_000_000).toFixed(1)+'M':v>=1_000?'$'+(v/1_000).toFixed(0)+'K':'$'+v;
@@ -158,105 +168,49 @@ export default function HomePage() {
               </div>
             )}
           </div>
-          <p style={{fontSize:11,color:C.t3,marginBottom:0}}>Type anything or paste a Polymarket URL</p>
+          <p style={{fontSize:11,color:C.t3}}>Type anything or paste a Polymarket URL</p>
         </div>
 
-        {/* HOT QUESTIONS — always visible, no loading */}
-        <div style={{maxWidth:960,margin:'0 auto',padding:'0 24px 32px'}}>
-          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}>
-            <span style={{fontSize:12,fontWeight:700,color:C.t2}}>🔥 Try these</span>
+        {/* FEATURED PREDICTIONS — with live odds */}
+        <div style={{maxWidth:960,margin:'0 auto',padding:'0 24px 48px'}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:20}}>
+            <span style={{width:6,height:6,background:C.red,borderRadius:'50%',display:'block',boxShadow:'0 0 6px #ef4f6a'}}/>
+            <span style={{fontSize:13,fontWeight:700,color:C.t1}}>What people are predicting now</span>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
-            {HOT_QUESTIONS.map((hq,i)=>{
-              const cs = CAT_COLORS[hq.cat] || CAT_COLORS.other;
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+            {cards.map((card,i)=>{
+              const cs = CAT_COLORS[card.cat] || CAT_COLORS.other;
+              const isYes = card.odds !== null && card.odds >= 50;
               return (
-                <button key={i} onClick={()=>go(hq.q)}
-                  style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'12px 14px',textAlign:'left',cursor:'pointer',transition:'all 0.15s'}}
+                <button key={i} onClick={()=>go(card.q)}
+                  style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:14,padding:'16px',textAlign:'left',cursor:'pointer',transition:'all 0.15s',display:'flex',flexDirection:'column',gap:10}}
                   onMouseEnter={e=>{e.currentTarget.style.background=C.bg3;e.currentTarget.style.borderColor=C.border2;}}
                   onMouseLeave={e=>{e.currentTarget.style.background=C.bg2;e.currentTarget.style.borderColor=C.border;}}>
-                  <div style={{fontSize:16,marginBottom:6}}>{hq.emoji}</div>
-                  <div style={{fontSize:12,fontWeight:500,color:C.t1,lineHeight:1.4,marginBottom:6}}>{hq.q}</div>
-                  <div style={{display:'inline-block',fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:6,background:cs.bg,color:cs.color}}>{hq.cat}</div>
+                  {/* Top row: emoji + odds */}
+                  <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:8}}>
+                    <span style={{fontSize:22}}>{card.emoji}</span>
+                    {card.loading ? (
+                      <div style={{width:44,height:28,background:C.bg4,borderRadius:8,animation:'pulse 1.5s infinite'}}/>
+                    ) : card.odds !== null ? (
+                      <div style={{textAlign:'right'}}>
+                        <div style={{fontSize:22,fontWeight:900,fontFamily:'monospace',color:isYes?C.green:C.red,lineHeight:1}}>{card.odds}%</div>
+                        <div style={{fontSize:9,color:C.t3,marginTop:1}}>chance YES</div>
+                      </div>
+                    ) : (
+                      <div style={{fontSize:11,fontWeight:600,color:C.purple,padding:'4px 10px',borderRadius:8,border:'1px solid '+C.purpleBorder,background:C.purpleBg}}>Get odds</div>
+                    )}
+                  </div>
+                  {/* Question */}
+                  <div style={{fontSize:13,fontWeight:500,color:C.t1,lineHeight:1.4,flex:1}}>{card.q}</div>
+                  {/* Category + CTA */}
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                    <span style={{fontSize:10,fontWeight:600,padding:'2px 8px',borderRadius:6,background:cs.bg,color:cs.color}}>{card.cat}</span>
+                    <span style={{fontSize:11,color:C.t3}}>AI analysis →</span>
+                  </div>
                 </button>
               );
             })}
           </div>
-        </div>
-
-        {/* LIVE MARKETS FEED */}
-        <div style={{maxWidth:960,margin:'0 auto',padding:'0 24px 80px'}}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
-            <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <span style={{width:6,height:6,background:C.red,borderRadius:'50%',display:'block',boxShadow:'0 0 6px #ef4f6a'}}/>
-              <span style={{fontSize:13,fontWeight:700,color:C.t1}}>Live markets</span>
-              <span style={{fontSize:11,color:C.t3}}>· from Polymarket</span>
-            </div>
-          </div>
-
-          {/* Category tabs */}
-          <div style={{display:'flex',gap:6,marginBottom:16,flexWrap:'wrap'}}>
-            {CATEGORIES.map(cat=>(
-              <button key={cat.id} onClick={()=>setActiveCategory(cat.id)}
-                style={{padding:'5px 14px',borderRadius:100,fontSize:12,fontWeight:600,cursor:'pointer',border:'1px solid '+(activeCategory===cat.id?C.purpleBorder:C.border),background:activeCategory===cat.id?C.purpleBg:'transparent',color:activeCategory===cat.id?C.purpleL:C.t2,transition:'all 0.15s'}}>
-                {cat.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Markets list */}
-          {trendingLoading ? (
-            <div style={{display:'grid',gap:8}}>
-              {[...Array(6)].map((_,i)=>(
-                <div key={i} style={{height:64,background:C.bg2,borderRadius:12,border:'1px solid '+C.border,opacity:0.2+i*0.12}}/>
-              ))}
-            </div>
-          ) : trending.length === 0 ? (
-            <div style={{textAlign:'center',padding:'40px 0'}}>
-              <div style={{fontSize:13,color:C.t3,marginBottom:12}}>No live markets found right now</div>
-              <div style={{display:'flex',gap:8,justifyContent:'center',flexWrap:'wrap'}}>
-                {HOT_QUESTIONS.filter(h=>activeCategory==='all'||h.cat===activeCategory).slice(0,3).map((hq,i)=>(
-                  <button key={i} onClick={()=>go(hq.q)}
-                    style={{padding:'8px 16px',borderRadius:10,background:C.bg2,border:'1px solid '+C.border2,color:C.t2,fontSize:12,cursor:'pointer'}}>
-                    {hq.emoji} {hq.q.slice(0,30)}...
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div style={{display:'grid',gap:8}}>
-              {trending.map((event,i)=>{
-                const cs = CAT_COLORS[event.category] || CAT_COLORS.other;
-                const isYes = event.yesPrice !== null && event.yesPrice >= 50;
-                return (
-                  <button key={i} onClick={()=>go(event.url)}
-                    style={{width:'100%',background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'14px 16px',cursor:'pointer',textAlign:'left',transition:'all 0.15s',display:'flex',alignItems:'center',gap:14}}
-                    onMouseEnter={e=>{e.currentTarget.style.background=C.bg3;e.currentTarget.style.borderColor=C.border2;}}
-                    onMouseLeave={e=>{e.currentTarget.style.background=C.bg2;e.currentTarget.style.borderColor=C.border;}}>
-                    <div style={{fontSize:11,fontWeight:700,color:C.t4,minWidth:18,textAlign:'right'}}>{i+1}</div>
-                    <div style={{fontSize:16,minWidth:24,textAlign:'center'}}>{event.icon}</div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:13,fontWeight:500,color:C.t1,lineHeight:1.35,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{event.title}</div>
-                      <div style={{display:'flex',alignItems:'center',gap:8,marginTop:4}}>
-                        <span style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:6,background:cs.bg,color:cs.color}}>{event.category}</span>
-                        <span style={{fontSize:10,color:C.t3}}>{event.volumeFormatted} vol</span>
-                        {event.marketCount > 1 && <span style={{fontSize:10,color:C.t3}}>{event.marketCount} outcomes</span>}
-                      </div>
-                    </div>
-                    {/* YES odds pill — human friendly */}
-                    {event.yesPrice !== null && !isNaN(event.yesPrice) && (
-                      <div style={{flexShrink:0,textAlign:'center',padding:'6px 12px',borderRadius:10,background:isYes?'rgba(46,204,138,0.1)':'rgba(239,79,106,0.1)',border:'1px solid '+(isYes?'rgba(46,204,138,0.2)':'rgba(239,79,106,0.2)')}}>
-                        <div style={{fontSize:15,fontWeight:800,color:isYes?C.green:C.red,fontFamily:'monospace'}}>{event.yesPrice}%</div>
-                        <div style={{fontSize:9,color:C.t3,marginTop:1}}>chance YES</div>
-                      </div>
-                    )}
-                    <div style={{flexShrink:0,fontSize:11,fontWeight:600,color:C.purple,padding:'6px 12px',borderRadius:8,border:'1px solid '+C.purpleBorder,background:C.purpleBg}}>
-                      Get AI odds →
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
 
         {/* HOW IT WORKS */}
