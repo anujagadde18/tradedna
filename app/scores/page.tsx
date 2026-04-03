@@ -442,6 +442,9 @@ function ScoresPageContent() {
   const runAnalysis = async () => {
     if (mtype === 'categorical') return;
     if (!event) return;
+    // If it's a Polymarket URL, wait for odds to load before analyzing
+    // This prevents the 65% default showing before real odds arrive
+    if (isPolymarketUrl && odds === null) return;
     try {
       const res  = await fetch('/api/analyse', {
         method: 'POST',
