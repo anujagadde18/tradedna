@@ -1,61 +1,89 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { LiveSportsFeed } from '@/components/home/LiveSportsFeed';
 
 interface SearchResult { slug:string; title:string; url:string; volume:number; endDate:string; markets:number; }
+interface TrendingEvent {
+  slug:string; title:string; url:string; volume:number; volumeFormatted:string;
+  category:string; icon:string; yesPrice:number|null; marketCount:number;
+}
 
 const C = {
-  bg0:'#06060a',bg1:'#0e0e14',bg2:'#14141c',bg3:'#1a1a24',bg4:'#22222e',
-  border:'rgba(255,255,255,0.06)',border2:'rgba(255,255,255,0.1)',
-  t1:'#f2f0ff',t2:'#9996b8',t3:'#5c5a78',t4:'#2e2c44',
-  purple:'#7c6ff7',purpleL:'#a89cf8',purpleBg:'rgba(124,111,247,0.1)',purpleBorder:'rgba(124,111,247,0.25)',
-  green:'#2ecc8a',amber:'#f5a623',red:'#ef4f6a',blue:'#4d9de0',
+  bg0:'#06060a', bg1:'#0e0e14', bg2:'#14141c', bg3:'#1a1a24',
+  border:'rgba(255,255,255,0.06)', border2:'rgba(255,255,255,0.1)',
+  t1:'#f2f0ff', t2:'#9996b8', t3:'#5c5a78', t4:'#2e2c44',
+  purple:'#7c6ff7', purpleL:'#a89cf8', purpleBg:'rgba(124,111,247,0.1)', purpleBorder:'rgba(124,111,247,0.25)',
+  green:'#2ecc8a', amber:'#f5a623', red:'#ef4f6a', blue:'#4d9de0',
 };
 
+const CATS = [
+  { id:'all',        label:'All',        emoji:'' },
+  { id:'sports',     label:'Sports',     emoji:'🏆' },
+  { id:'crypto',     label:'Crypto',     emoji:'₿' },
+  { id:'politics',   label:'Politics',   emoji:'🗳️' },
+  { id:'technology', label:'Tech',       emoji:'🤖' },
+  { id:'economics',  label:'Economics',  emoji:'📈' },
+  { id:'world',      label:'World',      emoji:'🌍' },
+];
+
 const CAT_COLORS: Record<string,{color:string;bg:string}> = {
-  sports:     {color:'#2ecc8a',bg:'rgba(46,204,138,0.1)'},
-  crypto:     {color:'#f5a623',bg:'rgba(245,166,35,0.1)'},
-  politics:   {color:'#ef4f6a',bg:'rgba(239,79,106,0.1)'},
-  technology: {color:'#7c6ff7',bg:'rgba(124,111,247,0.1)'},
-  economics:  {color:'#4d9de0',bg:'rgba(77,157,224,0.1)'},
-  geopolitics:{color:'#a89cf8',bg:'rgba(168,156,248,0.1)'},
-  other:      {color:'#9996b8',bg:'rgba(153,150,184,0.08)'},
+  sports:     {color:'#2ecc8a', bg:'rgba(46,204,138,0.1)'},
+  crypto:     {color:'#f5a623', bg:'rgba(245,166,35,0.1)'},
+  politics:   {color:'#ef4f6a', bg:'rgba(239,79,106,0.1)'},
+  technology: {color:'#7c6ff7', bg:'rgba(124,111,247,0.1)'},
+  economics:  {color:'#4d9de0', bg:'rgba(77,157,224,0.1)'},
+  world:      {color:'#a89cf8', bg:'rgba(168,156,248,0.1)'},
+  other:      {color:'#9996b8', bg:'rgba(153,150,184,0.08)'},
 };
 
 export default function HomePage() {
   const router = useRouter();
-  const [query, setQuery]   = useState('');
+  const [query, setQuery]       = useState('');
   const [isAnalyzing, setAnalyzing] = useState(false);
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [searching, setSearching] = useState(false);
+  const [results, setResults]   = useState<SearchResult[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [category, setCategory] = useState('all');
+  const [events, setEvents]     = useState<TrendingEvent[]>([]);
+  const [loading, setLoading]   = useState(true);
   const timer = useRef<NodeJS.Timeout|null>(null);
 
-  const isUrl = (q:string) => q.includes('polymarket.com/event/');
+  const go = (q: string) => {
+    setAnalyzing(true);
+    setShowResults(false);
+    router.push('/scores?event=' + encodeURIComponent(q));
+  };
 
   // Autocomplete
   useEffect(() => {
-    if (!query.trim() || isUrl(query) || query.trim().length < 3) { setResults([]); setShowResults(false); return; }
+    const q = query.trim();
+    if (!q || q.includes('polymarket.com') || q.length < 3) { setResults([]); setShowResults(false); return; }
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(async () => {
-      setSearching(true);
       try {
-        const r = await fetch('/api/search?q='+encodeURIComponent(query.trim()));
+        const r = await fetch('/api/search?q=' + encodeURIComponent(q));
         const d = await r.json();
         if (d.results?.length > 0) { setResults(d.results); setShowResults(true); }
         else { setResults([]); setShowResults(false); }
       } catch {}
-      setSearching(false);
     }, 400);
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [query]);
 
-  const go = (q:string) => { setAnalyzing(true); setShowResults(false); router.push('/scores?event='+encodeURIComponent(q)); };
-  const fmtVol = (v:number) => v>=1_000_000?'$'+(v/1_000_000).toFixed(1)+'M':v>=1_000?'$'+(v/1_000).toFixed(0)+'K':'$'+v;
+  // Load trending by category
+  useEffect(() => {
+    setLoading(true);
+    setEvents([]);
+    fetch('/api/trending?category=' + category)
+      .then(r => r.json())
+      .then(d => { setEvents(d.results || []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [category]);
+
+  const fmtVol = (v: number) => v >= 1_000_000 ? '$' + (v/1_000_000).toFixed(1) + 'M' : v >= 1_000 ? '$' + (v/1_000).toFixed(0) + 'K' : '$' + v;
 
   return (
-    <div style={{background:C.bg0,minHeight:'100vh',color:C.t1,fontFamily:"'Inter',system-ui,sans-serif"}}>
+    <div style={{background:C.bg0, minHeight:'100vh', color:C.t1, fontFamily:"'Inter',system-ui,sans-serif"}}>
+
       {/* NAV */}
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:52,background:'rgba(6,6,10,0.95)',backdropFilter:'blur(20px)',borderBottom:'1px solid '+C.border,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 24px'}}>
         <div style={{display:'flex',alignItems:'center',gap:12,cursor:'pointer'}} onClick={()=>router.push('/')}>
@@ -85,6 +113,7 @@ export default function HomePage() {
       </nav>
 
       <div style={{paddingTop:52}}>
+
         {/* HERO */}
         <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'56px 24px 36px',textAlign:'center',position:'relative',overflow:'hidden'}}>
           <div style={{position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',width:800,height:500,background:'radial-gradient(ellipse,rgba(124,111,247,0.07) 0%,transparent 65%)',pointerEvents:'none'}}/>
@@ -106,16 +135,16 @@ export default function HomePage() {
                 onKeyDown={e=>e.key==='Enter'&&query.trim()&&go(query.trim())}
                 placeholder="Ask anything — Will India win? Will Bitcoin hit $100k?"
                 autoFocus
-                style={{width:'100%',padding:'15px 130px 15px 18px',background:C.bg2,border:'1px solid '+C.border2,borderRadius:14,color:C.t1,fontSize:14,outline:'none',fontFamily:'inherit',boxSizing:'border-box'}}/>
+                style={{width:'100%',padding:'15px 130px 15px 18px',background:C.bg2,border:'1px solid '+C.border2,borderRadius:14,color:C.t1,fontSize:14,outline:'none',fontFamily:'inherit',boxSizing:'border-box' as const}}/>
               <button onClick={()=>query.trim()&&go(query.trim())} disabled={isAnalyzing||!query.trim()}
-                style={{position:'absolute',right:6,top:'50%',transform:'translateY(-50%)',background:C.purple,color:'white',border:'none',borderRadius:10,padding:'8px 18px',fontSize:13,fontWeight:600,cursor:'pointer',opacity:(!query.trim()||isAnalyzing)?0.5:1,whiteSpace:'nowrap'}}>
-                {isAnalyzing?'...':'Analyze'}
+                style={{position:'absolute',right:6,top:'50%',transform:'translateY(-50%)',background:C.purple,color:'white',border:'none',borderRadius:10,padding:'8px 18px',fontSize:13,fontWeight:600,cursor:'pointer',opacity:(!query.trim()||isAnalyzing)?0.5:1,whiteSpace:'nowrap' as const}}>
+                {isAnalyzing ? '...' : 'Analyze'}
               </button>
             </div>
             {showResults && results.length > 0 && (
               <div style={{position:'absolute',top:'100%',left:0,right:0,marginTop:4,background:C.bg2,border:'1px solid '+C.border2,borderRadius:12,overflow:'hidden',zIndex:50,boxShadow:'0 16px 40px rgba(0,0,0,0.6)'}}>
                 {results.map((r,i)=>(
-                  <button key={i} onClick={()=>go(r.url)} style={{width:'100%',padding:'10px 16px',background:'none',border:'none',borderBottom:'1px solid rgba(255,255,255,0.04)',cursor:'pointer',textAlign:'left'}}
+                  <button key={i} onClick={()=>go(r.url)} style={{width:'100%',padding:'10px 16px',background:'none',border:'none',borderBottom:'1px solid rgba(255,255,255,0.04)',cursor:'pointer',textAlign:'left' as const}}
                     onMouseEnter={e=>(e.currentTarget.style.background=C.bg3)} onMouseLeave={e=>(e.currentTarget.style.background='none')}>
                     <div style={{fontSize:12,color:C.t1,fontWeight:500,marginBottom:1}}>{r.title}</div>
                     <div style={{fontSize:10,color:C.t3}}>{fmtVol(r.volume)} vol</div>
@@ -127,8 +156,82 @@ export default function HomePage() {
           <p style={{fontSize:11,color:C.t3}}>Type anything or paste a Polymarket URL</p>
         </div>
 
-        {/* LIVE SPORTS FEED — real data from Polymarket */}
-        <LiveSportsFeed />
+        {/* LIVE MARKETS */}
+        <div style={{maxWidth:960,margin:'0 auto',padding:'0 24px 48px'}}>
+
+          {/* Header + category tabs */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16,flexWrap:'wrap' as const,gap:10}}>
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <span style={{width:6,height:6,background:C.red,borderRadius:'50%',display:'block',boxShadow:'0 0 6px #ef4f6a'}}/>
+              <span style={{fontSize:13,fontWeight:700}}>Live markets</span>
+              <span style={{fontSize:11,color:C.t3}}>· from Polymarket</span>
+            </div>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap' as const}}>
+              {CATS.map(c=>(
+                <button key={c.id} onClick={()=>setCategory(c.id)}
+                  style={{padding:'5px 14px',borderRadius:100,fontSize:12,fontWeight:600,cursor:'pointer',
+                    border:'1px solid '+(category===c.id ? C.purpleBorder : C.border),
+                    background:category===c.id ? C.purpleBg : 'transparent',
+                    color:category===c.id ? C.purpleL : C.t2}}>
+                  {c.emoji ? c.emoji + ' ' : ''}{c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Events list */}
+          {loading ? (
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {[...Array(6)].map((_,i)=>(
+                <div key={i} style={{height:64,background:C.bg2,borderRadius:12,border:'1px solid '+C.border,opacity:0.2+i*0.1}}/>
+              ))}
+            </div>
+          ) : events.length === 0 ? (
+            <div style={{textAlign:'center',padding:'40px 0',color:C.t3,fontSize:13}}>
+              No live markets found for this category right now.
+            </div>
+          ) : (
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {events.map((e,i)=>{
+                const cs = CAT_COLORS[e.category] || CAT_COLORS.other;
+                const isYes = e.yesPrice !== null && e.yesPrice >= 50;
+                return (
+                  <button key={e.slug} onClick={()=>go(e.url)}
+                    style={{width:'100%',background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'14px 16px',cursor:'pointer',textAlign:'left' as const,transition:'all 0.15s',display:'flex',alignItems:'center',gap:14}}
+                    onMouseEnter={ev=>{ev.currentTarget.style.background=C.bg3;ev.currentTarget.style.borderColor=C.border2;}}
+                    onMouseLeave={ev=>{ev.currentTarget.style.background=C.bg2;ev.currentTarget.style.borderColor=C.border;}}>
+                    {/* Rank */}
+                    <div style={{fontSize:11,fontWeight:700,color:C.t4,minWidth:18,textAlign:'right' as const}}>{i+1}</div>
+                    {/* Icon */}
+                    <div style={{fontSize:18,minWidth:24,textAlign:'center' as const}}>{e.icon}</div>
+                    {/* Title + meta */}
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:13,fontWeight:500,color:C.t1,lineHeight:1.35,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{e.title}</div>
+                      <div style={{display:'flex',alignItems:'center',gap:8,marginTop:4}}>
+                        <span style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:6,background:cs.bg,color:cs.color}}>{e.category}</span>
+                        <span style={{fontSize:10,color:C.t3}}>{e.volumeFormatted} vol</span>
+                        {e.marketCount > 1 && <span style={{fontSize:10,color:C.t3}}>{e.marketCount} outcomes</span>}
+                      </div>
+                    </div>
+                    {/* Odds */}
+                    {e.yesPrice !== null && (
+                      <div style={{flexShrink:0,textAlign:'center' as const,padding:'6px 12px',borderRadius:10,
+                        background:isYes ? 'rgba(46,204,138,0.1)' : 'rgba(239,79,106,0.1)',
+                        border:'1px solid '+(isYes ? 'rgba(46,204,138,0.2)' : 'rgba(239,79,106,0.2)')}}>
+                        <div style={{fontSize:16,fontWeight:800,color:isYes?C.green:C.red,fontFamily:'monospace'}}>{e.yesPrice}%</div>
+                        <div style={{fontSize:9,color:C.t3,marginTop:1}}>YES</div>
+                      </div>
+                    )}
+                    {/* CTA */}
+                    <div style={{flexShrink:0,fontSize:11,fontWeight:600,color:C.purple,padding:'6px 12px',borderRadius:8,border:'1px solid '+C.purpleBorder,background:C.purpleBg}}>
+                      Get AI odds →
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* HOW IT WORKS */}
         <div style={{borderTop:'1px solid '+C.border,padding:'64px 40px'}}>
@@ -150,14 +253,14 @@ export default function HomePage() {
           <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,maxWidth:900,margin:'0 auto'}}>
             {[
               {t:'Multi-source signals',d:'NewsAPI, GDELT, HackerNews, Metaculus and live Polymarket odds — all in one place.'},
-              {t:'Custom weights',d:'Trust markets more? Bump the weight. Sports fan? Weight Cricbuzz higher. Your call.'},
+              {t:'Custom weights',d:'Trust markets more? Bump the weight. Sports fan? Weight your sources higher.'},
               {t:'Any question',d:'Sports, crypto, politics, tech — if the world is predicting it, PlayPicks can analyze it.'},
               {t:'Prediction journal',d:'Every analysis logged with AI conviction snapshot. Track your edge over time.',link:true},
             ].map((f,i)=>(
               <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'14px'}}>
                 <div style={{fontSize:12,fontWeight:600,marginBottom:5,color:C.t1}}>{f.t}</div>
                 <div style={{fontSize:11,color:C.t2,lineHeight:1.6}}>{f.d}</div>
-                {f.link&&<button onClick={()=>router.push('/journal')} style={{marginTop:8,fontSize:11,color:C.amber,background:'none',border:'none',cursor:'pointer',padding:0}}>View journal →</button>}
+                {f.link && <button onClick={()=>router.push('/journal')} style={{marginTop:8,fontSize:11,color:C.amber,background:'none',border:'none',cursor:'pointer',padding:0}}>View journal →</button>}
               </div>
             ))}
           </div>
@@ -172,6 +275,7 @@ export default function HomePage() {
             <span style={{fontSize:11,color:C.t4}}>PlayPicks AI</span>
           </div>
         </div>
+
       </div>
     </div>
   );
