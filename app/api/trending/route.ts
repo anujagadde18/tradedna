@@ -1,71 +1,24 @@
 import { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
-// These are very specific searches that will ONLY match 2026 markets
-const CATEGORY_QUERIES: Record<string, string[]> = {
-  all: [
-    'Trump tariffs April 2026',
-    '2026 NBA Champion',
-    'IPL 2026 winner',
-    'Bitcoin hit 2026',
-    'Ukraine Russia ceasefire 2026',
-    'Federal Reserve May 2026',
-    'US recession 2026',
-    '2026 FIFA World Cup',
-    'Iran military 2026',
-    'OpenAI GPT 2026',
-  ],
-  sports: [
-    '2026 NBA Champion',
-    'IPL 2026 winner',
-    '2026 FIFA World Cup',
-    'Champions League 2026',
-    'NFL Super Bowl 2027',
-    'NBA playoffs 2026',
-  ],
-  crypto: [
-    'Bitcoin hit 2026',
-    'Ethereum 2026',
-    'crypto bill 2026',
-    'Bitcoin ETF 2026',
-    'stablecoin 2026',
-  ],
-  politics: [
-    'Trump tariffs April 2026',
-    'US election 2026',
-    'government shutdown 2026',
-    'Supreme Court 2026',
-    'Congress bill 2026',
-  ],
-  technology: [
-    'OpenAI GPT 2026',
-    'AI model 2026',
-    'Nvidia stock 2026',
-    'Google AI 2026',
-    'ChatGPT 2026',
-  ],
-  economics: [
-    'Federal Reserve May 2026',
-    'US recession 2026',
-    'inflation 2026',
-    'GDP 2026',
-    'interest rates 2026',
-  ],
-  world: [
-    'Ukraine Russia ceasefire 2026',
-    'Iran military 2026',
-    'China Taiwan 2026',
-    'NATO 2026',
-    'Israel 2026',
-  ],
+// Polymarket category slugs — from their actual tag system
+const CAT_QUERIES: Record<string, string> = {
+  all:        'active=true&closed=false&archived=false&limit=50&order=volume24hr&ascending=false',
+  sports:     'active=true&closed=false&archived=false&limit=30&order=volume24hr&ascending=false&tag_id=12',
+  crypto:     'active=true&closed=false&archived=false&limit=30&order=volume24hr&ascending=false&tag_id=2',
+  politics:   'active=true&closed=false&archived=false&limit=30&order=volume24hr&ascending=false&tag_id=7',
+  technology: 'active=true&closed=false&archived=false&limit=30&order=volume24hr&ascending=false&tag_id=18',
+  economics:  'active=true&closed=false&archived=false&limit=30&order=volume24hr&ascending=false&tag_id=5',
+  world:      'active=true&closed=false&archived=false&limit=30&order=volume24hr&ascending=false&tag_id=4',
 };
 
+// Fallback: keyword-based category detection
 const CAT_KEYWORDS: Record<string, string[]> = {
-  sports:     ['nba','nfl','ipl','cricket','basketball','football','soccer','tennis','golf','champion','playoff','league','cup','world cup','team','season'],
-  crypto:     ['bitcoin','btc','eth','ethereum','crypto','blockchain','solana','coin','defi','stablecoin','usdc'],
-  politics:   ['trump','election','president','congress','senate','vote','tariff','democrat','republican','governor','supreme court'],
-  technology: ['ai','openai','gpt','model','artificial intelligence','microsoft','google','nvidia','anthropic','chatgpt','gemini'],
-  economics:  ['fed','federal reserve','rates','inflation','recession','gdp','unemployment','interest','economy','treasury'],
+  sports:     ['nba','nfl','ipl','cricket','basketball','football','soccer','tennis','golf','champion','playoff','league','world cup','match'],
+  crypto:     ['bitcoin','btc','eth','ethereum','crypto','blockchain','solana','coin','defi','stablecoin'],
+  politics:   ['trump','election','president','congress','senate','vote','tariff','democrat','republican','supreme court'],
+  technology: ['ai','openai','gpt','model','artificial intelligence','microsoft','google','nvidia','anthropic','chatgpt'],
+  economics:  ['fed','federal reserve','rates','inflation','recession','gdp','unemployment','interest','economy'],
   world:      ['ukraine','russia','iran','china','nato','war','ceasefire','israel','gaza','military','nuclear','taiwan'],
 };
 
@@ -73,7 +26,18 @@ const CAT_EMOJI: Record<string, string> = {
   sports:'🏆', crypto:'₿', politics:'🗳️', technology:'🤖', economics:'📈', world:'🌍', other:'🔮',
 };
 
-function detectCategory(title: string): string {
+function detectCat(title: string, apiCategory?: string): string {
+  // Use API category if available
+  if (apiCategory) {
+    const c = apiCategory.toLowerCase();
+    if (c.includes('sport') || c.includes('cricket') || c.includes('basketball') || c.includes('football')) return 'sports';
+    if (c.includes('crypto') || c.includes('bitcoin') || c.includes('ethereum')) return 'crypto';
+    if (c.includes('politic') || c.includes('election') || c.includes('government')) return 'politics';
+    if (c.includes('tech') || c.includes('ai') || c.includes('science')) return 'technology';
+    if (c.includes('econom') || c.includes('finance') || c.includes('business')) return 'economics';
+    if (c.includes('world') || c.includes('geopolitic') || c.includes('international')) return 'world';
+  }
+  // Fall back to keyword detection
   const t = title.toLowerCase();
   let best = 'other'; let bestScore = 0;
   for (const [cat, kws] of Object.entries(CAT_KEYWORDS)) {
@@ -108,67 +72,64 @@ function getYesPrice(event: any): number | null {
   } catch { return null; }
 }
 
-async function search(q: string): Promise<any[]> {
-  try {
-    const res = await fetch(
-      `https://gamma-api.polymarket.com/events?q=${encodeURIComponent(q)}&active=true&limit=5`,
-      { headers: { 'Accept': 'application/json' }, cache: 'no-store' }
-    );
-    if (!res.ok) return [];
-    const d = await res.json();
-    return Array.isArray(d) ? d : [];
-  } catch { return []; }
-}
-
 export async function GET(req: NextRequest) {
   const category = req.nextUrl.searchParams.get('category') || 'all';
-  const queries = CATEGORY_QUERIES[category] || CATEGORY_QUERIES.all;
-  const cutoff = new Date('2026-01-01T00:00:00Z'); // Only show 2026+ markets
+  const params = CAT_QUERIES[category] || CAT_QUERIES.all;
 
-  const batches = await Promise.all(queries.map(search));
+  let events: any[] = [];
+  let debugInfo: any = {};
+
+  try {
+    // Primary: use events endpoint with volume24hr sorting (shows currently active)
+    const res = await fetch(
+      `https://gamma-api.polymarket.com/events?${params}`,
+      { headers: { 'Accept': 'application/json' }, cache: 'no-store' }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      events = Array.isArray(data) ? data : [];
+    }
+    debugInfo.primaryCount = events.length;
+    debugInfo.sampleTitles = events.slice(0, 5).map((e: any) => e.title + ' [vol24:' + e.volume24hr + ' cat:' + e.category + ']');
+  } catch (e: any) {
+    debugInfo.error = e.message;
+  }
 
   const seen = new Set<string>();
   const results: any[] = [];
-  const rejected: string[] = [];
 
-  for (const batch of batches) {
-    for (const event of batch) {
-      if (!event.slug || !event.title || seen.has(event.slug)) continue;
+  for (const event of events) {
+    if (!event.slug || !event.title || seen.has(event.slug)) continue;
+    seen.add(event.slug);
 
-      // Reject if endDate is before 2026
-      if (event.endDate && new Date(event.endDate) < cutoff) {
-        rejected.push(event.title.slice(0, 50) + ' [' + event.endDate + ']');
-        continue;
-      }
+    const vol = parseFloat(event.volume || '0');
+    const vol24 = parseFloat(event.volume24hr || '0');
+    const cat = detectCat(event.title, event.category || event.subcategory);
 
-      seen.add(event.slug);
-      const vol = parseFloat(event.volume || '0');
-      const cat = detectCategory(event.title);
-      if (category !== 'all' && cat !== category) continue;
+    // For specific tabs, filter by category
+    if (category !== 'all' && cat !== category) continue;
 
-      results.push({
-        slug: event.slug,
-        title: event.title,
-        url: 'https://polymarket.com/event/' + event.slug,
-        volume: vol,
-        volumeFormatted: fmtVol(vol),
-        category: cat,
-        icon: CAT_EMOJI[cat] || '🔮',
-        yesPrice: getYesPrice(event),
-        marketCount: (event.markets || []).length,
-        endDate: event.endDate || '',
-      });
-    }
+    results.push({
+      slug: event.slug,
+      title: event.title,
+      url: 'https://polymarket.com/event/' + event.slug,
+      volume: vol,
+      volumeFormatted: fmtVol(vol),
+      volume24h: vol24,
+      volume24hFormatted: fmtVol(vol24),
+      category: cat,
+      icon: CAT_EMOJI[cat] || '🔮',
+      yesPrice: getYesPrice(event),
+      marketCount: (event.markets || []).length,
+      endDate: event.endDate || '',
+    });
   }
 
-  results.sort((a, b) => b.volume - a.volume);
+  // Sort by 24h volume — most active RIGHT NOW first
+  results.sort((a, b) => b.volume24h - a.volume24h);
 
   return Response.json({
     results: results.slice(0, 20),
-    debug: {
-      total: batches.reduce((a,b) => a+b.length, 0),
-      passed: results.length,
-      rejectedSample: rejected.slice(0, 5),
-    }
+    debug: debugInfo,
   });
 }
