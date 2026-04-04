@@ -62,10 +62,9 @@ function getYesPrice(event: any): number | null {
   } catch { return null; }
 }
 
-// Only keep events that end in the future
-function isCurrent(event: any): boolean {
-  if (!event.endDate) return true;
-  return new Date(event.endDate) > new Date();
+// Only keep events with volume > 0 - remove date filter, it's breaking things
+function hasVolume(event: any): boolean {
+  return parseFloat(event.volume || '0') > 100;
 }
 
 async function search(q: string): Promise<any[]> {
@@ -92,14 +91,11 @@ export async function GET(req: NextRequest) {
   for (const batch of batches) {
     for (const event of batch) {
       if (!event.slug || !event.title || seen.has(event.slug)) continue;
-      if (!isCurrent(event)) continue;
+      if (!hasVolume(event)) continue;
       seen.add(event.slug);
 
       const vol = parseFloat(event.volume || '0');
-      if (vol < 100) continue;
-
       const cat = detectCategory(event.title);
-      // For specific category tabs, filter strictly
       if (category !== 'all' && cat !== category) continue;
 
       results.push({
@@ -120,5 +116,13 @@ export async function GET(req: NextRequest) {
   // Sort by volume, dedupe
   results.sort((a, b) => b.volume - a.volume);
 
-  return Response.json({ results: results.slice(0, 20) });
+  return Response.json({
+    results: results.slice(0, 20),
+    debug: {
+      queriesRun: queries,
+      totalFromAPI: batches.reduce((a,b) => a+b.length, 0),
+      afterVolFilter: seen.size,
+      afterCatFilter: results.length,
+    }
+  });
 }
