@@ -1,24 +1,27 @@
 import { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
-// Category queries that reliably return CURRENT markets
 const CATEGORY_QUERIES: Record<string, string[]> = {
-  all:        ['Trump tariffs 2026', 'NBA champion 2026', 'Bitcoin 2026', 'IPL 2026', 'Ukraine ceasefire', 'Fed rates 2026', 'AI model 2026'],
-  sports:     ['NBA champion 2026', 'IPL 2026', 'Champions League 2026', 'NFL 2026', 'NBA playoffs 2026'],
-  crypto:     ['Bitcoin price 2026', 'Ethereum 2026', 'crypto 2026', 'stablecoin 2026'],
-  politics:   ['Trump 2026', 'US election 2026', 'Congress 2026', 'tariffs 2026', 'government 2026'],
-  technology: ['OpenAI 2026', 'AI model 2026', 'GPT 2026', 'Google AI 2026', 'tech 2026'],
+  all:        ['Trump tariffs April 2026', 'NBA champion 2026', 'IPL 2026 winner', 'Bitcoin 2026', 'Ukraine ceasefire 2026', 'Fed rates 2026', 'World Cup 2026'],
+  sports:     ['NBA champion 2026', 'IPL 2026 winner', 'Champions League 2026', 'World Cup 2026', 'NFL 2026'],
+  crypto:     ['Bitcoin 2026', 'Ethereum 2026', 'crypto regulation 2026', 'stablecoin bill 2026'],
+  politics:   ['Trump tariffs 2026', 'US government 2026', 'Congress 2026', 'election 2026'],
+  technology: ['OpenAI 2026', 'AI model 2026', 'GPT 2026', 'Nvidia 2026'],
   economics:  ['Fed rates 2026', 'recession 2026', 'inflation 2026', 'GDP 2026'],
-  world:      ['Ukraine ceasefire', 'Iran 2026', 'China 2026', 'NATO 2026'],
+  world:      ['Ukraine ceasefire 2026', 'Iran 2026', 'China Taiwan 2026', 'NATO 2026'],
 };
 
 const CAT_KEYWORDS: Record<string, string[]> = {
-  sports:     ['nba','nfl','ipl','cricket','basketball','football','soccer','tennis','golf','champion','playoff','league','cup','match','game','team'],
-  crypto:     ['bitcoin','btc','eth','ethereum','crypto','blockchain','solana','coin','defi'],
-  politics:   ['trump','election','president','congress','senate','vote','tariff','democrat','republican','governor','supreme court'],
-  technology: ['ai','openai','gpt','model','artificial intelligence','microsoft','google','nvidia','anthropic','chatgpt','gemini','tech'],
-  economics:  ['fed','federal reserve','rates','inflation','recession','gdp','unemployment','tariff','interest','economy'],
-  world:      ['ukraine','russia','iran','china','nato','war','ceasefire','israel','gaza','military','nuclear'],
+  sports:     ['nba','nfl','ipl','cricket','basketball','football','soccer','tennis','golf','champion','playoff','league','cup','match','game','team','season'],
+  crypto:     ['bitcoin','btc','eth','ethereum','crypto','blockchain','solana','coin','defi','stablecoin'],
+  politics:   ['trump','election','president','congress','senate','vote','tariff','democrat','republican','governor','supreme court','ballot'],
+  technology: ['ai','openai','gpt','model','artificial intelligence','microsoft','google','nvidia','anthropic','chatgpt','gemini'],
+  economics:  ['fed','federal reserve','rates','inflation','recession','gdp','unemployment','interest','economy','treasury'],
+  world:      ['ukraine','russia','iran','china','nato','war','ceasefire','israel','gaza','military','nuclear','taiwan'],
+};
+
+const CAT_EMOJI: Record<string, string> = {
+  sports:'🏆', crypto:'₿', politics:'🗳️', technology:'🤖', economics:'📈', world:'🌍', other:'🔮',
 };
 
 function detectCategory(title: string): string {
@@ -30,10 +33,6 @@ function detectCategory(title: string): string {
   }
   return best;
 }
-
-const CAT_EMOJI: Record<string, string> = {
-  sports:'🏆', crypto:'₿', politics:'🗳️', technology:'🤖', economics:'📈', world:'🌍', other:'🔮',
-};
 
 function fmtVol(v: number): string {
   if (v >= 1_000_000) return '$' + (v/1_000_000).toFixed(1) + 'M';
@@ -47,36 +46,37 @@ function getYesPrice(event: any): number | null {
     if (markets.length !== 1) return null;
     const prices = markets[0].outcomePrices
       ? (typeof markets[0].outcomePrices === 'string'
-          ? JSON.parse(markets[0].outcomePrices)
-          : markets[0].outcomePrices)
+          ? JSON.parse(markets[0].outcomePrices) : markets[0].outcomePrices)
       : null;
     if (!prices || prices.length < 2) return null;
     const yes = parseFloat(prices[0]);
     const no  = parseFloat(prices[1]);
     const yesPct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
     const noPct  = no  <= 1 ? Math.round(no  * 100) : Math.round(no);
-    const sum = yesPct + noPct;
-    if (sum < 85 || sum > 115) return null;
+    if (Math.abs(yesPct + noPct - 100) > 15) return null;
     if (yesPct < 2 || yesPct > 98) return null;
     return yesPct;
   } catch { return null; }
 }
 
-// Only keep events with volume > 0 - remove date filter, it's breaking things
-function hasVolume(event: any): boolean {
-  return parseFloat(event.volume || '0') > 100;
-}
-
 async function search(q: string): Promise<any[]> {
   try {
     const res = await fetch(
-      `https://gamma-api.polymarket.com/events?q=${encodeURIComponent(q)}&active=true&limit=8`,
+      `https://gamma-api.polymarket.com/events?q=${encodeURIComponent(q)}&active=true&limit=10`,
       { headers: { 'Accept': 'application/json' }, cache: 'no-store' }
     );
     if (!res.ok) return [];
     const d = await res.json();
     return Array.isArray(d) ? d : [];
   } catch { return []; }
+}
+
+// Key fix: filter by end date — must end after today
+const NOW = new Date();
+function isFutureMarket(event: any): boolean {
+  if (!event.endDate) return false; // require endDate
+  const end = new Date(event.endDate);
+  return end > NOW;
 }
 
 export async function GET(req: NextRequest) {
@@ -91,9 +91,11 @@ export async function GET(req: NextRequest) {
   for (const batch of batches) {
     for (const event of batch) {
       if (!event.slug || !event.title || seen.has(event.slug)) continue;
-      if (!hasVolume(event)) continue;
-      seen.add(event.slug);
 
+      // STRICT: only show markets that haven't ended yet
+      if (!isFutureMarket(event)) continue;
+
+      seen.add(event.slug);
       const vol = parseFloat(event.volume || '0');
       const cat = detectCategory(event.title);
       if (category !== 'all' && cat !== category) continue;
@@ -108,21 +110,19 @@ export async function GET(req: NextRequest) {
         icon: CAT_EMOJI[cat] || '🔮',
         yesPrice: getYesPrice(event),
         marketCount: (event.markets || []).length,
-        endDate: event.endDate || '',
+        endDate: event.endDate,
       });
     }
   }
 
-  // Sort by volume, dedupe
   results.sort((a, b) => b.volume - a.volume);
 
   return Response.json({
     results: results.slice(0, 20),
     debug: {
-      queriesRun: queries,
-      totalFromAPI: batches.reduce((a,b) => a+b.length, 0),
-      afterVolFilter: seen.size,
-      afterCatFilter: results.length,
+      total: batches.reduce((a,b) => a+b.length, 0),
+      afterDateFilter: seen.size,
+      final: results.length,
     }
   });
 }
