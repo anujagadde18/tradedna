@@ -1,20 +1,69 @@
 import { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
+// These are very specific searches that will ONLY match 2026 markets
 const CATEGORY_QUERIES: Record<string, string[]> = {
-  all:        ['Trump tariffs April 2026', 'NBA champion 2026', 'IPL 2026 winner', 'Bitcoin 2026', 'Ukraine ceasefire 2026', 'Fed rates 2026', 'World Cup 2026'],
-  sports:     ['NBA champion 2026', 'IPL 2026 winner', 'Champions League 2026', 'World Cup 2026', 'NFL 2026'],
-  crypto:     ['Bitcoin 2026', 'Ethereum 2026', 'crypto regulation 2026', 'stablecoin bill 2026'],
-  politics:   ['Trump tariffs 2026', 'US government 2026', 'Congress 2026', 'election 2026'],
-  technology: ['OpenAI 2026', 'AI model 2026', 'GPT 2026', 'Nvidia 2026'],
-  economics:  ['Fed rates 2026', 'recession 2026', 'inflation 2026', 'GDP 2026'],
-  world:      ['Ukraine ceasefire 2026', 'Iran 2026', 'China Taiwan 2026', 'NATO 2026'],
+  all: [
+    'Trump tariffs April 2026',
+    '2026 NBA Champion',
+    'IPL 2026 winner',
+    'Bitcoin hit 2026',
+    'Ukraine Russia ceasefire 2026',
+    'Federal Reserve May 2026',
+    'US recession 2026',
+    '2026 FIFA World Cup',
+    'Iran military 2026',
+    'OpenAI GPT 2026',
+  ],
+  sports: [
+    '2026 NBA Champion',
+    'IPL 2026 winner',
+    '2026 FIFA World Cup',
+    'Champions League 2026',
+    'NFL Super Bowl 2027',
+    'NBA playoffs 2026',
+  ],
+  crypto: [
+    'Bitcoin hit 2026',
+    'Ethereum 2026',
+    'crypto bill 2026',
+    'Bitcoin ETF 2026',
+    'stablecoin 2026',
+  ],
+  politics: [
+    'Trump tariffs April 2026',
+    'US election 2026',
+    'government shutdown 2026',
+    'Supreme Court 2026',
+    'Congress bill 2026',
+  ],
+  technology: [
+    'OpenAI GPT 2026',
+    'AI model 2026',
+    'Nvidia stock 2026',
+    'Google AI 2026',
+    'ChatGPT 2026',
+  ],
+  economics: [
+    'Federal Reserve May 2026',
+    'US recession 2026',
+    'inflation 2026',
+    'GDP 2026',
+    'interest rates 2026',
+  ],
+  world: [
+    'Ukraine Russia ceasefire 2026',
+    'Iran military 2026',
+    'China Taiwan 2026',
+    'NATO 2026',
+    'Israel 2026',
+  ],
 };
 
 const CAT_KEYWORDS: Record<string, string[]> = {
-  sports:     ['nba','nfl','ipl','cricket','basketball','football','soccer','tennis','golf','champion','playoff','league','cup','match','game','team','season'],
-  crypto:     ['bitcoin','btc','eth','ethereum','crypto','blockchain','solana','coin','defi','stablecoin'],
-  politics:   ['trump','election','president','congress','senate','vote','tariff','democrat','republican','governor','supreme court','ballot'],
+  sports:     ['nba','nfl','ipl','cricket','basketball','football','soccer','tennis','golf','champion','playoff','league','cup','world cup','team','season'],
+  crypto:     ['bitcoin','btc','eth','ethereum','crypto','blockchain','solana','coin','defi','stablecoin','usdc'],
+  politics:   ['trump','election','president','congress','senate','vote','tariff','democrat','republican','governor','supreme court'],
   technology: ['ai','openai','gpt','model','artificial intelligence','microsoft','google','nvidia','anthropic','chatgpt','gemini'],
   economics:  ['fed','federal reserve','rates','inflation','recession','gdp','unemployment','interest','economy','treasury'],
   world:      ['ukraine','russia','iran','china','nato','war','ceasefire','israel','gaza','military','nuclear','taiwan'],
@@ -62,7 +111,7 @@ function getYesPrice(event: any): number | null {
 async function search(q: string): Promise<any[]> {
   try {
     const res = await fetch(
-      `https://gamma-api.polymarket.com/events?q=${encodeURIComponent(q)}&active=true&limit=10`,
+      `https://gamma-api.polymarket.com/events?q=${encodeURIComponent(q)}&active=true&limit=5`,
       { headers: { 'Accept': 'application/json' }, cache: 'no-store' }
     );
     if (!res.ok) return [];
@@ -71,29 +120,26 @@ async function search(q: string): Promise<any[]> {
   } catch { return []; }
 }
 
-// Key fix: filter by end date — must end after today
-const NOW = new Date();
-function isFutureMarket(event: any): boolean {
-  if (!event.endDate) return false; // require endDate
-  const end = new Date(event.endDate);
-  return end > NOW;
-}
-
 export async function GET(req: NextRequest) {
   const category = req.nextUrl.searchParams.get('category') || 'all';
   const queries = CATEGORY_QUERIES[category] || CATEGORY_QUERIES.all;
+  const cutoff = new Date('2026-01-01T00:00:00Z'); // Only show 2026+ markets
 
   const batches = await Promise.all(queries.map(search));
 
   const seen = new Set<string>();
   const results: any[] = [];
+  const rejected: string[] = [];
 
   for (const batch of batches) {
     for (const event of batch) {
       if (!event.slug || !event.title || seen.has(event.slug)) continue;
 
-      // STRICT: only show markets that haven't ended yet
-      if (!isFutureMarket(event)) continue;
+      // Reject if endDate is before 2026
+      if (event.endDate && new Date(event.endDate) < cutoff) {
+        rejected.push(event.title.slice(0, 50) + ' [' + event.endDate + ']');
+        continue;
+      }
 
       seen.add(event.slug);
       const vol = parseFloat(event.volume || '0');
@@ -110,7 +156,7 @@ export async function GET(req: NextRequest) {
         icon: CAT_EMOJI[cat] || '🔮',
         yesPrice: getYesPrice(event),
         marketCount: (event.markets || []).length,
-        endDate: event.endDate,
+        endDate: event.endDate || '',
       });
     }
   }
@@ -121,8 +167,8 @@ export async function GET(req: NextRequest) {
     results: results.slice(0, 20),
     debug: {
       total: batches.reduce((a,b) => a+b.length, 0),
-      afterDateFilter: seen.size,
-      final: results.length,
+      passed: results.length,
+      rejectedSample: rejected.slice(0, 5),
     }
   });
 }
