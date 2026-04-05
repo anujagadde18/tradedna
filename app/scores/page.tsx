@@ -742,13 +742,17 @@ function ScoresPageContent() {
                     <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:14 }}>
                       <TradePanel marketUrl={tradeData.marketUrl} marketTitle={tradeData.marketTitle} outcomeName={tradeData.topOutcome.name} marketOdds={tradeData.topOutcome.odds} aiConfidence={mtype==='categorical'?tradeData.topOutcome.aiConfidence:binaryAI} edge={mtype==='categorical'?tradeData.topOutcome.edge:binEdge} tokenId={tradeData.topOutcome.tokenId} isBinary={mtype==='binary'} />
                     </div>
+                  ) : isPolymarketUrl ? (
+                    <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:14, textAlign:'center' }}>
+                      <div style={{ fontSize:11, color:C.t3, marginBottom:8 }}>Loading market data...</div>
+                      <div style={{ width:24, height:24, border:'2px solid '+C.purpleBorder, borderTopColor:C.purple, borderRadius:'50%', margin:'0 auto', animation:'spin 0.8s linear infinite' }}/>
+                      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+                    </div>
                   ) : (
                     <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:14 }}>
-                      <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, textAlign:'center', marginBottom:5 }}>Place a trade</div>
-                      <div style={{ fontSize:10, color:C.t3, textAlign:'center', marginBottom:10 }}>No wallet or crypto needed</div>
-                      <div style={{ fontSize:11, fontWeight:700, color:C.amber, textAlign:'center', marginBottom:10 }}>{hasLiveMarket && edgeVal > 0 ? 'Suggested: ' + betAmt : 'Paste a Polymarket URL to calculate real edge'}</div>
-                      <button style={{ width:'100%', padding:11, background:C.purple, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:8 }} onClick={() => window.open(isPolymarketUrl ? event : 'https://polymarket.com', '_blank')}>Trade on Polymarket</button>
-                      <a href="https://polymarket.com" target="_blank" rel="noopener noreferrer" style={{ fontSize:11, color:C.t3, textDecoration:"none", display:"block", textAlign:"center", cursor:"pointer" }}>Or trade directly on Polymarket</a>
+                      <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'0.7px', color:C.t3, textAlign:'center' as const, marginBottom:5 }}>Place a trade</div>
+                      <div style={{ fontSize:10, color:C.t3, textAlign:'center' as const, marginBottom:10 }}>Paste a Polymarket URL above to enable in-app trading</div>
+                      <a href="https://polymarket.com" target="_blank" rel="noopener noreferrer" style={{ display:'block', width:'100%', padding:11, background:C.purple, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:8, textAlign:'center' as const, textDecoration:'none', boxSizing:'border-box' as const }}>Browse markets on Polymarket →</a>
                     </div>
                   )}
                   <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:14 }}>

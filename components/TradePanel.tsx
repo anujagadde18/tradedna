@@ -98,8 +98,8 @@ export function TradePanel({
 
   const placeTrade = async () => {
     if (!tokenId) {
-      // No token ID - redirect to Polymarket as fallback
-      window.open(marketUrl, '_blank');
+      setTradeError('Market token not loaded yet. Please wait a moment and try again.');
+      setTradeStatus('error');
       return;
     }
     if (!userAddress || !finalAmount || finalAmount <= 0) return;
