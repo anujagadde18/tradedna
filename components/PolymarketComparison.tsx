@@ -184,11 +184,11 @@ export function PolymarketComparison({
             edge:          aiConf - mktOdds,
             weekChange:    Math.round((o.oneWeekPriceChange || 0) * 100),
             dayChange:     Math.round((o.oneDayPriceChange  || 0) * 100),
-            tokenId:       o.clobTokenIds
+            tokenId:       o.clobTokenId || (o.clobTokenIds
               ? (typeof o.clobTokenIds === 'string'
                   ? JSON.parse(o.clobTokenIds)[0]
                   : o.clobTokenIds[0])
-              : undefined,
+              : undefined),
           };
         });
 
