@@ -98,8 +98,15 @@ export function TradePanel({
 
   const placeTrade = async () => {
     if (!tokenId) {
-      setTradeError('Market token not loaded yet. Please wait a moment and try again.');
-      setTradeStatus('error');
+      // Try waiting a moment and checking again
+      setTradeStatus('placing');
+      await new Promise(r => setTimeout(r, 2000));
+      if (!tokenId) {
+        setTradeError('Market token not loaded. Please refresh the page and try again.');
+        setTradeStatus('error');
+        return;
+      }
+      setTradeStatus('idle');
       return;
     }
     if (!userAddress || !finalAmount || finalAmount <= 0) return;

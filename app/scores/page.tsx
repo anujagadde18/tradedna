@@ -740,7 +740,7 @@ function ScoresPageContent() {
                   </div>
                   {tradeData ? (
                     <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:14 }}>
-                      <TradePanel marketUrl={tradeData.marketUrl} marketTitle={tradeData.marketTitle} outcomeName={tradeData.topOutcome.name} marketOdds={tradeData.topOutcome.odds} aiConfidence={mtype==='categorical'?tradeData.topOutcome.aiConfidence:binaryAI} edge={mtype==='categorical'?tradeData.topOutcome.edge:binEdge} tokenId={tradeData.topOutcome.tokenId} isBinary={mtype==='binary'} />
+                      <TradePanel key={tradeData.topOutcome.tokenId || tradeData.marketUrl} marketUrl={tradeData.marketUrl} marketTitle={tradeData.marketTitle} outcomeName={tradeData.topOutcome.name} marketOdds={tradeData.topOutcome.odds} aiConfidence={mtype==='categorical'?tradeData.topOutcome.aiConfidence:binaryAI} edge={mtype==='categorical'?tradeData.topOutcome.edge:binEdge} tokenId={tradeData.topOutcome.tokenId} isBinary={mtype==='binary'} />
                     </div>
                   ) : isPolymarketUrl ? (
                     <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:14, textAlign:'center' }}>
