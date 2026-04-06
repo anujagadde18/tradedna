@@ -6,6 +6,7 @@ interface SearchResult { slug:string; title:string; url:string; volume:number; e
 interface TrendingEvent {
   slug:string; title:string; url:string; volume:number; volumeFormatted:string;
   category:string; icon:string; yesPrice:number|null; marketCount:number;
+  image:string|null; volume24h:number; volume24hFormatted:string;
 }
 
 const C = {
