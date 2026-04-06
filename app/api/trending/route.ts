@@ -2,12 +2,12 @@ import { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 const CAT_KEYWORDS: Record<string, string[]> = {
-  sports:     ['nba','nfl','ipl','cricket','basketball','football','soccer','tennis','golf','champion','playoff','league','world cup','match'],
-  crypto:     ['bitcoin','btc','eth','ethereum','crypto','blockchain','solana','coin','defi','stablecoin'],
-  politics:   ['trump','election','president','congress','senate','vote','tariff','democrat','republican','supreme court'],
-  technology: ['ai','openai','gpt','model','artificial intelligence','microsoft','google','nvidia','anthropic','chatgpt'],
-  economics:  ['fed','federal reserve','rates','inflation','recession','gdp','unemployment','interest','economy'],
-  world:      ['ukraine','russia','iran','china','nato','war','ceasefire','israel','gaza','military','nuclear','taiwan'],
+  sports:     ['nba','nfl','ipl','cricket','basketball','football','soccer','tennis','golf','champion','playoff','league','world cup','match','vs','celtics','lakers','warriors','thunder','nuggets','heat','knicks','bucks','suns','mavs','mavericks','grizzlies','pacers','cavaliers','raptors','jazz','nets','bulls','hornets','wizards','pistons','timberwolves','clippers','spurs','hawks','pelicans','rockets','kings','blazers','magic','76ers','sixers','f1','formula','drivers','ufc','fifa','nhl','mlb','premier league','champions league','europa'],
+  crypto:     ['bitcoin','btc','eth','ethereum','crypto','blockchain','solana','coin','defi','stablecoin','usdc','xrp','bnb','dogecoin'],
+  politics:   ['trump','election','president','congress','senate','vote','tariff','democrat','republican','supreme court','governor','ballot','midterm','nominee','political'],
+  technology: ['ai','openai','gpt','model','artificial intelligence','microsoft','google','nvidia','anthropic','chatgpt','gemini','tech','software','startup'],
+  economics:  ['fed','federal reserve','rates','inflation','recession','gdp','unemployment','interest','economy','treasury','dollar','market cap','tariff'],
+  world:      ['ukraine','russia','iran','china','nato','war','ceasefire','israel','gaza','military','nuclear','taiwan','north korea','sanctions','geopolit'],
 };
 
 const CAT_EMOJI: Record<string, string> = {
@@ -42,18 +42,29 @@ function fmtVol(v: number): string {
 function getYesPrice(event: any): number | null {
   try {
     const markets = event.markets || [];
+    // Only show price for binary markets (1 market, YES/NO)
     if (markets.length !== 1) return null;
-    const prices = markets[0].outcomePrices
-      ? (typeof markets[0].outcomePrices === 'string' ? JSON.parse(markets[0].outcomePrices) : markets[0].outcomePrices)
+    const m = markets[0];
+    // Try outcomePrices
+    const prices = m.outcomePrices
+      ? (typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices)
       : null;
-    if (!prices || prices.length < 2) return null;
-    const yes = parseFloat(prices[0]);
-    const no  = parseFloat(prices[1]);
-    const yesPct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
-    const noPct  = no  <= 1 ? Math.round(no  * 100) : Math.round(no);
-    if (Math.abs(yesPct + noPct - 100) > 15) return null;
-    if (yesPct < 2 || yesPct > 98) return null;
-    return yesPct;
+    if (prices && prices.length >= 2) {
+      const yes = parseFloat(prices[0]);
+      const no  = parseFloat(prices[1]);
+      const yesPct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
+      const noPct  = no  <= 1 ? Math.round(no  * 100) : Math.round(no);
+      if (Math.abs(yesPct + noPct - 100) > 15) return null;
+      if (yesPct < 2 || yesPct > 98) return null;
+      return yesPct;
+    }
+    // Try lastTradePrice
+    if (m.lastTradePrice) {
+      const p = parseFloat(m.lastTradePrice);
+      const pct = p <= 1 ? Math.round(p * 100) : Math.round(p);
+      if (pct >= 2 && pct <= 98) return pct;
+    }
+    return null;
   } catch { return null; }
 }
 
