@@ -110,6 +110,7 @@ export async function GET(req: NextRequest) {
       volume24hFormatted: fmtVol(vol24),
       category:         cat,
       icon:             CAT_EMOJI[cat] || '🔮',
+      image:            event.image || event.featuredImage || null,
       yesPrice:         getYesPrice(event),
       marketCount:      (event.markets || []).length,
       endDate:          event.endDate || '',
@@ -121,3 +122,4 @@ export async function GET(req: NextRequest) {
 
   return Response.json({ results: results.slice(0, 20) });
 }
+// test

@@ -9,7 +9,7 @@ interface TrendingEvent {
 }
 
 const C = {
-  bg0:'#06060a', bg1:'#0e0e14', bg2:'#14141c', bg3:'#1a1a24',
+  bg0:'#06060a', bg1:'#0e0e14', bg2:'#14141c', bg3:'#1a1a24', bg4:'#22222e',
   border:'rgba(255,255,255,0.06)', border2:'rgba(255,255,255,0.1)',
   t1:'#f2f0ff', t2:'#9996b8', t3:'#5c5a78', t4:'#2e2c44',
   purple:'#7c6ff7', purpleL:'#a89cf8', purpleBg:'rgba(124,111,247,0.1)', purpleBorder:'rgba(124,111,247,0.25)',
@@ -191,45 +191,90 @@ export default function HomePage() {
               No live markets found for this category right now.
             </div>
           ) : (
-            <div style={{display:'flex',flexDirection:'column',gap:8}}>
-              {events.map((e,i)=>{
-                const cs = CAT_COLORS[e.category] || CAT_COLORS.other;
-                const isYes = e.yesPrice !== null && e.yesPrice >= 50;
-                return (
-                  <button key={e.slug} onClick={()=>go(e.url)}
-                    style={{width:'100%',background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'14px 16px',cursor:'pointer',textAlign:'left' as const,transition:'all 0.15s',display:'flex',alignItems:'center',gap:14}}
-                    onMouseEnter={ev=>{ev.currentTarget.style.background=C.bg3;ev.currentTarget.style.borderColor=C.border2;}}
-                    onMouseLeave={ev=>{ev.currentTarget.style.background=C.bg2;ev.currentTarget.style.borderColor=C.border;}}>
-                    {/* Rank */}
-                    <div style={{fontSize:11,fontWeight:700,color:C.t4,minWidth:18,textAlign:'right' as const}}>{i+1}</div>
-                    {/* Icon */}
-                    <div style={{fontSize:18,minWidth:24,textAlign:'center' as const}}>{e.icon}</div>
-                    {/* Title + meta */}
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:13,fontWeight:500,color:C.t1,lineHeight:1.35,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{e.title}</div>
-                      <div style={{display:'flex',alignItems:'center',gap:8,marginTop:4}}>
-                        <span style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:6,background:cs.bg,color:cs.color}}>{e.category}</span>
-                        <span style={{fontSize:10,color:C.t3}}>{e.volumeFormatted} vol</span>
-                        {e.marketCount > 1 && <span style={{fontSize:10,color:C.t3}}>{e.marketCount} outcomes</span>}
+            <>
+              {/* TOP FEATURED — big image cards for top 3 */}
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:12}}>
+                {events.slice(0,3).map((e,i)=>{
+                  const cs = CAT_COLORS[e.category] || CAT_COLORS.other;
+                  const isYes = e.yesPrice !== null && e.yesPrice >= 50;
+                  return (
+                    <button key={e.slug} onClick={()=>go(e.url)}
+                      style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:16,overflow:'hidden',cursor:'pointer',textAlign:'left' as const,transition:'all 0.15s',padding:0,display:'block',width:'100%'}}
+                      onMouseEnter={ev=>{ev.currentTarget.style.borderColor=C.border2;ev.currentTarget.style.transform='translateY(-2px)';}}
+                      onMouseLeave={ev=>{ev.currentTarget.style.borderColor=C.border;ev.currentTarget.style.transform='translateY(0)';}}>
+                      {/* Image */}
+                      <div style={{height:120,background:'linear-gradient(135deg,'+C.bg3+','+C.bg4+')',position:'relative',overflow:'hidden'}}>
+                        {e.image ? (
+                          <img src={e.image} alt={e.title} style={{width:'100%',height:'100%',objectFit:'cover',opacity:0.85}} onError={ev=>{(ev.target as HTMLImageElement).style.display='none';}}/>
+                        ) : (
+                          <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:48}}>{e.icon}</div>
+                        )}
+                        <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(6,6,10,0.9) 0%,transparent 60%)'}}/>
+                        {/* Live badge */}
+                        <div style={{position:'absolute',top:8,left:8,display:'flex',alignItems:'center',gap:4,background:'rgba(0,0,0,0.6)',padding:'3px 8px',borderRadius:100}}>
+                          <span style={{width:5,height:5,background:C.red,borderRadius:'50%',display:'block',boxShadow:'0 0 4px #ef4f6a'}}/>
+                          <span style={{fontSize:9,fontWeight:700,color:'#fff',textTransform:'uppercase' as const,letterSpacing:'0.5px'}}>Live</span>
+                        </div>
+                        {/* YES price on image */}
+                        {e.yesPrice !== null && (
+                          <div style={{position:'absolute',top:8,right:8,background:isYes?'rgba(46,204,138,0.9)':'rgba(239,79,106,0.9)',padding:'4px 10px',borderRadius:8}}>
+                            <span style={{fontSize:14,fontWeight:900,color:'#fff',fontFamily:'monospace'}}>{e.yesPrice}%</span>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                    {/* Odds */}
-                    {e.yesPrice !== null && (
-                      <div style={{flexShrink:0,textAlign:'center' as const,padding:'6px 12px',borderRadius:10,
-                        background:isYes ? 'rgba(46,204,138,0.1)' : 'rgba(239,79,106,0.1)',
-                        border:'1px solid '+(isYes ? 'rgba(46,204,138,0.2)' : 'rgba(239,79,106,0.2)')}}>
-                        <div style={{fontSize:16,fontWeight:800,color:isYes?C.green:C.red,fontFamily:'monospace'}}>{e.yesPrice}%</div>
-                        <div style={{fontSize:9,color:C.t3,marginTop:1}}>YES</div>
+                      {/* Content */}
+                      <div style={{padding:'12px 14px'}}>
+                        <div style={{fontSize:12,fontWeight:700,color:C.t1,lineHeight:1.35,marginBottom:8,minHeight:32}}>{e.title}</div>
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                          <div style={{display:'flex',alignItems:'center',gap:6}}>
+                            <span style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:6,background:cs.bg,color:cs.color}}>{e.category}</span>
+                            <span style={{fontSize:10,color:C.t3}}>{e.volume24hFormatted}/24h</span>
+                          </div>
+                          <span style={{fontSize:11,fontWeight:600,color:C.purple}}>AI odds →</span>
+                        </div>
                       </div>
-                    )}
-                    {/* CTA */}
-                    <div style={{flexShrink:0,fontSize:11,fontWeight:600,color:C.purple,padding:'6px 12px',borderRadius:8,border:'1px solid '+C.purpleBorder,background:C.purpleBg}}>
-                      Get AI odds →
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* REST — compact list */}
+              <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                {events.slice(3).map((e,i)=>{
+                  const cs = CAT_COLORS[e.category] || CAT_COLORS.other;
+                  const isYes = e.yesPrice !== null && e.yesPrice >= 50;
+                  return (
+                    <button key={e.slug} onClick={()=>go(e.url)}
+                      style={{width:'100%',background:C.bg2,border:'1px solid '+C.border,borderRadius:10,padding:'10px 14px',cursor:'pointer',textAlign:'left' as const,transition:'all 0.1s',display:'flex',alignItems:'center',gap:12}}
+                      onMouseEnter={ev=>{ev.currentTarget.style.background=C.bg3;ev.currentTarget.style.borderColor=C.border2;}}
+                      onMouseLeave={ev=>{ev.currentTarget.style.background=C.bg2;ev.currentTarget.style.borderColor=C.border;}}>
+                      <div style={{fontSize:11,fontWeight:700,color:C.t4,minWidth:20,textAlign:'right' as const}}>{i+4}</div>
+                      {e.image ? (
+                        <img src={e.image} alt="" style={{width:32,height:32,borderRadius:6,objectFit:'cover',flexShrink:0}} onError={ev=>{(ev.target as HTMLImageElement).style.display='none';}}/>
+                      ) : (
+                        <div style={{fontSize:16,minWidth:32,textAlign:'center' as const}}>{e.icon}</div>
+                      )}
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:12,fontWeight:500,color:C.t1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{e.title}</div>
+                        <div style={{display:'flex',alignItems:'center',gap:6,marginTop:2}}>
+                          <span style={{fontSize:9,fontWeight:600,padding:'1px 6px',borderRadius:4,background:cs.bg,color:cs.color}}>{e.category}</span>
+                          <span style={{fontSize:9,color:C.t3}}>{e.volume24hFormatted}/24h</span>
+                          {e.marketCount > 1 && <span style={{fontSize:9,color:C.t3}}>{e.marketCount} outcomes</span>}
+                        </div>
+                      </div>
+                      {e.yesPrice !== null && (
+                        <div style={{flexShrink:0,textAlign:'center' as const,padding:'4px 10px',borderRadius:8,background:isYes?'rgba(46,204,138,0.1)':'rgba(239,79,106,0.1)',border:'1px solid '+(isYes?'rgba(46,204,138,0.2)':'rgba(239,79,106,0.2)')}}>
+                          <div style={{fontSize:14,fontWeight:800,color:isYes?C.green:C.red,fontFamily:'monospace'}}>{e.yesPrice}%</div>
+                        </div>
+                      )}
+                      <div style={{flexShrink:0,fontSize:10,fontWeight:600,color:C.purple,padding:'4px 10px',borderRadius:6,border:'1px solid '+C.purpleBorder,background:C.purpleBg}}>
+                        AI odds →
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
 
