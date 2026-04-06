@@ -1,6 +1,4 @@
-// app/api/analyse/route.ts
 import { NextRequest } from 'next/server';
-
 export const dynamic = 'force-dynamic';
 
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
@@ -24,14 +22,14 @@ function validateQuestion(query: string): { valid: boolean; reason?: string } {
   return { valid: true };
 }
 
-// Expanded sentiment words
 const BULLISH = [
   'likely','confirms','surge','strong','positive','yes','growth','beats','record',
   'rises','rally','confidence','supports','agree','bullish','wins','leads','ahead',
   'dominates','breakthrough','launches','succeeds','approved','passes','elected',
   'confirmed','achieved','exceeded','expected','imminent','announced','deal','accord',
   'progress','agreement','ceasefire','truce','peace','signed','enacted','passed',
-  'raised','increased','higher','above','beat','exceeded','soars','boosts',
+  'raised','increased','higher','above','beat','exceeded','soars','boosts','up',
+  'gain','advance','climb','recover','rebound','optimistic','positive','favorable',
 ];
 
 const BEARISH = [
@@ -40,7 +38,8 @@ const BEARISH = [
   'collapses','delays','cancels','struggles','controversy','rejected','blocked',
   'denied','failed','missed','below','cut','lowered','reduced','slump','plunge',
   'concerns','warned','threat','crisis','escalation','breakdown','collapse',
-  'opposed','vetoed','halted','suspended','terminated','collapsed',
+  'opposed','vetoed','halted','suspended','terminated','down','loss','bearish',
+  'pessimistic','unfavorable','worsen','deteriorate','tumble','slide',
 ];
 
 function scoreHeadline(title: string, description: string): number {
@@ -56,12 +55,9 @@ function extractKeywords(query: string): string {
     'does','with','would','the','and','for','are','by','in','on','at',
     'to','of','a','an','be','is','it','any','over','than','more','less',
     'how','who','which','where','why','can','could','should','may','might']);
-  return query
-    .replace(/[?!.,]/g, '')
-    .split(' ')
+  return query.replace(/[?!.,]/g, '').split(' ')
     .filter(w => w.length > 2 && !stop.has(w.toLowerCase()))
-    .slice(0, 5)
-    .join(' ');
+    .slice(0, 5).join(' ');
 }
 
 async function fetchGDELT(keywords: string): Promise<any[]> {
@@ -92,9 +88,7 @@ async function fetchMetaculus(keywords: string): Promise<{ probability: number |
     const data = await res.json();
     const questions = data.results || [];
     if (questions.length === 0) return { probability: null, count: 0 };
-    const probs = questions
-      .map((q: any) => q.community_prediction?.full?.q2)
-      .filter((p: any) => p !== null && p !== undefined);
+    const probs = questions.map((q: any) => q.community_prediction?.full?.q2).filter((p: any) => p !== null && p !== undefined);
     if (probs.length === 0) return { probability: null, count: questions.length };
     const avg = probs.reduce((a: number, b: number) => a + b, 0) / probs.length;
     return { probability: Math.round(avg * 100), count: questions.length };
@@ -115,14 +109,12 @@ export async function POST(request: NextRequest) {
           'Will the Fed cut rates in May 2026?',
           'Will Bitcoin hit $100k before April?',
           'Will there be a US-Iran ceasefire?',
-          'Which company will have the top AI model by June 2026?',
         ],
         sources: [],
       });
     }
 
     const keywords = extractKeywords(query);
-
     const [gdeltArticles, hnArticles, metaculus] = await Promise.all([
       fetchGDELT(keywords),
       fetchHackerNews(keywords),
@@ -140,18 +132,9 @@ export async function POST(request: NextRequest) {
     }
 
     const allArticles = [
-      ...newsArticles.slice(0, 5).map((a: any) => ({
-        title: a.title || '', desc: a.description || '',
-        source: a.source?.name || 'News', url: a.url, category: 'news',
-      })),
-      ...gdeltArticles.slice(0, 4).map((a: any) => ({
-        title: a.title || '', desc: a.seendescription || '',
-        source: a.domain || 'GDELT News', url: a.url, category: 'news',
-      })),
-      ...hnArticles.slice(0, 3).map((a: any) => ({
-        title: a.title || '', desc: '',
-        source: 'Hacker News', url: `https://news.ycombinator.com/item?id=${a.objectID}`, category: 'social',
-      })),
+      ...newsArticles.slice(0, 5).map((a: any) => ({ title: a.title || '', desc: a.description || '', source: a.source?.name || 'News', url: a.url, category: 'news' })),
+      ...gdeltArticles.slice(0, 4).map((a: any) => ({ title: a.title || '', desc: a.seendescription || '', source: a.domain || 'GDELT News', url: a.url, category: 'news' })),
+      ...hnArticles.slice(0, 3).map((a: any) => ({ title: a.title || '', desc: '', source: 'Hacker News', url: `https://news.ycombinator.com/item?id=${a.objectID}`, category: 'social' })),
     ];
 
     const queryWords = keywords.toLowerCase().split(' ').filter(w => w.length > 3);
@@ -160,59 +143,33 @@ export async function POST(request: NextRequest) {
       return queryWords.some(w => text.includes(w));
     });
 
-    // KEY FIX: If market odds exist, they are the ground truth
-    // AI confidence should be close to market with news adjusting ±10-15%
+    // MARKET ODDS = ground truth, adjust by news ±15pts max
     if (marketOdds && marketOdds > 0) {
       let newsAdjustment = 0;
       if (relevantArticles.length > 0) {
         const scores = relevantArticles.map(a => scoreHeadline(a.title, a.desc));
         const total = scores.reduce((a, b) => a + b, 0);
-        // News can adjust market by at most ±15 points
         newsAdjustment = Math.max(-15, Math.min(15, total * 3));
       }
       if (metaculus.probability !== null) {
-        const metaculusAdjustment = (metaculus.probability - marketOdds) * 0.2;
-        newsAdjustment += metaculusAdjustment;
+        newsAdjustment += (metaculus.probability - marketOdds) * 0.15;
       }
-
       let finalConfidence = Math.round(marketOdds + newsAdjustment);
       finalConfidence = Math.max(5, Math.min(95, finalConfidence));
 
       const sources: any[] = relevantArticles.slice(0, 6).map(a => {
         const score = scoreHeadline(a.title, a.desc);
-        return {
-          name: a.source, sig: a.title, url: a.url, category: a.category,
-          type: score > 0 ? 'strong' : score < 0 ? 'contrary' : 'mixed',
-          contribution: score !== 0 ? (score > 0 ? Math.abs(score) * 5 : -(Math.abs(score) * 5)) : 1,
-        };
+        return { name: a.source, sig: a.title, url: a.url, category: a.category, type: score > 0 ? 'strong' : score < 0 ? 'contrary' : 'mixed', contribution: score !== 0 ? (score > 0 ? Math.abs(score) * 5 : -(Math.abs(score) * 5)) : 1 };
       });
-
-      sources.push({
-        name: 'Polymarket',
-        sig: `Live market at ${marketOdds}% — crowd consensus`,
-        url: '', category: 'market', type: 'priced',
-        contribution: Math.round((marketOdds - 50) / 5),
-      });
-
-      if (metaculus.probability !== null) {
-        sources.push({
-          name: 'Metaculus',
-          sig: `Community forecasters: ${metaculus.probability}% probability`,
-          url: 'https://metaculus.com', category: 'community',
-          type: metaculus.probability > 55 ? 'strong' : metaculus.probability < 45 ? 'contrary' : 'mixed',
-          contribution: Math.round((metaculus.probability - 50) / 3),
-        });
-      }
+      sources.push({ name: 'Polymarket', sig: `Live market at ${marketOdds}% — crowd consensus`, url: '', category: 'market', type: 'priced', contribution: Math.round((marketOdds - 50) / 5) });
+      if (metaculus.probability !== null) sources.push({ name: 'Metaculus', sig: `Community forecasters: ${metaculus.probability}%`, url: 'https://metaculus.com', category: 'community', type: metaculus.probability > 55 ? 'strong' : metaculus.probability < 45 ? 'contrary' : 'mixed', contribution: Math.round((metaculus.probability - 50) / 3) });
 
       return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources });
     }
 
-    // No market odds — use news + metaculus only
+    // NO MARKET ODDS — use news + metaculus
     if (relevantArticles.length === 0 && !metaculus.probability) {
-      return Response.json({
-        valid: true, confidence: 35, keywords, articleCount: 0, sources: [], noData: true,
-        message: 'No relevant news found. Try pasting a Polymarket URL for live odds.',
-      });
+      return Response.json({ valid: true, confidence: 35, keywords, articleCount: 0, sources: [], noData: true, message: 'No relevant news found. Try pasting a Polymarket URL for live odds.' });
     }
 
     let newsConfidence = 50;
@@ -226,11 +183,13 @@ export async function POST(request: NextRequest) {
       newsConfidence = Math.round(20 + normalized * 70);
       if (positives > negatives * 2) newsConfidence = Math.min(85, newsConfidence + 12);
       if (negatives > positives * 2) newsConfidence = Math.max(15, newsConfidence - 12);
+      // Avoid clustering at 50 — push to extremes when signal is clear
+      if (newsConfidence > 48 && newsConfidence < 52) newsConfidence = positives >= negatives ? 55 : 45;
     }
 
     let finalConfidence: number;
     if (metaculus.probability !== null) {
-      finalConfidence = Math.round(newsConfidence * 0.5 + metaculus.probability * 0.5);
+      finalConfidence = Math.round(newsConfidence * 0.45 + metaculus.probability * 0.55);
     } else {
       finalConfidence = newsConfidence;
     }
@@ -238,22 +197,9 @@ export async function POST(request: NextRequest) {
 
     const sources: any[] = relevantArticles.slice(0, 6).map(a => {
       const score = scoreHeadline(a.title, a.desc);
-      return {
-        name: a.source, sig: a.title, url: a.url, category: a.category,
-        type: score > 0 ? 'strong' : score < 0 ? 'contrary' : 'mixed',
-        contribution: score !== 0 ? (score > 0 ? Math.abs(score) * 5 : -(Math.abs(score) * 5)) : 1,
-      };
+      return { name: a.source, sig: a.title, url: a.url, category: a.category, type: score > 0 ? 'strong' : score < 0 ? 'contrary' : 'mixed', contribution: score !== 0 ? (score > 0 ? Math.abs(score) * 5 : -(Math.abs(score) * 5)) : 1 };
     });
-
-    if (metaculus.probability !== null) {
-      sources.push({
-        name: 'Metaculus',
-        sig: `Community forecasters: ${metaculus.probability}% across ${metaculus.count} questions`,
-        url: 'https://metaculus.com', category: 'community',
-        type: metaculus.probability > 55 ? 'strong' : metaculus.probability < 45 ? 'contrary' : 'mixed',
-        contribution: Math.round((metaculus.probability - 50) / 3),
-      });
-    }
+    if (metaculus.probability !== null) sources.push({ name: 'Metaculus', sig: `Community forecasters: ${metaculus.probability}% across ${metaculus.count} questions`, url: 'https://metaculus.com', category: 'community', type: metaculus.probability > 55 ? 'strong' : metaculus.probability < 45 ? 'contrary' : 'mixed', contribution: Math.round((metaculus.probability - 50) / 3) });
 
     return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources });
 
