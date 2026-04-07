@@ -94,9 +94,9 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
   const conv = getConviction(aiPct, marketPct);
 
   // Human-friendly verdict — what a friend would say
-  const bigVerdict = aiPct >= 80 ? 'Very likely YES' : aiPct >= 65 ? 'Probably YES' : aiPct >= 53 ? 'Leaning YES' : aiPct >= 47 ? 'Uncertain' : aiPct >= 35 ? 'Leaning NO' : 'Probably NO';
-  const verdictColor = aiPct >= 65 ? C.green : aiPct >= 47 ? C.amber : C.red;
-  const verdictBg = aiPct >= 65 ? 'rgba(46,204,138,0.08)' : aiPct >= 47 ? 'rgba(245,166,35,0.08)' : 'rgba(239,79,106,0.08)';
+  const bigVerdict = aiPct >= 80 ? 'Very likely YES' : aiPct >= 65 ? 'Probably YES' : aiPct >= 55 ? 'Leaning YES' : aiPct >= 45 ? 'Uncertain' : aiPct >= 30 ? 'Leaning NO' : 'Probably NO';
+  const verdictColor = aiPct >= 65 ? C.green : aiPct >= 45 ? C.amber : C.red;
+  const verdictBg = aiPct >= 65 ? 'rgba(46,204,138,0.08)' : aiPct >= 45 ? 'rgba(245,166,35,0.08)' : 'rgba(239,79,106,0.08)';
 
   // Plain English explanation anyone can understand
   const plainExplain = edge === null
