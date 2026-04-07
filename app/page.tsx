@@ -157,6 +157,41 @@ export default function HomePage() {
           <p style={{fontSize:11,color:C.t3}}>Type anything or paste a Polymarket URL</p>
         </div>
 
+        {/* SCROLLING TICKER */}
+        <div style={{overflow:'hidden',borderTop:'1px solid '+C.border,borderBottom:'1px solid '+C.border,padding:'12px 0',marginBottom:0,position:'relative'}}>
+          <div style={{display:'flex',gap:10,animation:'tickerScroll 50s linear infinite',width:'max-content'}}
+            onMouseEnter={e=>(e.currentTarget.style.animationPlayState='paused')}
+            onMouseLeave={e=>(e.currentTarget.style.animationPlayState='running')}>
+            <style>{`@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}`}</style>
+            {[...Array(2)].flatMap(()=>[
+              {t:'2026 FIFA World Cup Winner',c:'sports',e:'⚽',v:'$9.8M/24h'},
+              {t:'2026 NBA Champion',c:'sports',e:'🏀',v:'$8.2M/24h'},
+              {t:'US forces enter Iran?',c:'world',e:'🌍',v:'$42.5M/24h'},
+              {t:'Fed decision April 2026',c:'economics',e:'📈',v:'$5.1M/24h'},
+              {t:'2026 F1 Drivers Champion',c:'sports',e:'🏎️',v:'$3.2M/24h'},
+              {t:'Bitcoin $100k in 2026?',c:'crypto',e:'₿',v:'$4.1M/24h'},
+              {t:'Democratic Nominee 2028',c:'politics',e:'🗳️',v:'$10.7M/24h'},
+              {t:'IPL 2026 Champion',c:'sports',e:'🏏',v:'$617K/24h'},
+              {t:'OpenAI GPT-5 in 2026?',c:'technology',e:'🤖',v:'$1.9M/24h'},
+              {t:'Ukraine ceasefire 2026?',c:'world',e:'🕊️',v:'$8.1M/24h'},
+            ]).map((item,i)=>{
+              const catC:Record<string,string> = {sports:'#2ecc8a',crypto:'#f5a623',politics:'#ef4f6a',technology:'#7c6ff7',economics:'#4d9de0',world:'#a89cf8'};
+              const col = catC[item.c] || '#9996b8';
+              return (
+                <button key={i} onClick={()=>go(item.t)}
+                  style={{display:'flex',alignItems:'center',gap:8,padding:'6px 14px',borderRadius:100,border:'1px solid '+C.border,background:C.bg2,cursor:'pointer',whiteSpace:'nowrap' as const,flexShrink:0,transition:'all 0.15s'}}
+                  onMouseEnter={e=>{e.currentTarget.style.borderColor=C.border2;e.currentTarget.style.background=C.bg3;}}
+                  onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.background=C.bg2;}}>
+                  <span style={{fontSize:14}}>{item.e}</span>
+                  <span style={{fontSize:12,fontWeight:500,color:C.t1}}>{item.t}</span>
+                  <span style={{fontSize:10,color:col,fontWeight:600,padding:'1px 6px',borderRadius:4,background:col+'15'}}>{item.c}</span>
+                  <span style={{fontSize:10,color:C.t3}}>{item.v}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* LIVE MARKETS */}
         <div style={{maxWidth:960,margin:'0 auto',padding:'0 24px 48px'}}>
 

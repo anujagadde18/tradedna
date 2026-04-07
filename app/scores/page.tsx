@@ -94,9 +94,9 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
   const conv = getConviction(aiPct, marketPct);
 
   // Human-friendly verdict — what a friend would say
-  const bigVerdict = aiPct >= 80 ? 'Very likely YES' : aiPct >= 65 ? 'Probably YES' : aiPct >= 50 ? 'Leaning YES' : aiPct >= 35 ? 'Leaning NO' : 'Probably NO';
-  const verdictColor = aiPct >= 65 ? C.green : aiPct >= 45 ? C.amber : C.red;
-  const verdictBg = aiPct >= 65 ? 'rgba(46,204,138,0.08)' : aiPct >= 45 ? 'rgba(245,166,35,0.08)' : 'rgba(239,79,106,0.08)';
+  const bigVerdict = aiPct >= 80 ? 'Very likely YES' : aiPct >= 65 ? 'Probably YES' : aiPct >= 53 ? 'Leaning YES' : aiPct >= 47 ? 'Uncertain' : aiPct >= 35 ? 'Leaning NO' : 'Probably NO';
+  const verdictColor = aiPct >= 65 ? C.green : aiPct >= 47 ? C.amber : C.red;
+  const verdictBg = aiPct >= 65 ? 'rgba(46,204,138,0.08)' : aiPct >= 47 ? 'rgba(245,166,35,0.08)' : 'rgba(239,79,106,0.08)';
 
   // Plain English explanation anyone can understand
   const plainExplain = edge === null
@@ -694,7 +694,7 @@ function ScoresPageContent() {
                   </button>
                 </div>
               ) : (
-                <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources.length > 0 ? realSources : activeSources} hasMarket={hasLiveMarket} />
+                <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} />
               )}
                 {invalidQuestion ? (
                   <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100%', padding:24, gap:12, textAlign:'center', background:C.bg2, border:'1px solid '+C.border, borderRadius:16 }}>
