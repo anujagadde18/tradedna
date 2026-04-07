@@ -107,6 +107,7 @@ export default function HomePage() {
           </div>
         </div>
         <div style={{display:'flex',gap:4}}>
+          <button onClick={()=>router.push('/ipl')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:600,color:'#2ecc8a',border:'1px solid rgba(46,204,138,0.3)',background:'rgba(46,204,138,0.08)',cursor:'pointer'}}>🏏 IPL</button>
           <button onClick={()=>router.push('/journal')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:500,color:C.t2,border:'none',background:'none',cursor:'pointer'}}>Journal</button>
           <button onClick={()=>router.push('/sources')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:500,color:C.t2,border:'none',background:'none',cursor:'pointer'}}>Sources</button>
           <button onClick={()=>router.push('/profile')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:500,color:C.t2,border:'none',background:'none',cursor:'pointer'}}>Profile</button>
