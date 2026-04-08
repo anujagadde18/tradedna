@@ -84,6 +84,8 @@ function getMoneylineOdds(event: any): number | null {
     return null;
   } catch { return null; }
 }
+
+function fmtVol(v: number): string {
   if (v >= 1_000_000) return '$' + (v/1_000_000).toFixed(1) + 'M';
   if (v >= 1_000) return '$' + (v/1_000).toFixed(0) + 'K';
   return '$' + Math.round(v);
