@@ -200,26 +200,35 @@ export default function HomePage() {
                 <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
                   <span style={{fontSize:16}}>🔥</span>
                   <span style={{fontSize:13,fontWeight:700,color:C.t1}}>Tonight's matches</span>
-                  <span style={{fontSize:11,color:C.t3}}>· click to get AI prediction + share</span>
+                  <span style={{fontSize:11,color:C.t3}}>· live odds from Polymarket</span>
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
                   {tonight.map(e => {
                     const parts = e.title.split(/\s+vs\.?\s+/i);
                     const team1 = parts[0]?.trim() || e.title;
                     const team2 = parts[1]?.trim() || '';
-                    const waMsg = encodeURIComponent(`🏀 *${e.title}*\n\nGet AI prediction for tonight's match 👇\n${e.url}\n\n#PlayPicks`);
+                    const isYes = e.yesPrice !== null && e.yesPrice >= 50;
+                    const winnerTeam = e.yesPrice !== null ? (isYes ? team1 : team2) : null;
+                    const winnerOdds = e.yesPrice !== null ? (isYes ? e.yesPrice : 100 - e.yesPrice) : null;
+                    const waMsg = encodeURIComponent(
+                      `🏀 *${e.title}*\n\n` +
+                      (winnerOdds ? `Market gives *${winnerTeam} ${winnerOdds}%* to win tonight\n\n` : '') +
+                      `Get full AI prediction 👇\nhttps://tradedna-8sn1.vercel.app/scores?event=${encodeURIComponent(e.url)}\n\n#PlayPicks #AIodds`
+                    );
                     return (
                       <div key={e.slug} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'12px 14px',display:'flex',flexDirection:'column' as const,gap:8}}>
                         <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:6}}>
-                          <div style={{fontSize:12,fontWeight:600,color:C.t1,textAlign:'center' as const,lineHeight:1.3}}>{team1}</div>
-                          <div style={{fontSize:10,fontWeight:800,color:C.t4,padding:'3px 8px',borderRadius:6,background:C.bg3}}>VS</div>
-                          <div style={{fontSize:12,fontWeight:600,color:C.t1,textAlign:'center' as const,lineHeight:1.3}}>{team2}</div>
-                        </div>
-                        {e.yesPrice !== null && (
-                          <div style={{textAlign:'center' as const,fontSize:10,color:C.t3}}>
-                            Market: <span style={{color:e.yesPrice>=50?C.green:C.red,fontWeight:700}}>{e.yesPrice}%</span> {team1}
+                          <div style={{textAlign:'center' as const}}>
+                            <div style={{fontSize:12,fontWeight:600,color:C.t1,lineHeight:1.3}}>{team1}</div>
+                            {e.yesPrice !== null && <div style={{fontSize:13,fontWeight:800,color:isYes?C.green:C.t3,fontFamily:'monospace',marginTop:2}}>{e.yesPrice}%</div>}
                           </div>
-                        )}
+                          <div style={{fontSize:10,fontWeight:800,color:C.t4,padding:'3px 8px',borderRadius:6,background:C.bg3}}>VS</div>
+                          <div style={{textAlign:'center' as const}}>
+                            <div style={{fontSize:12,fontWeight:600,color:C.t1,lineHeight:1.3}}>{team2}</div>
+                            {e.yesPrice !== null && <div style={{fontSize:13,fontWeight:800,color:!isYes?C.red:C.t3,fontFamily:'monospace',marginTop:2}}>{100-e.yesPrice}%</div>}
+                          </div>
+                        </div>
+                        <div style={{fontSize:9,color:C.t3,textAlign:'center' as const}}>{e.volume24hFormatted} traded today · {e.marketCount} outcomes</div>
                         <div style={{display:'flex',gap:6}}>
                           <button onClick={()=>go(e.url)}
                             style={{flex:2,padding:'7px',borderRadius:8,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,cursor:'pointer',fontSize:11,fontWeight:600}}>

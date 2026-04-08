@@ -42,27 +42,44 @@ function fmtVol(v: number): string {
 function getYesPrice(event: any): number | null {
   try {
     const markets = event.markets || [];
-    // Only show price for binary markets (1 market, YES/NO)
-    if (markets.length !== 1) return null;
-    const m = markets[0];
-    // Try outcomePrices
-    const prices = m.outcomePrices
-      ? (typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices)
-      : null;
-    if (prices && prices.length >= 2) {
-      const yes = parseFloat(prices[0]);
-      const no  = parseFloat(prices[1]);
-      const yesPct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
-      const noPct  = no  <= 1 ? Math.round(no  * 100) : Math.round(no);
-      if (Math.abs(yesPct + noPct - 100) > 15) return null;
-      if (yesPct < 2 || yesPct > 98) return null;
-      return yesPct;
+
+    // For binary markets (single market, YES/NO)
+    if (markets.length === 1) {
+      const m = markets[0];
+      const prices = m.outcomePrices
+        ? (typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices)
+        : null;
+      if (prices && prices.length >= 2) {
+        const yes = parseFloat(prices[0]);
+        const no  = parseFloat(prices[1]);
+        const yesPct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
+        const noPct  = no  <= 1 ? Math.round(no  * 100) : Math.round(no);
+        if (Math.abs(yesPct + noPct - 100) <= 15 && yesPct >= 2 && yesPct <= 98) return yesPct;
+      }
+      if (m.lastTradePrice) {
+        const p = parseFloat(m.lastTradePrice);
+        const pct = p <= 1 ? Math.round(p * 100) : Math.round(p);
+        if (pct >= 2 && pct <= 98) return pct;
+      }
     }
-    // Try lastTradePrice
-    if (m.lastTradePrice) {
-      const p = parseFloat(m.lastTradePrice);
-      const pct = p <= 1 ? Math.round(p * 100) : Math.round(p);
-      if (pct >= 2 && pct <= 98) return pct;
+
+    // For matchup markets — find the moneyline "win" market
+    if (markets.length > 1) {
+      const moneyline = markets.find((m: any) => {
+        const q = (m.question || m.groupItemTitle || '').toLowerCase();
+        return q.includes('moneyline') || q.includes('win') || q.includes('winner');
+      });
+      const target = moneyline || markets[0];
+      if (target?.outcomePrices) {
+        const prices = typeof target.outcomePrices === 'string'
+          ? JSON.parse(target.outcomePrices)
+          : target.outcomePrices;
+        if (prices && prices.length >= 2) {
+          const yes = parseFloat(prices[0]);
+          const yesPct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
+          if (yesPct >= 2 && yesPct <= 98) return yesPct;
+        }
+      }
     }
     return null;
   } catch { return null; }
