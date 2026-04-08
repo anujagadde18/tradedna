@@ -218,7 +218,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
           { label:'Market', value: marketValid ? marketPct+'%' : '—', color: C.t2 },
           { label:'AI thinks', value: aiPct+'%', color: verdictColor },
           { label:'Edge', value: edge !== null ? (edge>0?'+':'')+edge+'%' : '—', color: edge !== null && Math.abs(edge) > 5 ? (edge>0?C.green:C.red) : C.t3 },
-          { label:'Conviction', value: conv.score, color: conv.score === 'High' ? C.green : conv.score === 'Medium' ? C.amber : C.t3 },
+          { label:'Conviction', value: conv.label, color: conv.style === 'high' ? C.green : conv.style === 'med' ? C.amber : C.t3 },
         ].map((m,i) => (
           <div key={i} style={{ padding:'12px 0', textAlign:'center' as const, borderRight: i<3 ? '1px solid '+C.border : 'none' }}>
             <div style={{ fontSize:10, color:C.t3, marginBottom:4, textTransform:'uppercase' as const, letterSpacing:'0.4px' }}>{m.label}</div>
