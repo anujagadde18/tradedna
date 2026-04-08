@@ -190,11 +190,14 @@ export default function HomePage() {
 
           {/* TONIGHT'S MATCHES — today's games across all sports */}
           {(() => {
-            const tonight = events.filter(e =>
-              e.category === 'sports' &&
-              e.title.toLowerCase().includes(' vs') &&
-              e.marketCount >= 2
-            ).slice(0, 6);
+            const tonight = events.filter(e => {
+              if (e.category !== 'sports') return false;
+              if (!e.title.toLowerCase().includes(' vs')) return false;
+              if (e.marketCount < 2) return false;
+              // Filter out games where market is 95%+ (already decided/live)
+              if (e.yesPrice !== null && (e.yesPrice >= 95 || e.yesPrice <= 5)) return false;
+              return true;
+            }).slice(0, 6);
             if (tonight.length === 0) return null;
             return (
               <div style={{marginBottom:28}}>

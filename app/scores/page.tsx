@@ -96,6 +96,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
   const team2 = matchup?.[2]?.trim() || '';
   const isMatchup = !!(team1 && team2);
   const marketValid = hasMarket && marketPct > 0 && marketPct < 98;
+  const isLiveGame = isMatchup && hasMarket && (marketPct >= 95 || marketPct <= 5);
   const edge = marketValid ? aiPct - marketPct : null;
   const conv = getConviction(aiPct, marketPct);
   const aiTeam2Pct = 100 - aiPct;
@@ -155,6 +156,12 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
 
         {isMatchup ? (
           <div style={{ marginBottom:16 }}>
+            {isLiveGame && (
+              <div style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 12px', borderRadius:8, background:'rgba(245,166,35,0.1)', border:'1px solid rgba(245,166,35,0.3)', marginBottom:12 }}>
+                <span style={{ width:6, height:6, borderRadius:'50%', background:C.amber, display:'block' }}/>
+                <span style={{ fontSize:12, color:C.amber, fontWeight:600 }}>Game in progress — odds reflect current score, not pre-game prediction</span>
+              </div>
+            )}
             <div style={{ display:'grid', gridTemplateColumns:'1fr auto 1fr', gap:12, alignItems:'center', marginBottom:14 }}>
               <div style={{ textAlign:'center' as const, padding:'14px 10px', borderRadius:12, background:aiPct>=50?'rgba(46,204,138,0.12)':'rgba(255,255,255,0.04)', border:'1px solid '+(aiPct>=50?'rgba(46,204,138,0.3)':C.border) }}>
                 <div style={{ fontSize:12, fontWeight:600, color:C.t2, marginBottom:6, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>{team1}</div>
