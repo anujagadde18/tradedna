@@ -15,7 +15,7 @@ interface MarketOutcome {
 interface PolymarketComparisonProps {
   userQuestion: string;
   aiPrediction: number;
-  onDataReceived?: (marketOdds: number, type?: 'binary' | 'categorical', outcomes?: any[], outcomeType?: string) => void;
+  onDataReceived?: (marketOdds: number, type?: 'binary' | 'categorical', outcomes?: any[], outcomeType?: string, title?: string) => void;
   // Called when we have enough data to enable trading
   onTradeReady?: (data: {
     marketTitle: string;
@@ -139,7 +139,7 @@ export function PolymarketComparison({
 
         const yesOdds = Math.round(parseFloat(prices[0]) * 100);
         setMarketOdds(yesOdds);
-        if (onDataReceived) onDataReceived(yesOdds, 'binary', [], 'binary');
+        if (onDataReceived) onDataReceived(yesOdds, 'binary', [], 'binary', data.title);
 
         // Pass token IDs up for trading
         // Polymarket binary markets have clobTokenIds: [yesTokenId, noTokenId]
@@ -205,7 +205,7 @@ export function PolymarketComparison({
 
         if (analyzed.length > 0) {
           setMarketOdds(analyzed[0].odds);
-          if (onDataReceived) onDataReceived(analyzed[0].odds, 'categorical', analyzed, data.outcomeType);
+          if (onDataReceived) onDataReceived(analyzed[0].odds, 'categorical', analyzed, data.outcomeType, data.title);
 
           // For price markets use the most uncertain outcome, else use top
           let tradeOutcome = analyzed[0];

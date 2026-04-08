@@ -349,6 +349,7 @@ function ScoresPageContent() {
   const [realSources, setRealSources] = useState<any[]>([]);
   const [invalidQuestion, setInvalidQuestion] = useState<{reason:string;examples:string[]}|null>(null);
   const [odds, setOdds]             = useState<number|null>(null);
+  const [marketTitle, setMarketTitle] = useState<string>('');
   const [mtype, setMtype]           = useState<'binary'|'categorical'>('binary');
   const [outcomes, setOutcomes]     = useState<any[]>([]);
   const [hasUrl, setHasUrl]         = useState<boolean|null>(null);
@@ -367,6 +368,7 @@ function ScoresPageContent() {
   useEffect(() => {
     setHasUrl(isPolymarketUrl);
     setOdds(null);
+    setMarketTitle('');
     setOutcomes([]);
     setTradeData(null);
     setRelated([]);
@@ -491,18 +493,13 @@ function ScoresPageContent() {
   const betAmt    = conv.style === 'high' ? '$75 - $200' : conv.style === 'med' ? '$25 - $75' : '$10 - $25';
 
   const eventTitle = (() => {
+    if (marketTitle) return marketTitle;
     if (event.includes('polymarket.com/event/')) {
       const idx = event.indexOf('polymarket.com/event/');
       const slug = event.slice(idx+21).split('/')[0].split('?')[0];
-      // Use intel title if available (fetched from API)
-      if (intel?.title) return intel.title;
-      // Try to make readable from slug: nba-cha-bos-2026-04-07 → Hornets vs. Celtics
-      const NBA: Record<string,string> = {'cha':'Hornets','bos':'Celtics','chi':'Bulls','was':'Wizards','uta':'Jazz','nop':'Pelicans','min':'Timberwolves','ind':'Pacers','mil':'Bucks','bkn':'Nets','okc':'Thunder','lal':'Lakers','mia':'Heat','tor':'Raptors','sac':'Kings','gsw':'Warriors','hou':'Rockets','phx':'Suns','oak':'Athletics','nyy':'Yankees','atl':'Braves','laa':'Angels','ari':'Diamondbacks','nym':'Mets','kc':'Royals','cle':'Guardians','tb':'Lightning','ott':'Senators','edm':'Oilers','cbj':'Blue Jackets','det':'Red Wings'};
-      const m = slug.match(/^(?:nba|nhl|mlb)-([a-z]+)-([a-z]+)-(\d{4}-\d{2}-\d{2})/);
-      if (m) {
-        const t1 = NBA[m[1]]; const t2 = NBA[m[2]];
-        if (t1 && t2) return `${t1} vs. ${t2}`;
-      }
+      const NBA: Record<string,string> = {'cha':'Hornets','bos':'Celtics','chi':'Bulls','was':'Wizards','uta':'Jazz','nop':'Pelicans','min':'Timberwolves','ind':'Pacers','mil':'Bucks','bkn':'Nets','okc':'Thunder','lal':'Lakers','mia':'Heat','tor':'Raptors','sac':'Kings','gsw':'Warriors','hou':'Rockets','phx':'Suns','atl':'Braves','laa':'Angels','ari':'Diamondbacks','nym':'Mets','kc':'Royals','cle':'Guardians','tb':'Lightning','ott':'Senators','edm':'Oilers','cbj':'Blue Jackets','det':'Red Wings','oak':'Athletics','nyy':'Yankees'};
+      const m = slug.match(/^(?:nba|nhl|mlb)-([a-z]+)-([a-z]+)-\d{4}/);
+      if (m) { const t1 = NBA[m[1]]; const t2 = NBA[m[2]]; if (t1 && t2) return `${t1} vs. ${t2}`; }
       return slug.split('-').map((w:string) => w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
     }
     return event.length > 80 ? event.slice(0,80) : event;
@@ -765,7 +762,7 @@ function ScoresPageContent() {
                     </div>
                   )}
                   <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:14 }}>
-                    <PolymarketComparison userQuestion={event} aiPrediction={intel?.confidence||0} onDataReceived={(o,t,outs,ot) => { setOdds(o); if(t) setMtype(t); if(outs) setOutcomes(outs); setHasUrl(true); }} onTradeReady={(d:TradeReadyData) => setTradeData(d)} />
+                    <PolymarketComparison userQuestion={event} aiPrediction={intel?.confidence||0} onDataReceived={(o,t,outs,ot,title) => { setOdds(o); if(t) setMtype(t); if(outs) setOutcomes(outs); setHasUrl(true); if(title) setMarketTitle(title); }} onTradeReady={(d:TradeReadyData) => setTradeData(d)} />
                   </div>
                 </div>
                 )}
