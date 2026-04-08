@@ -33,7 +33,57 @@ function detectCat(title: string, apiCat?: string): string {
   return best;
 }
 
-function fmtVol(v: number): string {
+const NBA_TEAMS: Record<string,string> = {
+  'atl':'Hawks','bos':'Celtics','bkn':'Nets','cha':'Hornets','chi':'Bulls',
+  'cle':'Cavaliers','dal':'Mavericks','den':'Nuggets','det':'Pistons','gsw':'Warriors',
+  'hou':'Rockets','ind':'Pacers','lac':'Clippers','lal':'Lakers','mem':'Grizzlies',
+  'mia':'Heat','mil':'Bucks','min':'Timberwolves','nop':'Pelicans','nyk':'Knicks',
+  'okc':'Thunder','orl':'Magic','phi':'76ers','phx':'Suns','por':'Trail Blazers',
+  'sac':'Kings','sas':'Spurs','tor':'Raptors','uta':'Jazz','was':'Wizards',
+};
+const NHL_TEAMS: Record<string,string> = {
+  'tb':'Lightning','ott':'Senators','edm':'Oilers','utah':'Utah HC','cbj':'Blue Jackets',
+  'det':'Red Wings','bos':'Bruins','tor':'Maple Leafs','mtl':'Canadiens','nyr':'Rangers',
+  'pit':'Penguins','was':'Capitals','chi':'Blackhawks','col':'Avalanche','vgs':'Golden Knights',
+};
+const MLB_TEAMS: Record<string,string> = {
+  'kc':'Royals','cle':'Guardians','ari':'Diamondbacks','nym':'Mets','atl':'Braves',
+  'laa':'Angels','oak':'Athletics','nyy':'Yankees','bos':'Red Sox','lad':'Dodgers',
+  'sf':'Giants','chc':'Cubs','cws':'White Sox','hou':'Astros','sea':'Mariners',
+};
+
+function teamsFromSlug(slug: string): { team1: string; team2: string } | null {
+  // Format: nba-chi-was-2026-04-07 or mlb-kc-cle-2026-04-07
+  const m = slug.match(/^(nba|nhl|mlb)-([a-z]+)-([a-z]+)-\d{4}/);
+  if (!m) return null;
+  const league = m[1];
+  const a = m[2]; const b = m[3];
+  const map = league === 'nba' ? NBA_TEAMS : league === 'nhl' ? NHL_TEAMS : MLB_TEAMS;
+  const t1 = map[a]; const t2 = map[b];
+  if (!t1 || !t2) return null;
+  return { team1: t1, team2: t2 };
+}
+
+function getMoneylineOdds(event: any): number | null {
+  try {
+    const markets = event.markets || [];
+    // For small market count (≤10), use first market outcomePrices
+    for (const m of markets) {
+      if (!m.outcomePrices) continue;
+      const prices = typeof m.outcomePrices === 'string'
+        ? JSON.parse(m.outcomePrices) : m.outcomePrices;
+      if (!prices || prices.length < 2) continue;
+      const yes = parseFloat(prices[0]);
+      const no  = parseFloat(prices[1]);
+      const yesPct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
+      const noPct  = no  <= 1 ? Math.round(no  * 100) : Math.round(no);
+      if (Math.abs(yesPct + noPct - 100) <= 15 && yesPct >= 2 && yesPct <= 98) {
+        return yesPct;
+      }
+    }
+    return null;
+  } catch { return null; }
+}
   if (v >= 1_000_000) return '$' + (v/1_000_000).toFixed(1) + 'M';
   if (v >= 1_000) return '$' + (v/1_000).toFixed(0) + 'K';
   return '$' + Math.round(v);
@@ -175,7 +225,8 @@ export async function GET(req: NextRequest) {
 
     // Use direct market odds if available, fallback to event-level extraction
     const directOdds = matchupOdds[event.slug];
-    const yesPrice = directOdds?.yesPrice ?? getYesPrice(event);
+    const yesPrice = directOdds?.yesPrice ?? getYesPrice(event) ?? getMoneylineOdds(event);
+    const teamNames = teamsFromSlug(event.slug);
 
     results.push({
       slug:              event.slug,
@@ -189,8 +240,8 @@ export async function GET(req: NextRequest) {
       icon:              CAT_EMOJI[cat] || '🔮',
       image:             event.image || event.featuredImage || null,
       yesPrice,
-      team1:             directOdds?.team1 || null,
-      team2:             directOdds?.team2 || null,
+      team1:             teamNames?.team1 || directOdds?.team1 || null,
+      team2:             teamNames?.team2 || directOdds?.team2 || null,
       marketCount:       (event.markets || []).length,
       endDate:           event.endDate || '',
     });
