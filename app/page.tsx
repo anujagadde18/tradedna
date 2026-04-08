@@ -7,6 +7,7 @@ interface TrendingEvent {
   slug:string; title:string; url:string; volume:number; volumeFormatted:string;
   category:string; icon:string; yesPrice:number|null; marketCount:number;
   image:string|null; volume24h:number; volume24hFormatted:string;
+  team1:string|null; team2:string|null;
 }
 
 const C = {
@@ -205,8 +206,8 @@ export default function HomePage() {
                 <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
                   {tonight.map(e => {
                     const parts = e.title.split(/\s+vs\.?\s+/i);
-                    const team1 = parts[0]?.trim() || e.title;
-                    const team2 = parts[1]?.trim() || '';
+                    const team1 = e.team1 || parts[0]?.trim() || e.title;
+                    const team2 = e.team2 || parts[1]?.trim() || '';
                     const isYes = e.yesPrice !== null && e.yesPrice >= 50;
                     const winnerTeam = e.yesPrice !== null ? (isYes ? team1 : team2) : null;
                     const winnerOdds = e.yesPrice !== null ? (isYes ? e.yesPrice : 100 - e.yesPrice) : null;
