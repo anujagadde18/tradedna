@@ -150,66 +150,66 @@ async function fetchLive(limit = 50): Promise<any[]> {
   } catch { return []; }
 }
 
-// Fetch binary sports matchup markets directly — these have real win % odds
-async function fetchSportsMatchups(): Promise<any[]> {
+// Fetch moneyline odds for a specific game event
+async function fetchMoneyline(eventSlug: string): Promise<number | null> {
   try {
     const res = await fetch(
-      `https://gamma-api.polymarket.com/markets?active=true&closed=false&archived=false&limit=50&order=volume24hr&ascending=false`,
-      { headers: { 'Accept': 'application/json' }, cache: 'no-store' }
+      `https://gamma-api.polymarket.com/markets?event_slug=${eventSlug}&limit=100`,
+      { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(4000) }
     );
-    if (!res.ok) return [];
+    if (!res.ok) return null;
     const d = await res.json();
     const markets = Array.isArray(d) ? d : (d.markets || []);
 
-    // Filter to binary sports matchups with real odds
-    return markets.filter((m: any) => {
-      const q = (m.question || '').toLowerCase();
-      const isMatchup = q.includes(' vs ') || q.includes(' v ') ||
-        (q.includes('will ') && q.includes(' win'));
-      const hasPrices = m.outcomePrices && m.outcomePrices !== '[]';
-      const vol = parseFloat(m.volume24hr || m.volumeNum || '0');
-      return isMatchup && hasPrices && vol > 1000;
-    }).slice(0, 30);
-  } catch { return []; }
+    // Find the moneyline/winner market
+    const moneyline = markets.find((m: any) => {
+      const q = (m.question || m.groupItemTitle || '').toLowerCase();
+      return q.includes('moneyline') || q === 'winner' ||
+        q.includes('to win') || q.includes('win the game');
+    }) || markets.find((m: any) => {
+      // Fallback: binary market with 2 outcomes summing to ~100%
+      if (!m.outcomePrices) return false;
+      try {
+        const p = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices;
+        if (p.length !== 2) return false;
+        const sum = parseFloat(p[0]) + parseFloat(p[1]);
+        return sum > 0.9 && sum < 1.1;
+      } catch { return false; }
+    });
+
+    if (!moneyline?.outcomePrices) return null;
+    const prices = typeof moneyline.outcomePrices === 'string'
+      ? JSON.parse(moneyline.outcomePrices) : moneyline.outcomePrices;
+    const yes = parseFloat(prices[0]);
+    const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
+    return (pct >= 2 && pct <= 98) ? pct : null;
+  } catch { return null; }
 }
 
 export async function GET(req: NextRequest) {
   const category = req.nextUrl.searchParams.get('category') || 'all';
+  const today = new Date().toISOString().split('T')[0];
 
-  // Fetch both events (for images/featured) and markets (for real odds)
-  const [events, matchupMarkets] = await Promise.all([
-    fetchLive(50),
-    fetchSportsMatchups(),
-  ]);
+  const events = await fetchLive(50);
 
-  // Build a slug→yesPrice map from direct market data
-  const matchupOdds: Record<string, { yesPrice: number; team1: string; team2: string }> = {};
-  for (const m of matchupMarkets) {
-    try {
-      const prices = typeof m.outcomePrices === 'string'
-        ? JSON.parse(m.outcomePrices)
-        : m.outcomePrices;
-      if (!prices || prices.length < 2) continue;
-      const outcomes = typeof m.outcomes === 'string'
-        ? JSON.parse(m.outcomes)
-        : (m.outcomes || []);
-      const yes = parseFloat(prices[0]);
-      const no  = parseFloat(prices[1]);
-      const yesPct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
-      const noPct  = no  <= 1 ? Math.round(no  * 100) : Math.round(no);
-      if (yesPct < 2 || yesPct > 98) continue;
-      if (Math.abs(yesPct + noPct - 100) > 15) continue;
-      const slug = m.slug || m.eventSlug || '';
-      const eventSlug = slug.split('/')[0];
-      if (eventSlug && !matchupOdds[eventSlug]) {
-        matchupOdds[eventSlug] = {
-          yesPrice: yesPct,
-          team1: outcomes[0] || '',
-          team2: outcomes[1] || '',
-        };
-      }
-    } catch {}
-  }
+  // Find today's sports games that need moneyline odds
+  const todayGames = events.filter(e => {
+    const isGame = /^(nba|nhl|mlb|nfl)-/.test(e.slug);
+    const endDate = e.endDate || '';
+    const isToday = endDate.startsWith(today) || endDate.startsWith(
+      new Date(Date.now() + 86400000).toISOString().split('T')[0]
+    );
+    return isGame && isToday;
+  });
+
+  // Fetch moneylines in parallel (max 8 at once to avoid timeout)
+  const moneylineMap: Record<string, number> = {};
+  await Promise.all(
+    todayGames.slice(0, 8).map(async e => {
+      const odds = await fetchMoneyline(e.slug);
+      if (odds !== null) moneylineMap[e.slug] = odds;
+    })
+  );
 
   const seen = new Set<string>();
   const results: any[] = [];
@@ -225,10 +225,8 @@ export async function GET(req: NextRequest) {
     const cat = detectCat(event.title, event.category || event.subcategory);
     if (category !== 'all' && cat !== category) continue;
 
-    // Use direct market odds if available, fallback to event-level extraction
-    const directOdds = matchupOdds[event.slug];
-    const yesPrice = directOdds?.yesPrice ?? getYesPrice(event) ?? getMoneylineOdds(event);
     const teamNames = teamsFromSlug(event.slug);
+    const yesPrice = moneylineMap[event.slug] ?? getYesPrice(event) ?? getMoneylineOdds(event);
 
     results.push({
       slug:              event.slug,
@@ -241,17 +239,14 @@ export async function GET(req: NextRequest) {
       category:          cat,
       icon:              CAT_EMOJI[cat] || '🔮',
       image:             event.image || event.featuredImage || null,
-      yesPrice,
-      team1:             teamNames?.team1 || directOdds?.team1 || null,
-      team2:             teamNames?.team2 || directOdds?.team2 || null,
+      yesPrice:          yesPrice ?? null,
+      team1:             teamNames?.team1 || null,
+      team2:             teamNames?.team2 || null,
       marketCount:       (event.markets || []).length,
       endDate:           event.endDate || '',
     });
   }
 
-  // Sort by 24h volume — most active right now first
   results.sort((a, b) => b.volume24h - a.volume24h);
-
   return Response.json({ results: results.slice(0, 20) });
 }
-// test
