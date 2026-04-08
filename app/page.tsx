@@ -187,6 +187,57 @@ export default function HomePage() {
         {/* LIVE MARKETS */}
         <div style={{maxWidth:960,margin:'0 auto',padding:'0 24px 48px'}}>
 
+          {/* TONIGHT'S MATCHES — today's games across all sports */}
+          {(() => {
+            const tonight = events.filter(e =>
+              e.category === 'sports' &&
+              e.title.toLowerCase().includes(' vs') &&
+              e.marketCount >= 2
+            ).slice(0, 6);
+            if (tonight.length === 0) return null;
+            return (
+              <div style={{marginBottom:28}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+                  <span style={{fontSize:16}}>🔥</span>
+                  <span style={{fontSize:13,fontWeight:700,color:C.t1}}>Tonight's matches</span>
+                  <span style={{fontSize:11,color:C.t3}}>· click to get AI prediction + share</span>
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
+                  {tonight.map(e => {
+                    const parts = e.title.split(/\s+vs\.?\s+/i);
+                    const team1 = parts[0]?.trim() || e.title;
+                    const team2 = parts[1]?.trim() || '';
+                    const waMsg = encodeURIComponent(`🏀 *${e.title}*\n\nGet AI prediction for tonight's match 👇\n${e.url}\n\n#PlayPicks`);
+                    return (
+                      <div key={e.slug} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'12px 14px',display:'flex',flexDirection:'column' as const,gap:8}}>
+                        <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:6}}>
+                          <div style={{fontSize:12,fontWeight:600,color:C.t1,textAlign:'center' as const,lineHeight:1.3}}>{team1}</div>
+                          <div style={{fontSize:10,fontWeight:800,color:C.t4,padding:'3px 8px',borderRadius:6,background:C.bg3}}>VS</div>
+                          <div style={{fontSize:12,fontWeight:600,color:C.t1,textAlign:'center' as const,lineHeight:1.3}}>{team2}</div>
+                        </div>
+                        {e.yesPrice !== null && (
+                          <div style={{textAlign:'center' as const,fontSize:10,color:C.t3}}>
+                            Market: <span style={{color:e.yesPrice>=50?C.green:C.red,fontWeight:700}}>{e.yesPrice}%</span> {team1}
+                          </div>
+                        )}
+                        <div style={{display:'flex',gap:6}}>
+                          <button onClick={()=>go(e.url)}
+                            style={{flex:2,padding:'7px',borderRadius:8,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,cursor:'pointer',fontSize:11,fontWeight:600}}>
+                            🤖 AI prediction
+                          </button>
+                          <button onClick={()=>window.open('https://wa.me/?text='+waMsg,'_blank')}
+                            style={{flex:1,padding:'7px',borderRadius:8,background:'rgba(37,211,102,0.08)',border:'1px solid rgba(37,211,102,0.2)',color:'#25d366',cursor:'pointer',fontSize:11,fontWeight:600}}>
+                            Share
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Header + category tabs */}
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16,flexWrap:'wrap' as const,gap:10}}>
             <div style={{display:'flex',alignItems:'center',gap:8}}>
