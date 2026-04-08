@@ -90,24 +90,33 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
   aiPct: number; marketPct: number; question: string; sources: any[]; hasMarket: boolean;
 }) {
   const [showAll, setShowAll] = useState(false);
-  const edge = hasMarket && marketPct > 0 ? aiPct - marketPct : null;
-  const conv = getConviction(aiPct, marketPct);
 
-  // Human-friendly verdict — what a friend would say
-  const bigVerdict = aiPct >= 80 ? 'Very likely YES' : aiPct >= 65 ? 'Probably YES' : aiPct >= 55 ? 'Leaning YES' : aiPct >= 45 ? 'Uncertain' : aiPct >= 30 ? 'Leaning NO' : 'Probably NO';
+  const matchup = question.match(/^(.+?)\s+vs\.?\s+(.+)$/i);
+  const team1 = matchup?.[1]?.trim() || '';
+  const team2 = matchup?.[2]?.trim() || '';
+  const isMatchup = !!(team1 && team2);
+  const marketValid = hasMarket && marketPct > 0 && marketPct < 98;
+  const edge = marketValid ? aiPct - marketPct : null;
+  const conv = getConviction(aiPct, marketPct);
+  const aiTeam2Pct = 100 - aiPct;
+  const mktTeam1Pct = marketValid ? marketPct : null;
+  const mktTeam2Pct = marketValid ? (100 - marketPct) : null;
+
+  const bigVerdict = isMatchup
+    ? aiPct >= 65 ? `${team1} likely wins` : aiPct >= 55 ? `${team1} slight edge` : aiPct >= 45 ? 'Too close to call' : aiPct >= 35 ? `${team2} slight edge` : `${team2} likely wins`
+    : aiPct >= 80 ? 'Very likely YES' : aiPct >= 65 ? 'Probably YES' : aiPct >= 55 ? 'Leaning YES' : aiPct >= 45 ? 'Uncertain' : aiPct >= 30 ? 'Leaning NO' : 'Probably NO';
+
   const verdictColor = aiPct >= 65 ? C.green : aiPct >= 45 ? C.amber : C.red;
   const verdictBg = aiPct >= 65 ? 'rgba(46,204,138,0.08)' : aiPct >= 45 ? 'rgba(245,166,35,0.08)' : 'rgba(239,79,106,0.08)';
 
-  // Plain English explanation anyone can understand
   const plainExplain = edge === null
-    ? aiPct >= 70 ? `News and social signals strongly suggest this will happen. AI has high confidence based on current coverage.`
-    : aiPct >= 50 ? `Mixed signals — more sources lean towards YES than NO, but it's not clear cut.`
-    : `Most signals suggest this is unlikely to happen based on current news and market data.`
-    : edge > 8 ? `AI sees a real opportunity here — it thinks the chance is higher than what bettors currently believe.`
-    : edge > 3 ? `AI slightly disagrees with bettors. Small edge, keep any bet modest.`
-    : `AI and bettors broadly agree. No strong signal either way right now.`;
+    ? aiPct >= 70 ? 'News and social signals strongly suggest this will happen.'
+    : aiPct >= 50 ? 'Mixed signals — more sources lean YES than NO.'
+    : 'Most signals suggest this is unlikely based on current data.'
+    : edge > 8 ? 'AI sees a real edge here — confidence is higher than what bettors believe.'
+    : edge > 3 ? 'AI slightly disagrees with bettors. Small edge.'
+    : 'AI and bettors broadly agree on this one.';
 
-  // What should I do? — the most useful thing for a normal user
   const action = edge === null
     ? aiPct >= 70 ? '✅ Strong signal — worth researching more' : aiPct >= 50 ? '⚠️ Uncertain — watch and wait' : '❌ Unlikely — probably skip'
     : edge > 8 ? '🎯 Good opportunity — AI sees edge over market'
@@ -120,28 +129,18 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
     return 0;
   }
 
-  const rows = sources
-    .map(src => {
-      const name = src.name || '';
-      let cat = src.category || 'news';
-      if (!src.category) {
-        if (['Reddit','Twitter','Hacker News'].some(n => name.includes(n))) cat = 'social';
-        else if (['Polymarket','Kalshi','Metaculus'].some(n => name.includes(n))) cat = name === 'Metaculus' ? 'community' : 'market';
-        else if (src.type === 'contrary') cat = 'contrary';
-      }
-      return {
-        name, category: cat,
-        sig: src.sig || src.signal || '',
-        type: src.type || 'mixed',
-        contribution: parseContrib(src.contrib ?? src.contribution ?? src.weight ?? 0),
-      };
-    })
-    .filter(r => r.contribution !== 0)
-    .sort((a,b) => Math.abs(b.contribution) - Math.abs(a.contribution));
+  const rows = sources.map(src => {
+    const name = src.name || '';
+    let cat = src.category || 'news';
+    if (!src.category) {
+      if (['Reddit','Twitter','Hacker News'].some(n => name.includes(n))) cat = 'social';
+      else if (['Polymarket','Kalshi','Metaculus'].some(n => name.includes(n))) cat = name === 'Metaculus' ? 'community' : 'market';
+      else if (src.type === 'contrary') cat = 'contrary';
+    }
+    return { name, category: cat, sig: src.sig || src.signal || '', type: src.type || 'mixed', contribution: parseContrib(src.contrib ?? src.contribution ?? src.weight ?? 0) };
+  }).filter(r => r.contribution !== 0).sort((a,b) => Math.abs(b.contribution) - Math.abs(a.contribution));
 
   const displayRows = showAll ? rows : rows.slice(0, 6);
-
-  // Signal summary for non-technical users
   const strongSources = rows.filter(r => r.type === 'strong').map(r => r.name.split(' ')[0]);
   const contrarySources = rows.filter(r => r.type === 'contrary').map(r => r.name.split(' ')[0]);
   const sigSummary = strongSources.length > 0
@@ -149,64 +148,62 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
     : rows.length > 0 ? 'Mixed signals across sources — no clear consensus.' : '';
 
   return (
-    <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:16, overflow:'hidden', userSelect:'none' }}>
-
-      {/* HERO — Human-friendly verdict first */}
+    <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:16, overflow:'hidden', userSelect:'none' as const }}>
       <div style={{ background:verdictBg, borderBottom:'1px solid '+C.border, padding:'24px 24px 20px' }}>
-
-        {/* Question */}
-        <div style={{ fontSize:12, color:C.t3, marginBottom:6, textTransform:'uppercase', letterSpacing:'0.5px', fontWeight:600 }}>AI Prediction</div>
+        <div style={{ fontSize:12, color:C.t3, marginBottom:6, textTransform:'uppercase' as const, letterSpacing:'0.5px', fontWeight:600 }}>AI Prediction</div>
         <div style={{ fontSize:13, color:C.t2, marginBottom:16, lineHeight:1.5 }}>{question}</div>
 
-        {/* BIG VERDICT — what a normal person wants to know */}
-        <div style={{ fontSize:42, fontWeight:900, letterSpacing:'-2px', color:verdictColor, lineHeight:1, marginBottom:12 }}>
-          {bigVerdict}
-        </div>
-
-        {/* Confidence bar */}
-        <div style={{ marginBottom:14 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
-            <span style={{ fontSize:11, color:C.t3 }}>AI confidence</span>
-            <span style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:verdictColor }}>{aiPct}%</span>
+        {isMatchup ? (
+          <div style={{ marginBottom:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr auto 1fr', gap:12, alignItems:'center', marginBottom:14 }}>
+              <div style={{ textAlign:'center' as const, padding:'14px 10px', borderRadius:12, background:aiPct>=50?'rgba(46,204,138,0.12)':'rgba(255,255,255,0.04)', border:'1px solid '+(aiPct>=50?'rgba(46,204,138,0.3)':C.border) }}>
+                <div style={{ fontSize:12, fontWeight:600, color:C.t2, marginBottom:6, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>{team1}</div>
+                <div style={{ fontSize:36, fontWeight:900, color:aiPct>=50?C.green:C.t3, fontFamily:'monospace', lineHeight:1 }}>{aiPct}%</div>
+                <div style={{ fontSize:10, color:C.t3, marginTop:4 }}>AI odds</div>
+                {mktTeam1Pct !== null && <div style={{ fontSize:10, color:C.t3, marginTop:2 }}>Market: <span style={{ fontWeight:600, color:C.t2 }}>{mktTeam1Pct}%</span></div>}
+              </div>
+              <div style={{ textAlign:'center' as const, fontSize:11, fontWeight:800, color:C.t4 }}>VS</div>
+              <div style={{ textAlign:'center' as const, padding:'14px 10px', borderRadius:12, background:aiPct<50?'rgba(46,204,138,0.12)':'rgba(255,255,255,0.04)', border:'1px solid '+(aiPct<50?'rgba(46,204,138,0.3)':C.border) }}>
+                <div style={{ fontSize:12, fontWeight:600, color:C.t2, marginBottom:6, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>{team2}</div>
+                <div style={{ fontSize:36, fontWeight:900, color:aiPct<50?C.green:C.t3, fontFamily:'monospace', lineHeight:1 }}>{aiTeam2Pct}%</div>
+                <div style={{ fontSize:10, color:C.t3, marginTop:4 }}>AI odds</div>
+                {mktTeam2Pct !== null && <div style={{ fontSize:10, color:C.t3, marginTop:2 }}>Market: <span style={{ fontWeight:600, color:C.t2 }}>{mktTeam2Pct}%</span></div>}
+              </div>
+            </div>
+            <div style={{ fontSize:26, fontWeight:900, letterSpacing:'-1px', color:verdictColor, textAlign:'center' as const, marginBottom:4 }}>{bigVerdict}</div>
           </div>
-          <div style={{ height:6, background:'rgba(255,255,255,0.05)', borderRadius:3, overflow:'hidden' }}>
-            <div style={{ height:'100%', borderRadius:3, background:verdictColor, width:aiPct+'%', transition:'width 0.8s cubic-bezier(0.16,1,0.3,1)' }} />
-          </div>
-        </div>
+        ) : (
+          <>
+            <div style={{ fontSize:42, fontWeight:900, letterSpacing:'-2px', color:verdictColor, lineHeight:1, marginBottom:12 }}>{bigVerdict}</div>
+            <div style={{ marginBottom:14 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+                <span style={{ fontSize:11, color:C.t3 }}>AI confidence</span>
+                <span style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:verdictColor }}>{aiPct}%</span>
+              </div>
+              <div style={{ height:6, background:'rgba(255,255,255,0.05)', borderRadius:3, overflow:'hidden' }}>
+                <div style={{ height:'100%', borderRadius:3, background:verdictColor, width:aiPct+'%', transition:'width 0.8s cubic-bezier(0.16,1,0.3,1)' }} />
+              </div>
+            </div>
+          </>
+        )}
 
-        {/* Plain English explanation */}
-        <div style={{ fontSize:13, color:C.t1, lineHeight:1.7, padding:'12px 14px', background:'rgba(0,0,0,0.2)', borderRadius:10, borderLeft:'3px solid '+verdictColor, marginBottom:12 }}>
-          {plainExplain}
-        </div>
+        <div style={{ fontSize:13, color:C.t1, lineHeight:1.7, padding:'12px 14px', background:'rgba(0,0,0,0.2)', borderRadius:10, borderLeft:'3px solid '+verdictColor, marginBottom:12 }}>{plainExplain}</div>
+        <div style={{ fontSize:13, fontWeight:600, color:C.t1, padding:'10px 14px', background:'rgba(255,255,255,0.04)', borderRadius:10, border:'1px solid '+C.border2 }}>{action}</div>
 
-        {/* What should I do — action callout */}
-        <div style={{ fontSize:13, fontWeight:600, color:C.t1, padding:'10px 14px', background:'rgba(255,255,255,0.04)', borderRadius:10, border:'1px solid '+C.border2 }}>
-          {action}
-        </div>
-
-        {/* Market comparison — only if we have market data, shown simply */}
-        {hasMarket && marketPct > 0 && (
+        {!isMatchup && hasMarket && marketPct > 0 && (
           <div style={{ marginTop:12, display:'flex', alignItems:'center', gap:12 }}>
-            <div style={{ fontSize:11, color:C.t3 }}>
-              Bettors say <span style={{ fontWeight:700, color:C.t2 }}>{marketPct}%</span>
-            </div>
+            <div style={{ fontSize:11, color:C.t3 }}>Bettors say <span style={{ fontWeight:700, color:C.t2 }}>{marketPct}%</span></div>
             <div style={{ fontSize:11, color:C.t3 }}>·</div>
-            <div style={{ fontSize:11, color:C.t3 }}>
-              AI says <span style={{ fontWeight:700, color:verdictColor }}>{aiPct}%</span>
-            </div>
+            <div style={{ fontSize:11, color:C.t3 }}>AI says <span style={{ fontWeight:700, color:verdictColor }}>{aiPct}%</span></div>
             {edge !== null && Math.abs(edge) > 2 && (
-              <>
-                <div style={{ fontSize:11, color:C.t3 }}>·</div>
-                <div style={{ fontSize:11, fontWeight:700, color: edge > 0 ? C.green : C.red }}>
-                  {edge > 0 ? '+' : ''}{edge}% difference
-                </div>
-              </>
+              <><div style={{ fontSize:11, color:C.t3 }}>·</div>
+              <div style={{ fontSize:11, fontWeight:700, color:edge>0?C.green:C.red }}>{edge > 0 ? '+' : ''}{edge}% edge</div></>
             )}
           </div>
         )}
       </div>
 
-      {/* WHAT THE SOURCES SAY — human explanation first, bars second */}
+      {/* WHAT THE SOURCES SAY */}
       {rows.length > 0 && (
         <div style={{ padding:'16px 24px 20px' }}>
           <div style={{ fontSize:12, fontWeight:600, color:C.t1, marginBottom:4 }}>What sources are saying</div>
