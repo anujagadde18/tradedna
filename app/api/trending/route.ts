@@ -67,18 +67,24 @@ function teamsFromSlug(slug: string): { team1: string; team2: string } | null {
 function getMoneylineOdds(event: any): number | null {
   try {
     const markets = event.markets || [];
-    // For small market count (≤10), use first market outcomePrices
-    for (const m of markets) {
-      if (!m.outcomePrices) continue;
-      const prices = typeof m.outcomePrices === 'string'
-        ? JSON.parse(m.outcomePrices) : m.outcomePrices;
-      if (!prices || prices.length < 2) continue;
-      const yes = parseFloat(prices[0]);
-      const no  = parseFloat(prices[1]);
-      const yesPct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
-      const noPct  = no  <= 1 ? Math.round(no  * 100) : Math.round(no);
-      if (Math.abs(yesPct + noPct - 100) <= 15 && yesPct >= 2 && yesPct <= 98) {
-        return yesPct;
+    // Try to find moneyline market by question text
+    const sorted = [...markets].sort((a: any, b: any) => 
+      parseFloat(b.volume || b.volumeNum || '0') - parseFloat(a.volume || a.volumeNum || '0')
+    );
+    for (const m of sorted) {
+      const q = (m.question || m.groupItemTitle || '').toLowerCase();
+      const isMoneyline = q.includes('moneyline') || q.includes('win the game') ||
+        q.includes('to win') || q === 'winner';
+      // Use lastTradePrice as odds proxy
+      const price = m.lastTradePrice || m.bestAsk || m.bestBid;
+      if (!price) continue;
+      const pct = parseFloat(price) <= 1
+        ? Math.round(parseFloat(price) * 100)
+        : Math.round(parseFloat(price));
+      if (pct >= 10 && pct <= 90) {
+        if (isMoneyline) return pct; // strong match
+        // For highest-volume market, return if it looks like a win probability
+        if (m === sorted[0]) return pct;
       }
     }
     return null;
@@ -188,28 +194,8 @@ async function fetchMoneyline(eventSlug: string): Promise<number | null> {
 
 export async function GET(req: NextRequest) {
   const category = req.nextUrl.searchParams.get('category') || 'all';
-  const today = new Date().toISOString().split('T')[0];
 
   const events = await fetchLive(50);
-
-  // Find today's sports games that need moneyline odds
-  const todayGames = events.filter(e => {
-    const isGame = /^(nba|nhl|mlb|nfl)-/.test(e.slug);
-    const endDate = e.endDate || '';
-    const isToday = endDate.startsWith(today) || endDate.startsWith(
-      new Date(Date.now() + 86400000).toISOString().split('T')[0]
-    );
-    return isGame && isToday;
-  });
-
-  // Fetch moneylines in parallel (max 8 at once to avoid timeout)
-  const moneylineMap: Record<string, number> = {};
-  await Promise.all(
-    todayGames.slice(0, 8).map(async e => {
-      const odds = await fetchMoneyline(e.slug);
-      if (odds !== null) moneylineMap[e.slug] = odds;
-    })
-  );
 
   const seen = new Set<string>();
   const results: any[] = [];
@@ -226,24 +212,24 @@ export async function GET(req: NextRequest) {
     if (category !== 'all' && cat !== category) continue;
 
     const teamNames = teamsFromSlug(event.slug);
-    const yesPrice = moneylineMap[event.slug] ?? getYesPrice(event) ?? getMoneylineOdds(event);
+    const yesPrice = getYesPrice(event) ?? getMoneylineOdds(event);
 
     results.push({
-      slug:              event.slug,
-      title:             event.title,
-      url:               'https://polymarket.com/event/' + event.slug,
-      volume:            vol,
-      volumeFormatted:   fmtVol(vol),
-      volume24h:         vol24,
+      slug:               event.slug,
+      title:              event.title,
+      url:                'https://polymarket.com/event/' + event.slug,
+      volume:             vol,
+      volumeFormatted:    fmtVol(vol),
+      volume24h:          vol24,
       volume24hFormatted: fmtVol(vol24),
-      category:          cat,
-      icon:              CAT_EMOJI[cat] || '🔮',
-      image:             event.image || event.featuredImage || null,
-      yesPrice:          yesPrice ?? null,
-      team1:             teamNames?.team1 || null,
-      team2:             teamNames?.team2 || null,
-      marketCount:       (event.markets || []).length,
-      endDate:           event.endDate || '',
+      category:           cat,
+      icon:               CAT_EMOJI[cat] || '🔮',
+      image:              event.image || event.featuredImage || null,
+      yesPrice:           yesPrice ?? null,
+      team1:              teamNames?.team1 || null,
+      team2:              teamNames?.team2 || null,
+      marketCount:        (event.markets || []).length,
+      endDate:            event.endDate || '',
     });
   }
 
