@@ -67,25 +67,24 @@ function teamsFromSlug(slug: string): { team1: string; team2: string } | null {
 function getMoneylineOdds(event: any): number | null {
   try {
     const markets = event.markets || [];
-    // Try to find moneyline market by question text
-    const sorted = [...markets].sort((a: any, b: any) => 
-      parseFloat(b.volume || b.volumeNum || '0') - parseFloat(a.volume || a.volumeNum || '0')
-    );
-    for (const m of sorted) {
+    // Only look for true binary winner markets — skip props, totals, spreads
+    for (const m of markets) {
       const q = (m.question || m.groupItemTitle || '').toLowerCase();
-      const isMoneyline = q.includes('moneyline') || q.includes('win the game') ||
-        q.includes('to win') || q === 'winner';
-      // Use lastTradePrice as odds proxy
-      const price = m.lastTradePrice || m.bestAsk || m.bestBid;
+      const isWinner = q.includes('moneyline') || q === 'winner' ||
+        q === 'win' || q.includes('win the game') ||
+        q.includes('to win') || q.includes('will win');
+      const isProps = q.includes('points') || q.includes('rebounds') ||
+        q.includes('assists') || q.includes('total') || q.includes('over') ||
+        q.includes('under') || q.includes('spread') || q.includes('quarter') ||
+        q.includes('half') || q.includes('first') || q.includes('hits') ||
+        q.includes('runs') || q.includes('strikeout');
+      if (!isWinner || isProps) continue;
+      const price = m.lastTradePrice || m.bestAsk;
       if (!price) continue;
       const pct = parseFloat(price) <= 1
         ? Math.round(parseFloat(price) * 100)
         : Math.round(parseFloat(price));
-      if (pct >= 10 && pct <= 90) {
-        if (isMoneyline) return pct; // strong match
-        // For highest-volume market, return if it looks like a win probability
-        if (m === sorted[0]) return pct;
-      }
+      if (pct >= 10 && pct <= 90) return pct;
     }
     return null;
   } catch { return null; }

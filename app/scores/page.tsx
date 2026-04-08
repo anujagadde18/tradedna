@@ -491,9 +491,18 @@ function ScoresPageContent() {
   const betAmt    = conv.style === 'high' ? '$75 - $200' : conv.style === 'med' ? '$25 - $75' : '$10 - $25';
 
   const eventTitle = (() => {
-    const idx = event.indexOf('polymarket.com/event/');
-    if (idx >= 0) {
+    if (event.includes('polymarket.com/event/')) {
+      const idx = event.indexOf('polymarket.com/event/');
       const slug = event.slice(idx+21).split('/')[0].split('?')[0];
+      // Use intel title if available (fetched from API)
+      if (intel?.title) return intel.title;
+      // Try to make readable from slug: nba-cha-bos-2026-04-07 → Hornets vs. Celtics
+      const NBA: Record<string,string> = {'cha':'Hornets','bos':'Celtics','chi':'Bulls','was':'Wizards','uta':'Jazz','nop':'Pelicans','min':'Timberwolves','ind':'Pacers','mil':'Bucks','bkn':'Nets','okc':'Thunder','lal':'Lakers','mia':'Heat','tor':'Raptors','sac':'Kings','gsw':'Warriors','hou':'Rockets','phx':'Suns','oak':'Athletics','nyy':'Yankees','atl':'Braves','laa':'Angels','ari':'Diamondbacks','nym':'Mets','kc':'Royals','cle':'Guardians','tb':'Lightning','ott':'Senators','edm':'Oilers','cbj':'Blue Jackets','det':'Red Wings'};
+      const m = slug.match(/^(?:nba|nhl|mlb)-([a-z]+)-([a-z]+)-(\d{4}-\d{2}-\d{2})/);
+      if (m) {
+        const t1 = NBA[m[1]]; const t2 = NBA[m[2]];
+        if (t1 && t2) return `${t1} vs. ${t2}`;
+      }
       return slug.split('-').map((w:string) => w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
     }
     return event.length > 80 ? event.slice(0,80) : event;
