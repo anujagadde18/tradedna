@@ -150,122 +150,137 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
 
   return (
     <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:16, overflow:'hidden', userSelect:'none' as const }}>
-      <div style={{ background:verdictBg, borderBottom:'1px solid '+C.border, padding:'24px 24px 20px' }}>
-        <div style={{ fontSize:12, color:C.t3, marginBottom:6, textTransform:'uppercase' as const, letterSpacing:'0.5px', fontWeight:600 }}>AI Prediction</div>
-        <div style={{ fontSize:13, color:C.t2, marginBottom:16, lineHeight:1.5 }}>{question}</div>
 
-        {isMatchup ? (
-          <div style={{ marginBottom:16 }}>
-            {isLiveGame && (
-              <div style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 12px', borderRadius:8, background:'rgba(245,166,35,0.1)', border:'1px solid rgba(245,166,35,0.3)', marginBottom:12 }}>
-                <span style={{ width:6, height:6, borderRadius:'50%', background:C.amber, display:'block' }}/>
-                <span style={{ fontSize:12, color:C.amber, fontWeight:600 }}>Game in progress — odds reflect current score, not pre-game prediction</span>
-              </div>
-            )}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr auto 1fr', gap:12, alignItems:'center', marginBottom:14 }}>
-              <div style={{ textAlign:'center' as const, padding:'14px 10px', borderRadius:12, background:aiPct>=50?'rgba(46,204,138,0.12)':'rgba(255,255,255,0.04)', border:'1px solid '+(aiPct>=50?'rgba(46,204,138,0.3)':C.border) }}>
-                <div style={{ fontSize:12, fontWeight:600, color:C.t2, marginBottom:6, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>{team1}</div>
-                <div style={{ fontSize:36, fontWeight:900, color:aiPct>=50?C.green:C.t3, fontFamily:'monospace', lineHeight:1 }}>{aiPct}%</div>
-                <div style={{ fontSize:10, color:C.t3, marginTop:4 }}>AI odds</div>
-                {mktTeam1Pct !== null && <div style={{ fontSize:10, color:C.t3, marginTop:2 }}>Market: <span style={{ fontWeight:600, color:C.t2 }}>{mktTeam1Pct}%</span></div>}
-              </div>
-              <div style={{ textAlign:'center' as const, fontSize:11, fontWeight:800, color:C.t4 }}>VS</div>
-              <div style={{ textAlign:'center' as const, padding:'14px 10px', borderRadius:12, background:aiPct<50?'rgba(46,204,138,0.12)':'rgba(255,255,255,0.04)', border:'1px solid '+(aiPct<50?'rgba(46,204,138,0.3)':C.border) }}>
-                <div style={{ fontSize:12, fontWeight:600, color:C.t2, marginBottom:6, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>{team2}</div>
-                <div style={{ fontSize:36, fontWeight:900, color:aiPct<50?C.green:C.t3, fontFamily:'monospace', lineHeight:1 }}>{aiTeam2Pct}%</div>
-                <div style={{ fontSize:10, color:C.t3, marginTop:4 }}>AI odds</div>
-                {mktTeam2Pct !== null && <div style={{ fontSize:10, color:C.t3, marginTop:2 }}>Market: <span style={{ fontWeight:600, color:C.t2 }}>{mktTeam2Pct}%</span></div>}
-              </div>
-            </div>
-            <div style={{ fontSize:26, fontWeight:900, letterSpacing:'-1px', color:verdictColor, textAlign:'center' as const, marginBottom:4 }}>{bigVerdict}</div>
-          </div>
-        ) : (
-          <>
-            <div style={{ fontSize:42, fontWeight:900, letterSpacing:'-2px', color:verdictColor, lineHeight:1, marginBottom:12 }}>{bigVerdict}</div>
-            <div style={{ marginBottom:14 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
-                <span style={{ fontSize:11, color:C.t3 }}>AI confidence</span>
-                <span style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:verdictColor }}>{aiPct}%</span>
-              </div>
-              <div style={{ height:6, background:'rgba(255,255,255,0.05)', borderRadius:3, overflow:'hidden' }}>
-                <div style={{ height:'100%', borderRadius:3, background:verdictColor, width:aiPct+'%', transition:'width 0.8s cubic-bezier(0.16,1,0.3,1)' }} />
-              </div>
-            </div>
-          </>
-        )}
-
-        <div style={{ fontSize:13, color:C.t1, lineHeight:1.7, padding:'12px 14px', background:'rgba(0,0,0,0.2)', borderRadius:10, borderLeft:'3px solid '+verdictColor, marginBottom:12 }}>{plainExplain}</div>
-        <div style={{ fontSize:13, fontWeight:600, color:C.t1, padding:'10px 14px', background:'rgba(255,255,255,0.04)', borderRadius:10, border:'1px solid '+C.border2 }}>{action}</div>
-
-        {!isMatchup && hasMarket && marketPct > 0 && (
-          <div style={{ marginTop:12, display:'flex', alignItems:'center', gap:12 }}>
-            <div style={{ fontSize:11, color:C.t3 }}>Bettors say <span style={{ fontWeight:700, color:C.t2 }}>{marketPct}%</span></div>
-            <div style={{ fontSize:11, color:C.t3 }}>·</div>
-            <div style={{ fontSize:11, color:C.t3 }}>AI says <span style={{ fontWeight:700, color:verdictColor }}>{aiPct}%</span></div>
-            {edge !== null && Math.abs(edge) > 2 && (
-              <><div style={{ fontSize:11, color:C.t3 }}>·</div>
-              <div style={{ fontSize:11, fontWeight:700, color:edge>0?C.green:C.red }}>{edge > 0 ? '+' : ''}{edge}% edge</div></>
-            )}
-          </div>
-        )}
+      {/* HEADER */}
+      <div style={{ padding:'14px 18px', borderBottom:'1px solid '+C.border, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <div style={{ fontSize:13, fontWeight:600, color:C.t1 }}>{question}</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {isMatchup && <span style={{ fontSize:10, fontWeight:600, padding:'3px 8px', borderRadius:100, background:'rgba(46,204,138,0.1)', color:C.green, border:'1px solid rgba(46,204,138,0.2)' }}>Sports</span>}
+          {hasMarket && <span style={{ fontSize:10, fontWeight:600, padding:'3px 8px', borderRadius:100, background:'rgba(77,157,224,0.1)', color:C.blue, border:'1px solid rgba(77,157,224,0.2)' }}>Live odds</span>}
+        </div>
       </div>
 
-      {/* WHAT THE SOURCES SAY */}
-      {rows.length > 0 && (
-        <div style={{ padding:'16px 24px 20px' }}>
-          <div style={{ fontSize:12, fontWeight:600, color:C.t1, marginBottom:4 }}>What sources are saying</div>
-          {sigSummary && (
-            <div style={{ fontSize:12, color:C.t2, lineHeight:1.6, marginBottom:14 }}>{sigSummary}</div>
+      {/* MATCHUP ODDS */}
+      {isMatchup ? (
+        <div style={{ padding:'18px', borderBottom:'1px solid '+C.border }}>
+          {isLiveGame && (
+            <div style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 12px', borderRadius:8, background:'rgba(245,166,35,0.08)', border:'1px solid rgba(245,166,35,0.2)', marginBottom:12 }}>
+              <span style={{ width:5, height:5, borderRadius:'50%', background:C.amber, display:'block', flexShrink:0 }}/>
+              <span style={{ fontSize:11, color:C.amber }}>Game in progress — odds reflect current score</span>
+            </div>
           )}
-          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 36px 1fr', gap:8, alignItems:'center', marginBottom:14 }}>
+            {/* Team 1 */}
+            <div style={{ textAlign:'center' as const, padding:'14px 8px', borderRadius:12,
+              background:aiPct>=50?'rgba(46,204,138,0.08)':'rgba(255,255,255,0.03)',
+              border:'1px solid '+(aiPct>=50?'rgba(46,204,138,0.25)':C.border) }}>
+              <div style={{ fontSize:11, fontWeight:600, color:C.t3, marginBottom:8, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>{team1}</div>
+              <div style={{ fontSize:38, fontWeight:700, color:aiPct>=50?C.green:C.t3, fontFamily:'monospace', lineHeight:1, letterSpacing:'-1px' }}>{aiPct}%</div>
+              <div style={{ fontSize:10, color:C.t3, marginTop:5 }}>AI odds</div>
+              {mktTeam1Pct !== null && <div style={{ fontSize:10, color:C.t3, marginTop:3 }}>Mkt: <span style={{ color:C.t2, fontWeight:600 }}>{mktTeam1Pct}%</span></div>}
+            </div>
+            {/* VS */}
+            <div style={{ textAlign:'center' as const, fontSize:10, fontWeight:700, color:C.t4 }}>VS</div>
+            {/* Team 2 */}
+            <div style={{ textAlign:'center' as const, padding:'14px 8px', borderRadius:12,
+              background:aiPct<50?'rgba(46,204,138,0.08)':'rgba(255,255,255,0.03)',
+              border:'1px solid '+(aiPct<50?'rgba(46,204,138,0.25)':C.border) }}>
+              <div style={{ fontSize:11, fontWeight:600, color:C.t3, marginBottom:8, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>{team2}</div>
+              <div style={{ fontSize:38, fontWeight:700, color:aiPct<50?C.green:C.t3, fontFamily:'monospace', lineHeight:1, letterSpacing:'-1px' }}>{aiTeam2Pct}%</div>
+              <div style={{ fontSize:10, color:C.t3, marginTop:5 }}>AI odds</div>
+              {mktTeam2Pct !== null && <div style={{ fontSize:10, color:C.t3, marginTop:3 }}>Mkt: <span style={{ color:C.t2, fontWeight:600 }}>{mktTeam2Pct}%</span></div>}
+            </div>
+          </div>
+          {/* Verdict line */}
+          <div style={{ textAlign:'center' as const, fontSize:18, fontWeight:700, color:verdictColor, letterSpacing:'-0.5px' }}>{bigVerdict}</div>
+          <div style={{ textAlign:'center' as const, fontSize:12, color:C.t3, marginTop:4 }}>{plainExplain}</div>
+        </div>
+      ) : (
+        /* NON-MATCHUP — standard verdict */
+        <div style={{ padding:'18px', borderBottom:'1px solid '+C.border }}>
+          <div style={{ fontSize:36, fontWeight:700, letterSpacing:'-1.5px', color:verdictColor, lineHeight:1, marginBottom:10 }}>{bigVerdict}</div>
+          <div style={{ marginBottom:12 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+              <span style={{ fontSize:11, color:C.t3 }}>AI confidence</span>
+              <span style={{ fontSize:12, fontWeight:700, fontFamily:'monospace', color:verdictColor }}>{aiPct}%</span>
+            </div>
+            <div style={{ height:5, background:'rgba(255,255,255,0.05)', borderRadius:3, overflow:'hidden' }}>
+              <div style={{ height:'100%', borderRadius:3, background:verdictColor, width:aiPct+'%', transition:'width 0.8s ease' }} />
+            </div>
+          </div>
+          <div style={{ fontSize:12, color:C.t2, lineHeight:1.6, padding:'10px 12px', background:'rgba(0,0,0,0.15)', borderRadius:8, borderLeft:'2px solid '+verdictColor }}>{plainExplain}</div>
+        </div>
+      )}
+
+      {/* 4 METRIC CARDS */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:0, borderBottom:'1px solid '+C.border }}>
+        {[
+          { label:'Market', value: marketValid ? marketPct+'%' : '—', color: C.t2 },
+          { label:'AI thinks', value: aiPct+'%', color: verdictColor },
+          { label:'Edge', value: edge !== null ? (edge>0?'+':'')+edge+'%' : '—', color: edge !== null && Math.abs(edge) > 5 ? (edge>0?C.green:C.red) : C.t3 },
+          { label:'Conviction', value: conv.score, color: conv.score === 'High' ? C.green : conv.score === 'Medium' ? C.amber : C.t3 },
+        ].map((m,i) => (
+          <div key={i} style={{ padding:'12px 0', textAlign:'center' as const, borderRight: i<3 ? '1px solid '+C.border : 'none' }}>
+            <div style={{ fontSize:10, color:C.t3, marginBottom:4, textTransform:'uppercase' as const, letterSpacing:'0.4px' }}>{m.label}</div>
+            <div style={{ fontSize:17, fontWeight:700, color:m.color, fontFamily:'monospace' }}>{m.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ACTION */}
+      <div style={{ padding:'12px 18px', borderBottom:'1px solid '+C.border }}>
+        <div style={{ fontSize:12, fontWeight:600, color:C.t1, padding:'8px 12px', background:'rgba(255,255,255,0.03)', borderRadius:8, border:'1px solid '+C.border }}>{action}</div>
+      </div>
+
+      {/* SIGNALS */}
+      {rows.length > 0 && (
+        <div style={{ padding:'14px 18px', borderBottom:'1px solid '+C.border }}>
+          <div style={{ fontSize:11, fontWeight:600, color:C.t3, textTransform:'uppercase' as const, letterSpacing:'0.5px', marginBottom:10 }}>What signals say</div>
+          {sigSummary && <div style={{ fontSize:12, color:C.t2, lineHeight:1.5, marginBottom:10 }}>{sigSummary}</div>}
+          <div style={{ display:'flex', flexDirection:'column' as const, gap:5 }}>
             {displayRows.map((r,i) => {
               const color = r.type === 'contrary' ? C.red : CAT_COLOR[r.category] || C.purple;
-              const isPos = r.contribution >= 0;
               const barW = Math.min(Math.abs(r.contribution) / 30 * 100, 100);
-              const shortName = ({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'X','Associated Press':'AP','Good Judgment Open':'GJ Open'} as Record<string,string>)[r.name] || r.name;
-              // Human-readable signal label
-              const signalLabel = r.type === 'strong' ? '↑ Agrees' : r.type === 'contrary' ? '↓ Disagrees' : r.type === 'priced' ? '~ Neutral' : '→ Mixed';
+              const shortName = ({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'X','Associated Press':'AP'} as Record<string,string>)[r.name] || r.name;
+              const tag = r.type === 'strong' ? 'Agrees' : r.type === 'contrary' ? 'Disagrees' : r.type === 'priced' ? 'Neutral' : 'Mixed';
+              const isPos = r.contribution >= 0;
               return (
-                <div key={i} style={{ display:'grid', alignItems:'center', gridTemplateColumns:'100px 1fr auto auto', gap:10 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-                    <div style={{ width:7, height:7, borderRadius:'50%', background:color, flexShrink:0 }}></div>
-                    <span style={{ fontSize:11, fontWeight:500, color:C.t2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{shortName}</span>
+                <div key={i} style={{ display:'grid', gridTemplateColumns:'90px 1fr auto auto', gap:8, alignItems:'center' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                    <div style={{ width:6, height:6, borderRadius:'50%', background:color, flexShrink:0 }}/>
+                    <span style={{ fontSize:11, color:C.t2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>{shortName}</span>
                   </div>
-                  <div style={{ height:6, background:'rgba(255,255,255,0.05)', borderRadius:3, overflow:'hidden' }}>
-                    <div style={{ height:'100%', borderRadius:3, background:color, width:barW+'%', opacity:0.9 }} />
+                  <div style={{ height:4, background:'rgba(255,255,255,0.05)', borderRadius:2, overflow:'hidden' }}>
+                    <div style={{ height:'100%', borderRadius:2, background:color, width:barW+'%' }} />
                   </div>
-                  <span style={{ fontSize:9, fontWeight:700, padding:'2px 7px', borderRadius:6, whiteSpace:'nowrap',
-                    background: r.type === 'strong' ? 'rgba(46,204,138,0.12)' : r.type === 'contrary' ? 'rgba(239,79,106,0.12)' : r.type === 'priced' ? 'rgba(77,157,224,0.12)' : 'rgba(245,166,35,0.12)',
-                    color: r.type === 'strong' ? C.green : r.type === 'contrary' ? C.red : r.type === 'priced' ? C.blue : C.amber,
-                  }}>{signalLabel}</span>
-                  <div style={{ fontSize:11, fontWeight:700, fontFamily:'monospace', color:isPos ? C.green : C.red, minWidth:36, textAlign:'right' }}>
-                    {isPos ? '+' : ''}{r.contribution}%
-                  </div>
+                  <span style={{ fontSize:9, fontWeight:600, padding:'2px 6px', borderRadius:4, whiteSpace:'nowrap' as const,
+                    background: r.type==='strong'?'rgba(46,204,138,0.1)':r.type==='contrary'?'rgba(239,79,106,0.1)':r.type==='priced'?'rgba(77,157,224,0.1)':'rgba(245,166,35,0.1)',
+                    color: r.type==='strong'?C.green:r.type==='contrary'?C.red:r.type==='priced'?C.blue:C.amber }}>{tag}</span>
+                  <div style={{ fontSize:11, fontWeight:700, fontFamily:'monospace', color:isPos?C.green:C.red, minWidth:32, textAlign:'right' as const }}>{isPos?'+':''}{r.contribution}%</div>
                 </div>
               );
             })}
           </div>
           {rows.length > 6 && (
-            <button onClick={() => setShowAll(!showAll)} style={{ marginTop:12, fontSize:11, color:C.t3, background:'none', border:'none', cursor:'pointer', padding:0 }}>
-              {showAll ? 'Show less' : '+ Show ' + (rows.length - 6) + ' more sources'}
+            <button onClick={() => setShowAll(!showAll)} style={{ marginTop:10, fontSize:11, color:C.t3, background:'none', border:'none', cursor:'pointer', padding:0 }}>
+              {showAll ? 'Show less' : '+ Show ' + (rows.length-6) + ' more sources'}
             </button>
           )}
         </div>
       )}
 
-      {/* Share section — always visible */}
-      <ShareButtons question={question} aiPct={aiPct} marketPct={marketPct} hasMarket={hasMarket} />
+      {/* SHARE */}
+      <ShareButtons question={question} aiPct={aiPct} marketPct={marketPct} hasMarket={hasMarket} isMatchup={isMatchup} team1={team1} team2={team2} aiTeam2Pct={aiTeam2Pct} />
     </div>
   );
 }
 
-function ShareButtons({ question, aiPct, marketPct, hasMarket }: { question:string; aiPct:number; marketPct:number; hasMarket:boolean }) {
+function ShareButtons({ question, aiPct, marketPct, hasMarket, isMatchup, team1, team2, aiTeam2Pct }: { question:string; aiPct:number; marketPct:number; hasMarket:boolean; isMatchup?:boolean; team1?:string; team2?:string; aiTeam2Pct?:number }) {
   const [copied, setCopied] = useState(false);
-  const verdict = aiPct >= 65 ? 'Very likely YES' : aiPct >= 50 ? 'Probably YES' : aiPct >= 35 ? 'Probably NO' : 'Very likely NO';
-  const emoji = aiPct >= 65 ? '✅' : aiPct >= 50 ? '🟡' : '❌';
 
-  const marketLine = hasMarket && marketPct > 0 ? '\nMarket says: ' + marketPct + '%' : '';
-  const shareText = emoji + ' PlayPicks AI: ' + aiPct + '% chance YES\n\n"' + question + '"\n\n' + verdict + marketLine + '\n\nGet AI odds on anything → tradedna.vercel.app\n#PlayPicks #PredictionMarkets';
+  const shareText = isMatchup && team1 && team2
+    ? `🏀 AI Prediction: ${team1} vs ${team2}\n\n${team1}: ${aiPct}% | ${team2}: ${aiTeam2Pct}%\n\n${hasMarket && marketPct > 0 && marketPct < 98 ? 'Market agrees at ' + marketPct + '% for ' + team1 + '\n\n' : ''}Get full AI analysis 👇\ntradedna.vercel.app\n\n#PlayPicks #AIodds`
+    : `🤖 PlayPicks AI: ${aiPct}% chance\n\n"${question}"\n\n${hasMarket && marketPct > 0 ? 'Market: ' + marketPct + '%\n\n' : ''}tradedna.vercel.app\n#PlayPicks`;
 
   function onX() {
     window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(shareText), '_blank', 'width=550,height=420');
