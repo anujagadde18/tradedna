@@ -488,34 +488,33 @@ function ScoresPageContent() {
   const runAnalysis = async () => {
     if (mtype === 'categorical') return;
     if (!event) return;
-    try {
-      // Convert Polymarket URL to a readable question for news search
-      let analysisQuery = event;
-      if (event.includes('polymarket.com/event/')) {
-        // Use market title if available, otherwise convert slug
-        if (marketTitle) {
-          analysisQuery = marketTitle;
+
+    // Convert Polymarket URL to a readable question for news search
+    let analysisQuery = event;
+    if (event.includes('polymarket.com/event/')) {
+      if (marketTitle) {
+        analysisQuery = marketTitle;
+      } else {
+        const slug = event.split('polymarket.com/event/')[1]?.split('/')[0]?.split('?')[0] || '';
+        const NBA: Record<string,string> = {'cha':'Hornets','bos':'Celtics','chi':'Bulls','was':'Wizards','uta':'Jazz','nop':'Pelicans','min':'Timberwolves','ind':'Pacers','mil':'Bucks','bkn':'Nets','okc':'Thunder','lal':'Lakers','mia':'Heat','tor':'Raptors','sac':'Kings','gsw':'Warriors','hou':'Rockets','phx':'Suns','atl':'Braves','laa':'Angels','ari':'Diamondbacks','nym':'Mets','kc':'Royals','cle':'Guardians','tb':'Lightning','ott':'Senators','edm':'Oilers','cbj':'Blue Jackets','det':'Red Wings','oak':'Athletics','nyy':'Yankees'};
+        const m = slug.match(/^(?:nba|nhl|mlb)-([a-z]+)-([a-z]+)/);
+        if (m && NBA[m[1]] && NBA[m[2]]) {
+          analysisQuery = `Will ${NBA[m[1]]} beat ${NBA[m[2]]}?`;
         } else {
-          const slug = event.split('polymarket.com/event/')[1]?.split('/')[0]?.split('?')[0] || '';
-          const NBA: Record<string,string> = {'cha':'Hornets','bos':'Celtics','chi':'Bulls','was':'Wizards','uta':'Jazz','nop':'Pelicans','min':'Timberwolves','ind':'Pacers','mil':'Bucks','bkn':'Nets','okc':'Thunder','lal':'Lakers','mia':'Heat','tor':'Raptors','sac':'Kings','gsw':'Warriors','hou':'Rockets','phx':'Suns','atl':'Braves','laa':'Angels','ari':'Diamondbacks','nym':'Mets','kc':'Royals','cle':'Guardians','tb':'Lightning','ott':'Senators','edm':'Oilers','cbj':'Blue Jackets','det':'Red Wings','oak':'Athletics','nyy':'Yankees'};
-          const m = slug.match(/^(?:nba|nhl|mlb)-([a-z]+)-([a-z]+)/);
-          if (m && NBA[m[1]] && NBA[m[2]]) {
-            analysisQuery = `Will ${NBA[m[1]]} beat ${NBA[m[2]]}?`;
-          } else {
-            analysisQuery = slug.split('-').filter(w => isNaN(Number(w))).map(w => w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
-          }
+          analysisQuery = slug.split('-').filter(w => isNaN(Number(w))).map(w => w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
         }
       }
+    }
 
-      // Don't pass live game odds (95%+) as market odds — they're current score, not probability
-      const marketOddsForAI = odds !== null && odds > 5 && odds < 95 ? odds : null;
+    const marketOddsForAI = odds !== null && odds > 5 && odds < 95 ? odds : null;
 
-      // For live games, skip AI analysis — show market odds as-is with warning
-      if (odds !== null && (odds >= 95 || odds <= 5)) {
-        setIntel(calculateIntelligence(odds, weights, 0, odds, event));
-        return;
-      }
+    // For live games skip AI — show market odds directly
+    if (odds !== null && (odds >= 95 || odds <= 5)) {
+      setIntel(calculateIntelligence(odds, weights, 0, odds, event));
+      return;
+    }
 
+    try {
       const res = await fetch('/api/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -529,9 +528,7 @@ function ScoresPageContent() {
       setInvalidQuestion(null);
       if (data.confidence) {
         setIntel(calculateIntelligence(data.confidence, weights, 0, marketOddsForAI, event));
-        if (data.sources && data.sources.length > 0) {
-          setRealSources(data.sources);
-        }
+        if (data.sources && data.sources.length > 0) setRealSources(data.sources);
       } else {
         const seed = analysisQuery.split('').reduce((acc:number, c:string) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0);
         setIntel(calculateIntelligence(45 + ((seed % 35 + 35) % 35), weights, 0, marketOddsForAI, event));
