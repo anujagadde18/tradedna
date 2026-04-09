@@ -188,26 +188,29 @@ export default function HomePage() {
         {/* LIVE MARKETS */}
         <div style={{maxWidth:960,margin:'0 auto',padding:'0 24px 48px'}}>
 
-          {/* TONIGHT'S MATCHES — today's games across all sports */}
+          {/* UPCOMING MATCHES — next games across all sports */}
           {(() => {
-            const tonight = events.filter(e => {
+            const now = new Date();
+            const upcoming = events.filter(e => {
               if (e.category !== 'sports') return false;
               if (!e.title.toLowerCase().includes(' vs')) return false;
               if (e.marketCount < 2) return false;
-              // Filter out games where market is 95%+ (already decided/live)
+              // Filter out finished games (95%+ odds = decided)
               if (e.yesPrice !== null && (e.yesPrice >= 95 || e.yesPrice <= 5)) return false;
+              // Filter out games that ended already
+              if (e.endDate && new Date(e.endDate) < now) return false;
               return true;
             }).slice(0, 6);
-            if (tonight.length === 0) return null;
+            if (upcoming.length === 0) return null;
             return (
               <div style={{marginBottom:28}}>
                 <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
                   <span style={{fontSize:16}}>🔥</span>
-                  <span style={{fontSize:13,fontWeight:700,color:C.t1}}>Tonight's matches</span>
+                  <span style={{fontSize:13,fontWeight:700,color:C.t1}}>Upcoming matches</span>
                   <span style={{fontSize:11,color:C.t3}}>· live odds from Polymarket</span>
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
-                  {tonight.map(e => {
+                  {upcoming.map(e => {
                     const parts = e.title.split(/\s+vs\.?\s+/i);
                     const team1 = e.team1 || parts[0]?.trim() || e.title;
                     const team2 = e.team2 || parts[1]?.trim() || '';

@@ -193,6 +193,8 @@ async function fetchMoneyline(eventSlug: string): Promise<number | null> {
 
 export async function GET(req: NextRequest) {
   const category = req.nextUrl.searchParams.get('category') || 'all';
+  const now = new Date();
+  const tomorrow = new Date(now.getTime() + 48 * 60 * 60 * 1000); // next 48 hours
 
   const events = await fetchLive(50);
 
@@ -212,6 +214,14 @@ export async function GET(req: NextRequest) {
 
     const teamNames = teamsFromSlug(event.slug);
     const yesPrice = getYesPrice(event) ?? getMoneylineOdds(event);
+
+    // For game matchups — skip if already finished (yesPrice 95%+) or endDate passed
+    const isGameMatchup = /^(nba|nhl|mlb|nfl|epl|ucl)-/.test(event.slug);
+    if (isGameMatchup) {
+      if (yesPrice !== null && (yesPrice >= 95 || yesPrice <= 5)) continue; // finished
+      const endDate = event.endDate ? new Date(event.endDate) : null;
+      if (endDate && endDate < now) continue; // already ended
+    }
 
     results.push({
       slug:               event.slug,
