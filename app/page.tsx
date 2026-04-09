@@ -7,7 +7,7 @@ interface TrendingEvent {
   slug:string; title:string; url:string; volume:number; volumeFormatted:string;
   category:string; icon:string; yesPrice:number|null; marketCount:number;
   image:string|null; volume24h:number; volume24hFormatted:string;
-  team1:string|null; team2:string|null;
+  team1:string|null; team2:string|null; endDate:string;
 }
 
 const C = {
