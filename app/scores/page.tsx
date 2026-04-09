@@ -86,10 +86,13 @@ function SourceAvatar({ name, category }: { name: string; category: string }) {
   );
 }
 
-function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
-  aiPct: number; marketPct: number; question: string; sources: any[]; hasMarket: boolean;
+function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, outcomes }: {
+  aiPct: number; marketPct: number; question: string; sources: any[]; hasMarket: boolean; mtype?: string; outcomes?: any[];
 }) {
   const [showAll, setShowAll] = useState(false);
+
+  const isCategorical = mtype === 'categorical';
+  const topOutcomes = outcomes?.slice(0, 5) || [];
 
   const matchup = question.match(/^(.+?)\s+vs\.?\s+(.+)$/i);
   const team1 = matchup?.[1]?.trim() || '';
@@ -160,8 +163,30 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket }: {
         </div>
       </div>
 
-      {/* MATCHUP ODDS */}
-      {isMatchup ? (
+      {/* CATEGORICAL — show top contenders */}
+      {isCategorical && topOutcomes.length > 0 ? (
+        <div style={{ padding:'18px', borderBottom:'1px solid '+C.border }}>
+          <div style={{ fontSize:11, color:C.t3, marginBottom:12, textTransform:'uppercase' as const, letterSpacing:'0.5px' }}>Top contenders</div>
+          <div style={{ display:'flex', flexDirection:'column' as const, gap:8 }}>
+            {topOutcomes.map((o: any, i: number) => {
+              const pct = o.odds || 0;
+              const isTop = i === 0;
+              return (
+                <div key={i} style={{ display:'flex', alignItems:'center', gap:12 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:isTop ? C.t1 : C.t2, width:140, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>{o.name}</div>
+                  <div style={{ flex:1, height:6, background:'rgba(255,255,255,0.05)', borderRadius:3, overflow:'hidden' }}>
+                    <div style={{ height:'100%', borderRadius:3, background:isTop ? C.green : C.t3, width: Math.min(pct * 2, 100)+'%' }} />
+                  </div>
+                  <div style={{ fontSize:14, fontWeight:700, color:isTop ? C.green : C.t2, fontFamily:'monospace', minWidth:40, textAlign:'right' as const }}>{pct}%</div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ marginTop:14, fontSize:13, fontWeight:600, color:verdictColor }}>
+            Top pick: {topOutcomes[0]?.name} at {topOutcomes[0]?.odds}%
+          </div>
+        </div>
+      ) : isMatchup ? (
         <div style={{ padding:'18px', borderBottom:'1px solid '+C.border }}>
           {isLiveGame && (
             <div style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 12px', borderRadius:8, background:'rgba(245,166,35,0.08)', border:'1px solid rgba(245,166,35,0.2)', marginBottom:12 }}>
@@ -746,7 +771,7 @@ function ScoresPageContent() {
                   </button>
                 </div>
               ) : (
-                <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} />
+                <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} mtype={mtype} outcomes={outcomes} />
               )}
                 {invalidQuestion ? (
                   <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100%', padding:24, gap:12, textAlign:'center', background:C.bg2, border:'1px solid '+C.border, borderRadius:16 }}>
