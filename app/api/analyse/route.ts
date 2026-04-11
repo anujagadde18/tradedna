@@ -10,19 +10,14 @@ const REAL_SIGNALS = [
   'percent','dollar','euro','senate','congress','supreme','court',
   'tariff','trade','oil','energy','climate','nuclear','military',
   'trump','biden','harris','musk','openai','google','apple','tesla','amazon',
+  'nasa','space','temperature','weather','storm','hurricane','earthquake',
+  'ipl','cricket','masters','golf','champions','league','world cup',
 ];
 
 function validateQuestion(query: string): { valid: boolean; reason?: string } {
   if (query.includes('polymarket.com') || query.includes('/event/')) return { valid: true };
-  if (!query || query.trim().length < 4) return { valid: false, reason: 'too_short' };
-  const q = query.toLowerCase();
-  // Accept sports matchups like "Will Hornets beat Celtics?"
-  const isMatchup = /\b(vs\.?|beat|beats|win|wins|winner|champion|final|cup|masters|open|gp|grand prix|tournament|playoffs|series)\b/i.test(query);
-  if (isMatchup) return { valid: true };
-  // Accept if has question word
-  const hasQuestionWord = /\b(will|would|could|can|should|when|what|who|which|how|is|are|does|did|has|have|by|before|after)\b/i.test(query);
-  if (!hasQuestionWord) return { valid: false, reason: 'not_a_question' };
-  if (query.length < 25 && !REAL_SIGNALS.some(w => q.includes(w))) return { valid: false, reason: 'no_real_entity' };
+  if (!query || query.trim().length < 8) return { valid: false, reason: 'too_short' };
+  // Accept everything — sports, politics, science, NASA, entertainment, anything
   return { valid: true };
 }
 
