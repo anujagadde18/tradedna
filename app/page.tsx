@@ -244,10 +244,13 @@ export default function HomePage() {
               if (e.category !== 'sports') return false;
               if (!e.title.toLowerCase().includes(' vs')) return false;
               if (e.marketCount < 2) return false;
-              // Filter out finished games (95%+ odds = decided)
+              // Filter out finished games
               if (e.yesPrice !== null && (e.yesPrice >= 95 || e.yesPrice <= 5)) return false;
-              // Filter out games that ended already
+              // Filter out ended games
               if (e.endDate && new Date(e.endDate) < now) return false;
+              // Filter out esports (LoL, Counter-Strike, Dota, etc)
+              const title = e.title.toLowerCase();
+              if (title.includes('lol:') || title.includes('league of legends') || title.includes('counter-strike') || title.includes('dota') || title.includes('bo3') || title.includes('bo5') || title.includes('lec') || title.includes('lpl') || title.includes('lck') || title.includes('esport')) return false;
               return true;
             }).slice(0, 6);
             if (upcoming.length === 0) return null;

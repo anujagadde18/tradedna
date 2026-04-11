@@ -145,8 +145,14 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
   }).filter(r => r.contribution !== 0).sort((a,b) => Math.abs(b.contribution) - Math.abs(a.contribution));
 
   const displayRows = showAll ? rows : rows.slice(0, 6);
-  const strongSources = rows.filter(r => r.type === 'strong').map(r => r.name.split(' ')[0]);
-  const contrarySources = rows.filter(r => r.type === 'contrary').map(r => r.name.split(' ')[0]);
+  const getShortName = (name: string) => {
+    const map: Record<string,string> = {'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'X','Associated Press':'AP','The Indian Express':'Indian Express','The Times of India':'Times of India','The Hindu':'The Hindu','Hacker News':'HackerNews','Good Judgment Open':'GJ Open'};
+    if (map[name]) return map[name];
+    // Remove leading "The " for display
+    return name.replace(/^The\s+/i, '').split(' ').slice(0,2).join(' ');
+  };
+  const strongSources = rows.filter(r => r.type === 'strong').map(r => getShortName(r.name));
+  const contrarySources = rows.filter(r => r.type === 'contrary').map(r => getShortName(r.name));
   const sigSummary = strongSources.length > 0
     ? `${strongSources.slice(0,2).join(', ')} ${strongSources.length > 1 ? 'are' : 'is'} showing strong positive signals.${contrarySources.length > 0 ? ` ${contrarySources[0]} disagrees.` : ''}`
     : rows.length > 0 ? 'Mixed signals across sources — no clear consensus.' : '';
@@ -266,7 +272,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
             {displayRows.map((r,i) => {
               const color = r.type === 'contrary' ? C.red : CAT_COLOR[r.category] || C.purple;
               const barW = Math.min(Math.abs(r.contribution) / 30 * 100, 100);
-              const shortName = ({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'X','Associated Press':'AP'} as Record<string,string>)[r.name] || r.name;
+              const shortName = ({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'X','Associated Press':'AP','The Indian Express':'Indian Express','The Times of India':'Times of India','The Hindu':'The Hindu','Hacker News':'HackerNews'} as Record<string,string>)[r.name] || r.name.replace(/^The\s+/i,'').split(' ').slice(0,2).join(' ');
               const tag = r.type === 'strong' ? 'Agrees' : r.type === 'contrary' ? 'Disagrees' : r.type === 'priced' ? 'Neutral' : 'Mixed';
               const isPos = r.contribution >= 0;
               return (
@@ -303,8 +309,14 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
 function ShareButtons({ question, aiPct, marketPct, hasMarket, isMatchup, team1, team2, aiTeam2Pct }: { question:string; aiPct:number; marketPct:number; hasMarket:boolean; isMatchup?:boolean; team1?:string; team2?:string; aiTeam2Pct?:number }) {
   const [copied, setCopied] = useState(false);
 
+  const sportEmoji = question.toLowerCase().includes('ipl') || question.toLowerCase().includes('cricket') ? '🏏' :
+    question.toLowerCase().includes('nba') || question.toLowerCase().includes('basketball') ? '🏀' :
+    question.toLowerCase().includes('nhl') || question.toLowerCase().includes('hockey') ? '🏒' :
+    question.toLowerCase().includes('mlb') || question.toLowerCase().includes('baseball') ? '⚾' :
+    question.toLowerCase().includes('soccer') || question.toLowerCase().includes('fc') || question.toLowerCase().includes('united') ? '⚽' : '🏆';
+
   const shareText = isMatchup && team1 && team2
-    ? `🏀 AI Prediction: ${team1} vs ${team2}\n\n${team1}: ${aiPct}% | ${team2}: ${aiTeam2Pct}%\n\n${hasMarket && marketPct > 0 && marketPct < 98 ? 'Market agrees at ' + marketPct + '% for ' + team1 + '\n\n' : ''}Get full AI analysis 👇\ntradedna.vercel.app\n\n#PlayPicks #AIodds`
+    ? `${sportEmoji} AI Prediction: ${team1} vs ${team2}\n\n${team1}: ${aiPct}% | ${team2}: ${aiTeam2Pct}%\n\n${hasMarket && marketPct > 0 && marketPct < 98 ? 'Market: ' + marketPct + '% for ' + team1 + '\n\n' : ''}Full AI analysis 👇\ntradedna.vercel.app\n\n#PlayPicks #AIodds`
     : `🤖 PlayPicks AI: ${aiPct}% chance\n\n"${question}"\n\n${hasMarket && marketPct > 0 ? 'Market: ' + marketPct + '%\n\n' : ''}tradedna.vercel.app\n#PlayPicks`;
 
   function onX() {
@@ -501,7 +513,9 @@ function ScoresPageContent() {
         if (m && NBA[m[1]] && NBA[m[2]]) {
           analysisQuery = `Will ${NBA[m[1]]} beat ${NBA[m[2]]}?`;
         } else {
-          analysisQuery = slug.split('-').filter(w => isNaN(Number(w))).map(w => w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+          // Keep readable slug but also pass the original URL as fallback
+          const readable = slug.split('-').filter((w:string) => isNaN(Number(w)) && w !== 'c' && w !== 'f').map((w:string) => w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+          analysisQuery = readable.length > 10 ? readable : event;
         }
       }
     }
@@ -510,6 +524,7 @@ function ScoresPageContent() {
 
     // For live games skip AI — show market odds directly
     if (odds !== null && (odds >= 95 || odds <= 5)) {
+      setInvalidQuestion(null);
       setIntel(calculateIntelligence(odds, weights, 0, odds, event));
       return;
     }
@@ -749,7 +764,7 @@ function ScoresPageContent() {
 
             {frame === 'verdict' && (
               <div style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap:16 }}>
-                {invalidQuestion ? (
+                {invalidQuestion && !intel ? (
                 <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:300, textAlign:'center', gap:16, padding:40 }}>
                   <div style={{ fontSize:48 }}>?</div>
                   <div style={{ fontSize:20, fontWeight:700, color:C.t1, letterSpacing:'-0.4px' }}>This doesn't look like a real prediction</div>
@@ -770,7 +785,7 @@ function ScoresPageContent() {
               ) : (
                 <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} mtype={mtype} outcomes={outcomes} />
               )}
-                {invalidQuestion ? (
+                {invalidQuestion && !intel ? (
                   <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100%', padding:24, gap:12, textAlign:'center', background:C.bg2, border:'1px solid '+C.border, borderRadius:16 }}>
                     <div style={{ fontSize:12, color:C.t3, lineHeight:1.6 }}>Ask a real prediction market question to see the AI verdict, conviction score, and trade recommendation.</div>
                   </div>
