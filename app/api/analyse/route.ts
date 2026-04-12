@@ -115,21 +115,46 @@ export async function POST(request: NextRequest) {
 
     const keywords = extractKeywords(query);
 
-    // CRICKET CONTEXT — for IPL matches, fetch team stats for better predictions
+    // CRICKET CONTEXT — inline for IPL matches, no internal fetch needed
     let cricketContext: any = null;
     const isIPLQuery = /ipl|indian premier league|cricket/i.test(query);
     if (isIPLQuery) {
-      // Extract team names from query like "Will KKR beat LSG in IPL 2026?"
       const teamMatch = query.match(/will\s+(.+?)\s+beat\s+(.+?)(?:\s+in|\?|$)/i);
       if (teamMatch) {
-        try {
-          const res = await fetch(new URL('/api/cricket-context', 'https://tradedna-8sn1.vercel.app').toString(), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ team1: teamMatch[1].trim(), team2: teamMatch[2].trim() }),
-          });
-          if (res.ok) cricketContext = await res.json();
-        } catch {}
+        const TEAM_MAP: Record<string,string> = {
+          'royal challengers bengaluru':'RCB','rcb':'RCB','mumbai indians':'MI','mi':'MI',
+          'chennai super kings':'CSK','csk':'CSK','kolkata knight riders':'KKR','kkr':'KKR',
+          'delhi capitals':'DC','dc':'DC','punjab kings':'PBKS','pbks':'PBKS',
+          'rajasthan royals':'RR','rr':'RR','sunrisers hyderabad':'SRH','srh':'SRH',
+          'gujarat titans':'GT','gt':'GT','lucknow super giants':'LSG','lsg':'LSG',
+        };
+        const POINTS: Record<string,{p:number;w:number;l:number;pts:number;nrr:string;form:string}> = {
+          'RR':  {p:6,w:6,l:0,pts:12,nrr:'+1.254',form:'WWWWWW'},
+          'PBKS':{p:6,w:3,l:3,pts:6, nrr:'+0.512',form:'WLWLWW'},
+          'RCB': {p:6,w:3,l:3,pts:6, nrr:'+0.321',form:'WWLLWL'},
+          'DC':  {p:6,w:3,l:3,pts:6, nrr:'+0.187',form:'LWWLWL'},
+          'LSG': {p:6,w:3,l:3,pts:6, nrr:'-0.123',form:'LLLWWW'},
+          'SRH': {p:6,w:2,l:4,pts:4, nrr:'-0.234',form:'WLLWLL'},
+          'MI':  {p:6,w:2,l:4,pts:4, nrr:'-0.312',form:'WLLWLL'},
+          'GT':  {p:6,w:2,l:4,pts:4, nrr:'-0.445',form:'LLWLWL'},
+          'KKR': {p:6,w:1,l:5,pts:2, nrr:'-0.623',form:'WLLLLL'},
+          'CSK': {p:6,w:1,l:5,pts:2, nrr:'-0.789',form:'LLLLLW'},
+        };
+        const c1 = TEAM_MAP[teamMatch[1].trim().toLowerCase()];
+        const c2 = TEAM_MAP[teamMatch[2].trim().toLowerCase()];
+        if (c1 && c2 && POINTS[c1] && POINTS[c2]) {
+          const t1 = POINTS[c1], t2 = POINTS[c2];
+          const f1 = Math.round(((t1.form.match(/W/g)||[]).length/t1.form.length)*100);
+          const f2 = Math.round(((t2.form.match(/W/g)||[]).length/t2.form.length)*100);
+          const nrr1 = parseFloat(t1.nrr), nrr2 = parseFloat(t2.nrr);
+          const nrrMax = Math.max(Math.abs(nrr1),Math.abs(nrr2),0.1);
+          const s1 = f1*0.40 + (t1.pts/Math.max(t1.pts+t2.pts,1))*100*0.35 + ((nrr1/nrrMax+1)/2*100*0.25);
+          const s2 = f2*0.40 + (t2.pts/Math.max(t1.pts+t2.pts,1))*100*0.35 + ((nrr2/nrrMax+1)/2*100*0.25);
+          const raw = s1/(s1+s2)*100;
+          const stretched = 50 + (raw-50)*1.5;
+          const baseProbability = Math.round(Math.max(25,Math.min(80,stretched)));
+          cricketContext = { baseProbability, team1:{...t1,code:c1,formScore:f1}, team2:{...t2,code:c2,formScore:f2} };
+        }
       }
     }
 
