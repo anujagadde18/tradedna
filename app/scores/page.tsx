@@ -796,17 +796,17 @@ function ScoresPageContent() {
                     <div style={{ background:'rgba(255,255,255,0.03)', borderRadius:9, overflow:'hidden', display:'grid', gridTemplateColumns:'1fr 40px 1fr', marginBottom:10 }}>
                       <div style={{ padding:'12px 8px', textAlign:'center' }}>
                         <div style={{ fontSize:8, textTransform:'uppercase', letterSpacing:'0.4px', color:C.t3, marginBottom:4 }}>Bettors</div>
-                        <div style={{ fontSize:28, fontWeight:700, letterSpacing:'-1.5px', fontFamily:'monospace', lineHeight:1, color:C.t2 }}>{mktPctForDisplay}%</div>
+                        <div style={{ fontSize:28, fontWeight:700, letterSpacing:'-1.5px', fontFamily:'monospace', lineHeight:1, color:C.t2 }}>{hasLiveMarket && mktPctForDisplay > 0 ? mktPctForDisplay+'%' : '—'}</div>
                         <div style={{ fontSize:8, color:C.t3, marginTop:2 }}>consensus</div>
                       </div>
                       <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', borderLeft:'1px solid '+C.border, borderRight:'1px solid '+C.border, padding:'6px 0' }}>
                         <div style={{ fontSize:7, color:C.t3, textTransform:'uppercase', marginBottom:4 }}>vs</div>
-                        <div style={{ fontSize:9, fontWeight:700, padding:'2px 6px', borderRadius:6, background:C.amberBg, color:C.amber }}>{edgeVal > 0 ? '+' : ''}{edgeVal.toFixed(0)}%</div>
+                        <div style={{ fontSize:9, fontWeight:700, padding:'2px 6px', borderRadius:6, background:C.amberBg, color:C.amber }}>{hasLiveMarket && edgeVal !== 0 ? (edgeVal > 0 ? '+' : '')+edgeVal.toFixed(0)+'%' : '—'}</div>
                       </div>
                       <div style={{ padding:'12px 8px', textAlign:'center', background:'rgba(77,157,224,0.07)', borderRadius:'0 9px 9px 0' }}>
                         <div style={{ fontSize:8, textTransform:'uppercase', letterSpacing:'0.4px', color:C.blue, marginBottom:4 }}>AI thinks</div>
                         <div style={{ fontSize:28, fontWeight:700, letterSpacing:'-1.5px', fontFamily:'monospace', lineHeight:1, color:C.blue }}>{aiPctForDisplay}%</div>
-                        <div style={{ fontSize:8, color:C.blue, marginTop:2 }}>edge found</div>
+                        <div style={{ fontSize:8, color:C.blue, marginTop:2 }}>confidence</div>
                       </div>
                     </div>
                     <span style={{ display:'inline-flex', padding:'3px 9px', borderRadius:20, fontSize:10, fontWeight:700, background:convBg, color:edgeColor, border:'1px solid '+edgeColor+'33' }}>{convLabel}</span>
@@ -818,7 +818,7 @@ function ScoresPageContent() {
                       <div style={{ height:'100%', borderRadius:2, background:'linear-gradient(90deg,'+C.red+','+C.amber+','+C.green+')', width:Math.min(100,Math.max(0,aiPctForDisplay))+'%', transition:'width .5s' }} />
                     </div>
                     <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:5, marginBottom:8 }}>
-                      {[{v:mktPctForDisplay+'%',l:'Market',c:C.t2},{v:aiPctForDisplay+'%',l:'AI',c:C.purpleL},{v:(edgeVal>0?'+':'')+edgeVal.toFixed(0)+'%',l:'Edge',c:edgeColor}].map(x => (
+                      {[{v: hasLiveMarket && mktPctForDisplay > 0 ? mktPctForDisplay+'%' : '—', l:'Market',c:C.t2},{v:aiPctForDisplay+'%',l:'AI',c:C.purpleL},{v: hasLiveMarket && edgeVal !== 0 ? (edgeVal>0?'+':'')+edgeVal.toFixed(0)+'%' : '—',l:'Edge',c:edgeColor}].map(x => (
                         <div key={x.l} style={{ background:'rgba(255,255,255,0.03)', borderRadius:7, padding:'8px 5px', textAlign:'center' }}>
                           <div style={{ fontSize:18, fontWeight:700, fontFamily:'monospace', letterSpacing:'-0.5px', color:x.c }}>{x.v}</div>
                           <div style={{ fontSize:8, color:C.t3, textTransform:'uppercase', letterSpacing:'0.3px', marginTop:2 }}>{x.l}</div>
