@@ -96,8 +96,10 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
   const topOutcomes = outcomes?.slice(0, 5) || [];
 
   const matchup = question.match(/^(.+?)\s+vs\.?\s+(.+)$/i);
-  const team1 = matchup?.[1]?.trim() || '';
-  const team2 = matchup?.[2]?.trim() || '';
+  // Also try "Will X beat Y" pattern for IPL questions
+  const beatMatch = (rawEvent||question).match(/will\s+(.+?)\s+beat\s+(.+?)(?:\s+in|\?|$)/i);
+  const team1 = matchup?.[1]?.trim() || beatMatch?.[1]?.trim() || '';
+  const team2 = matchup?.[2]?.trim() || beatMatch?.[2]?.trim() || '';
   const isMatchup = !!(team1 && team2);
   const isIPL = /ipl|cricket/i.test(question) || /ipl|cricket/i.test(rawEvent||'');
 
