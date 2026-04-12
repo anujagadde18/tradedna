@@ -86,8 +86,8 @@ function SourceAvatar({ name, category }: { name: string; category: string }) {
   );
 }
 
-function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, outcomes }: {
-  aiPct: number; marketPct: number; question: string; sources: any[]; hasMarket: boolean; mtype?: string; outcomes?: any[];
+function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, outcomes, rawEvent }: {
+  aiPct: number; marketPct: number; question: string; sources: any[]; hasMarket: boolean; mtype?: string; outcomes?: any[]; rawEvent?: string;
 }) {
   const [showAll, setShowAll] = useState(false);
   const [spotlight, setSpotlight] = useState<any>(null);
@@ -99,19 +99,22 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
   const team1 = matchup?.[1]?.trim() || '';
   const team2 = matchup?.[2]?.trim() || '';
   const isMatchup = !!(team1 && team2);
-  const isIPL = /ipl|cricket/i.test(question);
+  const isIPL = /ipl|cricket/i.test(question) || /ipl|cricket/i.test(rawEvent||'');
 
   // Fetch player spotlight for IPL matches
   useEffect(() => {
-    if (!isIPL || !isMatchup) return;
-    const m = question.match(/will\s+(.+?)\s+beat\s+(.+?)(?:\s+in|\?|$)/i);
+    if (!isIPL) return;
+    // Try to extract teams from raw event first (full question), then question
+    const src = rawEvent || question;
+    const m = src.match(/will\s+(.+?)\s+beat\s+(.+?)(?:\s+in|\?|$)/i)
+           || src.match(/(.+?)\s+vs\.?\s+(.+?)(?:\s+ipl|\?|$)/i);
     if (!m) return;
     fetch('/api/cricket-context', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ team1: m[1].trim(), team2: m[2].trim() }),
     }).then(r => r.json()).then(d => { if (d.spotlight) setSpotlight(d.spotlight); }).catch(() => {});
-  }, [question]);
+  }, [question, rawEvent]);
   const marketValid = hasMarket && marketPct > 0 && marketPct < 98;
   const isLiveGame = isMatchup && hasMarket && (marketPct >= 95 || marketPct <= 5);
   const edge = marketValid ? aiPct - marketPct : null;
@@ -832,7 +835,7 @@ function ScoresPageContent() {
                   </button>
                 </div>
               ) : (
-                <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} mtype={mtype} outcomes={outcomes} />
+                <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} mtype={mtype} outcomes={outcomes} rawEvent={event} />
               )}
                 {invalidQuestion && !intel ? (
                   <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100%', padding:24, gap:12, textAlign:'center', background:C.bg2, border:'1px solid '+C.border, borderRadius:16 }}>
