@@ -90,6 +90,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
   aiPct: number; marketPct: number; question: string; sources: any[]; hasMarket: boolean; mtype?: string; outcomes?: any[];
 }) {
   const [showAll, setShowAll] = useState(false);
+  const [spotlight, setSpotlight] = useState<any>(null);
 
   const isCategorical = mtype === 'categorical';
   const topOutcomes = outcomes?.slice(0, 5) || [];
@@ -98,6 +99,19 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
   const team1 = matchup?.[1]?.trim() || '';
   const team2 = matchup?.[2]?.trim() || '';
   const isMatchup = !!(team1 && team2);
+  const isIPL = /ipl|cricket/i.test(question);
+
+  // Fetch player spotlight for IPL matches
+  useEffect(() => {
+    if (!isIPL || !isMatchup) return;
+    const m = question.match(/will\s+(.+?)\s+beat\s+(.+?)(?:\s+in|\?|$)/i);
+    if (!m) return;
+    fetch('/api/cricket-context', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ team1: m[1].trim(), team2: m[2].trim() }),
+    }).then(r => r.json()).then(d => { if (d.spotlight) setSpotlight(d.spotlight); }).catch(() => {});
+  }, [question]);
   const marketValid = hasMarket && marketPct > 0 && marketPct < 98;
   const isLiveGame = isMatchup && hasMarket && (marketPct >= 95 || marketPct <= 5);
   const edge = marketValid ? aiPct - marketPct : null;
@@ -297,6 +311,41 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
               {showAll ? 'Show less' : '+ Show ' + (rows.length-6) + ' more sources'}
             </button>
           )}
+        </div>
+      )}
+
+      {/* PLAYER SPOTLIGHT — IPL only */}
+      {spotlight && (spotlight.team1 || spotlight.team2) && (
+        <div style={{ padding:'14px 18px', borderBottom:'1px solid '+C.border }}>
+          <div style={{ fontSize:11, fontWeight:600, color:C.t3, textTransform:'uppercase' as const, letterSpacing:'0.5px', marginBottom:10 }}>🏏 Players to watch</div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+            {[
+              { team: team1, data: spotlight.team1 },
+              { team: team2, data: spotlight.team2 },
+            ].map((s, i) => s.data ? (
+              <div key={i} style={{ background:'rgba(255,255,255,0.03)', borderRadius:10, padding:'10px 12px', border:'1px solid '+C.border }}>
+                <div style={{ fontSize:9, color:C.t3, marginBottom:6, textTransform:'uppercase' as const, letterSpacing:'0.4px' }}>{s.team}</div>
+                {/* Batter */}
+                <div style={{ marginBottom:8 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:3 }}>
+                    <span style={{ fontSize:10, fontWeight:700, color:C.green }}>🏏</span>
+                    <span style={{ fontSize:11, fontWeight:600, color:C.t1 }}>{s.data.bat.name}</span>
+                  </div>
+                  <div style={{ fontSize:10, color:C.t2 }}>{s.data.bat.runs} runs · Avg {s.data.bat.avg} · SR {s.data.bat.sr}</div>
+                  <div style={{ fontSize:9, color:C.t3 }}>{s.data.bat.role}</div>
+                </div>
+                {/* Bowler */}
+                <div style={{ borderTop:'1px solid '+C.border, paddingTop:7 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:3 }}>
+                    <span style={{ fontSize:10, fontWeight:700, color:C.amber }}>🎯</span>
+                    <span style={{ fontSize:11, fontWeight:600, color:C.t1 }}>{s.data.bowl.name}</span>
+                  </div>
+                  <div style={{ fontSize:10, color:C.t2 }}>{s.data.bowl.wkts} wkts · Eco {s.data.bowl.eco}</div>
+                  <div style={{ fontSize:9, color:C.t3 }}>{s.data.bowl.role}</div>
+                </div>
+              </div>
+            ) : null)}
+          </div>
         </div>
       )}
 
@@ -810,7 +859,11 @@ function ScoresPageContent() {
                       </div>
                     </div>
                     <span style={{ display:'inline-flex', padding:'3px 9px', borderRadius:20, fontSize:10, fontWeight:700, background:convBg, color:edgeColor, border:'1px solid '+edgeColor+'33' }}>{convLabel}</span>
-                    <div style={{ fontSize:10, color:C.t2, lineHeight:1.5, marginTop:8 }}>AI has a slight edge over bettors. Keep position modest.</div>
+                    <div style={{ fontSize:10, color:C.t2, lineHeight:1.5, marginTop:8 }}>
+                      {hasLiveMarket && mktPctForDisplay > 0
+                        ? 'AI has a slight edge over bettors. Keep position modest.'
+                        : 'No Polymarket data for this match. AI confidence from cricket stats + news.'}
+                    </div>
                   </div>
                   <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:14 }}>
                     <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:8 }}>Conviction score</div>
@@ -825,7 +878,11 @@ function ScoresPageContent() {
                         </div>
                       ))}
                     </div>
-                    <div style={{ fontSize:10, color:C.t2, lineHeight:1.5, padding:'7px 9px', background:'rgba(255,255,255,0.025)', borderRadius:7 }}>Small edge - keep position modest. Only bet with personal conviction.</div>
+                    <div style={{ fontSize:10, color:C.t2, lineHeight:1.5, padding:'7px 9px', background:'rgba(255,255,255,0.025)', borderRadius:7 }}>
+                      {hasLiveMarket && mktPctForDisplay > 0
+                        ? 'Small edge - keep position modest. Only bet with personal conviction.'
+                        : 'No market data available. AI confidence based on news and cricket stats only.'}
+                    </div>
                   </div>
                   {tradeData ? (
                     <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:14 }}>

@@ -39,7 +39,20 @@ const POINTS_TABLE: Record<string, { p: number; w: number; l: number; pts: numbe
   'CSK':  { p: 6, w: 1, l: 5, pts: 2,  nrr: '-0.789', form: 'LLLLLW' },
 };
 
-// Head to head records this IPL season
+// IPL 2026 Player Stats — updated April 12
+// Key players per team with current season form
+const PLAYER_SPOTLIGHT: Record<string, { bat: { name: string; runs: number; avg: number; sr: number; role: string }; bowl: { name: string; wkts: number; eco: number; role: string } }> = {
+  'RR':   { bat: { name:'Yashasvi Jaiswal',   runs:245, avg:49, sr:168, role:'Opener'     }, bowl: { name:'Ravi Bishnoi',     wkts:9,  eco:6.8, role:'Leg Spin'    } },
+  'PBKS': { bat: { name:'Shashank Singh',     runs:189, avg:47, sr:172, role:'Middle order'}, bowl: { name:'Vijaykumar Vyshak',wkts:8,  eco:7.2, role:'Pacer'       } },
+  'RCB':  { bat: { name:'Virat Kohli',        runs:198, avg:40, sr:142, role:'Opener'     }, bowl: { name:'Jacob Duffy',      wkts:8,  eco:7.8, role:'Pacer'       } },
+  'DC':   { bat: { name:'Sameer Rizvi',       runs:210, avg:53, sr:165, role:'Opener'     }, bowl: { name:'Kuldeep Yadav',    wkts:7,  eco:7.1, role:'Wrist Spin'  } },
+  'LSG':  { bat: { name:'Nicholas Pooran',    runs:167, avg:42, sr:178, role:'Wicketkeeper'}, bowl: { name:'Mohsin Khan',     wkts:6,  eco:7.4, role:'Pacer'       } },
+  'SRH':  { bat: { name:'Heinrich Klaasen',   runs:195, avg:49, sr:182, role:'Wicketkeeper'}, bowl: { name:'Pat Cummins',     wkts:7,  eco:7.9, role:'Pacer'       } },
+  'MI':   { bat: { name:'Rohit Sharma',       runs:178, avg:36, sr:148, role:'Opener'     }, bowl: { name:'Jasprit Bumrah',   wkts:8,  eco:6.2, role:'Pacer'       } },
+  'GT':   { bat: { name:'Shubman Gill',       runs:156, avg:31, sr:139, role:'Opener'     }, bowl: { name:'Rashid Khan',      wkts:7,  eco:6.5, role:'Leg Spin'    } },
+  'KKR':  { bat: { name:'Venkatesh Iyer',     runs:134, avg:22, sr:135, role:'Opener'     }, bowl: { name:'Varun Chakravarthy',wkts:6, eco:7.8, role:'Mystery Spin'} },
+  'CSK':  { bat: { name:'Ruturaj Gaikwad',    runs:112, avg:19, sr:128, role:'Opener'     }, bowl: { name:'Jamie Overton',    wkts:7,  eco:8.1, role:'Pacer'       } },
+};
 const HEAD_TO_HEAD: Record<string, string> = {
   'RCB-MI': 'RCB won last meeting by 4 wickets',
   'MI-RCB': 'RCB won last meeting by 4 wickets',
@@ -126,6 +139,10 @@ Points advantage: ${t1.pts > t2.pts ? `${team1} higher in table (${t1.pts} vs ${
       team1: { code: code1, ...t1, formScore: form1 },
       team2: { code: code2, ...t2, formScore: form2 },
       h2h,
+      spotlight: {
+        team1: PLAYER_SPOTLIGHT[code1] || null,
+        team2: PLAYER_SPOTLIGHT[code2] || null,
+      }
     });
 
   } catch (err: any) {
