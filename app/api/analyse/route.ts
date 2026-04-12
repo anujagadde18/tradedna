@@ -114,6 +114,25 @@ export async function POST(request: NextRequest) {
     }
 
     const keywords = extractKeywords(query);
+
+    // CRICKET CONTEXT — for IPL matches, fetch team stats for better predictions
+    let cricketContext: any = null;
+    const isIPLQuery = /ipl|indian premier league|cricket/i.test(query);
+    if (isIPLQuery) {
+      // Extract team names from query like "Will KKR beat LSG in IPL 2026?"
+      const teamMatch = query.match(/will\s+(.+?)\s+beat\s+(.+?)(?:\s+in|\?|$)/i);
+      if (teamMatch) {
+        try {
+          const res = await fetch(new URL('/api/cricket-context', 'https://tradedna-8sn1.vercel.app').toString(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ team1: teamMatch[1].trim(), team2: teamMatch[2].trim() }),
+          });
+          if (res.ok) cricketContext = await res.json();
+        } catch {}
+      }
+    }
+
     const [gdeltArticles, hnArticles, metaculus] = await Promise.all([
       fetchGDELT(keywords),
       fetchHackerNews(keywords),
@@ -166,13 +185,24 @@ export async function POST(request: NextRequest) {
       return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources });
     }
 
-    // NO MARKET ODDS — use news + metaculus
-    if (relevantArticles.length === 0 && !metaculus.probability) {
+    // NO MARKET ODDS — use cricket stats + news + metaculus
+    if (relevantArticles.length === 0 && !metaculus.probability && !cricketContext) {
       return Response.json({ valid: true, confidence: 35, keywords, articleCount: 0, sources: [], noData: true, message: 'No relevant news found. Try pasting a Polymarket URL for live odds.' });
     }
 
     let newsConfidence = 50;
-    if (relevantArticles.length > 0) {
+
+    // If we have cricket context, start from stats-based probability
+    if (cricketContext?.baseProbability) {
+      newsConfidence = cricketContext.baseProbability;
+      // Adjust by news sentiment ±10 pts
+      if (relevantArticles.length > 0) {
+        const scores = relevantArticles.map((a:any) => scoreHeadline(a.title, a.desc));
+        const total = scores.reduce((a:number, b:number) => a + b, 0);
+        const newsAdj = Math.max(-10, Math.min(10, total * 2));
+        newsConfidence = Math.round(newsConfidence + newsAdj);
+      }
+    } else if (relevantArticles.length > 0) {
       const scores = relevantArticles.map(a => scoreHeadline(a.title, a.desc));
       const positives = scores.filter(s => s > 0).length;
       const negatives = scores.filter(s => s < 0).length;
@@ -194,11 +224,17 @@ export async function POST(request: NextRequest) {
     }
     finalConfidence = Math.max(10, Math.min(95, finalConfidence));
 
-    const sources: any[] = relevantArticles.slice(0, 6).map(a => {
+    const sources: any[] = relevantArticles.slice(0, 6).map((a:any) => {
       const score = scoreHeadline(a.title, a.desc);
       return { name: a.source, sig: a.title, url: a.url, category: a.category, type: score > 0 ? 'strong' : score < 0 ? 'contrary' : 'mixed', contribution: score !== 0 ? (score > 0 ? Math.abs(score) * 5 : -(Math.abs(score) * 5)) : 1 };
     });
     if (metaculus.probability !== null) sources.push({ name: 'Metaculus', sig: `Community forecasters: ${metaculus.probability}% across ${metaculus.count} questions`, url: 'https://metaculus.com', category: 'community', type: metaculus.probability > 55 ? 'strong' : metaculus.probability < 45 ? 'contrary' : 'mixed', contribution: Math.round((metaculus.probability - 50) / 3) });
+    if (cricketContext?.team1) {
+      const t1 = cricketContext.team1;
+      const t2 = cricketContext.team2;
+      sources.unshift({ name: 'IPL Stats', sig: `Form: ${t1.form} (${t1.formScore}% wins) vs ${t2.form} (${t2.formScore}% wins). Points: ${t1.pts} vs ${t2.pts}`, url: '', category: 'market', type: t1.formScore > t2.formScore ? 'strong' : t1.formScore < t2.formScore ? 'contrary' : 'mixed', contribution: Math.round((t1.formScore - t2.formScore) / 5) });
+      if (cricketContext.h2h) sources.unshift({ name: 'Head-to-Head', sig: cricketContext.h2h, url: '', category: 'market', type: 'mixed', contribution: 1 });
+    }
 
     return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources });
 
