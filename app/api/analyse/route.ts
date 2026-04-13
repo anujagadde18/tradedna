@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
           const raw = s1/(s1+s2)*100;
           const stretched = 50 + (raw-50)*1.5;
           const baseProbability = Math.round(Math.max(25,Math.min(80,stretched)));
-          cricketContext = { baseProbability, team1:{...t1,code:c1,formScore:f1}, team2:{...t2,code:c2,formScore:f2} };
+          console.log("[Cricket] "+c1+"("+baseProbability+"%) vs "+c2+"("+(100-baseProbability)+"%)"); cricketContext = { baseProbability, team1:{...t1,code:c1,formScore:f1}, team2:{...t2,code:c2,formScore:f2} };
         }
       }
     }
