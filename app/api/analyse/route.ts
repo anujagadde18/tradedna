@@ -219,14 +219,18 @@ export async function POST(request: NextRequest) {
 
     // If we have cricket context, start from stats-based probability
     if (cricketContext?.baseProbability) {
+      // Cricket stats are the ground truth — news can only adjust ±8 pts max
       newsConfidence = cricketContext.baseProbability;
-      // Adjust by news sentiment ±10 pts
       if (relevantArticles.length > 0) {
         const scores = relevantArticles.map((a:any) => scoreHeadline(a.title, a.desc));
         const total = scores.reduce((a:number, b:number) => a + b, 0);
-        const newsAdj = Math.max(-10, Math.min(10, total * 2));
+        // Very small news adjustment — cricket stats dominate
+        const newsAdj = Math.max(-8, Math.min(8, total * 1));
         newsConfidence = Math.round(newsConfidence + newsAdj);
       }
+      // Hard clamp — if cricket says underdog (<40%), keep them underdog despite news
+      if (cricketContext.baseProbability < 40) newsConfidence = Math.min(45, newsConfidence);
+      if (cricketContext.baseProbability > 60) newsConfidence = Math.max(55, newsConfidence);
     } else if (relevantArticles.length > 0) {
       const scores = relevantArticles.map(a => scoreHeadline(a.title, a.desc));
       const positives = scores.filter(s => s > 0).length;
