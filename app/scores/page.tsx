@@ -596,7 +596,9 @@ function ScoresPageContent() {
       }
       setInvalidQuestion(null);
       if (data.confidence) {
-        setIntel(calculateIntelligence(data.confidence, weights, 0, marketOddsForAI, event));
+        // Use raw confidence directly — intelligenceEngine flips NO verdicts
+        const rawConf = Math.max(5, Math.min(95, data.confidence));
+        setIntel({ confidence: rawConf, direction: rawConf >= 50 ? 'YES' : 'NO', probabilityLabel: rawConf >= 65 ? 'Very likely YES' : rawConf >= 55 ? 'Probably YES' : rawConf >= 45 ? 'Uncertain' : rawConf >= 35 ? 'Probably NO' : 'Very likely NO', predictionStrength: rawConf >= 70 ? 'Strong' : rawConf >= 55 ? 'Medium' : 'Weak', strengthScore: rawConf, riskLevel: rawConf >= 70 || rawConf <= 30 ? 'Low' : 'Medium', marketEdge: marketOddsForAI ? rawConf - marketOddsForAI : null, edgeContext: '', modelComponents: [], confidenceDrivers: { positive: [], negative: [] }, explanation: '' });
         if (data.sources && data.sources.length > 0) setRealSources(data.sources);
       } else {
         const seed = analysisQuery.split('').reduce((acc:number, c:string) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0);
