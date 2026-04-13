@@ -246,12 +246,18 @@ export async function POST(request: NextRequest) {
     }
 
     let finalConfidence: number;
-    if (metaculus.probability !== null) {
+    if (cricketContext?.baseProbability) {
+      finalConfidence = newsConfidence;
+    } else if (metaculus.probability !== null) {
       finalConfidence = Math.round(newsConfidence * 0.45 + metaculus.probability * 0.55);
     } else {
       finalConfidence = newsConfidence;
     }
     finalConfidence = Math.max(10, Math.min(95, finalConfidence));
+    if (cricketContext?.baseProbability) {
+      if (cricketContext.baseProbability <= 35) finalConfidence = Math.min(42, finalConfidence);
+      if (cricketContext.baseProbability >= 65) finalConfidence = Math.max(58, finalConfidence);
+    }
 
     const sources: any[] = relevantArticles.slice(0, 6).map((a:any) => {
       const score = scoreHeadline(a.title, a.desc);
