@@ -83,7 +83,13 @@ export default function HomePage() {
   }, [category]);
 
   useEffect(() => {
-    fetch('/api/ipl').then(r=>r.json()).then(d=>setIplMatches(d.matches||[])).catch(()=>{});
+    // Only fetch today + tomorrow's matches
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    fetch('/api/ipl').then(r=>r.json()).then(d=>{
+      const filtered = (d.matches||[]).filter((m:any) => m.date === today || m.date === tomorrow).slice(0,4);
+      setIplMatches(filtered);
+    }).catch(()=>{});
   }, []);
 
   const fmtVol = (v: number) => v >= 1_000_000 ? '$' + (v/1_000_000).toFixed(1) + 'M' : v >= 1_000 ? '$' + (v/1_000).toFixed(0) + 'K' : '$' + v;
@@ -199,7 +205,7 @@ export default function HomePage() {
               <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
                 <span style={{fontSize:16}}>🏏</span>
                 <span style={{fontSize:13,fontWeight:700,color:C.t1}}>IPL 2026</span>
-                <span style={{fontSize:11,color:C.t3}}>· upcoming matches</span>
+                <span style={{fontSize:11,color:C.t3}}>· today & tomorrow</span>
                 <button onClick={()=>router.push('/ipl')} style={{marginLeft:'auto',fontSize:10,color:C.purpleL,background:C.purpleBg,border:'1px solid '+C.purpleBorder,borderRadius:6,padding:'3px 10px',cursor:'pointer'}}>Full schedule →</button>
               </div>
               <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
