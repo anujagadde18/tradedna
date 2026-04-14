@@ -1,20 +1,18 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { sql } from '@vercel/postgres';
-import { headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const headersList = headers();
-    const referer = headersList.get('referer') || '';
-    const userAgent = (headersList.get('user-agent') || '').slice(0, 150);
+    const referer = req.headers.get('referer') || '';
+    const userAgent = (req.headers.get('user-agent') || '').slice(0, 150);
     const body = await req.json().catch(() => ({}));
     const name = String(body.name || '');
     const props = body.props ?? {};
     const anonId = body.anonId || crypto.randomUUID();
 
-    if (!name) return NextResponse.json({ ok: false, error: 'Missing name' }, { status: 400 });
+    if (!name) return NextResponse.json({ ok: false }, { status: 400 });
 
     await sql`
       INSERT INTO users (id, first_ref, last_seen_at)
