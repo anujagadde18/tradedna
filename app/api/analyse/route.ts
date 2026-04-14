@@ -129,16 +129,16 @@ export async function POST(request: NextRequest) {
           'gujarat titans':'GT','gt':'GT','lucknow super giants':'LSG','lsg':'LSG',
         };
         const POINTS: Record<string,{p:number;w:number;l:number;pts:number;nrr:string;form:string}> = {
-          'RR':  {p:7,w:6,l:1,pts:12,nrr:'+1.089',form:'WWWWWL'},
-          'PBKS':{p:7,w:4,l:3,pts:8, nrr:'+0.487',form:'WLWLWW'},
-          'RCB': {p:7,w:4,l:3,pts:8, nrr:'+0.298',form:'WWLLWL'},
-          'DC':  {p:7,w:4,l:3,pts:8, nrr:'+0.156',form:'LWWLWL'},
-          'LSG': {p:7,w:4,l:3,pts:8, nrr:'+0.021',form:'LLLWWW'},
-          'SRH': {p:7,w:3,l:4,pts:6, nrr:'-0.134',form:'WLLWLLW'},
-          'MI':  {p:7,w:2,l:5,pts:4, nrr:'-0.287',form:'WLLWLL'},
-          'GT':  {p:7,w:3,l:4,pts:6, nrr:'-0.312',form:'LLWLWL'},
-          'KKR': {p:7,w:1,l:6,pts:2, nrr:'-0.589',form:'WLLLLL'},
-          'CSK': {p:7,w:1,l:6,pts:2, nrr:'-0.701',form:'LLLLLW'},
+          'RR':  {p:7, w:6, l:1, pts:12, nrr:'+0.923', form:'WWWWWL'},
+          'RCB': {p:8, w:5, l:3, pts:10, nrr:'+0.412', form:'WWLLWW'},
+          'PBKS':{p:7, w:4, l:3, pts:8,  nrr:'+0.387', form:'WLWLWW'},
+          'DC':  {p:7, w:4, l:3, pts:8,  nrr:'+0.201', form:'LWWLWL'},
+          'SRH': {p:8, w:4, l:4, pts:8,  nrr:'+0.089', form:'WLLWLLW'},
+          'GT':  {p:8, w:4, l:4, pts:8,  nrr:'-0.112', form:'LLWLWLW'},
+          'LSG': {p:8, w:3, l:5, pts:6,  nrr:'-0.234', form:'LLLWWWL'},
+          'CSK': {p:8, w:2, l:6, pts:4,  nrr:'-0.445', form:'LLLLLWW'},
+          'MI':  {p:8, w:2, l:6, pts:4,  nrr:'-0.523', form:'WLLWLLL'},
+          'KKR': {p:8, w:1, l:7, pts:2,  nrr:'-0.789', form:'WLLLLLL'},
         };
         // Venue home advantage
         const HOME_ADV: Record<string,number> = {

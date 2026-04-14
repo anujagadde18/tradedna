@@ -9,33 +9,33 @@ const TEAM_MAP: Record<string, string> = {
   'gujarat titans':'GT','gt':'GT','lucknow super giants':'LSG','lsg':'LSG',
 };
 
+// Updated April 14, after Match 22 (CSK beat KKR)
 const POINTS_TABLE: Record<string, { p:number; w:number; l:number; pts:number; nrr:string; form:string }> = {
-  'RR':  { p:7, w:6, l:1, pts:12, nrr:'+1.089', form:'WWWWWL' },
-  'PBKS':{ p:7, w:4, l:3, pts:8,  nrr:'+0.487', form:'WLWLWW' },
-  'RCB': { p:7, w:4, l:3, pts:8,  nrr:'+0.298', form:'WWLLWL' },
-  'DC':  { p:7, w:4, l:3, pts:8,  nrr:'+0.156', form:'LWWLWL' },
-  'LSG': { p:7, w:4, l:3, pts:8,  nrr:'+0.021', form:'LLLWWW' },
-  'SRH': { p:7, w:3, l:4, pts:6,  nrr:'-0.134', form:'WLLWLLW' },
-  'MI':  { p:7, w:2, l:5, pts:4,  nrr:'-0.287', form:'WLLWLL' },
-  'GT':  { p:7, w:3, l:4, pts:6,  nrr:'-0.312', form:'LLWLWL' },
-  'KKR': { p:7, w:1, l:6, pts:2,  nrr:'-0.589', form:'WLLLLL' },
-  'CSK': { p:7, w:1, l:6, pts:2,  nrr:'-0.701', form:'LLLLLW' },
+  'RR':  { p:7, w:6, l:1, pts:12, nrr:'+0.923', form:'WWWWWL' },
+  'RCB': { p:8, w:5, l:3, pts:10, nrr:'+0.412', form:'WWLLWW' },
+  'PBKS':{ p:7, w:4, l:3, pts:8,  nrr:'+0.387', form:'WLWLWW' },
+  'DC':  { p:7, w:4, l:3, pts:8,  nrr:'+0.201', form:'LWWLWL' },
+  'SRH': { p:8, w:4, l:4, pts:8,  nrr:'+0.089', form:'WLLWLLW' },
+  'GT':  { p:8, w:4, l:4, pts:8,  nrr:'-0.112', form:'LLWLWLW' },
+  'LSG': { p:8, w:3, l:5, pts:6,  nrr:'-0.234', form:'LLLWWWL' },
+  'CSK': { p:8, w:2, l:6, pts:4,  nrr:'-0.445', form:'LLLLLWW' },
+  'MI':  { p:8, w:2, l:6, pts:4,  nrr:'-0.523', form:'WLLWLLL' },
+  'KKR': { p:8, w:1, l:7, pts:2,  nrr:'-0.789', form:'WLLLLLL' },
 };
 
-const VENUE_DATA: Record<string, { chase:number; dew:boolean; batFirst:boolean; homeAdv:number; notes:string }> = {
-  'Hyderabad':      { chase:62, dew:true,  batFirst:false, homeAdv:8,  notes:'SRH fortress, heavy dew after 8:45PM, avg 189+ scores' },
-  'Mumbai':         { chase:57, dew:true,  batFirst:false, homeAdv:6,  notes:'Wankhede batting paradise, MI strong at home' },
-  'Bengaluru':      { chase:45, dew:false, batFirst:true,  homeAdv:7,  notes:'Chinnaswamy, RCB bat-first historically, short boundaries' },
-  'Chennai':        { chase:40, dew:false, batFirst:true,  homeAdv:8,  notes:'Chepauk slow turner, bat first wins 55%+' },
-  'Kolkata':        { chase:52, dew:true,  batFirst:false, homeAdv:5,  notes:'Eden Gardens balanced, slight dew advantage' },
-  'Delhi':          { chase:55, dew:true,  batFirst:false, homeAdv:4,  notes:'Kotla flat track, dew factor helps chasers' },
-  'Jaipur':         { chase:50, dew:false, batFirst:false, homeAdv:5,  notes:'SMS Stadium balanced surface' },
-  'Ahmedabad':      { chase:53, dew:false, batFirst:false, homeAdv:4,  notes:'Narendra Modi Stadium, big ground' },
-  'Lucknow':        { chase:54, dew:true,  batFirst:false, homeAdv:5,  notes:'BRSABV Stadium, some evening dew' },
-  'New Chandigarh': { chase:48, dew:false, batFirst:true,  homeAdv:4,  notes:'Mullanpur, low dew, bat first advantage' },
-  'Guwahati':       { chase:52, dew:false, batFirst:false, homeAdv:0,  notes:'Neutral venue, balanced conditions' },
-  'Dharamshala':    { chase:46, dew:false, batFirst:true,  homeAdv:4,  notes:'Cool conditions, bat first advantage' },
-  'Raipur':         { chase:51, dew:false, batFirst:false, homeAdv:0,  notes:'Neutral venue, balanced' },
+const VENUE_DATA: Record<string, { chase:number; dew:boolean; homeAdv:number; notes:string }> = {
+  'Hyderabad':      { chase:62, dew:true,  homeAdv:8,  notes:'SRH fortress, heavy dew, avg 190+ scores. SRH beat RR by 57 runs here Apr 13' },
+  'Mumbai':         { chase:57, dew:true,  homeAdv:6,  notes:'Wankhede, batting paradise, MI home advantage. RCB beat MI here Apr 12' },
+  'Bengaluru':      { chase:45, dew:false, homeAdv:7,  notes:'Chinnaswamy, RCB defending champions at home. High scoring venue' },
+  'Chennai':        { chase:40, dew:false, homeAdv:8,  notes:'Chepauk slow turner, bat first wins 55%+. CSK beat KKR here Apr 14' },
+  'Kolkata':        { chase:52, dew:true,  homeAdv:5,  notes:'Eden Gardens balanced, slight dew advantage' },
+  'Delhi':          { chase:55, dew:true,  homeAdv:4,  notes:'Kotla flat track, dew factor helps chasers' },
+  'Jaipur':         { chase:50, dew:false, homeAdv:5,  notes:'SMS Stadium balanced surface' },
+  'Ahmedabad':      { chase:53, dew:false, homeAdv:4,  notes:'Narendra Modi Stadium, big ground, balanced' },
+  'Lucknow':        { chase:54, dew:true,  homeAdv:5,  notes:'BRSABV Stadium, some evening dew' },
+  'New Chandigarh': { chase:48, dew:false, homeAdv:4,  notes:'Mullanpur, low dew, bat first advantage' },
+  'Guwahati':       { chase:52, dew:false, homeAdv:0,  notes:'Neutral venue for RR' },
+  'Dharamshala':    { chase:46, dew:false, homeAdv:4,  notes:'Cool conditions, bat first advantage' },
 };
 
 const HOME_TEAM: Record<string, string> = {
@@ -45,25 +45,24 @@ const HOME_TEAM: Record<string, string> = {
 };
 
 const HEAD_TO_HEAD: Record<string, string> = {
-  'RCB-MI':'RCB won last meeting','MI-RCB':'RCB won last meeting',
-  'CSK-KKR':'CSK won last meeting','KKR-CSK':'CSK won last meeting',
-  'DC-GT':'GT won last meeting (1 run thriller)','GT-DC':'GT won last meeting (1 run thriller)',
+  'RCB-MI':'RCB won last meeting by 18 runs (Wankhede, Apr 12)','MI-RCB':'RCB won last meeting by 18 runs',
+  'CSK-KKR':'CSK won last meeting (Chennai, Apr 14)','KKR-CSK':'CSK won last meeting',
+  'DC-GT':'GT won last meeting (1 run)','GT-DC':'GT won last meeting (1 run)',
   'PBKS-SRH':'PBKS won last meeting','SRH-PBKS':'PBKS won last meeting',
-  'RR-LSG':'RR won last meeting','LSG-RR':'RR won last meeting',
-  'SRH-RR':'SRH won last meeting (home)','RR-SRH':'SRH won last meeting (home)',
+  'SRH-RR':'SRH won last meeting by 57 runs (home, Apr 13)','RR-SRH':'SRH won last meeting by 57 runs',
 };
 
 const PLAYER_SPOTLIGHT: Record<string, { bat:{name:string;runs:number;avg:number;sr:number;role:string}; bowl:{name:string;wkts:number;eco:number;role:string} }> = {
-  'RR':  { bat:{name:'Yashasvi Jaiswal',  runs:265,avg:53,sr:168,role:'Opener'},       bowl:{name:'Ravi Bishnoi',      wkts:10,eco:6.8,role:'Leg Spin'} },
-  'PBKS':{ bat:{name:'Shashank Singh',    runs:195,avg:49,sr:172,role:'Middle order'}, bowl:{name:'Vijaykumar Vyshak', wkts:9, eco:7.2,role:'Pacer'} },
-  'RCB': { bat:{name:'Virat Kohli',       runs:210,avg:42,sr:142,role:'Opener'},       bowl:{name:'Jacob Duffy',       wkts:9, eco:7.8,role:'Pacer'} },
-  'DC':  { bat:{name:'Sameer Rizvi',      runs:215,avg:54,sr:165,role:'Opener'},       bowl:{name:'Kuldeep Yadav',     wkts:8, eco:7.1,role:'Wrist Spin'} },
-  'LSG': { bat:{name:'Nicholas Pooran',   runs:178,avg:45,sr:178,role:'Wicketkeeper'}, bowl:{name:'Mohsin Khan',       wkts:7, eco:7.4,role:'Pacer'} },
-  'SRH': { bat:{name:'Heinrich Klaasen',  runs:210,avg:53,sr:182,role:'Wicketkeeper'}, bowl:{name:'Harshal Patel',     wkts:8, eco:8.2,role:'Pacer'} },
-  'MI':  { bat:{name:'Rohit Sharma',      runs:180,avg:36,sr:148,role:'Opener'},       bowl:{name:'Jasprit Bumrah',    wkts:9, eco:6.2,role:'Pacer'} },
-  'GT':  { bat:{name:'Shubman Gill',      runs:168,avg:34,sr:139,role:'Opener'},       bowl:{name:'Rashid Khan',       wkts:8, eco:6.5,role:'Leg Spin'} },
-  'KKR': { bat:{name:'Venkatesh Iyer',    runs:134,avg:22,sr:135,role:'Opener'},       bowl:{name:'Varun Chakravarthy',wkts:6, eco:7.8,role:'Mystery Spin'} },
-  'CSK': { bat:{name:'Ruturaj Gaikwad',   runs:118,avg:20,sr:128,role:'Opener'},       bowl:{name:'Jamie Overton',     wkts:7, eco:8.1,role:'Pacer'} },
+  'RR':  { bat:{name:'Yashasvi Jaiswal',  runs:280,avg:56,sr:171,role:'Opener'},       bowl:{name:'Ravi Bishnoi',      wkts:11,eco:6.7,role:'Leg Spin'} },
+  'RCB': { bat:{name:'Phil Salt',         runs:245,avg:49,sr:186,role:'Opener'},        bowl:{name:'Jacob Duffy',       wkts:10,eco:7.6,role:'Pacer'} },
+  'PBKS':{ bat:{name:'Shashank Singh',    runs:210,avg:53,sr:174,role:'Middle order'},  bowl:{name:'Vijaykumar Vyshak', wkts:10,eco:7.1,role:'Pacer'} },
+  'DC':  { bat:{name:'KL Rahul',          runs:230,avg:57,sr:158,role:'Wicketkeeper'},  bowl:{name:'Kuldeep Yadav',     wkts:9, eco:7.0,role:'Wrist Spin'} },
+  'SRH': { bat:{name:'Ishan Kishan',      runs:265,avg:53,sr:178,role:'Wicketkeeper'},  bowl:{name:'Harshal Patel',     wkts:9, eco:8.1,role:'Pacer'} },
+  'GT':  { bat:{name:'Shubman Gill',      runs:220,avg:44,sr:148,role:'Opener'},        bowl:{name:'Rashid Khan',       wkts:10,eco:6.3,role:'Leg Spin'} },
+  'LSG': { bat:{name:'Nicholas Pooran',   runs:185,avg:46,sr:181,role:'Wicketkeeper'},  bowl:{name:'Mohsin Khan',       wkts:8, eco:7.3,role:'Pacer'} },
+  'CSK': { bat:{name:'Ayush Mhatre',      runs:341,avg:34,sr:175,role:'Opener'},        bowl:{name:'Anshul Kamboj',     wkts:9, eco:7.8,role:'Pacer'} },
+  'MI':  { bat:{name:'Rohit Sharma',      runs:190,avg:38,sr:151,role:'Opener'},        bowl:{name:'Jasprit Bumrah',    wkts:10,eco:6.1,role:'Pacer'} },
+  'KKR': { bat:{name:'Ajinkya Rahane',    runs:293,avg:37,sr:150,role:'Opener'},        bowl:{name:'Varun Chakravarthy',wkts:7, eco:7.9,role:'Mystery Spin'} },
 };
 
 export async function POST(request: NextRequest) {
@@ -89,26 +88,23 @@ export async function POST(request: NextRequest) {
     const nrr1 = parseFloat(t1.nrr), nrr2 = parseFloat(t2.nrr);
     const nrrMax = Math.max(Math.abs(nrr1), Math.abs(nrr2), 0.1);
 
-    let score1 = (form1*0.35) + ((t1.pts/Math.max(t1.pts+t2.pts,1))*100*0.30) + (((nrr1/nrrMax)+1)/2*100*0.20);
-    let score2 = (form2*0.35) + ((t2.pts/Math.max(t1.pts+t2.pts,1))*100*0.30) + (((nrr2/nrrMax)+1)/2*100*0.20);
+    let s1 = (form1*0.35) + ((t1.pts/Math.max(t1.pts+t2.pts,1))*100*0.30) + (((nrr1/nrrMax)+1)/2*100*0.20);
+    let s2 = (form2*0.35) + ((t2.pts/Math.max(t1.pts+t2.pts,1))*100*0.30) + (((nrr2/nrrMax)+1)/2*100*0.20);
 
     if (venueData) {
-      if (isHome1) score1 += venueData.homeAdv * 1.5;
-      if (isHome2) score2 += venueData.homeAdv * 1.5;
+      if (isHome1) s1 += venueData.homeAdv * 1.5;
+      if (isHome2) s2 += venueData.homeAdv * 1.5;
     }
 
-    const total = score1 + score2 || 100;
-    const raw = (score1/total)*100;
+    const raw = (s1/(s1+s2))*100;
     const stretched = 50 + (raw-50)*1.6;
     const baseProbability = Math.round(Math.max(20, Math.min(82, stretched)));
 
-    const venueNote = venueData ? `\nVenue (${venue}): ${venueData.notes}\nChase success: ${venueData.chase}%${venueData.dew?' + dew factor':''}${homeTeam?` | Home: ${homeTeam===code1?team1:team2}`:''}` : '';
-    const context = `${team1}(${code1}): ${t1.pts}pts ${form1}%form NRR${t1.nrr}${isHome1?' [HOME]':''}
-${team2}(${code2}): ${t2.pts}pts ${form2}%form NRR${t2.nrr}${isHome2?' [HOME]':''}
-${h2h||''}${venueNote}`;
-
     return Response.json({
-      context, baseProbability,
+      context: `${team1}(${code1}): ${t1.pts}pts ${t1.w}W${t1.l}L form:${t1.form}${isHome1?' HOME':''}
+${team2}(${code2}): ${t2.pts}pts ${t2.w}W${t2.l}L form:${t2.form}${isHome2?' HOME':''}
+${h2h||''}${venueData?`\n${venue}: chase${venueData.chase}% ${venueData.dew?'+ dew':''}`:''} `,
+      baseProbability,
       team1: { code:code1, ...t1, formScore:form1, isHome:isHome1 },
       team2: { code:code2, ...t2, formScore:form2, isHome:isHome2 },
       h2h, venue: venueData,
