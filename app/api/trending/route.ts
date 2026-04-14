@@ -146,7 +146,7 @@ function getYesPrice(event: any): number | null {
 async function fetchLive(limit = 50): Promise<any[]> {
   try {
     const res = await fetch(
-      `https://gamma-api.polymarket.com/events?active=true&closed=false&archived=false&limit=${limit}&order=volume24hr&ascending=false`,
+      `https://gamma-api.polymarket.com/events/keyset?active=true&closed=false&archived=false&limit=${limit}&order=volume24hr&ascending=false`,
       { headers: { 'Accept': 'application/json' }, cache: 'no-store' }
     );
     if (!res.ok) return [];
@@ -159,7 +159,7 @@ async function fetchLive(limit = 50): Promise<any[]> {
 async function fetchMoneyline(eventSlug: string): Promise<number | null> {
   try {
     const res = await fetch(
-      `https://gamma-api.polymarket.com/markets?event_slug=${eventSlug}&limit=100`,
+      `https://gamma-api.polymarket.com/markets/keyset?event_slug=${eventSlug}&limit=100`,
       { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(4000) }
     );
     if (!res.ok) return null;

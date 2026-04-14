@@ -25,37 +25,56 @@ function extractPrice(market: any): { yes: number; no: number } | null {
 
 async function fetchEvents(url: string): Promise<any[]> {
   try {
-    const res = await fetch(url, {
-      headers: { 'Accept': 'application/json' },
-      cache: 'no-store',
-    });
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data) ? data : [];
   } catch { return []; }
 }
 
+// Only keep events ending in the future
+function isActive(event: any): boolean {
+  if (!event.endDate) return true;
+  return new Date(event.endDate) > new Date();
+}
+
+const IPL_TEAMS = ['chennai super kings','mumbai indians','kolkata knight riders','kkr',
+  'sunrisers hyderabad','srh','rajasthan royals','punjab kings','pbks','delhi capitals',
+  'lucknow super giants','lsg','royal challengers','rcb','gujarat titans','gt'];
+
+const NBA_TEAMS = ['thunder','celtics','lakers','warriors','knicks','nuggets','timberwolves',
+  'pistons','heat','bucks','suns','mavericks','mavs','clippers','spurs','hawks','nets',
+  'sixers','cavaliers','cavs','rockets','grizzlies','pelicans','pacers','raptors','jazz',
+  'kings','blazers','magic','hornets','wizards','bulls'];
+
+function classifySport(title: string): 'ipl' | 'nba' | null {
+  const t = title.toLowerCase();
+  if (t.includes('ipl') || t.includes('indian premier league') || IPL_TEAMS.some(team => t.includes(team))) return 'ipl';
+  if (t.includes(' nba ') || t.includes('nba ') || NBA_TEAMS.some(team => t.includes(team))) return 'nba';
+  return null;
+}
+
 export async function GET(request: NextRequest) {
   const sport = request.nextUrl.searchParams.get('sport') || 'all';
-  const now = new Date().toISOString();
 
-  // Use endDateMin to only get current/future markets
-  // Polymarket gamma API supports endDateMin filter
-  const BASE = 'https://gamma-api.polymarket.com/events';
-  const PARAMS = `active=true&limit=30&order=volume&ascending=false&endDateMin=${encodeURIComponent(now)}`;
+  // Very specific queries that Polymarket search actually returns current results for
+  const SPECIFIC_QUERIES = sport === 'ipl' ? [
+    'Chennai Super Kings vs', 'Mumbai Indians vs', 'IPL 2026 Champion',
+    'Kolkata Knight Riders vs', 'Royal Challengers vs', 'Rajasthan Royals vs',
+  ] : sport === 'nba' ? [
+    'NBA Champion 2026', 'Oklahoma City Thunder vs', 'NBA playoffs 2026',
+    'Boston Celtics vs', 'Cleveland Cavaliers vs',
+  ] : [
+    'Chennai Super Kings', 'Mumbai Indians', 'IPL 2026 Champion',
+    'NBA Champion 2026', 'Oklahoma City Thunder vs', 'Kolkata Knight Riders',
+    'Royal Challengers Bengaluru', 'Boston Celtics vs',
+  ];
 
-  const urls = sport === 'ipl'
-    ? [`${BASE}?${PARAMS}&tag=cricket`, `${BASE}?${PARAMS}&q=IPL+2026`]
-    : sport === 'nba'
-    ? [`${BASE}?${PARAMS}&tag=nba`, `${BASE}?${PARAMS}&q=NBA+2026`]
-    : [
-        `${BASE}?${PARAMS}&tag=cricket`,
-        `${BASE}?${PARAMS}&tag=nba`,
-        `${BASE}?${PARAMS}&q=IPL+2026`,
-        `${BASE}?${PARAMS}&q=NBA+2026`,
-      ];
-
-  const batches = await Promise.all(urls.map(fetchEvents));
+  const batches = await Promise.all(
+    SPECIFIC_QUERIES.map(q =>
+      fetchEvents(`https://gamma-api.polymarket.com/events/keyset?q=${encodeURIComponent(q)}&active=true&limit=10`)
+    )
+  );
 
   const seen = new Set<string>();
   const matches: any[] = [];
@@ -65,33 +84,27 @@ export async function GET(request: NextRequest) {
   for (const batch of batches) {
     for (const event of batch) {
       if (!event.slug || !event.title || seen.has(event.slug)) continue;
+      if (!isActive(event)) continue;
       seen.add(event.slug);
+
       const vol = parseFloat(event.volume || '0');
       const markets = event.markets || [];
       const title: string = event.title;
-      debugTitles.push(title + ' [m:' + markets.length + ' v:' + Math.round(vol) + ']');
+      debugTitles.push(title + ' [endDate:' + (event.endDate||'none') + ' m:' + markets.length + ']');
 
-      const tl = title.toLowerCase();
-      const isIPL = tl.includes('ipl') || tl.includes('indian premier league') ||
-        ['super kings','mumbai indians','knight riders','sunrisers','rajasthan royals',
-         'punjab kings','delhi capitals','lucknow super','royal challengers','gujarat titans']
-        .some(t => tl.includes(t));
-      const isNBA = tl.includes('nba') || tl.includes('thunder') || tl.includes('celtics') ||
-        tl.includes('lakers') || tl.includes('warriors') || tl.includes('knicks') ||
-        tl.includes('nuggets') || tl.includes('timberwolves') || tl.includes('pistons') ||
-        tl.includes('heat') || tl.includes('bucks') || tl.includes('suns') || tl.includes('mavericks');
+      const sportType = classifySport(title);
+      if (!sportType) continue;
+      if (sport !== 'all' && sportType !== sport) continue;
 
-      if (!isIPL && !isNBA) continue;
-      const sportLabel = isIPL ? 'IPL 2026' : 'NBA 2026';
-      const emoji      = isIPL ? '🏏' : '🏀';
+      const sportLabel = sportType === 'ipl' ? 'IPL 2026' : 'NBA 2026';
+      const emoji = sportType === 'ipl' ? '🏏' : '🏀';
 
-      // Binary match market
-      if (markets.length === 1) {
+      // Binary match market — 1 market, title has "vs"
+      if (markets.length === 1 && /\bvs?\.?\b/i.test(title)) {
         const price = extractPrice(markets[0]);
-        // Try to split title into two teams
-        // Polymarket sports titles: "Indian Premier League: CSK vs MI"
-        const colonPart = title.includes(':') ? title.split(':')[1].trim() : title;
-        const vsMatch = colonPart.match(/^(.+?)\s+(?:vs?\.?)\s+(.+?)(?:\s*[-–(].*)?$/i);
+        // Strip prefix like "Indian Premier League: " before parsing teams
+        const colonPart = title.includes(':') ? title.split(':').slice(1).join(':').trim() : title;
+        const vsMatch = colonPart.match(/^(.+?)\s+vs?\.?\s+(.+?)(?:\s*[-–(].*)?$/i);
         if (price && vsMatch) {
           matches.push({
             slug: event.slug, title, url: 'https://polymarket.com/event/' + event.slug,
@@ -99,16 +112,17 @@ export async function GET(request: NextRequest) {
             sport: sportLabel, emoji, type: 'match',
             homeTeam: vsMatch[1].trim(), awayTeam: vsMatch[2].trim(),
             homeOdds: price.yes, awayOdds: price.no,
+            endDate: event.endDate || '',
           });
           continue;
         }
       }
 
-      // Futures / multi-outcome
+      // Futures / multi-outcome (champion markets etc)
       if (markets.length > 1 && vol > 100) {
         const outcomes: { name: string; pct: number }[] = [];
         for (const m of markets) {
-          const name = m.groupItemTitle || m.outcomeName || m.question || '';
+          const name = m.groupItemTitle || m.outcomeName || '';
           if (!name || !m.outcomePrices) continue;
           try {
             const prices = typeof m.outcomePrices === 'string'
@@ -139,12 +153,10 @@ export async function GET(request: NextRequest) {
     futures: futures.slice(0, 4),
     total: matches.length + futures.length,
     debug: {
-      urlsUsed: urls,
+      queries: SPECIFIC_QUERIES,
       totalFound: batches.reduce((a, b) => a + b.length, 0),
       afterDedup: seen.size,
-      matches: matches.length,
-      futures: futures.length,
-      sampleTitles: debugTitles.slice(0, 20),
+      sampleTitles: debugTitles.slice(0, 25),
     },
   });
 }

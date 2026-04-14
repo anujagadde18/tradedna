@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
   try {
     // Fetch top active markets by volume
     const res = await fetch(
-      'https://gamma-api.polymarket.com/events?limit=100&active=true&order=volume&ascending=false',
+      'https://gamma-api.polymarket.com/events/keyset?limit=100&active=true&order=volume&ascending=false',
       { headers: { 'Accept': 'application/json' }, next: { revalidate: 180 } }
     );
 
