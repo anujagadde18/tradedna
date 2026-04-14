@@ -57,8 +57,18 @@ export default function HomePage() {
   };
 
   // Autocomplete
+  // Track page visit
   useEffect(() => {
-    const q = query.trim();
+    try {
+      let id = localStorage.getItem('pp_uid');
+      if (!id) { id = crypto.randomUUID(); localStorage.setItem('pp_uid', id); }
+      fetch('/api/track', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ anonId: id, name: 'page_view', props: { page: 'home', ref: document.referrer } })
+      }).catch(()=>{});
+    } catch {}
+  }, []);
+
+  useEffect(() => {
     if (!q || q.includes('polymarket.com') || q.length < 3) { setResults([]); setShowResults(false); return; }
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(async () => {
@@ -72,14 +82,78 @@ export default function HomePage() {
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [query]);
 
-  // Load trending by category
+  // Load trending — fetch directly from Polymarket on client to bypass server geoblock
   useEffect(() => {
     setLoading(true);
     setEvents([]);
-    fetch('/api/trending?category=' + category)
+
+    const catFilter: Record<string,string[]> = {
+      sports:     ['nba','nfl','ipl','cricket','basketball','football','soccer','tennis','golf','nhl','mlb','ufc','fifa','masters','champions league','f1','formula'],
+      crypto:     ['bitcoin','btc','ethereum','eth','crypto','solana','doge','coinbase'],
+      politics:   ['election','president','trump','biden','congress','senate','governor','vote','democrat','republican'],
+      tech:       ['ai','openai','apple','google','tesla','spacex','microsoft','meta','nvidia'],
+      economics:  ['fed','rate','gdp','inflation','recession','tariff','oil','market','s&p','nasdaq'],
+      world:      ['iran','china','russia','ukraine','war','ceasefire','nato','israel','india'],
+    };
+
+    const keywords = category !== 'all' ? (catFilter[category] || []) : [];
+
+    fetch(`https://gamma-api.polymarket.com/events?active=true&closed=false&archived=false&limit=50&order=volume24hr&ascending=false`)
       .then(r => r.json())
-      .then(d => { setEvents(d.results || []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then((data: any[]) => {
+        if (!Array.isArray(data)) { setLoading(false); return; }
+        const now = new Date();
+        let results = data.filter((e: any) => {
+          if (!e.slug || !e.title) return false;
+          const vol24 = parseFloat(e.volume24hr || '0');
+          if (vol24 <= 0) return false;
+          // Esports filter
+          const t = e.title.toLowerCase();
+          if (t.includes('lol:') || t.includes('counter-strike') || t.includes('bo3') || t.includes('bo5') || t.includes('lec ') || t.includes('lck ')) return false;
+          // Category filter
+          if (keywords.length > 0 && !keywords.some(k => t.includes(k))) return false;
+          return true;
+        });
+        results.sort((a: any, b: any) => parseFloat(b.volume24hr||'0') - parseFloat(a.volume24hr||'0'));
+        const mapped = results.slice(0, 20).map((e: any) => {
+          const yesPrice = e.markets?.[0]?.outcomePrices ? Math.round(parseFloat(JSON.parse(e.markets[0].outcomePrices)[0]) * 100) : null;
+          const titleL = e.title.toLowerCase();
+          const cat = category !== 'all' ? category :
+            catFilter.sports.some(k => titleL.includes(k)) ? 'sports' :
+            catFilter.crypto.some(k => titleL.includes(k)) ? 'crypto' :
+            catFilter.politics.some(k => titleL.includes(k)) ? 'politics' :
+            catFilter.tech.some(k => titleL.includes(k)) ? 'tech' :
+            catFilter.economics.some(k => titleL.includes(k)) ? 'economics' :
+            catFilter.world.some(k => titleL.includes(k)) ? 'world' : 'other';
+          const slugParts = e.slug?.match(/^(?:nba|nhl|mlb|nfl)-([a-z]+)-([a-z]+)/);
+          const TEAMS: Record<string,string> = {'cha':'Hornets','bos':'Celtics','chi':'Bulls','was':'Wizards','uta':'Jazz','nop':'Pelicans','min':'Timberwolves','ind':'Pacers','mil':'Bucks','bkn':'Nets','okc':'Thunder','lal':'Lakers','mia':'Heat','tor':'Raptors','sac':'Kings','gsw':'Warriors','hou':'Rockets','phx':'Suns','atl':'Hawks','cle':'Cavaliers','den':'Nuggets','mem':'Grizzlies','por':'Blazers','orl':'Magic','det':'Pistons','ny':'Knicks','phi':'76ers','tb':'Lightning','ott':'Senators','edm':'Oilers','cbj':'Blue Jackets','det':'Red Wings','oak':'Athletics','nyy':'Yankees','kc':'Royals','cle':'Guardians','ari':'Diamondbacks','nym':'Mets','atl':'Braves','laa':'Angels'};
+          return {
+            slug: e.slug, title: e.title,
+            url: 'https://polymarket.com/event/' + e.slug,
+            volume: parseFloat(e.volume || '0'),
+            volumeFormatted: e.volumeFormatted || '',
+            volume24h: parseFloat(e.volume24hr || '0'),
+            volume24hFormatted: '$' + (parseFloat(e.volume24hr||'0')/1000000).toFixed(1) + 'M',
+            category: cat,
+            icon: cat === 'sports' ? '🏆' : cat === 'crypto' ? '₿' : cat === 'politics' ? '🗳️' : cat === 'tech' ? '🤖' : cat === 'economics' ? '📈' : '🌍',
+            image: e.image || null,
+            yesPrice: yesPrice,
+            team1: slugParts ? (TEAMS[slugParts[1]] || null) : null,
+            team2: slugParts ? (TEAMS[slugParts[2]] || null) : null,
+            marketCount: (e.markets || []).length,
+            endDate: e.endDate || '',
+          };
+        });
+        setEvents(mapped);
+        setLoading(false);
+      })
+      .catch(() => {
+        // Fallback to our server API if direct fetch fails
+        fetch('/api/trending?category=' + category)
+          .then(r => r.json())
+          .then(d => { setEvents(d.results || []); setLoading(false); })
+          .catch(() => setLoading(false));
+      });
   }, [category]);
 
   useEffect(() => {
