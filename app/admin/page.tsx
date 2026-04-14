@@ -1,135 +1,187 @@
 'use client';
-import { useState } from 'react';
-
-// These are the current odds — update weekly by checking Polymarket
-// Format: { q, odds, url }
-const CURRENT_ODDS = [
-  { q: 'Will Bitcoin hit $100k before July 2025?',      odds: 32, cat: 'crypto',      emoji: '₿',  url: 'https://polymarket.com/event/will-bitcoin-hit-100k' },
-  { q: 'Will the Fed cut rates in May 2025?',           odds: 17, cat: 'economics',   emoji: '📈', url: 'https://polymarket.com/event/fed-cut-may-2025' },
-  { q: 'Will Trump impose tariffs above 10% in April?', odds: 78, cat: 'politics',    emoji: '🗳️', url: 'https://polymarket.com/event/trump-tariffs-april-2025' },
-  { q: 'Will Ethereum reach $4k in 2025?',              odds: 28, cat: 'crypto',      emoji: '⟠',  url: 'https://polymarket.com/event/ethereum-4k-2025' },
-  { q: 'Will there be a US recession in 2025?',         odds: 45, cat: 'economics',   emoji: '📉', url: 'https://polymarket.com/event/us-recession-2025' },
-  { q: 'Will Ukraine ceasefire happen in 2025?',        odds: 52, cat: 'geopolitics', emoji: '🌍', url: 'https://polymarket.com/event/ukraine-ceasefire-2025' },
-  { q: 'Will OpenAI release GPT-5 in 2025?',            odds: 71, cat: 'technology',  emoji: '🤖', url: 'https://polymarket.com/event/openai-gpt5-2025' },
-  { q: 'Will Dogecoin hit $1 in 2025?',                 odds: 19, cat: 'crypto',      emoji: '🐕', url: 'https://polymarket.com/event/dogecoin-1-dollar-2025' },
-  { q: 'Will US avoid a government shutdown in 2025?',  odds: 63, cat: 'politics',    emoji: '🏛️', url: 'https://polymarket.com/event/government-shutdown-2025' },
-];
+import { useState, useEffect } from 'react';
 
 const C = {
-  bg0:'#06060a', bg2:'#14141c', bg3:'#1a1a24',
-  border:'rgba(255,255,255,0.08)', border2:'rgba(255,255,255,0.12)',
-  t1:'#f2f0ff', t2:'#9996b8', t3:'#5c5a78',
-  purple:'#7c6ff7', green:'#2ecc8a', red:'#ef4f6a', amber:'#f5a623',
+  bg0:'#07070c', bg2:'#13131e', bg3:'#191926',
+  border:'rgba(255,255,255,0.06)', t1:'#eeeeff', t2:'#9896b2', t3:'#565470',
+  purple:'#7c6ff7', green:'#2ecc8a', amber:'#f5a623', red:'#ef4f6a', blue:'#4d9de0',
 };
 
 export default function AdminPage() {
-  const [password, setPassword] = useState('');
-  const [authed, setAuthed]     = useState(false);
-  const [odds, setOdds]         = useState(CURRENT_ODDS.map(o => ({ ...o })));
-  const [saved, setSaved]       = useState(false);
-  const [copied, setCopied]     = useState(false);
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [updated, setUpdated] = useState('');
+  const [error, setError] = useState('');
 
-  const ADMIN_PASS = process.env.NEXT_PUBLIC_ADMIN_PASS || 'playpicks2025';
+  const load = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/kpi');
+      const json = await res.json();
+      if (json.error) { setError(json.error); setLoading(false); return; }
+      setData(json);
+      setUpdated(new Date().toLocaleTimeString());
+      setError('');
+    } catch (e: any) { setError(e.message); }
+    setLoading(false);
+  };
 
-  function login() {
-    if (password === ADMIN_PASS) setAuthed(true);
-    else alert('Wrong password');
-  }
+  useEffect(() => { load(); const t = setInterval(load, 30000); return () => clearInterval(t); }, []);
 
-  function updateOdds(i: number, val: number) {
-    setOdds(prev => prev.map((o, idx) => idx === i ? { ...o, odds: val } : o));
-  }
+  const k = data?.kpis;
 
-  function generateCode() {
-    const lines = odds.map(o =>
-      `  { q:'${o.q}', cat:'${o.cat}', emoji:'${o.emoji}', odds:${o.odds}, url:'${o.url}' },`
-    ).join('\n');
-    return `const FEATURED: {q:string;cat:string;emoji:string;odds:number|null;url:string}[] = [\n${lines}\n];`;
-  }
+  const fillDays = (rows: any[], key: string, n: number) => {
+    const map: Record<string, number> = {};
+    (rows||[]).forEach((r: any) => { const d = (r.day||'').toString().split('T')[0]; map[d] = parseInt(r[key]||0); });
+    return Array.from({length:n}, (_, i) => {
+      const d = new Date(Date.now() - (n-1-i)*86400000);
+      const dk = d.toISOString().split('T')[0];
+      return { day: dk.slice(5), val: map[dk]||0 };
+    });
+  };
 
-  async function copyCode() {
-    await navigator.clipboard.writeText(generateCode());
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  if (!authed) return (
-    <div style={{ background:C.bg0, minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'system-ui' }}>
-      <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:16, padding:32, width:320 }}>
-        <div style={{ fontSize:16, fontWeight:700, color:C.t1, marginBottom:20 }}>PlayPicks Admin</div>
-        <input type="password" value={password} onChange={e=>setPassword(e.target.value)}
-          onKeyDown={e=>e.key==='Enter'&&login()}
-          placeholder="Password"
-          style={{ width:'100%', padding:'10px 14px', background:C.bg3, border:'1px solid '+C.border2, borderRadius:10, color:C.t1, fontSize:14, outline:'none', marginBottom:12, boxSizing:'border-box' as const }}/>
-        <button onClick={login}
-          style={{ width:'100%', padding:'10px', background:C.purple, color:'#fff', border:'none', borderRadius:10, fontSize:14, fontWeight:600, cursor:'pointer' }}>
-          Login
-        </button>
-      </div>
-    </div>
-  );
+  const dauData = fillDays(data?.trends?.dau, 'users', 14);
+  const anlData = fillDays(data?.trends?.analyses, 'count', 14);
+  const maxDau = Math.max(...dauData.map(d => d.val), 1);
+  const maxAnl = Math.max(...anlData.map(d => d.val), 1);
 
   return (
-    <div style={{ background:C.bg0, minHeight:'100vh', color:C.t1, fontFamily:'system-ui', padding:32 }}>
-      <div style={{ maxWidth:800, margin:'0 auto' }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
+    <div style={{ minHeight:'100vh', background:C.bg0, color:C.t1, fontFamily:'system-ui, sans-serif', padding:'32px 24px' }}>
+      <div style={{ maxWidth:900, margin:'0 auto' }}>
+
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:32 }}>
           <div>
-            <div style={{ fontSize:20, fontWeight:700 }}>Update Homepage Odds</div>
-            <div style={{ fontSize:12, color:C.t3, marginTop:4 }}>Check Polymarket weekly and update these. Then copy the code into app/page.tsx FEATURED array.</div>
+            <div style={{ fontSize:22, fontWeight:700, letterSpacing:'-0.5px' }}>PlayPicks AI — KPIs</div>
+            <div style={{ fontSize:12, color:C.t3, marginTop:4 }}>Live from Neon Postgres · auto-refreshes every 30s</div>
           </div>
-          <a href="https://polymarket.com" target="_blank" rel="noopener noreferrer"
-            style={{ padding:'8px 16px', background:'rgba(124,111,247,0.1)', border:'1px solid rgba(124,111,247,0.25)', borderRadius:10, color:'#a89cf8', fontSize:12, fontWeight:600, textDecoration:'none' }}>
-            Open Polymarket →
-          </a>
-        </div>
-
-        <div style={{ display:'grid', gap:8, marginBottom:24 }}>
-          {odds.map((o, i) => {
-            const isYes = o.odds >= 50;
-            return (
-              <div key={i} style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:12, padding:'14px 16px', display:'flex', alignItems:'center', gap:14 }}>
-                <span style={{ fontSize:18, minWidth:24 }}>{o.emoji}</span>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:12, fontWeight:500, color:C.t1, marginBottom:4 }}>{o.q}</div>
-                  <div style={{ fontSize:10, color:C.t3 }}>{o.cat}</div>
-                </div>
-                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <input type="number" min="1" max="99" value={o.odds}
-                    onChange={e => updateOdds(i, parseInt(e.target.value)||0)}
-                    style={{ width:64, padding:'6px 10px', background:C.bg3, border:'1px solid '+C.border2, borderRadius:8, color:isYes?C.green:C.red, fontSize:16, fontWeight:700, textAlign:'center', outline:'none' }}/>
-                  <span style={{ fontSize:11, color:C.t3 }}>% YES</span>
-                </div>
-                <a href={o.url} target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize:11, color:'#a89cf8', textDecoration:'none', whiteSpace:'nowrap' }}>
-                  Check →
-                </a>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Generated code */}
-        <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:12, padding:16, marginBottom:16 }}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-            <div style={{ fontSize:12, fontWeight:600, color:C.t2 }}>Generated code — paste into app/page.tsx</div>
-            <button onClick={copyCode}
-              style={{ padding:'6px 14px', background:copied?'rgba(46,204,138,0.12)':'rgba(124,111,247,0.1)', border:'1px solid '+(copied?'rgba(46,204,138,0.3)':'rgba(124,111,247,0.25)'), borderRadius:8, color:copied?C.green:'#a89cf8', cursor:'pointer', fontSize:12, fontWeight:600 }}>
-              {copied ? '✓ Copied!' : 'Copy code'}
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            {updated && <span style={{ fontSize:12, color:C.t3 }}>Updated {updated}</span>}
+            <button onClick={load} style={{ padding:'8px 16px', background:C.purple, border:'none', borderRadius:8, color:'#fff', fontSize:12, fontWeight:600, cursor:'pointer' }}>
+              Refresh
             </button>
           </div>
-          <pre style={{ fontSize:11, color:C.t3, lineHeight:1.6, overflow:'auto', margin:0, whiteSpace:'pre-wrap' }}>
-            {generateCode()}
-          </pre>
         </div>
 
-        <div style={{ fontSize:11, color:C.t3, lineHeight:1.8 }}>
-          <div style={{ fontWeight:600, color:C.t2, marginBottom:6 }}>How to update weekly:</div>
-          1. Go to Polymarket and find each question<br/>
-          2. Update the % YES number above<br/>
-          3. Click "Copy code"<br/>
-          4. Open app/page.tsx and replace the FEATURED array<br/>
-          5. git commit + push → live in 1 minute
-        </div>
+        {error && (
+          <div style={{ background:'rgba(239,79,106,0.1)', border:'1px solid rgba(239,79,106,0.3)', borderRadius:10, padding:'12px 16px', marginBottom:24, color:C.red, fontSize:13 }}>
+            {error.includes('missing_connection') ? 'Database not connected — check POSTGRES_URL or DATABASE_URL env var in Vercel' : error}
+          </div>
+        )}
+
+        {loading && !data && (
+          <div style={{ textAlign:'center', padding:'60px 0', color:C.t3 }}>Loading...</div>
+        )}
+
+        {k && (
+          <>
+            {/* KPI cards row 1 */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:12 }}>
+              {[
+                { label:'Total users', value: k.totalUsers, color: C.purple },
+                { label:'Active today', value: k.activeToday, color: C.green },
+                { label:'Analyses today', value: k.analysesToday, color: C.amber },
+                { label:'Avg per user', value: k.avgAnalysesPerUser?.toFixed(1), color: C.blue },
+              ].map(c => (
+                <div key={c.label} style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:12, padding:'16px 18px' }}>
+                  <div style={{ fontSize:11, color:C.t3, textTransform:'uppercase' as const, letterSpacing:'0.5px', marginBottom:8 }}>{c.label}</div>
+                  <div style={{ fontSize:32, fontWeight:700, color:c.color, fontFamily:'monospace', letterSpacing:'-1px' }}>{c.value ?? '0'}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* KPI cards row 2 */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:24 }}>
+              {[
+                { label:'New this week', value: k.newWeek },
+                { label:'Active this week', value: k.activeWeek },
+                { label:'Analyses (week)', value: k.analysesWeek },
+                { label:'Returning users', value: k.retained },
+              ].map(c => (
+                <div key={c.label} style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:12, padding:'14px 18px' }}>
+                  <div style={{ fontSize:11, color:C.t3, textTransform:'uppercase' as const, letterSpacing:'0.5px', marginBottom:6 }}>{c.label}</div>
+                  <div style={{ fontSize:24, fontWeight:700, color:C.t2, fontFamily:'monospace' }}>{c.value ?? '0'}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Charts */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:24 }}>
+              {[
+                { title:'Daily active users — 14 days', data:dauData, max:maxDau, color:C.purple },
+                { title:'Analyses per day — 14 days', data:anlData, max:maxAnl, color:C.green },
+              ].map(chart => (
+                <div key={chart.title} style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:12, padding:'16px 18px' }}>
+                  <div style={{ fontSize:12, fontWeight:600, color:C.t2, marginBottom:16 }}>{chart.title}</div>
+                  {chart.data.every(d => d.val === 0) ? (
+                    <div style={{ height:80, display:'flex', alignItems:'center', justifyContent:'center', color:C.t3, fontSize:12 }}>No data yet — start using the app</div>
+                  ) : (
+                    <div>
+                      <div style={{ display:'flex', alignItems:'flex-end', gap:3, height:80, marginBottom:6 }}>
+                        {chart.data.map((d, i) => (
+                          <div key={i} style={{ flex:1, display:'flex', flexDirection:'column' as const, alignItems:'center', gap:0 }}>
+                            <div style={{
+                              width:'100%', borderRadius:'2px 2px 0 0',
+                              background: chart.color,
+                              opacity: i === chart.data.length-1 ? 1 : 0.5,
+                              height: Math.max(2, (d.val/chart.max)*76)
+                            }} />
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ display:'flex', justifyContent:'space-between', fontSize:9, color:C.t3 }}>
+                        <span>{chart.data[0]?.day}</span>
+                        <span>{chart.data[6]?.day}</span>
+                        <span>{chart.data[13]?.day}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom row */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+              {/* Top queries */}
+              <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:12, padding:'16px 18px' }}>
+                <div style={{ fontSize:12, fontWeight:600, color:C.t2, marginBottom:12 }}>Top queries</div>
+                {!data.topQueries?.length ? (
+                  <div style={{ color:C.t3, fontSize:12 }}>No analyses yet</div>
+                ) : data.topQueries.map((q: any, i: number) => (
+                  <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 0', borderBottom:'1px solid '+C.border }}>
+                    <div style={{ fontSize:12, color:C.t1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const, maxWidth:'80%' }}>{i+1}. {q.query}</div>
+                    <div style={{ fontSize:12, fontWeight:700, color:C.purple, flexShrink:0, marginLeft:8 }}>{q.count}x</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Traffic sources */}
+              <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:12, padding:'16px 18px' }}>
+                <div style={{ fontSize:12, fontWeight:600, color:C.t2, marginBottom:12 }}>Traffic sources</div>
+                {!data.referrers?.length ? (
+                  <div style={{ color:C.t3, fontSize:12 }}>No traffic data yet</div>
+                ) : (() => {
+                  const max = Math.max(...data.referrers.map((r: any) => parseInt(r.count)));
+                  return data.referrers.map((r: any, i: number) => {
+                    const pct = Math.round(parseInt(r.count)/max*100);
+                    const label = r.ref === 'direct' ? 'Direct' : r.ref.replace(/https?:\/\//,'').split('/')[0];
+                    return (
+                      <div key={i} style={{ marginBottom:10 }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:4 }}>
+                          <span style={{ color:C.t1 }}>{label}</span>
+                          <span style={{ color:C.t3 }}>{r.count}</span>
+                        </div>
+                        <div style={{ height:4, background:C.bg3, borderRadius:2 }}>
+                          <div style={{ height:'100%', width:pct+'%', background:C.purple, borderRadius:2 }} />
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
