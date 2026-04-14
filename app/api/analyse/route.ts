@@ -295,6 +295,7 @@ export async function POST(request: NextRequest) {
       if (cricketContext.h2h) sources.unshift({ name: 'Head-to-Head', sig: cricketContext.h2h, url: '', category: 'market', type: 'mixed', contribution: 1 });
     }
 
+    fetch(new URL('/api/track', request.url).toString(), {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'analysis_run',props:{query:query.slice(0,100),confidence:finalConfidence}})}).catch(()=>{});
     return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources });
 
   } catch (err: any) {

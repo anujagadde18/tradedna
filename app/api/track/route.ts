@@ -1,37 +1,35 @@
-// app/api/track/route.ts
-import { NextResponse } from "next/server";
-import { sql } from "@vercel/postgres";
-import { getOrCreateAnonId } from "@/lib/anon";
+import { NextResponse } from 'next/server';
+import { sql } from '@vercel/postgres';
+import { headers } from 'next/headers';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const { anonId, referer } = await getOrCreateAnonId();
+    const headersList = headers();
+    const referer = headersList.get('referer') || '';
+    const userAgent = (headersList.get('user-agent') || '').slice(0, 150);
     const body = await req.json().catch(() => ({}));
-
-    const name = String(body.name || "");
+    const name = String(body.name || '');
     const props = body.props ?? {};
+    const anonId = body.anonId || crypto.randomUUID();
 
-    if (!name) {
-      return NextResponse.json({ ok: false, error: "Missing event name" }, { status: 400 });
-    }
+    if (!name) return NextResponse.json({ ok: false, error: 'Missing name' }, { status: 400 });
 
-    // Upsert user
     await sql`
-      insert into users (id, first_ref)
-      values (${anonId}::uuid, ${referer})
-      on conflict (id) do update
-      set last_seen_at = now()
+      INSERT INTO users (id, first_ref, last_seen_at)
+      VALUES (${anonId}::uuid, ${referer}, NOW())
+      ON CONFLICT (id) DO UPDATE SET last_seen_at = NOW()
     `;
 
-    // Log event
     await sql`
-      insert into events (user_id, name, props)
-      values (${anonId}::uuid, ${name}, ${JSON.stringify(props)}::jsonb)
+      INSERT INTO events (user_id, name, props)
+      VALUES (${anonId}::uuid, ${name}, ${JSON.stringify({...props, ua: userAgent})}::jsonb)
     `;
 
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error("Track error:", error);
-    return NextResponse.json({ ok: false, error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ ok: true, anonId });
+  } catch (err: any) {
+    console.error('Track:', err.message);
+    return NextResponse.json({ ok: false }, { status: 200 });
   }
 }
