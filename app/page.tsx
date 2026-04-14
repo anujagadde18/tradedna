@@ -69,11 +69,11 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (!q || q.includes('polymarket.com') || q.length < 3) { setResults([]); setShowResults(false); return; }
+    if (!query || query.includes('polymarket.com') || query.length < 3) { setResults([]); setShowResults(false); return; }
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(async () => {
       try {
-        const r = await fetch('/api/search?q=' + encodeURIComponent(q));
+        const r = await fetch('/api/search?q=' + encodeURIComponent(query));
         const d = await r.json();
         if (d.results?.length > 0) { setResults(d.results); setShowResults(true); }
         else { setResults([]); setShowResults(false); }
