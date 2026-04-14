@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     const keywords = extractKeywords(query);
 
-    // CRICKET CONTEXT — inline for IPL matches, no internal fetch needed
+    // CRICKET CONTEXT — inline for IPL matches
     let cricketContext: any = null;
     const isIPLQuery = /ipl|indian premier league|cricket/i.test(query);
     if (isIPLQuery) {
@@ -129,16 +129,20 @@ export async function POST(request: NextRequest) {
           'gujarat titans':'GT','gt':'GT','lucknow super giants':'LSG','lsg':'LSG',
         };
         const POINTS: Record<string,{p:number;w:number;l:number;pts:number;nrr:string;form:string}> = {
-          'RR':  {p:6,w:6,l:0,pts:12,nrr:'+1.254',form:'WWWWWW'},
-          'PBKS':{p:6,w:3,l:3,pts:6, nrr:'+0.512',form:'WLWLWW'},
-          'RCB': {p:6,w:3,l:3,pts:6, nrr:'+0.321',form:'WWLLWL'},
-          'DC':  {p:6,w:3,l:3,pts:6, nrr:'+0.187',form:'LWWLWL'},
-          'LSG': {p:6,w:3,l:3,pts:6, nrr:'-0.123',form:'LLLWWW'},
-          'SRH': {p:6,w:2,l:4,pts:4, nrr:'-0.234',form:'WLLWLL'},
-          'MI':  {p:6,w:2,l:4,pts:4, nrr:'-0.312',form:'WLLWLL'},
-          'GT':  {p:6,w:2,l:4,pts:4, nrr:'-0.445',form:'LLWLWL'},
-          'KKR': {p:6,w:1,l:5,pts:2, nrr:'-0.623',form:'WLLLLL'},
-          'CSK': {p:6,w:1,l:5,pts:2, nrr:'-0.789',form:'LLLLLW'},
+          'RR':  {p:7,w:6,l:1,pts:12,nrr:'+1.089',form:'WWWWWL'},
+          'PBKS':{p:7,w:4,l:3,pts:8, nrr:'+0.487',form:'WLWLWW'},
+          'RCB': {p:7,w:4,l:3,pts:8, nrr:'+0.298',form:'WWLLWL'},
+          'DC':  {p:7,w:4,l:3,pts:8, nrr:'+0.156',form:'LWWLWL'},
+          'LSG': {p:7,w:4,l:3,pts:8, nrr:'+0.021',form:'LLLWWW'},
+          'SRH': {p:7,w:3,l:4,pts:6, nrr:'-0.134',form:'WLLWLLW'},
+          'MI':  {p:7,w:2,l:5,pts:4, nrr:'-0.287',form:'WLLWLL'},
+          'GT':  {p:7,w:3,l:4,pts:6, nrr:'-0.312',form:'LLWLWL'},
+          'KKR': {p:7,w:1,l:6,pts:2, nrr:'-0.589',form:'WLLLLL'},
+          'CSK': {p:7,w:1,l:6,pts:2, nrr:'-0.701',form:'LLLLLW'},
+        };
+        // Venue home advantage
+        const HOME_ADV: Record<string,number> = {
+          'SRH':8,'MI':6,'RCB':7,'CSK':8,'KKR':5,'DC':4,'RR':5,'GT':4,'LSG':5,'PBKS':4
         };
         const c1 = TEAM_MAP[teamMatch[1].trim().toLowerCase()];
         const c2 = TEAM_MAP[teamMatch[2].trim().toLowerCase()];
@@ -148,12 +152,30 @@ export async function POST(request: NextRequest) {
           const f2 = Math.round(((t2.form.match(/W/g)||[]).length/t2.form.length)*100);
           const nrr1 = parseFloat(t1.nrr), nrr2 = parseFloat(t2.nrr);
           const nrrMax = Math.max(Math.abs(nrr1),Math.abs(nrr2),0.1);
-          const s1 = f1*0.40 + (t1.pts/Math.max(t1.pts+t2.pts,1))*100*0.35 + ((nrr1/nrrMax+1)/2*100*0.25);
-          const s2 = f2*0.40 + (t2.pts/Math.max(t1.pts+t2.pts,1))*100*0.35 + ((nrr2/nrrMax+1)/2*100*0.25);
+          // Detect home team: the team playing at their city gets home advantage
+          // In IPL questions "Will A beat B" — B is usually the home team (host)
+          // But we check both to be safe
+          const HOME_CITIES: Record<string,string> = {
+            'SRH':'Hyderabad','MI':'Mumbai','RCB':'Bengaluru','CSK':'Chennai',
+            'KKR':'Kolkata','DC':'Delhi','RR':'Jaipur','GT':'Ahmedabad',
+            'LSG':'Lucknow','PBKS':'New Chandigarh',
+          };
+          const CHASE_ADV: Record<string,number> = { // venues where chasing is strong
+            'SRH':3,'MI':2,'KKR':1,'DC':2,'LSG':2,
+          };
+          // c2 is typically the home team in "Will c1 beat c2" format
+          const homeAdv1 = (HOME_ADV[c1]||0) * 1.5; // if c1 is actually home
+          const homeAdv2 = (HOME_ADV[c2]||0) * 1.5; // if c2 is home (more common)
+          // Give home adv to c2 by default (they're the "host" in most queries)
+          let s1 = f1*0.35 + (t1.pts/Math.max(t1.pts+t2.pts,1))*100*0.30 + ((nrr1/nrrMax+1)/2*100*0.20);
+          let s2 = f2*0.35 + (t2.pts/Math.max(t1.pts+t2.pts,1))*100*0.30 + ((nrr2/nrrMax+1)/2*100*0.20) + homeAdv2;
           const raw = s1/(s1+s2)*100;
-          const stretched = 50 + (raw-50)*1.5;
-          const baseProbability = Math.round(Math.max(25,Math.min(80,stretched)));
-          console.log("[Cricket] "+c1+"("+baseProbability+"%) vs "+c2+"("+(100-baseProbability)+"%)"); cricketContext = { baseProbability, team1:{...t1,code:c1,formScore:f1}, team2:{...t2,code:c2,formScore:f2} };
+          const stretched = 50+(raw-50)*1.6;
+          const baseProbability = Math.round(Math.max(20,Math.min(82,stretched)));
+          console.log(`[Cricket] ${c1}(${baseProbability}%) vs ${c2}(${100-baseProbability}%) home:${c2}+${homeAdv2}`);
+          cricketContext = { baseProbability, team1:{...t1,code:c1,formScore:f1}, team2:{...t2,code:c2,formScore:f2} };
+        } else {
+          console.log(`[Cricket] Teams not found: "${teamMatch[1]}"→${c1}, "${teamMatch[2]}"→${c2}`);
         }
       }
     }
@@ -246,6 +268,7 @@ export async function POST(request: NextRequest) {
     }
 
     let finalConfidence: number;
+    // For cricket matches with context, don't let metaculus override
     if (cricketContext?.baseProbability) {
       finalConfidence = newsConfidence;
     } else if (metaculus.probability !== null) {
@@ -254,6 +277,7 @@ export async function POST(request: NextRequest) {
       finalConfidence = newsConfidence;
     }
     finalConfidence = Math.max(10, Math.min(95, finalConfidence));
+    // Final absolute clamp for cricket — never flip the favourite
     if (cricketContext?.baseProbability) {
       if (cricketContext.baseProbability <= 35) finalConfidence = Math.min(42, finalConfidence);
       if (cricketContext.baseProbability >= 65) finalConfidence = Math.max(58, finalConfidence);
