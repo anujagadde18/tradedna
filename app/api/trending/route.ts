@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const preferredRegion = ['fra1', 'lhr1', 'sin1']; // Non-US regions to avoid Polymarket geoblock
 
 const CAT_KEYWORDS: Record<string, string[]> = {
   sports:     ['nba','nfl','ipl','cricket','basketball','football','soccer','tennis','golf','champion','playoff','league','world cup','match','vs','celtics','lakers','warriors','thunder','nuggets','heat','knicks','bucks','suns','mavs','mavericks','grizzlies','pacers','cavaliers','raptors','jazz','nets','bulls','hornets','wizards','pistons','timberwolves','clippers','spurs','hawks','pelicans','rockets','kings','blazers','magic','76ers','sixers','f1','formula','drivers','ufc','fifa','nhl','mlb','premier league','champions league','europa','masters','pga','open championship','wimbledon','us open','french open','olympics'],
@@ -144,15 +146,29 @@ function getYesPrice(event: any): number | null {
 
 // Fetch using volume24hr sort — gets what's actively trading RIGHT NOW
 async function fetchLive(limit = 50): Promise<any[]> {
-  try {
-    const res = await fetch(
-      `https://gamma-api.polymarket.com/events?active=true&closed=false&archived=false&limit=${limit}&order=volume24hr&ascending=false`,
-      { headers: { 'Accept': 'application/json' }, cache: 'no-store' }
-    );
-    if (!res.ok) return [];
-    const d = await res.json();
-    return Array.isArray(d) ? d : [];
-  } catch { return []; }
+  // Try multiple endpoints in case of geoblock
+  const urls = [
+    `https://gamma-api.polymarket.com/events?active=true&closed=false&archived=false&limit=${limit}&order=volume24hr&ascending=false`,
+    `https://gamma-api.polymarket.com/events?active=true&limit=${limit}&order=volume&ascending=false`,
+  ];
+  
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { 
+        headers: { 
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (compatible; PlayPicksAI/1.0)',
+        }, 
+        cache: 'no-store',
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!res.ok) continue;
+      const d = await res.json();
+      const results = Array.isArray(d) ? d : [];
+      if (results.length > 0) return results;
+    } catch { continue; }
+  }
+  return [];
 }
 
 // Fetch moneyline odds for a specific game event
