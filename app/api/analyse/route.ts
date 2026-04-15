@@ -96,8 +96,33 @@ async function fetchMetaculus(keywords: string): Promise<{ probability: number |
 
 export async function POST(request: NextRequest) {
   try {
-    const { query, marketOdds } = await request.json();
+    const { query, marketOdds, anonId } = await request.json();
     if (!query) return Response.json({ error: 'Missing query' }, { status: 400 });
+
+    // Usage limit — 5 free analyses per day per user
+    if (anonId) {
+      try {
+        const { neon } = await import('@neondatabase/serverless');
+        const sql = neon(process.env.DATABASE_URL!);
+        const today = new Date().toISOString().split('T')[0];
+        const usage = await sql`
+          SELECT COUNT(*)::int as count FROM events 
+          WHERE user_id = ${anonId}::uuid 
+          AND name = 'analysis_run' 
+          AND created_at >= ${today}::date
+        `;
+        const count = usage[0]?.count || 0;
+        if (count >= 5) {
+          return Response.json({ 
+            valid: false, 
+            limitReached: true,
+            usageCount: count,
+            message: 'You have used your 5 free analyses today. Sign in to get unlimited access.',
+            sources: [] 
+          });
+        }
+      } catch {} // Don't block if DB fails
+    }
 
     const validation = validateQuestion(query);
     if (!validation.valid) {
@@ -295,7 +320,7 @@ export async function POST(request: NextRequest) {
       if (cricketContext.h2h) sources.unshift({ name: 'Head-to-Head', sig: cricketContext.h2h, url: '', category: 'market', type: 'mixed', contribution: 1 });
     }
 
-    fetch(new URL('/api/track', request.url).toString(), {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'analysis_run',props:{query:query.slice(0,100),confidence:finalConfidence}})}).catch(()=>{});
+    fetch(new URL('/api/track', request.url).toString(), {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({anonId:anonId||'',name:'analysis_run',props:{query:query.slice(0,100),confidence:finalConfidence}})}).catch(()=>{});
     return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources });
 
   } catch (err: any) {

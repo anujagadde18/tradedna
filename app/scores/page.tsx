@@ -454,6 +454,14 @@ function ScoresPageContent() {
   const searchParams = useSearchParams();
   const event = searchParams.get('event') || '';
 
+  // Persistent anonymous user ID — stored in localStorage
+  const [anonId] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    let id = localStorage.getItem('pp_uid');
+    if (!id) { id = crypto.randomUUID(); localStorage.setItem('pp_uid', id); }
+    return id;
+  });
+
   const [frame, setFrame]           = useState<Frame>('verdict');
   const [intel, setIntel]           = useState<any>(null);
   const [realSources, setRealSources] = useState<any[]>([]);
@@ -470,6 +478,7 @@ function ScoresPageContent() {
   const [toast, setToast]           = useState('');
   const [addFormOpen, setAddForm]   = useState(false);
   const [showMagicModal, setShowMagicModal] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
   const [customUrl, setCustomUrl]   = useState('');
   const [mktAdded, setMktAdded]     = useState<Record<string,boolean>>({});
   const [mktAdding, setMktAdding]   = useState<Record<string,boolean>>({});
@@ -484,6 +493,7 @@ function ScoresPageContent() {
     setRelated([]);
     setRealSources([]);
     setIntel(null);
+    setLimitReached(false);
     setInvalidQuestion(null);
     setFrame('verdict');
   }, [event]);
@@ -587,10 +597,14 @@ function ScoresPageContent() {
       const res = await fetch('/api/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: analysisQuery, marketOdds: marketOddsForAI }),
+        body: JSON.stringify({ query: analysisQuery, marketOdds: marketOddsForAI, anonId }),
       });
       const data = await res.json();
       if (data.valid === false) {
+        if (data.limitReached) {
+          setLimitReached(true);
+          return;
+        }
         setInvalidQuestion({ reason: data.reason, examples: data.examples || [] });
         return;
       }
@@ -820,7 +834,17 @@ function ScoresPageContent() {
 
             {frame === 'verdict' && (
               <div style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap:16 }}>
-                {invalidQuestion && !intel ? (
+                {limitReached ? (
+                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:300, textAlign:'center', gap:16, padding:40 }}>
+                  <div style={{ fontSize:48 }}>🔒</div>
+                  <div style={{ fontSize:20, fontWeight:700, color:C.t1, letterSpacing:'-0.4px' }}>Daily limit reached</div>
+                  <div style={{ fontSize:13, color:C.t2, maxWidth:380, lineHeight:1.6 }}>You've used your 5 free analyses today. Sign in for unlimited access — free during beta.</div>
+                  <button onClick={() => setShowMagicModal(true)} style={{ background:C.purple, color:'#fff', border:'none', borderRadius:10, padding:'12px 28px', fontSize:14, fontWeight:700, cursor:'pointer' }}>
+                    Sign in for unlimited →
+                  </button>
+                  <div style={{ fontSize:11, color:C.t3 }}>Resets at midnight · No credit card needed</div>
+                </div>
+                ) : invalidQuestion && !intel ? (
                 <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:300, textAlign:'center', gap:16, padding:40 }}>
                   <div style={{ fontSize:48 }}>?</div>
                   <div style={{ fontSize:20, fontWeight:700, color:C.t1, letterSpacing:'-0.4px' }}>This doesn't look like a real prediction</div>
@@ -841,9 +865,9 @@ function ScoresPageContent() {
               ) : (
                 <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} mtype={mtype} outcomes={outcomes} rawEvent={event} />
               )}
-                {invalidQuestion && !intel ? (
+                {(invalidQuestion && !intel) || limitReached ? (
                   <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100%', padding:24, gap:12, textAlign:'center', background:C.bg2, border:'1px solid '+C.border, borderRadius:16 }}>
-                    <div style={{ fontSize:12, color:C.t3, lineHeight:1.6 }}>Ask a real prediction market question to see the AI verdict, conviction score, and trade recommendation.</div>
+                    <div style={{ fontSize:12, color:C.t3, lineHeight:1.6 }}>{limitReached ? 'Sign in to see AI conviction scores and trade recommendations.' : 'Ask a real prediction market question to see the AI verdict, conviction score, and trade recommendation.'}</div>
                   </div>
                 ) : (
                 <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
