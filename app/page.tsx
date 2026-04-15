@@ -103,17 +103,22 @@ export default function HomePage() {
       .then((data: any[]) => {
         if (!Array.isArray(data)) { setLoading(false); return; }
         const now = new Date();
-        // Esports filter + dedup
+        // Deduplicate by slug AND title
         const seen = new Set<string>();
+        const seenTitles = new Set<string>();
         let results = data.filter((e: any) => {
           if (!e.slug || !e.title) return false;
           if (seen.has(e.slug)) return false;
+          const titleKey = e.title.toLowerCase().slice(0, 40);
+          if (seenTitles.has(titleKey)) return false;
           seen.add(e.slug);
+          seenTitles.add(titleKey);
           const vol24 = parseFloat(e.volume24hr || '0');
           if (vol24 <= 0) return false;
           const t = e.title.toLowerCase();
-          // Filter esports
-          if (t.includes('lol:') || t.includes('counter-strike') || t.includes('bo3') || t.includes('bo5') || t.includes(' lec ') || t.includes(' lck ') || t.includes('dota') || t.includes('esports world cup') || t.includes('dreamleague') || t.includes('iem ') || t.includes('natus vincere') || t.includes('furia')) return false;
+          // Filter esports/gaming
+          const esportsTerms = ['lol:','counter-strike','bo3','bo5',' lec ',' lck ','dota','esports world cup','dreamleague','iem ','natus vincere','furia','esport','yi zhou','kotov','chess','busan','rekonix','nemesis vs','invictus gaming','top esports','team spirit','team liquid','navi ','g2 esports','vitality'];
+          if (esportsTerms.some(term => t.includes(term))) return false;
           // Category filter
           if (keywords.length > 0 && !keywords.some(k => t.includes(k))) return false;
           return true;
@@ -332,9 +337,14 @@ export default function HomePage() {
               if (e.yesPrice !== null && (e.yesPrice >= 95 || e.yesPrice <= 5)) return false;
               // Filter out ended games
               if (e.endDate && new Date(e.endDate) < now) return false;
-              // Filter out esports (LoL, Counter-Strike, Dota, etc)
+              // Filter out esports and individual sports (tennis, chess, boxing)
               const title = e.title.toLowerCase();
-              if (title.includes('lol:') || title.includes('league of legends') || title.includes('counter-strike') || title.includes('dota') || title.includes('bo3') || title.includes('bo5') || title.includes('lec') || title.includes('lpl') || title.includes('lck') || title.includes('esport')) return false;
+              const badTerms = ['lol:','league of legends','counter-strike','dota','bo3','bo5','lec','lpl','lck','esport','yi zhou','kotov','chess','busan','boxing','ufc','mma','vs pavel','vs yi','tennis','table tennis'];
+              if (badTerms.some(t => title.includes(t))) return false;
+              // Only show team sports with recognizable team names
+              const goodSports = ['nba','nhl','mlb','nfl','ipl','cricket','premier league','champions league','la liga','bundesliga','serie a'];
+              const hasGoodSport = goodSports.some(s => e.slug?.includes(s.replace(/ /g,'-')) || title.includes(s));
+              if (!hasGoodSport && !e.team1) return false;
               return true;
             }).slice(0, 6);
             if (upcoming.length === 0) return null;
