@@ -126,7 +126,7 @@ export default function HomePage() {
             catFilter.economics.some(k => titleL.includes(k)) ? 'economics' :
             catFilter.world.some(k => titleL.includes(k)) ? 'world' : 'other';
           const slugParts = e.slug?.match(/^(?:nba|nhl|mlb|nfl)-([a-z]+)-([a-z]+)/);
-          const TEAMS: Record<string,string> = {'cha':'Hornets','bos':'Celtics','chi':'Bulls','was':'Wizards','uta':'Jazz','nop':'Pelicans','min':'Timberwolves','ind':'Pacers','mil':'Bucks','bkn':'Nets','okc':'Thunder','lal':'Lakers','mia':'Heat','tor':'Raptors','sac':'Kings','gsw':'Warriors','hou':'Rockets','phx':'Suns','atl':'Hawks','cle':'Cavaliers','den':'Nuggets','mem':'Grizzlies','por':'Blazers','orl':'Magic','det':'Pistons','ny':'Knicks','phi':'76ers','tb':'Lightning','ott':'Senators','edm':'Oilers','cbj':'Blue Jackets','det':'Red Wings','oak':'Athletics','nyy':'Yankees','kc':'Royals','cle':'Guardians','ari':'Diamondbacks','nym':'Mets','atl':'Braves','laa':'Angels'};
+          const TEAMS: Record<string,string> = {'cha':'Hornets','bos':'Celtics','chi':'Bulls','was':'Wizards','uta':'Jazz','nop':'Pelicans','min':'Timberwolves','ind':'Pacers','mil':'Bucks','bkn':'Nets','okc':'Thunder','lal':'Lakers','mia':'Heat','tor':'Raptors','sac':'Kings','gsw':'Warriors','hou':'Rockets','phx':'Suns','atl':'Hawks','cle':'Cavaliers','den':'Nuggets','mem':'Grizzlies','por':'Blazers','orl':'Magic','det':'Pistons','ny':'Knicks','phi':'76ers','tb':'Lightning','ott':'Senators','edm':'Oilers','cbj':'Blue Jackets','oak':'Athletics','nyy':'Yankees','kc':'Royals','ari':'Diamondbacks','nym':'Mets','laa':'Angels'};
           return {
             slug: e.slug, title: e.title,
             url: 'https://polymarket.com/event/' + e.slug,
