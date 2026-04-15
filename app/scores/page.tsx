@@ -421,6 +421,10 @@ function MagicLinkModalInner({ onClose }: { onClose: () => void }) {
         }
       }
       setSent(true);
+      // Mark as signed in — bypasses daily limit
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('pp_signed_in', '1');
+      }
     } catch { setSent(true); } // show success even on error
     setLoading(false);
   };
@@ -479,6 +483,10 @@ function ScoresPageContent() {
   const [addFormOpen, setAddForm]   = useState(false);
   const [showMagicModal, setShowMagicModal] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return !!localStorage.getItem('pp_signed_in');
+  });
   const [customUrl, setCustomUrl]   = useState('');
   const [mktAdded, setMktAdded]     = useState<Record<string,boolean>>({});
   const [mktAdding, setMktAdding]   = useState<Record<string,boolean>>({});
@@ -597,7 +605,7 @@ function ScoresPageContent() {
       const res = await fetch('/api/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: analysisQuery, marketOdds: marketOddsForAI, anonId }),
+        body: JSON.stringify({ query: analysisQuery, marketOdds: marketOddsForAI, anonId, isSignedIn }),
       });
       const data = await res.json();
       if (data.valid === false) {
@@ -780,6 +788,14 @@ function ScoresPageContent() {
           <button onClick={() => goFrame('sources')} style={{ padding:'4px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', background:C.purple, color:'#fff', border:'none' }}>Tune sources</button>
           <button onClick={runAnalysis} style={{ padding:'4px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', border:'1px solid '+C.border2, background:'none', color:C.t2 }}>Re-analyze</button>
           <button onClick={() => router.push('/journal')} style={{ padding:'4px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', border:'1px solid '+C.border2, background:'none', color:C.t2 }}>Journal</button>
+          {!isSignedIn && (
+            <button onClick={() => setShowMagicModal(true)} style={{ padding:'4px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', background:'rgba(46,204,138,0.1)', border:'1px solid rgba(46,204,138,0.25)', color:C.green }}>
+              Sign in
+            </button>
+          )}
+          {isSignedIn && (
+            <div style={{ fontSize:10, color:C.green, padding:'4px 10px', borderRadius:7, background:'rgba(46,204,138,0.08)', border:'1px solid rgba(46,204,138,0.2)' }}>✓ Signed in</div>
+          )}
         </div>
       </nav>
 

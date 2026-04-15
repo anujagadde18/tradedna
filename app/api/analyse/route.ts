@@ -96,11 +96,11 @@ async function fetchMetaculus(keywords: string): Promise<{ probability: number |
 
 export async function POST(request: NextRequest) {
   try {
-    const { query, marketOdds, anonId } = await request.json();
+    const { query, marketOdds, anonId, isSignedIn } = await request.json();
     if (!query) return Response.json({ error: 'Missing query' }, { status: 400 });
 
-    // Usage limit — 5 free analyses per day per user
-    if (anonId) {
+    // Usage limit — 5 free analyses per day per user (bypassed for signed-in users)
+    if (anonId && !isSignedIn) {
       try {
         const { neon } = await import('@neondatabase/serverless');
         const sql = neon(process.env.DATABASE_URL!);
