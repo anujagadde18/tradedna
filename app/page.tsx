@@ -103,13 +103,17 @@ export default function HomePage() {
       .then((data: any[]) => {
         if (!Array.isArray(data)) { setLoading(false); return; }
         const now = new Date();
+        // Esports filter + dedup
+        const seen = new Set<string>();
         let results = data.filter((e: any) => {
           if (!e.slug || !e.title) return false;
+          if (seen.has(e.slug)) return false;
+          seen.add(e.slug);
           const vol24 = parseFloat(e.volume24hr || '0');
           if (vol24 <= 0) return false;
-          // Esports filter
           const t = e.title.toLowerCase();
-          if (t.includes('lol:') || t.includes('counter-strike') || t.includes('bo3') || t.includes('bo5') || t.includes('lec ') || t.includes('lck ')) return false;
+          // Filter esports
+          if (t.includes('lol:') || t.includes('counter-strike') || t.includes('bo3') || t.includes('bo5') || t.includes(' lec ') || t.includes(' lck ') || t.includes('dota') || t.includes('esports world cup') || t.includes('dreamleague') || t.includes('iem ') || t.includes('natus vincere') || t.includes('furia')) return false;
           // Category filter
           if (keywords.length > 0 && !keywords.some(k => t.includes(k))) return false;
           return true;
