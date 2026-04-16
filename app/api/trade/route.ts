@@ -1,6 +1,3 @@
-// app/api/trade/route.ts
-// Tries gasless relayer first, falls back to direct CLOB with builder attribution
-
 import { NextRequest } from 'next/server';
 import crypto from 'crypto';
 
@@ -29,13 +26,13 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Builder credentials not configured' }, { status: 500 });
     }
 
-    // ── PATH 1: Gasless relayer (if POLYMARKET_MAGIC_PK is set and useRelayer not false) ──
+    // ── PATH 1: Gasless relayer ──
     if (magicPk && useRelayer !== false) {
       try {
         const relayRes = await fetch(
           new URL('/api/relay', request.url).toString(),
           {
-            method:  'POST',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               action:        'place_order',
@@ -48,37 +45,33 @@ export async function POST(request: NextRequest) {
             }),
           }
         );
-
         if (relayRes.ok) {
           const relayData = await relayRes.json();
-          return Response.json({
-            success:  true,
-            orderId:  relayData.orderId,
-            result:   relayData.response,
-            gasless:  true,
-          });
+          return Response.json({ success: true, orderId: relayData.orderId, result: relayData.response, gasless: true });
         }
-        // If relayer fails, fall through to direct CLOB
         console.warn('Relayer failed, falling back to direct CLOB');
       } catch (relayErr) {
         console.warn('Relayer error, falling back:', relayErr);
       }
     }
 
-    // ── PATH 2: Direct CLOB with builder attribution headers ──
+    // ── PATH 2: Direct CLOB with CORRECT builder attribution headers ──
     const timestamp = Date.now().toString();
     const path      = '/order';
     const bodyStr   = JSON.stringify(orderPayload);
     const signature = buildSignature(secret, parseInt(timestamp), 'POST', path, bodyStr);
 
     const response = await fetch('https://clob.polymarket.com/order', {
-      method:  'POST',
+      method: 'POST',
       headers: {
-        'Content-Type':           'application/json',
-        'POLY_BUILDER_API_KEY':    apiKey,
-        'POLY_BUILDER_TIMESTAMP':  timestamp,
-        'POLY_BUILDER_PASSPHRASE': passphrase,
-        'POLY_BUILDER_SIGNATURE':  signature,
+        'Content-Type':        'application/json',
+        // Correct Polymarket CLOB auth headers
+        'CLOB-API-KEY':        apiKey,
+        'CLOB-TIMESTAMP':      timestamp,
+        'CLOB-PASSPHRASE':     passphrase,
+        'CLOB-SIGNATURE':      signature,
+        // Builder attribution — this is what Richard needs to see
+        'CLOB-Builder-Code':   apiKey,
         ...(body.authHeaders || {}),
       },
       body: bodyStr,
