@@ -117,7 +117,7 @@ export default function HomePage() {
           if (vol24 <= 0) return false;
           const t = e.title.toLowerCase();
           // Filter esports/gaming
-          const esportsTerms = ['lol:','counter-strike','bo3','bo5',' lec ',' lck ','dota','esports world cup','dreamleague','iem ','natus vincere','furia','esport','yi zhou','kotov','chess','busan','rekonix','nemesis vs','invictus gaming','top esports','team spirit','team liquid','navi ','g2 esports','vitality'];
+          const esportsTerms = ['lol:','lol :','counter-strike','bo3','bo5','lec ','lck ','dota','esports world cup','dreamleague','iem ','natus vincere','furia','esport','yi zhou','kotov','chess','busan','rekonix','nemesis vs','invictus gaming','top esports','bilibili','team spirit','team liquid','navi ','g2 esports','vitality','pgl ','bucharest','elon musk','# tweets'];
           if (esportsTerms.some(term => t.includes(term))) return false;
           // Category filter
           if (keywords.length > 0 && !keywords.some(k => t.includes(k))) return false;
