@@ -120,7 +120,7 @@ export default function HomePage() {
           const esportsTerms = ['lol:','lol :','lol ','counter-strike','bo3','bo5','lec ','lck ','dota','esports world cup','dreamleague','iem ','natus vincere','furia','esport','yi zhou','kotov','chess','busan','rekonix','nemesis vs','invictus gaming','top esports','bilibili','team spirit','team liquid','navi ','g2 esports','vitality','pgl','bucharest','elon musk','# tweets','musk','grand final','tweets april','tweet'];
           if (esportsTerms.some(term => t.includes(term))) return false;
           // Also filter by slug
-          const badSlugs = ['lpl-','lck-','lec-','pgl-','elon-musk-tweet'];
+          const badSlugs = ['lol-','lpl-','lck-','lec-','pgl-','elon-musk-','what-will-be-said'];
           if (badSlugs.some(s => (e.slug||'').includes(s))) return false;
           // Category filter
           if (keywords.length > 0 && !keywords.some(k => t.includes(k))) return false;
