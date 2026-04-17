@@ -118,7 +118,7 @@ export default function HomePage() {
           const slug = (e.slug || '').toLowerCase();
           const t = e.title.toLowerCase();
           // Whitelist approach - only allow clean market slugs
-          const isEsports = slug.startsWith('lol-') || slug.startsWith('lpl-') || slug.startsWith('lck-') || slug.startsWith('lec-') || slug.includes('pgl-') || slug.includes('bo3') || slug.includes('bo5') || slug.includes('dota') || slug.includes('counter-strike') || slug.includes('dreamleague') || slug.includes('esports-world-cup');
+          const isEsports = slug.startsWith('lol-') || slug.startsWith('lpl-') || slug.startsWith('lck-') || slug.startsWith('lec-') || slug.startsWith('cs-') || slug.startsWith('csl-') || slug.includes('pgl-') || slug.includes('bo3') || slug.includes('bo5') || slug.includes('dota') || slug.includes('counter-strike') || slug.includes('dreamleague') || slug.includes('esports-world-cup') || t.includes('counter-strike') || t.includes('vitality vs') || t.includes('natus vincere') || t.includes('iem rio') || t.includes('spirit vs');
           if (isEsports) return false;
           const isNoise = slug.includes('elon-musk') || slug.includes('of-tweets') || slug.includes('what-will-be-said') || slug.includes('yi-zhou') || slug.includes('kotov') || slug.includes('chess');
           if (isNoise) return false;
