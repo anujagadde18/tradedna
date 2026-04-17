@@ -98,74 +98,10 @@ export default function HomePage() {
 
     const keywords = category !== 'all' ? (catFilter[category] || []) : [];
 
-    fetch(`https://gamma-api.polymarket.com/events?active=true&closed=false&archived=false&limit=50&order=volume24hr&ascending=false`)
+    fetch('/api/trending?category=' + category)
       .then(r => r.json())
-      .then((data: any[]) => {
-        if (!Array.isArray(data)) { setLoading(false); return; }
-        const now = new Date();
-        // Deduplicate by slug AND title
-        const seen = new Set<string>();
-        const seenTitles = new Set<string>();
-        let results = data.filter((e: any) => {
-          if (!e.slug || !e.title) return false;
-          if (seen.has(e.slug)) return false;
-          const titleKey = e.title.toLowerCase().slice(0, 40);
-          if (seenTitles.has(titleKey)) return false;
-          seen.add(e.slug);
-          seenTitles.add(titleKey);
-          const vol24 = parseFloat(e.volume24hr || '0');
-          if (vol24 <= 0) return false;
-          const slug = (e.slug || '').toLowerCase();
-          const t = e.title.toLowerCase();
-          // Whitelist approach - only allow clean market slugs
-          const isEsports = slug.startsWith('lol-') || slug.startsWith('lpl-') || slug.startsWith('lck-') || slug.startsWith('lec-') || slug.startsWith('cs-') || slug.startsWith('csl-') || slug.includes('pgl-') || slug.includes('bo3') || slug.includes('bo5') || slug.includes('dota') || slug.includes('counter-strike') || slug.includes('dreamleague') || slug.includes('esports-world-cup') || t.includes('counter-strike') || t.includes('vitality vs') || t.includes('natus vincere') || t.includes('iem rio') || t.includes('spirit vs');
-          if (isEsports) return false;
-          const isNoise = slug.includes('elon-musk') || slug.includes('of-tweets') || slug.includes('what-will-be-said') || slug.includes('yi-zhou') || slug.includes('kotov') || slug.includes('chess');
-          if (isNoise) return false;
-          // Category filter
-          if (keywords.length > 0 && !keywords.some(k => t.includes(k))) return false;
-          return true;
-        });
-        results.sort((a: any, b: any) => parseFloat(b.volume24hr||'0') - parseFloat(a.volume24hr||'0'));
-        const mapped = results.slice(0, 20).map((e: any) => {
-          const yesPrice = e.markets?.[0]?.outcomePrices ? Math.round(parseFloat(JSON.parse(e.markets[0].outcomePrices)[0]) * 100) : null;
-          const titleL = e.title.toLowerCase();
-          const cat = category !== 'all' ? category :
-            catFilter.sports.some(k => titleL.includes(k)) ? 'sports' :
-            catFilter.crypto.some(k => titleL.includes(k)) ? 'crypto' :
-            catFilter.politics.some(k => titleL.includes(k)) ? 'politics' :
-            catFilter.tech.some(k => titleL.includes(k)) ? 'tech' :
-            catFilter.economics.some(k => titleL.includes(k)) ? 'economics' :
-            catFilter.world.some(k => titleL.includes(k)) ? 'world' : 'other';
-          const slugParts = e.slug?.match(/^(?:nba|nhl|mlb|nfl)-([a-z]+)-([a-z]+)/);
-          const TEAMS: Record<string,string> = {'cha':'Hornets','bos':'Celtics','chi':'Bulls','was':'Wizards','uta':'Jazz','nop':'Pelicans','min':'Timberwolves','ind':'Pacers','mil':'Bucks','bkn':'Nets','okc':'Thunder','lal':'Lakers','mia':'Heat','tor':'Raptors','sac':'Kings','gsw':'Warriors','hou':'Rockets','phx':'Suns','atl':'Hawks','cle':'Cavaliers','den':'Nuggets','mem':'Grizzlies','por':'Blazers','orl':'Magic','det':'Pistons','ny':'Knicks','phi':'76ers','tb':'Lightning','ott':'Senators','edm':'Oilers','cbj':'Blue Jackets','oak':'Athletics','nyy':'Yankees','kc':'Royals','ari':'Diamondbacks','nym':'Mets','laa':'Angels'};
-          return {
-            slug: e.slug, title: e.title,
-            url: 'https://polymarket.com/event/' + e.slug,
-            volume: parseFloat(e.volume || '0'),
-            volumeFormatted: e.volumeFormatted || '',
-            volume24h: parseFloat(e.volume24hr || '0'),
-            volume24hFormatted: '$' + (parseFloat(e.volume24hr||'0')/1000000).toFixed(1) + 'M',
-            category: cat,
-            icon: cat === 'sports' ? '🏆' : cat === 'crypto' ? '₿' : cat === 'politics' ? '🗳️' : cat === 'tech' ? '🤖' : cat === 'economics' ? '📈' : '🌍',
-            image: e.image || null,
-            yesPrice: yesPrice,
-            team1: slugParts ? (TEAMS[slugParts[1]] || null) : null,
-            team2: slugParts ? (TEAMS[slugParts[2]] || null) : null,
-            marketCount: (e.markets || []).length,
-            endDate: e.endDate || '',
-          };
-        });
-        setEvents(mapped);
-        setLoading(false);
-      })
-      .catch(() => {
-        // Fallback to our server API if direct fetch fails
-        fetch('/api/trending?category=' + category)
-          .then(r => r.json())
-          .then(d => { setEvents(d.results || []); setLoading(false); })
-          .catch(() => setLoading(false));
-      });
+      .then(d => { setEvents(d.results || []); setLoading(false); })
+      .catch(() => setLoading(false));
   }, [category]);
 
   useEffect(() => {
