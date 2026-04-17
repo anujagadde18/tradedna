@@ -115,13 +115,13 @@ export default function HomePage() {
           seenTitles.add(titleKey);
           const vol24 = parseFloat(e.volume24hr || '0');
           if (vol24 <= 0) return false;
+          const slug = (e.slug || '').toLowerCase();
           const t = e.title.toLowerCase();
-          // Filter esports/gaming/noise
-          const esportsTerms = ['lol:','lol :','lol ','counter-strike','bo3','bo5','lec ','lck ','dota','esports world cup','dreamleague','iem ','natus vincere','furia','esport','yi zhou','kotov','chess','busan','rekonix','nemesis vs','invictus gaming','top esports','bilibili','team spirit','team liquid','navi ','g2 esports','vitality','pgl','bucharest','elon musk','# tweets','musk','grand final','tweets april','tweet'];
-          if (esportsTerms.some(term => t.includes(term))) return false;
-          // Also filter by slug
-          const badSlugs = ['lol-','lpl-','lck-','lec-','pgl-','elon-musk-','what-will-be-said'];
-          if (badSlugs.some(s => (e.slug||'').includes(s))) return false;
+          // Whitelist approach - only allow clean market slugs
+          const isEsports = slug.startsWith('lol-') || slug.startsWith('lpl-') || slug.startsWith('lck-') || slug.startsWith('lec-') || slug.includes('pgl-') || slug.includes('bo3') || slug.includes('bo5') || slug.includes('dota') || slug.includes('counter-strike') || slug.includes('dreamleague') || slug.includes('esports-world-cup');
+          if (isEsports) return false;
+          const isNoise = slug.includes('elon-musk') || slug.includes('of-tweets') || slug.includes('what-will-be-said') || slug.includes('yi-zhou') || slug.includes('kotov') || slug.includes('chess');
+          if (isNoise) return false;
           // Category filter
           if (keywords.length > 0 && !keywords.some(k => t.includes(k))) return false;
           return true;
