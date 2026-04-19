@@ -96,7 +96,11 @@ async function fetchMetaculus(keywords: string): Promise<{ probability: number |
 
 export async function POST(request: NextRequest) {
   try {
-    const { query, marketOdds, anonId, isSignedIn } = await request.json();
+    const { query, marketOdds, anonId, isSignedIn, weights } = await request.json();
+    const w = weights || { news:35, social:40, technical:25 };
+    const wNews = (w.news || 35) / 100;
+    const wSocial = (w.social || 40) / 100;
+    const wTech = (w.technical || 25) / 100;
     if (!query) return Response.json({ error: 'Missing query' }, { status: 400 });
 
     // Usage limit — 5 free analyses per day per user (bypassed for signed-in users)
@@ -293,11 +297,16 @@ export async function POST(request: NextRequest) {
     }
 
     let finalConfidence: number;
-    // For cricket matches with context, don't let metaculus override
+    // Apply user weights to final confidence
     if (cricketContext?.baseProbability) {
+      // Cricket — use base probability directly
       finalConfidence = newsConfidence;
     } else if (metaculus.probability !== null) {
-      finalConfidence = Math.round(newsConfidence * 0.45 + metaculus.probability * 0.55);
+      // Blend: news (weighted), metaculus as technical signal
+      const newsW = wNews + wSocial; // combine news+social
+      const techW = wTech;
+      const total = newsW + techW;
+      finalConfidence = Math.round((newsConfidence * newsW + metaculus.probability * techW) / total);
     } else {
       finalConfidence = newsConfidence;
     }

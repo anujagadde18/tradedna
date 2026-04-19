@@ -41,6 +41,10 @@ const PREDICTIONS: Prediction[] = [
   { id:11, date:'Apr 17', question:'RCB beat DC in IPL 2026',                                 category:'cricket',  aiConfidence:61, marketOdds:null, result:'incorrect',actualOutcome:'DC won ❌',          edge:null, notes:'DC pulled the upset at Chinnaswamy' },
   { id:12, date:'Apr 18', question:'RR beat KKR in IPL 2026',                                 category:'cricket',  aiConfidence:80, marketOdds:null, result:'incorrect',actualOutcome:'KKR won ❌ (upset)', edge:null, notes:'KKR got their first win of the season' },
   { id:13, date:'Apr 18', question:'PBKS beat LSG in IPL 2026',                               category:'cricket',  aiConfidence:69, marketOdds:null, result:'correct',  actualOutcome:'PBKS won ✅',        edge:null },
+  { id:14, date:'Apr 19', question:'GT beat MI in IPL 2026',                                   category:'cricket',  aiConfidence:72, marketOdds:null, result:'pending',   actualOutcome:'Today',              edge:null },
+  { id:15, date:'Apr 16', question:'Will Drake release Iceman by June 30?',                    category:'other',    aiConfidence:82, marketOdds:78,   result:'pending',   actualOutcome:'Ongoing',            edge:4,   notes:'Music market, $XM on Polymarket' },
+  { id:16, date:'Apr 16', question:'NBA Champion 2026 — Celtics win',                          category:'sports',   aiConfidence:48, marketOdds:46,   result:'pending',   actualOutcome:'Season ongoing',     edge:2 },
+  { id:17, date:'Apr 16', question:'F1 Drivers Champion 2026',                                 category:'sports',   aiConfidence:44, marketOdds:42,   result:'pending',   actualOutcome:'Season ongoing',     edge:2 },
 ];
 
 const CAT_COLORS: Record<string, string> = {
@@ -58,7 +62,9 @@ export default function AccuracyPage() {
 
   const filtered = PREDICTIONS.filter(p => {
     if (filter !== 'all' && p.result !== filter) return false;
-    if (catFilter !== 'all' && p.category !== catFilter) return false;
+    if (catFilter === 'sports') {
+      if (p.category !== 'sports' && p.category !== 'cricket') return false;
+    } else if (catFilter !== 'all' && p.category !== catFilter) return false;
     return true;
   }).sort((a, b) => b.id - a.id);
 

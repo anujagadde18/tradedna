@@ -605,7 +605,7 @@ function ScoresPageContent() {
       const res = await fetch('/api/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: analysisQuery, marketOdds: marketOddsForAI, anonId, isSignedIn }),
+        body: JSON.stringify({ query: analysisQuery, marketOdds: marketOddsForAI, anonId, isSignedIn, weights }),
       });
       const data = await res.json();
       if (data.valid === false) {
