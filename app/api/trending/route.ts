@@ -220,6 +220,12 @@ export async function GET(req: NextRequest) {
   for (const event of events) {
     if (!event.slug || !event.title || seen.has(event.slug)) continue;
     seen.add(event.slug);
+    // Filter esports and noise
+    const slug = event.slug.toLowerCase();
+    const t = (event.title || '').toLowerCase();
+    const isEsports = slug.startsWith('lol-') || slug.startsWith('lpl-') || slug.startsWith('lck-') || slug.startsWith('lec-') || slug.includes('counter-strike') || slug.includes('dota') || slug.includes('dreamleague') || slug.includes('pgl-') || slug.includes('esports-world-cup') || t.includes('counter-strike') || t.includes('(bo3)') || t.includes('(bo5)') || t.includes('dota 2') || t.includes('lol:') || t.includes('iem rio');
+    const isNoise = slug.includes('elon-musk') || slug.includes('of-tweets') || slug.includes('what-will-be-said') || slug.includes('yi-zhou') || slug.includes('kotov');
+    if (isEsports || isNoise) continue;
 
     const vol24 = parseFloat(event.volume24hr || '0');
     const vol   = parseFloat(event.volume || '0');
