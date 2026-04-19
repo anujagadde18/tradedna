@@ -17,7 +17,7 @@ type Prediction = {
   id: number;
   date: string;
   question: string;
-  category: 'cricket' | 'politics' | 'sports' | 'crypto' | 'world';
+  category: 'cricket' | 'politics' | 'sports' | 'crypto' | 'world' | 'other';
   aiConfidence: number;
   marketOdds: number | null;
   result: 'correct' | 'incorrect' | 'pending';
