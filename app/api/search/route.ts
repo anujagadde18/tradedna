@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch with larger limit so we have more to filter
     const res = await fetch(
-      `https://gamma-api.polymarket.com/events/keyset?q=${encodeURIComponent(searchQ)}&limit=20&active=true`,
+      `https://gamma-api.polymarket.com/events?q=${encodeURIComponent(searchQ)}&limit=20&active=true`,
       { headers: { 'Accept': 'application/json' } }
     );
 
