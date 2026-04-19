@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
 
   const batches = await Promise.all(
     SPECIFIC_QUERIES.map(q =>
-      fetchEvents(`https://gamma-api.polymarket.com/events?q=${encodeURIComponent(q)}&active=true&limit=10`)
+      fetchEvents(`https://gamma-api.polymarket.com/events/keyset?q=${encodeURIComponent(q)}&active=true&limit=10`)
     )
   );
 

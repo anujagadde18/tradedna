@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const eventRes = await fetch(
-      `https://gamma-api.polymarket.com/events?slug=${slug}&limit=1`,
+      `https://gamma-api.polymarket.com/events/keyset?slug=${slug}&limit=1`,
       { headers: { 'Accept': 'application/json' } }
     );
 
