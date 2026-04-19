@@ -148,8 +148,8 @@ function getYesPrice(event: any): number | null {
 async function fetchLive(limit = 50): Promise<any[]> {
   // Try multiple endpoints in case of geoblock
   const urls = [
-    `https://gamma-api.polymarket.com/events?active=true&closed=false&archived=false&limit=${limit}&order=volume24hr&ascending=false`,
-    `https://gamma-api.polymarket.com/events?active=true&limit=${limit}&order=volume&ascending=false`,
+    `https://gamma-api.polymarket.com/events/keyset?active=true&closed=false&archived=false&limit=${limit}&order=volume24hr&ascending=false`,
+    `https://gamma-api.polymarket.com/events/keyset?active=true&limit=${limit}&order=volume&ascending=false`,
   ];
   
   for (const url of urls) {
@@ -175,7 +175,7 @@ async function fetchLive(limit = 50): Promise<any[]> {
 async function fetchMoneyline(eventSlug: string): Promise<number | null> {
   try {
     const res = await fetch(
-      `https://gamma-api.polymarket.com/markets?event_slug=${eventSlug}&limit=100`,
+      `https://gamma-api.polymarket.com/markets/keyset?event_slug=${eventSlug}&limit=100`,
       { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(4000) }
     );
     if (!res.ok) return null;
