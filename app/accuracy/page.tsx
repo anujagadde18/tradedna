@@ -132,7 +132,7 @@ export default function AccuracyPage() {
             </button>
           ))}
           <div style={{ width:1, background:C.border, margin:'0 4px' }} />
-          {(['all','cricket','sports','politics','world','crypto'] as const).map(c => (
+          {(['all','cricket','sports','politics','world','crypto','other'] as const).map(c => (
             <button key={c} onClick={() => setCatFilter(c)}
               style={{ padding:'5px 14px', borderRadius:20, fontSize:12, fontWeight:600, cursor:'pointer', border:'1px solid '+(catFilter===c ? C.border3 : C.border), background: catFilter===c ? C.bg3 : 'transparent', color: catFilter===c ? C.t1 : C.t3 }}>
               {c === 'all' ? 'All markets' : (CAT_ICONS[c]||'') + ' ' + c}
