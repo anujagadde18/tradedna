@@ -55,10 +55,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ── PATH 2: Direct CLOB with CORRECT builder attribution headers ──
+    // ── PATH 2: Direct CLOB with new bytes32 builder code in payload ──
+    // Builder code injected into order payload BEFORE signing (new format)
+    const builderCode = process.env.POLY_BUILDER_API_KEY || '';
+    const payloadWithBuilder = injectBuilderCode(orderPayload, builderCode);
     const timestamp = Date.now().toString();
     const path      = '/order';
-    const bodyStr   = JSON.stringify(orderPayload);
+    const bodyStr   = JSON.stringify(payloadWithBuilder);
     const signature = buildSignature(secret, parseInt(timestamp), 'POST', path, bodyStr);
 
     const response = await fetch('https://clob.polymarket.com/order', {
@@ -74,7 +77,7 @@ export async function POST(request: NextRequest) {
         'CLOB-Builder-Code':   apiKey,
         ...(body.authHeaders || {}),
       },
-      body: bodyStr,
+      body: bodyStr,  // payload includes builderCode field
     });
 
     const result = await response.json();
