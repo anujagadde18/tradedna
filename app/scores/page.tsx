@@ -620,6 +620,28 @@ function ScoresPageContent() {
       if (data.confidence) {
         // Use raw confidence directly — intelligenceEngine flips NO verdicts
         const rawConf = Math.max(5, Math.min(95, data.confidence));
+        // Auto-save to journal
+        try {
+          const journalEntry = {
+            id: event.slice(0,50).replace(/[^a-z0-9]/gi,'-').toLowerCase() + '-' + Date.now(),
+            question: event,
+            aiConfidence: rawConf,
+            marketOdds: marketOddsForAI || null,
+            edge: marketOddsForAI ? rawConf - marketOddsForAI : null,
+            weights,
+            sources: (data.sources||[]).slice(0,5).map((s:any)=>({name:s.name,type:s.category||'news',contribution:s.contribution||0})),
+            result: 'pending',
+            timestamp: Date.now(),
+          };
+          const existing = localStorage.getItem('pp_journal');
+          const journal = existing ? JSON.parse(existing) : [];
+          // Don't duplicate
+          if (!journal.find((e:any) => e.question === event)) {
+            journal.unshift(journalEntry);
+            if (journal.length > 200) journal.splice(200);
+            localStorage.setItem('pp_journal', JSON.stringify(journal));
+          }
+        } catch {}
         setIntel({ confidence: rawConf, direction: rawConf >= 50 ? 'YES' : 'NO', probabilityLabel: rawConf >= 65 ? 'Very likely YES' : rawConf >= 55 ? 'Probably YES' : rawConf >= 45 ? 'Uncertain' : rawConf >= 35 ? 'Probably NO' : 'Very likely NO', predictionStrength: rawConf >= 70 ? 'Strong' : rawConf >= 55 ? 'Medium' : 'Weak', strengthScore: rawConf, riskLevel: rawConf >= 70 || rawConf <= 30 ? 'Low' : 'Medium', marketEdge: marketOddsForAI ? rawConf - marketOddsForAI : null, edgeContext: '', modelComponents: [], confidenceDrivers: { positive: [], negative: [] }, explanation: '' });
         if (data.sources && data.sources.length > 0) setRealSources(data.sources);
       } else {
