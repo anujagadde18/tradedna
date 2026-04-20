@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     // ── PATH 2: Direct CLOB with new bytes32 builder code in payload ──
     // Builder code injected into order payload BEFORE signing (new format)
     const builderCode = process.env.POLY_BUILDER_API_KEY || '';
-    const payloadWithBuilder = injectBuilderCode(orderPayload, builderCode);
+    const payloadWithBuilder = { ...orderPayload, builderCode };
     const timestamp = Date.now().toString();
     const path      = '/order';
     const bodyStr   = JSON.stringify(payloadWithBuilder);
