@@ -865,7 +865,7 @@ function ScoresPageContent() {
                     <div style={{ fontSize:10, color:C.t2, lineHeight:1.5, marginTop:8 }}>
                       {hasLiveMarket && mktPctForDisplay > 0
                         ? 'AI has a slight edge over bettors. Keep position modest.'
-                        : 'No Polymarket data. AI confidence from news signals and expert forecasters.'}
+                        : 'No market data. AI confidence from news, forecasters and real-time signals.'}
                     </div>
                   </div>
                   <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:14 }}>
