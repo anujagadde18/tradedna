@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
           // Home advantage — only ONE team can be home per match
           // In "Will A beat B" format, we detect home team from the IPL schedule
           // Each team plays half their games at home — use team code to identify
-          const HOME_CITIES: Record<string,string[]> = {
+          const VENUE_CITIES: Record<string,string[]> = {
             'SRH':['hyderabad'],'MI':['mumbai','wankhede'],'RCB':['bengaluru','bangalore','chinnaswamy'],
             'CSK':['chennai','chepauk'],'KKR':['kolkata','eden'],'DC':['delhi'],
             'RR':['jaipur','guwahati'],'GT':['ahmedabad','narendra'],'LSG':['lucknow'],
@@ -207,8 +207,8 @@ export async function POST(request: NextRequest) {
           const queryLower = query.toLowerCase();
           let homeTeam = c2; // default: c2 is home
           // Check if query mentions c1's home city
-          const c1Cities = HOME_CITIES[c1] || [];
-          const c2Cities = HOME_CITIES[c2] || [];
+          const c1Cities = VENUE_CITIES[c1] || [];
+          const c2Cities = VENUE_CITIES[c2] || [];
           if (c1Cities.some(city => queryLower.includes(city))) homeTeam = c1;
           else if (c2Cities.some(city => queryLower.includes(city))) homeTeam = c2;
           
