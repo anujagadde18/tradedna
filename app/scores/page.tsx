@@ -92,318 +92,204 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
   const [showAll, setShowAll] = useState(false);
   const [spotlight, setSpotlight] = useState<any>(null);
 
-  const isCategorical = mtype === 'categorical';
+  const isCategorical = mtype === "categorical";
   const topOutcomes = outcomes?.slice(0, 5) || [];
-
   const matchup = question.match(/^(.+?)\s+vs\.?\s+(.+)$/i);
-  // Also try "Will X beat Y" pattern for IPL questions
   const beatMatch = (rawEvent||question).match(/will\s+(.+?)\s+beat\s+(.+?)(?:\s+in|\?|$)/i);
-  const team1 = matchup?.[1]?.trim() || beatMatch?.[1]?.trim() || '';
-  const team2 = matchup?.[2]?.trim() || beatMatch?.[2]?.trim() || '';
+  const team1 = matchup?.[1]?.trim() || beatMatch?.[1]?.trim() || "";
+  const team2 = matchup?.[2]?.trim() || beatMatch?.[2]?.trim() || "";
   const isMatchup = !!(team1 && team2);
-  const isIPL = /ipl|cricket/i.test(question) || /ipl|cricket/i.test(rawEvent||'');
+  const isIPL = /ipl|cricket/i.test(question) || /ipl|cricket/i.test(rawEvent||"");
 
-  // Fetch player spotlight for IPL matches
   useEffect(() => {
     if (!isIPL) return;
-    // Try to extract teams from raw event first (full question), then question
     const src = rawEvent || question;
-    const m = src.match(/will\s+(.+?)\s+beat\s+(.+?)(?:\s+in|\?|$)/i)
-           || src.match(/(.+?)\s+vs\.?\s+(.+?)(?:\s+ipl|\?|$)/i);
+    const m = src.match(/will\s+(.+?)\s+beat\s+(.+?)(?:\s+in|\?|$)/i) || src.match(/(.+?)\s+vs\.?\s+(.+?)(?:\s+ipl|\?|$)/i);
     if (!m) return;
-    fetch('/api/cricket-context', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ team1: m[1].trim(), team2: m[2].trim() }),
-    }).then(r => r.json()).then(d => { if (d.spotlight) setSpotlight(d.spotlight); }).catch(() => {});
+    fetch("/api/cricket-context", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ team1: m[1].trim(), team2: m[2].trim() }) })
+      .then(r => r.json()).then(d => { if (d.spotlight) setSpotlight(d.spotlight); }).catch(() => {});
   }, [question, rawEvent]);
+
   const marketValid = hasMarket && marketPct > 0 && marketPct < 98;
-  const isLiveGame = isMatchup && hasMarket && (marketPct >= 95 || marketPct <= 5);
   const edge = marketValid ? aiPct - marketPct : null;
-  const conv = getConviction(aiPct, marketPct);
   const aiTeam2Pct = 100 - aiPct;
-  const mktTeam1Pct = marketValid ? marketPct : null;
-  const mktTeam2Pct = marketValid ? (100 - marketPct) : null;
 
-  const bigVerdict = isMatchup
-    ? aiPct >= 65 ? `${team1} likely wins` : aiPct >= 55 ? `${team1} slight edge` : aiPct >= 45 ? 'Too close to call' : aiPct >= 35 ? `${team2} slight edge` : `${team2} likely wins`
-    : aiPct >= 80 ? 'Very likely YES' : aiPct >= 65 ? 'Probably YES' : aiPct >= 55 ? 'Leaning YES' : aiPct >= 45 ? 'Uncertain' : aiPct >= 30 ? 'Leaning NO' : 'Probably NO';
+  const verdictText = isMatchup
+    ? aiPct >= 70 ? `${team1} favoured` : aiPct >= 58 ? `${team1} slight edge` : aiPct >= 42 ? "Too close to call" : aiPct >= 30 ? `${team2} slight edge` : `${team2} favoured`
+    : aiPct >= 75 ? "Strong YES signal" : aiPct >= 60 ? "Leaning YES" : aiPct >= 45 ? "Uncertain" : aiPct >= 30 ? "Leaning NO" : "Strong NO signal";
 
-  const verdictColor = aiPct >= 65 ? C.green : aiPct >= 45 ? C.amber : C.red;
-  const verdictBg = aiPct >= 65 ? 'rgba(46,204,138,0.08)' : aiPct >= 45 ? 'rgba(245,166,35,0.08)' : 'rgba(239,79,106,0.08)';
-
-  const plainExplain = edge === null
-    ? aiPct >= 70 ? 'News and social signals strongly suggest this will happen.'
-    : aiPct >= 50 ? 'Mixed signals — more sources lean YES than NO.'
-    : 'Most signals suggest this is unlikely based on current data.'
-    : edge > 8 ? 'AI sees a real edge here — confidence is higher than what bettors believe.'
-    : edge > 3 ? 'AI slightly disagrees with bettors. Small edge.'
-    : 'AI and bettors broadly agree on this one.';
-
-  const action = edge === null
-    ? aiPct >= 70 ? '✅ Strong signal — worth researching more' : aiPct >= 50 ? '⚠️ Uncertain — watch and wait' : '❌ Unlikely — probably skip'
-    : edge > 8 ? '🎯 Good opportunity — AI sees edge over market'
-    : edge > 3 ? '📊 Small edge — small bet if you agree'
-    : '⏸️ No edge — skip this or wait for better odds';
+  const verdictColor = aiPct >= 60 ? C.green : aiPct >= 40 ? C.amber : C.red;
 
   function parseContrib(s: any): number {
-    if (typeof s === 'number') return s;
-    if (typeof s === 'string') return parseFloat(s.replace('%','').replace('+','')) || 0;
+    if (typeof s === "number") return s;
+    if (typeof s === "string") return parseFloat(s.replace("%","").replace("+","")) || 0;
     return 0;
   }
 
-  const rows = sources.map(src => {
-    const name = src.name || '';
-    let cat = src.category || 'news';
-    if (!src.category) {
-      if (['Reddit','Twitter','Hacker News'].some(n => name.includes(n))) cat = 'social';
-      else if (['Polymarket','Kalshi','Metaculus'].some(n => name.includes(n))) cat = name === 'Metaculus' ? 'community' : 'market';
-      else if (src.type === 'contrary') cat = 'contrary';
-    }
-    return { name, category: cat, sig: src.sig || src.signal || '', type: src.type || 'mixed', contribution: parseContrib(src.contrib ?? src.contribution ?? src.weight ?? 0) };
-  }).filter(r => r.contribution !== 0).sort((a,b) => Math.abs(b.contribution) - Math.abs(a.contribution));
+  const allSources = sources.map(src => ({
+    name: src.name || "",
+    sig: src.sig || src.signal || "",
+    type: src.type || "mixed",
+    category: src.category || "news",
+    url: src.url || "",
+    contribution: parseContrib(src.contrib ?? src.contribution ?? src.weight ?? 0)
+  }));
 
-  const displayRows = showAll ? rows : rows.slice(0, 6);
-  const getShortName = (name: string) => {
-    const map: Record<string,string> = {'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'X','Associated Press':'AP','The Indian Express':'Indian Express','The Times of India':'Times of India','The Hindu':'The Hindu','Hacker News':'HackerNews','Good Judgment Open':'GJ Open'};
-    if (map[name]) return map[name];
-    // Remove leading "The " for display
-    return name.replace(/^The\s+/i, '').split(' ').slice(0,2).join(' ');
-  };
-  const strongSources = rows.filter(r => r.type === 'strong').map(r => getShortName(r.name));
-  const contrarySources = rows.filter(r => r.type === 'contrary').map(r => getShortName(r.name));
-  const sigSummary = strongSources.length > 0
-    ? `${strongSources.slice(0,2).join(', ')} ${strongSources.length > 1 ? 'are' : 'is'} showing strong positive signals.${contrarySources.length > 0 ? ` ${contrarySources[0]} disagrees.` : ''}`
-    : rows.length > 0 ? 'Mixed signals across sources — no clear consensus.' : '';
+  const bullSources = allSources.filter(s => s.contribution > 0 || s.type === "strong").slice(0, 3);
+  const bearSources = allSources.filter(s => s.contribution < 0 || s.type === "contrary").slice(0, 3);
+  const keySources = allSources.filter(s => s.name === "Key Risk").slice(0, 1);
+  const metaculusSource = allSources.find(s => s.name === "Metaculus");
+  const polymarketSource = allSources.find(s => s.name === "Polymarket");
 
   return (
-    <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:16, overflow:'hidden', userSelect:'none' as const }}>
+    <div style={{ background:C.bg2, border:"1px solid "+C.border, borderRadius:16, overflow:"hidden" }}>
 
-      {/* HEADER */}
-      <div style={{ padding:'14px 18px', borderBottom:'1px solid '+C.border, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <div style={{ fontSize:13, fontWeight:600, color:C.t1 }}>{question}</div>
-        <div style={{ display:'flex', gap:6 }}>
-          {isMatchup && <span style={{ fontSize:10, fontWeight:600, padding:'3px 8px', borderRadius:100, background:'rgba(46,204,138,0.1)', color:C.green, border:'1px solid rgba(46,204,138,0.2)' }}>Sports</span>}
-          {hasMarket && <span style={{ fontSize:10, fontWeight:600, padding:'3px 8px', borderRadius:100, background:'rgba(77,157,224,0.1)', color:C.blue, border:'1px solid rgba(77,157,224,0.2)' }}>Live odds</span>}
-        </div>
+      {/* BIG NUMBER */}
+      <div style={{ padding:"24px 20px 16px", borderBottom:"1px solid "+C.border }}>
+        {isMatchup ? (
+          <div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:12, alignItems:"center", marginBottom:16 }}>
+              <div style={{ textAlign:"center", padding:"16px 10px", borderRadius:14, background:aiPct>=50?"rgba(46,204,138,0.07)":"rgba(255,255,255,0.02)", border:"1px solid "+(aiPct>=50?"rgba(46,204,138,0.2)":C.border) }}>
+                <div style={{ fontSize:11, color:C.t3, marginBottom:8, fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{team1}</div>
+                <div style={{ fontSize:44, fontWeight:800, color:aiPct>=50?C.green:C.t3, fontFamily:"monospace", letterSpacing:"-2px", lineHeight:1 }}>{aiPct}%</div>
+                <div style={{ fontSize:9, color:C.t3, marginTop:6, textTransform:"uppercase", letterSpacing:"0.5px" }}>AI confidence</div>
+                {marketValid && <div style={{ fontSize:10, color:C.t3, marginTop:3 }}>Market: <b style={{color:C.t2}}>{marketPct}%</b></div>}
+              </div>
+              <div style={{ textAlign:"center" }}>
+                <div style={{ fontSize:11, fontWeight:700, color:C.t4, marginBottom:4 }}>VS</div>
+                {edge !== null && Math.abs(edge) >= 3 && (
+                  <div style={{ fontSize:10, fontWeight:700, padding:"3px 8px", borderRadius:6, background:edge>0?"rgba(46,204,138,0.1)":"rgba(239,79,106,0.1)", color:edge>0?C.green:C.red, border:"1px solid "+(edge>0?"rgba(46,204,138,0.2)":"rgba(239,79,106,0.2)") }}>
+                    {edge>0?"+":""}{edge}%
+                  </div>
+                )}
+              </div>
+              <div style={{ textAlign:"center", padding:"16px 10px", borderRadius:14, background:aiPct<50?"rgba(46,204,138,0.07)":"rgba(255,255,255,0.02)", border:"1px solid "+(aiPct<50?"rgba(46,204,138,0.2)":C.border) }}>
+                <div style={{ fontSize:11, color:C.t3, marginBottom:8, fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{team2}</div>
+                <div style={{ fontSize:44, fontWeight:800, color:aiPct<50?C.green:C.t3, fontFamily:"monospace", letterSpacing:"-2px", lineHeight:1 }}>{aiTeam2Pct}%</div>
+                <div style={{ fontSize:9, color:C.t3, marginTop:6, textTransform:"uppercase", letterSpacing:"0.5px" }}>AI confidence</div>
+                {marketValid && <div style={{ fontSize:10, color:C.t3, marginTop:3 }}>Market: <b style={{color:C.t2}}>{100-marketPct}%</b></div>}
+              </div>
+            </div>
+            <div style={{ textAlign:"center", fontSize:16, fontWeight:700, color:verdictColor }}>{verdictText}</div>
+          </div>
+        ) : isCategorical && topOutcomes.length > 0 ? (
+          <div>
+            <div style={{ marginBottom:16 }}>
+              {topOutcomes.map((o: any, i: number) => (
+                <div key={i} style={{ display:"flex", alignItems:"center", gap:12, marginBottom:8 }}>
+                  <div style={{ fontSize:12, fontWeight:600, color:i===0?C.t1:C.t2, width:160, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{o.name}</div>
+                  <div style={{ flex:1, height:6, background:"rgba(255,255,255,0.05)", borderRadius:3, overflow:"hidden" }}>
+                    <div style={{ height:"100%", borderRadius:3, background:i===0?C.green:C.t3, width:Math.min(o.odds*1.5,100)+"%" }} />
+                  </div>
+                  <div style={{ fontSize:14, fontWeight:700, color:i===0?C.green:C.t2, fontFamily:"monospace", minWidth:40, textAlign:"right" }}>{o.odds}%</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize:14, fontWeight:700, color:C.green }}>Top pick: {topOutcomes[0]?.name} at {topOutcomes[0]?.odds}%</div>
+          </div>
+        ) : (
+          <div>
+            <div style={{ display:"flex", alignItems:"center", gap:16, marginBottom:14 }}>
+              <div style={{ fontSize:52, fontWeight:800, color:verdictColor, fontFamily:"monospace", letterSpacing:"-2px", lineHeight:1 }}>{aiPct}%</div>
+              <div>
+                <div style={{ fontSize:16, fontWeight:700, color:verdictColor, marginBottom:4 }}>{verdictText}</div>
+                {marketValid && <div style={{ fontSize:12, color:C.t3 }}>Market: <b style={{color:C.t2}}>{marketPct}%</b> · Edge: <b style={{color:edge!>0?C.green:C.red}}>{edge!>0?"+":""}{edge}%</b></div>}
+                {!marketValid && <div style={{ fontSize:11, color:C.t3 }}>No market data · AI from news + forecasters</div>}
+              </div>
+            </div>
+            <div style={{ height:6, background:"rgba(255,255,255,0.05)", borderRadius:3, overflow:"hidden" }}>
+              <div style={{ height:"100%", borderRadius:3, background:verdictColor, width:aiPct+"%", transition:"width 0.8s ease" }} />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* CATEGORICAL — show top contenders */}
-      {isCategorical && topOutcomes.length > 0 ? (
-        <div style={{ padding:'18px', borderBottom:'1px solid '+C.border }}>
-          <div style={{ fontSize:11, color:C.t3, marginBottom:12, textTransform:'uppercase' as const, letterSpacing:'0.5px' }}>Top contenders</div>
-          <div style={{ display:'flex', flexDirection:'column' as const, gap:8 }}>
-            {topOutcomes.map((o: any, i: number) => {
-              const pct = o.odds || 0;
-              const isTop = i === 0;
-              return (
-                <div key={i} style={{ display:'flex', alignItems:'center', gap:12 }}>
-                  <div style={{ fontSize:11, fontWeight:600, color:isTop ? C.t1 : C.t2, width:140, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>{o.name}</div>
-                  <div style={{ flex:1, height:6, background:'rgba(255,255,255,0.05)', borderRadius:3, overflow:'hidden' }}>
-                    <div style={{ height:'100%', borderRadius:3, background:isTop ? C.green : C.t3, width: Math.min(pct * 2, 100)+'%' }} />
-                  </div>
-                  <div style={{ fontSize:14, fontWeight:700, color:isTop ? C.green : C.t2, fontFamily:'monospace', minWidth:40, textAlign:'right' as const }}>{pct}%</div>
+      {/* BULL vs BEAR */}
+      {(bullSources.length > 0 || bearSources.length > 0) && (
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:0, borderBottom:"1px solid "+C.border }}>
+          <div style={{ padding:"14px 16px", borderRight:"1px solid "+C.border }}>
+            <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:10 }}>
+              <div style={{ width:8, height:8, borderRadius:"50%", background:C.green }} />
+              <span style={{ fontSize:10, fontWeight:700, color:C.green, textTransform:"uppercase", letterSpacing:"0.5px" }}>For</span>
+            </div>
+            {bullSources.length > 0
+              ? bullSources.map((s, i) => (
+                <div key={i} style={{ fontSize:11, color:C.t2, marginBottom:6, lineHeight:1.45, paddingLeft:8, borderLeft:"2px solid rgba(46,204,138,0.3)" }}>
+                  {s.sig?.slice(0,80)}{(s.sig?.length||0)>80?"…":""}
                 </div>
-              );
-            })}
+              ))
+              : <div style={{ fontSize:11, color:C.t3 }}>No positive signals found</div>
+            }
           </div>
-          <div style={{ marginTop:14, fontSize:13, fontWeight:600, color:verdictColor }}>
-            Top pick: {topOutcomes[0]?.name} at {topOutcomes[0]?.odds}%
+          <div style={{ padding:"14px 16px" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:10 }}>
+              <div style={{ width:8, height:8, borderRadius:"50%", background:C.red }} />
+              <span style={{ fontSize:10, fontWeight:700, color:C.red, textTransform:"uppercase", letterSpacing:"0.5px" }}>Against</span>
+            </div>
+            {bearSources.length > 0
+              ? bearSources.map((s, i) => (
+                <div key={i} style={{ fontSize:11, color:C.t2, marginBottom:6, lineHeight:1.45, paddingLeft:8, borderLeft:"2px solid rgba(239,79,106,0.3)" }}>
+                  {s.sig?.slice(0,80)}{(s.sig?.length||0)>80?"…":""}
+                </div>
+              ))
+              : <div style={{ fontSize:11, color:C.t3 }}>No negative signals found</div>
+            }
           </div>
-        </div>
-      ) : isMatchup ? (
-        <div style={{ padding:'18px', borderBottom:'1px solid '+C.border }}>
-          {isLiveGame && (
-            <div style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 12px', borderRadius:8, background:'rgba(245,166,35,0.08)', border:'1px solid rgba(245,166,35,0.2)', marginBottom:12 }}>
-              <span style={{ width:5, height:5, borderRadius:'50%', background:C.amber, display:'block', flexShrink:0 }}/>
-              <span style={{ fontSize:11, color:C.amber }}>Game in progress — odds reflect current score</span>
-            </div>
-          )}
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 36px 1fr', gap:8, alignItems:'center', marginBottom:14 }}>
-            {/* Team 1 */}
-            <div style={{ textAlign:'center' as const, padding:'14px 8px', borderRadius:12,
-              background:aiPct>=50?'rgba(46,204,138,0.08)':'rgba(255,255,255,0.03)',
-              border:'1px solid '+(aiPct>=50?'rgba(46,204,138,0.25)':C.border) }}>
-              <div style={{ fontSize:11, fontWeight:600, color:C.t3, marginBottom:8, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>{team1}</div>
-              <div style={{ fontSize:38, fontWeight:700, color:aiPct>=50?C.green:C.t3, fontFamily:'monospace', lineHeight:1, letterSpacing:'-1px' }}>{aiPct}%</div>
-              <div style={{ fontSize:10, color:C.t3, marginTop:5 }}>AI odds</div>
-              {mktTeam1Pct !== null && <div style={{ fontSize:10, color:C.t3, marginTop:3 }}>Mkt: <span style={{ color:C.t2, fontWeight:600 }}>{mktTeam1Pct}%</span></div>}
-            </div>
-            {/* VS */}
-            <div style={{ textAlign:'center' as const, fontSize:10, fontWeight:700, color:C.t4 }}>VS</div>
-            {/* Team 2 */}
-            <div style={{ textAlign:'center' as const, padding:'14px 8px', borderRadius:12,
-              background:aiPct<50?'rgba(46,204,138,0.08)':'rgba(255,255,255,0.03)',
-              border:'1px solid '+(aiPct<50?'rgba(46,204,138,0.25)':C.border) }}>
-              <div style={{ fontSize:11, fontWeight:600, color:C.t3, marginBottom:8, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>{team2}</div>
-              <div style={{ fontSize:38, fontWeight:700, color:aiPct<50?C.green:C.t3, fontFamily:'monospace', lineHeight:1, letterSpacing:'-1px' }}>{aiTeam2Pct}%</div>
-              <div style={{ fontSize:10, color:C.t3, marginTop:5 }}>AI odds</div>
-              {mktTeam2Pct !== null && <div style={{ fontSize:10, color:C.t3, marginTop:3 }}>Mkt: <span style={{ color:C.t2, fontWeight:600 }}>{mktTeam2Pct}%</span></div>}
-            </div>
-          </div>
-          {/* Verdict line */}
-          <div style={{ textAlign:'center' as const, fontSize:18, fontWeight:700, color:verdictColor, letterSpacing:'-0.5px' }}>{bigVerdict}</div>
-          <div style={{ textAlign:'center' as const, fontSize:12, color:C.t3, marginTop:4 }}>{plainExplain}</div>
-
-          {/* BULL vs BEAR — why this prediction */}
-          {rows.length > 0 && (
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:14 }}>
-              <div style={{ padding:'10px 12px', borderRadius:10, background:'rgba(46,204,138,0.06)', border:'1px solid rgba(46,204,138,0.15)' }}>
-                <div style={{ fontSize:10, fontWeight:700, color:C.green, textTransform:'uppercase' as const, letterSpacing:'0.5px', marginBottom:6 }}>🟢 Bull case</div>
-                {rows.filter(r => r.contribution > 0).slice(0,3).length > 0
-                  ? rows.filter(r => r.contribution > 0).slice(0,3).map((r,i) => (
-                    <div key={i} style={{ fontSize:11, color:C.t2, marginBottom:3, lineHeight:1.4 }}>· {getShortName(r.name)}: {r.sig?.slice(0,60)}{r.sig?.length > 60 ? '…' : ''}</div>
-                  ))
-                  : <div style={{ fontSize:11, color:C.t3 }}>No strong positive signals found</div>
-                }
-              </div>
-              <div style={{ padding:'10px 12px', borderRadius:10, background:'rgba(239,79,106,0.06)', border:'1px solid rgba(239,79,106,0.15)' }}>
-                <div style={{ fontSize:10, fontWeight:700, color:C.red, textTransform:'uppercase' as const, letterSpacing:'0.5px', marginBottom:6 }}>🔴 Bear case</div>
-                {rows.filter(r => r.contribution < 0).slice(0,3).length > 0
-                  ? rows.filter(r => r.contribution < 0).slice(0,3).map((r,i) => (
-                    <div key={i} style={{ fontSize:11, color:C.t2, marginBottom:3, lineHeight:1.4 }}>· {getShortName(r.name)}: {r.sig?.slice(0,60)}{r.sig?.length > 60 ? '…' : ''}</div>
-                  ))
-                  : <div style={{ fontSize:11, color:C.t3 }}>No strong negative signals found</div>
-                }
-              </div>
-            </div>
-          )}
-        </div>
-      ) : (
-        /* NON-MATCHUP — standard verdict */
-        <div style={{ padding:'18px', borderBottom:'1px solid '+C.border }}>
-          <div style={{ fontSize:36, fontWeight:700, letterSpacing:'-1.5px', color:verdictColor, lineHeight:1, marginBottom:10 }}>{bigVerdict}</div>
-          <div style={{ marginBottom:12 }}>
-            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
-              <span style={{ fontSize:11, color:C.t3 }}>AI confidence</span>
-              <span style={{ fontSize:12, fontWeight:700, fontFamily:'monospace', color:verdictColor }}>{aiPct}%</span>
-            </div>
-            <div style={{ height:5, background:'rgba(255,255,255,0.05)', borderRadius:3, overflow:'hidden' }}>
-              <div style={{ height:'100%', borderRadius:3, background:verdictColor, width:aiPct+'%', transition:'width 0.8s ease' }} />
-            </div>
-          </div>
-          <div style={{ fontSize:12, color:C.t2, lineHeight:1.6, padding:'10px 12px', background:'rgba(0,0,0,0.15)', borderRadius:8, borderLeft:'2px solid '+verdictColor }}>{plainExplain}</div>
-
-          {/* BULL vs BEAR */}
-          {rows.length > 0 && (
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:12 }}>
-              <div style={{ padding:'10px 12px', borderRadius:10, background:'rgba(46,204,138,0.06)', border:'1px solid rgba(46,204,138,0.15)' }}>
-                <div style={{ fontSize:10, fontWeight:700, color:C.green, textTransform:'uppercase' as const, letterSpacing:'0.5px', marginBottom:6 }}>🟢 Bull case</div>
-                {rows.filter(r => r.contribution > 0).slice(0,3).length > 0
-                  ? rows.filter(r => r.contribution > 0).slice(0,3).map((r,i) => (
-                    <div key={i} style={{ fontSize:11, color:C.t2, marginBottom:3, lineHeight:1.4 }}>· {getShortName(r.name)}: {r.sig?.slice(0,70)}{r.sig?.length > 70 ? '…' : ''}</div>
-                  ))
-                  : <div style={{ fontSize:11, color:C.t3 }}>No strong positive signals</div>
-                }
-              </div>
-              <div style={{ padding:'10px 12px', borderRadius:10, background:'rgba(239,79,106,0.06)', border:'1px solid rgba(239,79,106,0.15)' }}>
-                <div style={{ fontSize:10, fontWeight:700, color:C.red, textTransform:'uppercase' as const, letterSpacing:'0.5px', marginBottom:6 }}>🔴 Bear case</div>
-                {rows.filter(r => r.contribution < 0).slice(0,3).length > 0
-                  ? rows.filter(r => r.contribution < 0).slice(0,3).map((r,i) => (
-                    <div key={i} style={{ fontSize:11, color:C.t2, marginBottom:3, lineHeight:1.4 }}>· {getShortName(r.name)}: {r.sig?.slice(0,70)}{r.sig?.length > 70 ? '…' : ''}</div>
-                  ))
-                  : <div style={{ fontSize:11, color:C.t3 }}>No strong negative signals</div>
-                }
-              </div>
-            </div>
-          )}
         </div>
       )}
 
-      {/* 4 METRIC CARDS */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:0, borderBottom:'1px solid '+C.border }}>
-        {[
-          { label:'Market', value: marketValid ? marketPct+'%' : '—', color: C.t2 },
-          { label:'AI thinks', value: aiPct+'%', color: verdictColor },
-          { label:'Edge', value: edge !== null ? (edge>0?'+':'')+edge+'%' : '—', color: edge !== null && Math.abs(edge) > 5 ? (edge>0?C.green:C.red) : C.t3 },
-          { label:'Conviction', value: conv.label, color: conv.style === 'high' ? C.green : conv.style === 'med' ? C.amber : C.t3 },
-        ].map((m,i) => (
-          <div key={i} style={{ padding:'12px 0', textAlign:'center' as const, borderRight: i<3 ? '1px solid '+C.border : 'none' }}>
-            <div style={{ fontSize:10, color:C.t3, marginBottom:4, textTransform:'uppercase' as const, letterSpacing:'0.4px' }}>{m.label}</div>
-            <div style={{ fontSize:17, fontWeight:700, color:m.color, fontFamily:'monospace' }}>{m.value}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* ACTION */}
-      <div style={{ padding:'12px 18px', borderBottom:'1px solid '+C.border }}>
-        <div style={{ fontSize:12, fontWeight:600, color:C.t1, padding:'8px 12px', background:'rgba(255,255,255,0.03)', borderRadius:8, border:'1px solid '+C.border }}>{action}</div>
-      </div>
-
-      {/* SIGNALS */}
-      {rows.length > 0 && (
-        <div style={{ padding:'14px 18px', borderBottom:'1px solid '+C.border }}>
-          <div style={{ fontSize:11, fontWeight:600, color:C.t3, textTransform:'uppercase' as const, letterSpacing:'0.5px', marginBottom:10 }}>What signals say</div>
-          {sigSummary && <div style={{ fontSize:12, color:C.t2, lineHeight:1.5, marginBottom:10 }}>{sigSummary}</div>}
-          <div style={{ display:'flex', flexDirection:'column' as const, gap:5 }}>
-            {displayRows.map((r,i) => {
-              const color = r.type === 'contrary' ? C.red : CAT_COLOR[r.category] || C.purple;
-              const barW = Math.min(Math.abs(r.contribution) / 30 * 100, 100);
-              const shortName = ({'Financial Times':'FT','Wall Street Journal':'WSJ','Twitter/X':'X','Associated Press':'AP','The Indian Express':'Indian Express','The Times of India':'Times of India','The Hindu':'The Hindu','Hacker News':'HackerNews'} as Record<string,string>)[r.name] || r.name.replace(/^The\s+/i,'').split(' ').slice(0,2).join(' ');
-              const tag = r.type === 'strong' ? 'Agrees' : r.type === 'contrary' ? 'Disagrees' : r.type === 'priced' ? 'Neutral' : 'Mixed';
-              const isPos = r.contribution >= 0;
-              return (
-                <div key={i} style={{ display:'grid', gridTemplateColumns:'90px 1fr auto auto', gap:8, alignItems:'center' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-                    <div style={{ width:6, height:6, borderRadius:'50%', background:color, flexShrink:0 }}/>
-                    <span style={{ fontSize:11, color:C.t2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>{shortName}</span>
-                  </div>
-                  <div style={{ height:4, background:'rgba(255,255,255,0.05)', borderRadius:2, overflow:'hidden' }}>
-                    <div style={{ height:'100%', borderRadius:2, background:color, width:barW+'%' }} />
-                  </div>
-                  <span style={{ fontSize:9, fontWeight:600, padding:'2px 6px', borderRadius:4, whiteSpace:'nowrap' as const,
-                    background: r.type==='strong'?'rgba(46,204,138,0.1)':r.type==='contrary'?'rgba(239,79,106,0.1)':r.type==='priced'?'rgba(77,157,224,0.1)':'rgba(245,166,35,0.1)',
-                    color: r.type==='strong'?C.green:r.type==='contrary'?C.red:r.type==='priced'?C.blue:C.amber }}>{tag}</span>
-                  <div style={{ fontSize:11, fontWeight:700, fontFamily:'monospace', color:isPos?C.green:C.red, minWidth:32, textAlign:'right' as const }}>{isPos?'+':''}{r.contribution}%</div>
-                </div>
-              );
-            })}
-          </div>
-          {rows.length > 6 && (
-            <button onClick={() => setShowAll(!showAll)} style={{ marginTop:10, fontSize:11, color:C.t3, background:'none', border:'none', cursor:'pointer', padding:0 }}>
-              {showAll ? 'Show less' : '+ Show ' + (rows.length-6) + ' more sources'}
-            </button>
-          )}
+      {/* KEY RISK */}
+      {keySources.length > 0 && (
+        <div style={{ padding:"10px 16px", borderBottom:"1px solid "+C.border, display:"flex", alignItems:"center", gap:8, background:"rgba(245,166,35,0.04)" }}>
+          <span style={{ fontSize:13 }}>⚡</span>
+          <span style={{ fontSize:11, color:C.amber, fontWeight:600 }}>Watch: </span>
+          <span style={{ fontSize:11, color:C.t2 }}>{keySources[0].sig}</span>
         </div>
       )}
 
-      {/* PLAYER SPOTLIGHT — IPL only */}
+      {/* SOURCES */}
+      <div style={{ padding:"12px 16px", borderBottom:"1px solid "+C.border }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+          <span style={{ fontSize:10, color:C.t3, fontWeight:600, textTransform:"uppercase", letterSpacing:"0.4px" }}>Sources</span>
+          {polymarketSource && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:6, background:"rgba(77,157,224,0.1)", color:C.blue, border:"1px solid rgba(77,157,224,0.2)" }}>📊 Polymarket {marketPct}%</span>}
+          {metaculusSource && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:6, background:"rgba(124,111,247,0.1)", color:C.purple, border:"1px solid rgba(124,111,247,0.2)" }}>🎯 Forecasters {metaculusSource.sig?.match(/\d+/)?.[0]}%</span>}
+          {allSources.filter(s => s.category==="news" && s.name!=="Signal" && s.name!=="Key Risk").slice(0,3).map((s,i) => (
+            <span key={i} style={{ fontSize:10, padding:"3px 8px", borderRadius:6, background:"rgba(255,255,255,0.05)", color:C.t3, border:"1px solid "+C.border }}>📰 {s.name?.slice(0,20)}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* PLAYER SPOTLIGHT IPL */}
       {spotlight && (spotlight.team1 || spotlight.team2) && (
-        <div style={{ padding:'14px 18px', borderBottom:'1px solid '+C.border }}>
-          <div style={{ fontSize:11, fontWeight:600, color:C.t3, textTransform:'uppercase' as const, letterSpacing:'0.5px', marginBottom:10 }}>🏏 Players to watch</div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-            {[
-              { team: team1, data: spotlight.team1 },
-              { team: team2, data: spotlight.team2 },
-            ].map((s, i) => s.data ? (
-              <div key={i} style={{ background:'rgba(255,255,255,0.03)', borderRadius:10, padding:'10px 12px', border:'1px solid '+C.border }}>
-                <div style={{ fontSize:9, color:C.t3, marginBottom:6, textTransform:'uppercase' as const, letterSpacing:'0.4px' }}>{s.team}</div>
-                {/* Batter */}
-                <div style={{ marginBottom:8 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:3 }}>
-                    <span style={{ fontSize:10, fontWeight:700, color:C.green }}>🏏</span>
-                    <span style={{ fontSize:11, fontWeight:600, color:C.t1 }}>{s.data.bat.name}</span>
-                  </div>
-                  <div style={{ fontSize:10, color:C.t2 }}>{s.data.bat.runs} runs · Avg {s.data.bat.avg} · SR {s.data.bat.sr}</div>
-                  <div style={{ fontSize:9, color:C.t3 }}>{s.data.bat.role}</div>
-                </div>
-                {/* Bowler */}
-                <div style={{ borderTop:'1px solid '+C.border, paddingTop:7 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:3 }}>
-                    <span style={{ fontSize:10, fontWeight:700, color:C.amber }}>🎯</span>
-                    <span style={{ fontSize:11, fontWeight:600, color:C.t1 }}>{s.data.bowl.name}</span>
-                  </div>
-                  <div style={{ fontSize:10, color:C.t2 }}>{s.data.bowl.wkts} wkts · Eco {s.data.bowl.eco}</div>
-                  <div style={{ fontSize:9, color:C.t3 }}>{s.data.bowl.role}</div>
-                </div>
+        <div style={{ padding:"12px 16px", borderBottom:"1px solid "+C.border }}>
+          <div style={{ fontSize:10, fontWeight:600, color:C.t3, textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:8 }}>🏏 Players to watch</div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+            {[{team:team1,data:spotlight.team1},{team:team2,data:spotlight.team2}].map((s,i) => s.data ? (
+              <div key={i} style={{ background:"rgba(255,255,255,0.02)", borderRadius:8, padding:"8px 10px", border:"1px solid "+C.border }}>
+                <div style={{ fontSize:9, color:C.t3, marginBottom:4, textTransform:"uppercase" }}>{s.team}</div>
+                <div style={{ fontSize:11, fontWeight:600, color:C.t1 }}>🏏 {s.data.bat?.name}</div>
+                <div style={{ fontSize:10, color:C.t3 }}>{s.data.bat?.runs} runs · Avg {s.data.bat?.avg} · SR {s.data.bat?.sr}</div>
+                <div style={{ fontSize:11, fontWeight:600, color:C.t1, marginTop:4 }}>🎯 {s.data.bowl?.name}</div>
+                <div style={{ fontSize:10, color:C.t3 }}>{s.data.bowl?.wkts} wkts · Eco {s.data.bowl?.eco}</div>
               </div>
             ) : null)}
           </div>
         </div>
       )}
 
-      {/* SHARE */}
-      <ShareButtons question={question} aiPct={aiPct} marketPct={marketPct} hasMarket={hasMarket} isMatchup={isMatchup} team1={team1} team2={team2} aiTeam2Pct={aiTeam2Pct} />
+      {/* ACTION */}
+      <div style={{ padding:"12px 16px" }}>
+        {edge !== null && Math.abs(edge) >= 5 ? (
+          <div style={{ fontSize:12, fontWeight:600, color:edge>0?C.green:C.red, padding:"8px 12px", background:edge>0?"rgba(46,204,138,0.06)":"rgba(239,79,106,0.06)", borderRadius:8, border:"1px solid "+(edge>0?"rgba(46,204,138,0.2)":"rgba(239,79,106,0.2)") }}>
+            {edge>0?"🎯 AI sees edge over market — worth researching":"⚠️ AI below market — market may know something"}
+          </div>
+        ) : (
+          <div style={{ fontSize:12, color:C.t3, padding:"8px 12px", background:"rgba(255,255,255,0.02)", borderRadius:8, border:"1px solid "+C.border }}>
+            {aiPct>=65?"✅ Strong signal — worth researching more":aiPct>=45?"⚠️ Mixed signals — watch and wait":"❌ Weak signal — probably skip"}
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }
