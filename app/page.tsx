@@ -372,9 +372,18 @@ export default function HomePage() {
             </div>
           ) : (
             <>
-              {/* TOP FEATURED — big image cards for top 3 */}
+              {/* TOP FEATURED — one from each major category */}
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:12}}>
-                {events.slice(0,3).map((e,i)=>{
+                {(() => {
+                  // Pick best from sports, world/politics, crypto — not just top 3 by volume
+                  const sports = events.find(e => ['sports'].includes(e.category) && !e.title.toLowerCase().includes('diplomatic'));
+                  const world = events.find(e => ['world','politics','economics'].includes(e.category));
+                  const crypto = events.find(e => e.category === 'crypto') || events.find(e => e.category === 'other');
+                  const featured = [sports, world, crypto].filter(Boolean) as typeof events;
+                  // Fill with top events if any slot is empty
+                  events.forEach(e => { if (featured.length < 3 && !featured.includes(e)) featured.push(e); });
+                  return featured.slice(0,3);
+                })().map((e,i)=>{
                   const cs = CAT_COLORS[e.category] || CAT_COLORS.other;
                   const isYes = e.yesPrice !== null && e.yesPrice >= 50;
                   return (
@@ -418,9 +427,33 @@ export default function HomePage() {
                 })}
               </div>
 
-              {/* REST — compact list */}
+              {/* REST — grouped by category */}
               <div style={{display:'flex',flexDirection:'column',gap:6}}>
-                {events.slice(3).map((e,i)=>{
+                {(() => {
+                  // Group events by category for better discovery
+                  const order = ['sports','world','politics','economics','crypto','other'];
+                  const grouped: Record<string, typeof events> = {};
+                  events.slice(3).forEach(e => {
+                    const cat = e.category || 'other';
+                    if (!grouped[cat]) grouped[cat] = [];
+                    grouped[cat].push(e);
+                  });
+                  // Flatten: show up to 3 per category, interleaved
+                  const result: typeof events = [];
+                  let added = true;
+                  let round = 0;
+                  while (added && result.length < 17) {
+                    added = false;
+                    order.forEach(cat => {
+                      if (grouped[cat] && grouped[cat][round]) {
+                        result.push(grouped[cat][round]);
+                        added = true;
+                      }
+                    });
+                    round++;
+                  }
+                  return result;
+                })().map((e,i)=>{
                   const cs = CAT_COLORS[e.category] || CAT_COLORS.other;
                   const isYes = e.yesPrice !== null && e.yesPrice >= 50;
                   return (
