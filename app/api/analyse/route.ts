@@ -97,7 +97,7 @@ async function fetchMetaculus(keywords: string): Promise<{ probability: number |
 export async function POST(request: NextRequest) {
   try {
     const { query, marketOdds, anonId, isSignedIn, weights } = await request.json();
-    const w = weights || { news:35, social:40, technical:25 };
+    const w = weights || { news:30, social:30, technical:40 }; // Metaculus is most reliable signal
     const wNews = (w.news || 35) / 100;
     const wSocial = (w.social || 40) / 100;
     const wTech = (w.technical || 25) / 100;
@@ -158,16 +158,17 @@ export async function POST(request: NextRequest) {
           'gujarat titans':'GT','gt':'GT','lucknow super giants':'LSG','lsg':'LSG',
         };
         const POINTS: Record<string,{p:number;w:number;l:number;pts:number;nrr:string;form:string}> = {
-          'RR':  {p:7, w:6, l:1, pts:12, nrr:'+0.923', form:'WWWWWL'},
-          'RCB': {p:8, w:5, l:3, pts:10, nrr:'+0.412', form:'WWLLWW'},
-          'PBKS':{p:7, w:4, l:3, pts:8,  nrr:'+0.387', form:'WLWLWW'},
-          'DC':  {p:7, w:4, l:3, pts:8,  nrr:'+0.201', form:'LWWLWL'},
-          'SRH': {p:8, w:4, l:4, pts:8,  nrr:'+0.089', form:'WLLWLLW'},
-          'GT':  {p:8, w:4, l:4, pts:8,  nrr:'-0.112', form:'LLWLWLW'},
-          'LSG': {p:8, w:3, l:5, pts:6,  nrr:'-0.234', form:'LLLWWWL'},
-          'CSK': {p:8, w:2, l:6, pts:4,  nrr:'-0.445', form:'LLLLLWW'},
-          'MI':  {p:8, w:2, l:6, pts:4,  nrr:'-0.523', form:'WLLWLLL'},
-          'KKR': {p:8, w:1, l:7, pts:2,  nrr:'-0.789', form:'WLLLLLL'},
+          // Updated April 20 after Match 30 (MI beat GT)
+          'RR':  {p:7,  w:6, l:1, pts:12, nrr:'+0.923', form:'WWWWWL'},
+          'RCB': {p:9,  w:6, l:3, pts:12, nrr:'+0.534', form:'WWLLWWW'},
+          'PBKS':{p:9,  w:5, l:3, pts:10, nrr:'+0.612', form:'WLWLWWW'},
+          'DC':  {p:9,  w:5, l:4, pts:10, nrr:'+0.298', form:'LWWLWLW'},
+          'GT':  {p:10, w:5, l:5, pts:10, nrr:'+0.021', form:'LWLWLWWL'},
+          'SRH': {p:9,  w:4, l:5, pts:8,  nrr:'+0.045', form:'WLLWLLWL'},
+          'MI':  {p:10, w:3, l:7, pts:6,  nrr:'-0.398', form:'WLLWLLLLW'},
+          'LSG': {p:9,  w:3, l:6, pts:6,  nrr:'-0.312', form:'LLLWWWLL'},
+          'CSK': {p:9,  w:3, l:6, pts:6,  nrr:'-0.198', form:'LLLLLWWW'},
+          'KKR': {p:10, w:1, l:8, pts:2,  nrr:'-0.934', form:'LLLLLLLNL'},
         };
         // Venue home advantage
         const HOME_ADV: Record<string,number> = {
@@ -243,10 +244,10 @@ export async function POST(request: NextRequest) {
       if (relevantArticles.length > 0) {
         const scores = relevantArticles.map(a => scoreHeadline(a.title, a.desc));
         const total = scores.reduce((a, b) => a + b, 0);
-        newsAdjustment = Math.max(-15, Math.min(15, total * 3));
+        newsAdjustment = Math.max(-8, Math.min(8, total * 2));
       }
       if (metaculus.probability !== null) {
-        newsAdjustment += (metaculus.probability - marketOdds) * 0.15;
+        newsAdjustment += (metaculus.probability - marketOdds) * 0.25;
       }
       let finalConfidence = Math.round(marketOdds + newsAdjustment);
       finalConfidence = Math.max(5, Math.min(95, finalConfidence));

@@ -10,18 +10,18 @@ const TEAM_MAP: Record<string, string> = {
 };
 
 // Updated April 14, after Match 22 (CSK beat KKR)
-// Updated April 17 after Match 25 (GT beat KKR)
+// Updated April 20 after Match 30 (MI beat GT)
 const POINTS_TABLE: Record<string, { p:number; w:number; l:number; pts:number; nrr:string; form:string }> = {
   'RR':  { p:7,  w:6, l:1, pts:12, nrr:'+0.923', form:'WWWWWL' },
   'RCB': { p:9,  w:6, l:3, pts:12, nrr:'+0.534', form:'WWLLWWW' },
-  'PBKS':{ p:9,  w:5, l:3, pts:9,  nrr:'+0.612', form:'WLWLWWW' },
-  'DC':  { p:8,  w:5, l:3, pts:10, nrr:'+0.312', form:'LWWLWLW' },
-  'GT':  { p:9,  w:5, l:4, pts:10, nrr:'+0.089', form:'LWLWLWW' },
-  'SRH': { p:8,  w:4, l:4, pts:8,  nrr:'+0.089', form:'WLLWLLW' },
-  'CSK': { p:8,  w:3, l:5, pts:6,  nrr:'-0.234', form:'LLLLLWW' },
+  'PBKS':{ p:9,  w:5, l:3, pts:10, nrr:'+0.612', form:'WLWLWWW' },
+  'DC':  { p:9,  w:5, l:4, pts:10, nrr:'+0.298', form:'LWWLWLW' },
+  'GT':  { p:10, w:5, l:5, pts:10, nrr:'+0.021', form:'LWLWLWWL' },
+  'SRH': { p:9,  w:4, l:5, pts:8,  nrr:'+0.045', form:'WLLWLLWL' },
+  'MI':  { p:10, w:3, l:7, pts:6,  nrr:'-0.398', form:'WLLWLLLLW' },
   'LSG': { p:9,  w:3, l:6, pts:6,  nrr:'-0.312', form:'LLLWWWLL' },
-  'MI':  { p:9,  w:2, l:7, pts:4,  nrr:'-0.612', form:'WLLWLLLL' },
-  'KKR': { p:9,  w:0, l:8, pts:1,  nrr:'-0.934', form:'LLLLLLLLN' },
+  'CSK': { p:9,  w:3, l:6, pts:6,  nrr:'-0.198', form:'LLLLLWWW' },
+  'KKR': { p:10, w:1, l:8, pts:2,  nrr:'-0.934', form:'LLLLLLLNL' },
 };
 
 const VENUE_DATA: Record<string, { chase:number; dew:boolean; homeAdv:number; notes:string }> = {
