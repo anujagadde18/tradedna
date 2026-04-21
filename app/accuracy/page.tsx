@@ -33,6 +33,7 @@ const PREDICTIONS: Prediction[] = [
   { id:19, date:'Mar 15', question:"Michael B. Jordan wins Best Actor (Oscars 2026)",             category:'other', aiConfidence:74, marketOdds:70, result:'correct',   actualOutcome:'Won ✅', edge:4 },
   { id:20, date:'Mar 15', question:"Jessie Buckley wins Best Actress (Oscars 2026)",              category:'other', aiConfidence:65, marketOdds:62, result:'correct',   actualOutcome:'Won ✅', edge:3 },
   { id:21, date:'Mar 15', question:"Paul Thomas Anderson wins Best Director (Oscars 2026)",       category:'other', aiConfidence:69, marketOdds:65, result:'correct',   actualOutcome:'Won ✅', edge:4 },
+    { id:22, date:'Apr 21', question:'SRH beat DC in IPL 2026',                                   category:'cricket', aiConfidence:53, marketOdds:null, result:'correct',  actualOutcome:'SRH won ✅ at Hyderabad', edge:null },
   { id:1,  date:'Apr 10', question:'Rory McIlroy wins Masters 2026',                          category:'sports',   aiConfidence:75, marketOdds:70, result:'correct',   actualOutcome:'Rory won ✅',          edge:5,    notes:'Correct pick before tournament' },
   { id:2,  date:'Apr 12', question:'PBKS beat SRH in IPL 2026',                               category:'cricket',  aiConfidence:85, marketOdds:null, result:'correct', actualOutcome:'PBKS won ✅',          edge:null },
   { id:3,  date:'Apr 13', question:'US-Iran permanent peace deal by June 30',                  category:'world',    aiConfidence:73, marketOdds:68, result:'pending',   actualOutcome:'Ongoing',             edge:5 },
