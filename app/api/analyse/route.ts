@@ -100,32 +100,32 @@ async function analyzeWithGroq(
     const metaContext = metaculusPct ? `Expert forecasters (Metaculus): ${metaculusPct}%` : '';
     const typeContext = getMarketContext(marketType, query);
 
-    const prompt = `You are a specialist prediction market analyst for ${marketType} markets. Return ONLY valid JSON.
+    const prompt = `You are a prediction market analyst. Return ONLY valid JSON. No other text.
 
 Question: "${query}"
 Market type: ${marketType}
 ${marketContext}
 ${metaContext}
-Analysis focus: ${typeContext}
 
-Recent headlines:
-${headlineText || 'No headlines available'}
+Headlines (ONLY use facts from these — do NOT invent any statistics, names, scores, or numbers not present here):
+${headlineText || 'No headlines available. Use only general knowledge, no invented stats.'}
 
-Return ONLY this JSON (no other text):
-{"probability":65,"bull":["Specific data point 1","Specific data point 2","Specific data point 3"],"bear":["Specific risk 1","Specific risk 2","Specific risk 3"],"keyRisk":"Single most important unknown factor","verdict":"3-5 word verdict"}
+Analysis guidance: ${typeContext}
 
-Critical rules:
-- probability must be integer 0-100
-- If Polymarket odds given: stay within +-10% unless very strong contrary signal
-- If Metaculus given: weight it 40%
-- Each bull/bear must be SPECIFIC and DATA-DRIVEN — not generic opinions
-- For sports: mention actual stats, records, standings
-- For economics: mention actual rates, data points
-- For politics: mention polling numbers, historical patterns
-- For geopolitics: mention timeline, negotiation status
-- NO phrases like "based on analysis" or "it appears" or "I believe"
-- Factors must read like data points from a Bloomberg terminal
-- verdict examples: "Strong YES", "Slight edge YES", "Too close to call", "Slight edge NO", "Strong NO"`;
+STRICT RULES:
+1. NEVER invent statistics, player names, scores, or numbers not in the headlines above
+2. If headlines have no relevant data, say "Limited data available" as a factor
+3. probability must be integer 0-100
+4. If Polymarket odds given: stay within +-8% of them
+5. If Metaculus given: weight it at 40%
+6. Each factor max 12 words, must be factual not opinion
+7. NO "based on analysis", "it appears", "I believe", "historically speaking"
+8. If you are not certain of a fact, do not include it
+
+Return ONLY this JSON:
+{"probability":65,"bull":["Fact from headlines or known data","Fact 2","Fact 3"],"bear":["Risk factor 1","Risk factor 2","Risk factor 3"],"keyRisk":"Most important unknown, max 12 words","verdict":"3-5 word verdict"}
+
+Verdict options: "Strong YES signal", "Leaning YES", "Too close to call", "Leaning NO", "Strong NO signal"`;
 
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
