@@ -193,13 +193,27 @@ export async function POST(request: NextRequest) {
           const CHASE_ADV: Record<string,number> = { // venues where chasing is strong
             'SRH':3,'MI':2,'KKR':1,'DC':2,'LSG':2,
           };
-          // Detect home team from team code — each team has a home city
-          const isC1Home = HOME_ADV.hasOwnProperty(c1);
-          const isC2Home = HOME_ADV.hasOwnProperty(c2);
-          // Give home advantage to whichever team is playing at their city
-          // SRH at Hyderabad = c1 home, DC visiting = c2 away
-          const homeAdv1 = isC1Home ? (HOME_ADV[c1]||0) * 1.5 : 0;
-          const homeAdv2 = isC2Home && !isC1Home ? (HOME_ADV[c2]||0) * 1.5 : 0;
+          // Home advantage — only ONE team can be home per match
+          // In "Will A beat B" format, we detect home team from the IPL schedule
+          // Each team plays half their games at home — use team code to identify
+          const HOME_CITIES: Record<string,string[]> = {
+            'SRH':['hyderabad'],'MI':['mumbai','wankhede'],'RCB':['bengaluru','bangalore','chinnaswamy'],
+            'CSK':['chennai','chepauk'],'KKR':['kolkata','eden'],'DC':['delhi'],
+            'RR':['jaipur','guwahati'],'GT':['ahmedabad','narendra'],'LSG':['lucknow'],
+            'PBKS':['chandigarh','dharamshala','mohali'],
+          };
+          // Simple heuristic: in IPL schedule, home team is usually mentioned second
+          // But we also check if the query mentions a venue
+          const queryLower = query.toLowerCase();
+          let homeTeam = c2; // default: c2 is home
+          // Check if query mentions c1's home city
+          const c1Cities = HOME_CITIES[c1] || [];
+          const c2Cities = HOME_CITIES[c2] || [];
+          if (c1Cities.some(city => queryLower.includes(city))) homeTeam = c1;
+          else if (c2Cities.some(city => queryLower.includes(city))) homeTeam = c2;
+          
+          const homeAdv1 = homeTeam === c1 ? (HOME_ADV[c1]||0) * 1.5 : 0;
+          const homeAdv2 = homeTeam === c2 ? (HOME_ADV[c2]||0) * 1.5 : 0;
           let s1 = f1*0.35 + (t1.pts/Math.max(t1.pts+t2.pts,1))*100*0.30 + ((nrr1/nrrMax+1)/2*100*0.20) + homeAdv1;
           let s2 = f2*0.35 + (t2.pts/Math.max(t1.pts+t2.pts,1))*100*0.30 + ((nrr2/nrrMax+1)/2*100*0.20) + homeAdv2;
           const raw = s1/(s1+s2)*100;
