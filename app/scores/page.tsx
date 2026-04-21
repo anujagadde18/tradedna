@@ -244,6 +244,30 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
           {/* Verdict line */}
           <div style={{ textAlign:'center' as const, fontSize:18, fontWeight:700, color:verdictColor, letterSpacing:'-0.5px' }}>{bigVerdict}</div>
           <div style={{ textAlign:'center' as const, fontSize:12, color:C.t3, marginTop:4 }}>{plainExplain}</div>
+
+          {/* BULL vs BEAR — why this prediction */}
+          {rows.length > 0 && (
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:14 }}>
+              <div style={{ padding:'10px 12px', borderRadius:10, background:'rgba(46,204,138,0.06)', border:'1px solid rgba(46,204,138,0.15)' }}>
+                <div style={{ fontSize:10, fontWeight:700, color:C.green, textTransform:'uppercase' as const, letterSpacing:'0.5px', marginBottom:6 }}>🟢 Bull case</div>
+                {rows.filter(r => r.contribution > 0).slice(0,3).length > 0
+                  ? rows.filter(r => r.contribution > 0).slice(0,3).map((r,i) => (
+                    <div key={i} style={{ fontSize:11, color:C.t2, marginBottom:3, lineHeight:1.4 }}>· {getShortName(r.name)}: {r.sig?.slice(0,60)}{r.sig?.length > 60 ? '…' : ''}</div>
+                  ))
+                  : <div style={{ fontSize:11, color:C.t3 }}>No strong positive signals found</div>
+                }
+              </div>
+              <div style={{ padding:'10px 12px', borderRadius:10, background:'rgba(239,79,106,0.06)', border:'1px solid rgba(239,79,106,0.15)' }}>
+                <div style={{ fontSize:10, fontWeight:700, color:C.red, textTransform:'uppercase' as const, letterSpacing:'0.5px', marginBottom:6 }}>🔴 Bear case</div>
+                {rows.filter(r => r.contribution < 0).slice(0,3).length > 0
+                  ? rows.filter(r => r.contribution < 0).slice(0,3).map((r,i) => (
+                    <div key={i} style={{ fontSize:11, color:C.t2, marginBottom:3, lineHeight:1.4 }}>· {getShortName(r.name)}: {r.sig?.slice(0,60)}{r.sig?.length > 60 ? '…' : ''}</div>
+                  ))
+                  : <div style={{ fontSize:11, color:C.t3 }}>No strong negative signals found</div>
+                }
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         /* NON-MATCHUP — standard verdict */
@@ -259,6 +283,30 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
             </div>
           </div>
           <div style={{ fontSize:12, color:C.t2, lineHeight:1.6, padding:'10px 12px', background:'rgba(0,0,0,0.15)', borderRadius:8, borderLeft:'2px solid '+verdictColor }}>{plainExplain}</div>
+
+          {/* BULL vs BEAR */}
+          {rows.length > 0 && (
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:12 }}>
+              <div style={{ padding:'10px 12px', borderRadius:10, background:'rgba(46,204,138,0.06)', border:'1px solid rgba(46,204,138,0.15)' }}>
+                <div style={{ fontSize:10, fontWeight:700, color:C.green, textTransform:'uppercase' as const, letterSpacing:'0.5px', marginBottom:6 }}>🟢 Bull case</div>
+                {rows.filter(r => r.contribution > 0).slice(0,3).length > 0
+                  ? rows.filter(r => r.contribution > 0).slice(0,3).map((r,i) => (
+                    <div key={i} style={{ fontSize:11, color:C.t2, marginBottom:3, lineHeight:1.4 }}>· {getShortName(r.name)}: {r.sig?.slice(0,70)}{r.sig?.length > 70 ? '…' : ''}</div>
+                  ))
+                  : <div style={{ fontSize:11, color:C.t3 }}>No strong positive signals</div>
+                }
+              </div>
+              <div style={{ padding:'10px 12px', borderRadius:10, background:'rgba(239,79,106,0.06)', border:'1px solid rgba(239,79,106,0.15)' }}>
+                <div style={{ fontSize:10, fontWeight:700, color:C.red, textTransform:'uppercase' as const, letterSpacing:'0.5px', marginBottom:6 }}>🔴 Bear case</div>
+                {rows.filter(r => r.contribution < 0).slice(0,3).length > 0
+                  ? rows.filter(r => r.contribution < 0).slice(0,3).map((r,i) => (
+                    <div key={i} style={{ fontSize:11, color:C.t2, marginBottom:3, lineHeight:1.4 }}>· {getShortName(r.name)}: {r.sig?.slice(0,70)}{r.sig?.length > 70 ? '…' : ''}</div>
+                  ))
+                  : <div style={{ fontSize:11, color:C.t3 }}>No strong negative signals</div>
+                }
+              </div>
+            </div>
+          )}
         </div>
       )}
 
