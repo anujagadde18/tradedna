@@ -193,11 +193,14 @@ export async function POST(request: NextRequest) {
           const CHASE_ADV: Record<string,number> = { // venues where chasing is strong
             'SRH':3,'MI':2,'KKR':1,'DC':2,'LSG':2,
           };
-          // c2 is typically the home team in "Will c1 beat c2" format
-          const homeAdv1 = (HOME_ADV[c1]||0) * 1.5; // if c1 is actually home
-          const homeAdv2 = (HOME_ADV[c2]||0) * 1.5; // if c2 is home (more common)
-          // Give home adv to c2 by default (they're the "host" in most queries)
-          let s1 = f1*0.35 + (t1.pts/Math.max(t1.pts+t2.pts,1))*100*0.30 + ((nrr1/nrrMax+1)/2*100*0.20);
+          // Detect home team from team code — each team has a home city
+          const isC1Home = HOME_ADV.hasOwnProperty(c1);
+          const isC2Home = HOME_ADV.hasOwnProperty(c2);
+          // Give home advantage to whichever team is playing at their city
+          // SRH at Hyderabad = c1 home, DC visiting = c2 away
+          const homeAdv1 = isC1Home ? (HOME_ADV[c1]||0) * 1.5 : 0;
+          const homeAdv2 = isC2Home && !isC1Home ? (HOME_ADV[c2]||0) * 1.5 : 0;
+          let s1 = f1*0.35 + (t1.pts/Math.max(t1.pts+t2.pts,1))*100*0.30 + ((nrr1/nrrMax+1)/2*100*0.20) + homeAdv1;
           let s2 = f2*0.35 + (t2.pts/Math.max(t1.pts+t2.pts,1))*100*0.30 + ((nrr2/nrrMax+1)/2*100*0.20) + homeAdv2;
           const raw = s1/(s1+s2)*100;
           const stretched = 50+(raw-50)*1.6;
