@@ -241,6 +241,47 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // ── LIVE CRICKET SCORE ──
+    let liveScoreContext = '';
+    if (isIPLQuery && cricketContext) {
+      try {
+        const TEAM_FULL: Record<string,string> = {
+          'SRH':'Sunrisers Hyderabad','MI':'Mumbai Indians','RCB':'Royal Challengers Bengaluru',
+          'CSK':'Chennai Super Kings','KKR':'Kolkata Knight Riders','DC':'Delhi Capitals',
+          'RR':'Rajasthan Royals','GT':'Gujarat Titans','LSG':'Lucknow Super Giants','PBKS':'Punjab Kings',
+        };
+        const fullT1 = TEAM_FULL[cricketContext.team1?.code] || '';
+        const fullT2 = TEAM_FULL[cricketContext.team2?.code] || '';
+        const liveRes = await fetch(
+          new URL(`/api/live-cricket?team1=${encodeURIComponent(fullT1)}&team2=${encodeURIComponent(fullT2)}`, request.url).toString(),
+          { signal: AbortSignal.timeout(4000) }
+        );
+        const liveData = await liveRes.json();
+        if (liveData.success && liveData.isLive && liveData.liveContext) {
+          liveScoreContext = liveData.liveContext;
+          // Adjust cricket probability based on live score
+          if (cricketContext.baseProbability && liveData.score?.length > 0) {
+            const lastInnings = liveData.score[liveData.score.length - 1];
+            const runs = lastInnings?.r || 0;
+            const wickets = lastInnings?.w || 0;
+            const overs = parseFloat(lastInnings?.o || '0');
+            const isBattingTeam1 = liveData.score[0]?.inning?.includes(fullT1);
+            // If batting team has lost 6+ wickets, reduce their probability
+            if (wickets >= 6) {
+              const wicketPenalty = (wickets - 5) * 4;
+              if (isBattingTeam1) {
+                cricketContext.baseProbability = Math.max(15, cricketContext.baseProbability - wicketPenalty);
+              } else {
+                cricketContext.baseProbability = Math.min(85, cricketContext.baseProbability + wicketPenalty);
+              }
+            }
+          }
+        } else if (liveData.success && liveData.matchEnded && liveData.status) {
+          liveScoreContext = `Match result: ${liveData.status}`;
+        }
+      } catch {}
+    }
+
     const [gdeltArticles, hnArticles, newsApiArticles, metaculus] = await Promise.all([
       fetchGDELT(keywords),
       fetchHackerNews(keywords),
@@ -261,6 +302,7 @@ export async function POST(request: NextRequest) {
     });
 
     const headlines = relevantArticles.map(a => a.title).filter(Boolean);
+    if (liveScoreContext) headlines.unshift(`LIVE SCORE: ${liveScoreContext}`);
 
     const buildSources = (groqResult: any, extra: any[]) => {
       const sources: any[] = [];
