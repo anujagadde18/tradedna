@@ -346,7 +346,7 @@ export async function POST(request: NextRequest) {
         ...headlines.slice(0, 3),
       ].filter(Boolean);
       const groqResult = await analyzeWithGroq(query, cricketHeadlines, metaculus.probability, null, 'cricket');
-      const t1 = cricketContext.team1, t2 = cricketContext.team2;
+      const t1 = ct1, t2 = ct2;
       const extraSources = [
         { name: 'IPL Stats', sig: `${t1.code}: ${t1.form} (${t1.formScore}% wins, ${t1.pts}pts) vs ${t2.code}: ${t2.form} (${t2.formScore}% wins, ${t2.pts}pts)`, url: '', category: 'market', type: t1.formScore>t2.formScore?'strong':'contrary', contribution: Math.round((t1.formScore-t2.formScore)/5) },
       ];
