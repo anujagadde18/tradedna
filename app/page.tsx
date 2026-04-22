@@ -276,12 +276,13 @@ export default function HomePage() {
               if (e.yesPrice !== null && (e.yesPrice >= 95 || e.yesPrice <= 5)) return false;
               // Filter out ended games
               if (e.endDate && new Date(e.endDate) < now) return false;
-              // Filter out completed IPL matches by checking if match date has passed
-              if (title.includes('lucknow super giants vs rajasthan royals')) return false;
-              if (title.includes('sunrisers hyderabad vs delhi capitals')) return false;
-              if (title.includes('gujarat titans vs mumbai indians')) return false;
-              if (title.includes('punjab kings vs lucknow super giants')) return false;
-              if (title.includes('kolkata knight riders vs rajasthan royals')) return false;
+              // Filter out completed IPL matches
+              const etitle = e.title.toLowerCase();
+              if (etitle.includes('lucknow super giants vs rajasthan royals')) return false;
+              if (etitle.includes('sunrisers hyderabad vs delhi capitals')) return false;
+              if (etitle.includes('gujarat titans vs mumbai indians')) return false;
+              if (etitle.includes('punjab kings vs lucknow super giants')) return false;
+              if (etitle.includes('kolkata knight riders vs rajasthan royals')) return false;
               // Filter out esports and individual sports (tennis, chess, boxing)
               const title = e.title.toLowerCase();
               const badTerms = ['lol:','league of legends','counter-strike','dota','bo3','bo5','lec','lpl','lck','esport','yi zhou','kotov','chess','busan','boxing','ufc','mma','vs pavel','vs yi','tennis','table tennis'];
