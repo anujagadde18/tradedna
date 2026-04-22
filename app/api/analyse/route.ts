@@ -336,13 +336,14 @@ export async function POST(request: NextRequest) {
 
     if (cricketContext?.baseProbability) {
       // For cricket, send structured match data to Groq instead of random headlines
-      const t1 = cricketContext.team1;
-      const t2 = cricketContext.team2;
+      const ct1 = cricketContext.team1;
+      const ct2 = cricketContext.team2;
+      const homeAdvPct = ct1.code==='SRH'||ct1.code==='CSK'?8:ct1.code==='RCB'?7:ct1.code==='MI'?6:5;
       const cricketHeadlines = [
-        `${t1.code} stats: ${t1.pts} points, ${t1.w}W ${t1.l}L, form ${t1.form} (${t1.formScore}% win rate), NRR ${t1.nrr}`,
-        `${t2.code} stats: ${t2.pts} points, ${t2.w}W ${t2.l}L, form ${t2.form} (${t2.formScore}% win rate), NRR ${t2.nrr}`,
-        cricketContext.homeTeam === t1.code ? `${t1.code} playing at home venue — home advantage +${t1.code === 'SRH' ? 8 : t1.code === 'CSK' ? 8 : t1.code === 'RCB' ? 7 : t1.code === 'MI' ? 6 : 5}%` : `${t2.code} playing at home venue`,
-        ...headlines.slice(0, 4),
+        `${ct1.code} this season: ${ct1.pts} points, ${ct1.w} wins ${ct1.l} losses, recent form ${ct1.form} (${ct1.formScore}% win rate), NRR ${ct1.nrr}`,
+        `${ct2.code} this season: ${ct2.pts} points, ${ct2.w} wins ${ct2.l} losses, recent form ${ct2.form} (${ct2.formScore}% win rate), NRR ${ct2.nrr}`,
+        cricketContext.homeTeam === ct1.code ? `${ct1.code} playing at home — home advantage +${homeAdvPct}%` : `${ct2.code} playing at home — home advantage +${ct2.code==='SRH'||ct2.code==='CSK'?8:ct2.code==='RCB'?7:ct2.code==='MI'?6:5}%`,
+        ...headlines.slice(0, 3),
       ].filter(Boolean);
       const groqResult = await analyzeWithGroq(query, cricketHeadlines, metaculus.probability, null, 'cricket');
       const t1 = cricketContext.team1, t2 = cricketContext.team2;
