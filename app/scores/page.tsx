@@ -86,8 +86,8 @@ function SourceAvatar({ name, category }: { name: string; category: string }) {
   );
 }
 
-function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, outcomes, rawEvent }: {
-  aiPct: number; marketPct: number; question: string; sources: any[]; hasMarket: boolean; mtype?: string; outcomes?: any[]; rawEvent?: string;
+function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, outcomes, rawEvent, breakdown }: {
+  aiPct: number; marketPct: number; question: string; sources: any[]; hasMarket: boolean; mtype?: string; outcomes?: any[]; rawEvent?: string; breakdown?: any[];
 }) {
   const [showAll, setShowAll] = useState(false);
   const [spotlight, setSpotlight] = useState<any>(null);
@@ -277,6 +277,28 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
         </div>
       )}
 
+      {/* PROBABILITY BREAKDOWN */}
+      {breakdown && breakdown.length > 1 && (
+        <div style={{ padding:"14px 16px", borderBottom:"1px solid "+C.border }}>
+          <div style={{ fontSize:10, fontWeight:700, color:C.t3, textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:10 }}>📊 How we got this number</div>
+          {breakdown.map((b: any, i: number) => (
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
+              <div style={{ fontSize:11, color:C.t2, flex:1 }}>{b.factor}</div>
+              <div style={{ fontSize:11, fontWeight:700, fontFamily:"monospace", color: b.delta > 0 ? C.green : b.delta < 0 ? C.red : C.t3, minWidth:40, textAlign:"right" }}>
+                {b.delta > 0 ? "+" : ""}{b.delta !== 0 ? b.delta+"%" : ""}
+              </div>
+              <div style={{ fontSize:12, fontWeight:800, fontFamily:"monospace", color:C.t1, minWidth:45, textAlign:"right" }}>
+                {b.cumulative}%
+              </div>
+            </div>
+          ))}
+          <div style={{ marginTop:8, paddingTop:8, borderTop:"1px solid "+C.border, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <span style={{ fontSize:11, fontWeight:700, color:C.t3 }}>Final probability</span>
+            <span style={{ fontSize:18, fontWeight:800, fontFamily:"monospace", color:aiPct>=60?C.green:aiPct>=40?C.amber:C.red }}>{aiPct}%</span>
+          </div>
+        </div>
+      )}
+
       {/* ACTION */}
       <div style={{ padding:"12px 16px" }}>
         {edge !== null && Math.abs(edge) >= 5 ? (
@@ -402,6 +424,7 @@ function ScoresPageContent() {
 
   const [frame, setFrame]           = useState<Frame>('verdict');
   const [intel, setIntel]           = useState<any>(null);
+  const [breakdown, setBreakdown]    = useState<any[]>([]);
   const [realSources, setRealSources] = useState<any[]>([]);
   const [invalidQuestion, setInvalidQuestion] = useState<{reason:string;examples:string[]}|null>(null);
   const [odds, setOdds]             = useState<number|null>(null);
@@ -435,6 +458,7 @@ function ScoresPageContent() {
     setRelated([]);
     setRealSources([]);
     setIntel(null);
+    setBreakdown([]);
     setLimitReached(false);
     setInvalidQuestion(null);
     setFrame('verdict');
@@ -578,6 +602,7 @@ function ScoresPageContent() {
         } catch {}
         setIntel({ confidence: rawConf, direction: rawConf >= 50 ? 'YES' : 'NO', probabilityLabel: rawConf >= 65 ? 'Very likely YES' : rawConf >= 55 ? 'Probably YES' : rawConf >= 45 ? 'Uncertain' : rawConf >= 35 ? 'Probably NO' : 'Very likely NO', predictionStrength: rawConf >= 70 ? 'Strong' : rawConf >= 55 ? 'Medium' : 'Weak', strengthScore: rawConf, riskLevel: rawConf >= 70 || rawConf <= 30 ? 'Low' : 'Medium', marketEdge: marketOddsForAI ? rawConf - marketOddsForAI : null, edgeContext: '', modelComponents: [], confidenceDrivers: { positive: [], negative: [] }, explanation: '' });
         if (data.sources && data.sources.length > 0) setRealSources(data.sources);
+        if (data.breakdown && data.breakdown.length > 0) setBreakdown(data.breakdown);
       } else {
         const seed = analysisQuery.split('').reduce((acc:number, c:string) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0);
         setIntel(calculateIntelligence(45 + ((seed % 35 + 35) % 35), weights, 0, marketOddsForAI, event));
