@@ -236,7 +236,26 @@ export async function POST(request: NextRequest) {
           const raw = s1/(s1+s2)*100;
           const stretched = 50+(raw-50)*1.6;
           const baseProbability = Math.round(Math.max(20,Math.min(82,stretched)));
-          cricketContext = { baseProbability, team1:{...t1,code:c1,formScore:f1}, team2:{...t2,code:c2,formScore:f2}, homeTeam };
+
+          // Probability breakdown — show exactly how we got the number
+          const breakdown = [
+            { factor: 'Starting point (equal teams)', value: 50, delta: 0, cumulative: 50 },
+            { factor: `Season form (${c1} ${f1}% win rate vs ${c2} ${f2}% win rate)`, value: f1-f2, delta: Math.round((f1-f2)*0.35*0.3), cumulative: 0 },
+            { factor: `Points table (${c1} ${t1.pts}pts vs ${c2} ${t2.pts}pts)`, value: t1.pts-t2.pts, delta: Math.round(((t1.pts/(Math.max(t1.pts+t2.pts,1)))-0.5)*100*0.30), cumulative: 0 },
+            { factor: `Run rate (NRR ${t1.nrr} vs ${t2.nrr})`, value: nrr1-nrr2, delta: Math.round(((nrr1/nrrMax+1)/2*100 - (nrr2/nrrMax+1)/2*100)*0.20), cumulative: 0 },
+          ];
+          if (homeAdv1 > 0) breakdown.push({ factor: `Home advantage (${c1} at ${homeTeam})`, value: homeAdv1, delta: Math.round(homeAdv1), cumulative: 0 });
+          if (homeAdv2 > 0) breakdown.push({ factor: `Home advantage (${c2} at ${homeTeam})`, value: -homeAdv2, delta: -Math.round(homeAdv2), cumulative: 0 });
+
+          // Calculate cumulative values
+          let cumulative = 50;
+          breakdown.forEach((b, i) => {
+            if (i === 0) { b.cumulative = 50; return; }
+            cumulative += b.delta;
+            b.cumulative = Math.round(cumulative);
+          });
+
+          cricketContext = { baseProbability, team1:{...t1,code:c1,formScore:f1}, team2:{...t2,code:c2,formScore:f2}, homeTeam, breakdown };
         }
       }
     }
@@ -324,7 +343,7 @@ export async function POST(request: NextRequest) {
       if (metaculus.probability !== null) extraSources.push({ name: 'Metaculus', sig: `Forecasters: ${metaculus.probability}%`, url: 'https://metaculus.com', category: 'community', type: 'mixed', contribution: Math.round((metaculus.probability-50)/5) });
       const sources = buildSources(groqResult, extraSources);
       fetch(new URL('/api/track', request.url).toString(), {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({anonId:anonId||'',name:'analysis_run',props:{query:query.slice(0,100),confidence:cricketContext.baseProbability}})}).catch(()=>{});
-      return Response.json({ valid: true, confidence: cricketContext.baseProbability, keywords, articleCount: relevantArticles.length, sources, groqVerdict: groqResult?.verdict||null, marketType });
+      return Response.json({ valid: true, confidence: cricketContext.baseProbability, keywords, articleCount: relevantArticles.length, sources, groqVerdict: groqResult?.verdict||null, marketType, breakdown: cricketContext.breakdown||null });
     }
 
     if (marketOdds && marketOdds > 0) {
