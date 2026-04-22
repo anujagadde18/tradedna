@@ -335,7 +335,16 @@ export async function POST(request: NextRequest) {
     };
 
     if (cricketContext?.baseProbability) {
-      const groqResult = await analyzeWithGroq(query, headlines, metaculus.probability, null, 'cricket');
+      // For cricket, send structured match data to Groq instead of random headlines
+      const t1 = cricketContext.team1;
+      const t2 = cricketContext.team2;
+      const cricketHeadlines = [
+        `${t1.code} stats: ${t1.pts} points, ${t1.w}W ${t1.l}L, form ${t1.form} (${t1.formScore}% win rate), NRR ${t1.nrr}`,
+        `${t2.code} stats: ${t2.pts} points, ${t2.w}W ${t2.l}L, form ${t2.form} (${t2.formScore}% win rate), NRR ${t2.nrr}`,
+        cricketContext.homeTeam === t1.code ? `${t1.code} playing at home venue — home advantage +${t1.code === 'SRH' ? 8 : t1.code === 'CSK' ? 8 : t1.code === 'RCB' ? 7 : t1.code === 'MI' ? 6 : 5}%` : `${t2.code} playing at home venue`,
+        ...headlines.slice(0, 4),
+      ].filter(Boolean);
+      const groqResult = await analyzeWithGroq(query, cricketHeadlines, metaculus.probability, null, 'cricket');
       const t1 = cricketContext.team1, t2 = cricketContext.team2;
       const extraSources = [
         { name: 'IPL Stats', sig: `${t1.code}: ${t1.form} (${t1.formScore}% wins, ${t1.pts}pts) vs ${t2.code}: ${t2.form} (${t2.formScore}% wins, ${t2.pts}pts)`, url: '', category: 'market', type: t1.formScore>t2.formScore?'strong':'contrary', contribution: Math.round((t1.formScore-t2.formScore)/5) },
