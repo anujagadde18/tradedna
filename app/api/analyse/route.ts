@@ -359,9 +359,12 @@ export async function POST(request: NextRequest) {
       const ct2 = cricketContext.team2;
       const homeAdvPct = ct1.code==='SRH'||ct1.code==='CSK'?8:ct1.code==='RCB'?7:ct1.code==='MI'?6:5;
       const cricketHeadlines = [
-        `${ct1.code} this season: ${ct1.pts} points, ${ct1.w} wins ${ct1.l} losses, recent form ${ct1.form} (${ct1.formScore}% win rate), NRR ${ct1.nrr}`,
-        `${ct2.code} this season: ${ct2.pts} points, ${ct2.w} wins ${ct2.l} losses, recent form ${ct2.form} (${ct2.formScore}% win rate), NRR ${ct2.nrr}`,
-        cricketContext.homeTeam === ct1.code ? `${ct1.code} playing at home — home advantage +${homeAdvPct}%` : `${ct2.code} playing at home — home advantage +${ct2.code==='SRH'||ct2.code==='CSK'?8:ct2.code==='RCB'?7:ct2.code==='MI'?6:5}%`,
+        `ANALYZE: Will ${ct1.code} beat ${ct2.code}? Bull = reasons ${ct1.code} wins. Bear = reasons ${ct1.code} loses.`,
+        `${ct1.code} season: ${ct1.pts}pts, ${ct1.w}W-${ct1.l}L, form ${ct1.form} (${ct1.formScore}% wins), NRR ${ct1.nrr}`,
+        `${ct2.code} season: ${ct2.pts}pts, ${ct2.w}W-${ct2.l}L, form ${ct2.form} (${ct2.formScore}% wins), NRR ${ct2.nrr}`,
+        cricketContext.homeTeam === ct1.code
+          ? `${ct1.code} HOME ground — BULL factor for ${ct1.code}, +${homeAdvPct}% advantage`
+          : `${ct2.code} HOME ground — BEAR factor for ${ct1.code}, opponent has +${ct2.code==='SRH'||ct2.code==='CSK'?8:ct2.code==='RCB'?7:ct2.code==='MI'?6:5}% advantage`,
         ...headlines.slice(0, 3),
       ].filter(Boolean);
       const groqResult = await analyzeWithGroq(query, cricketHeadlines, metaculus.probability, null, 'cricket');
