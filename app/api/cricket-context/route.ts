@@ -61,8 +61,8 @@ const PLAYER_SPOTLIGHT: Record<string, { bat:{name:string;runs:number;avg:number
   'SRH': { bat:{name:'Heinrich Klaasen',  runs:283,avg:47,sr:182,role:'Wicketkeeper'},  bowl:{name:'Harshal Patel',     wkts:9, eco:8.1,role:'Pacer'} },
   'GT':  { bat:{name:'Shubman Gill',      runs:265,avg:44,sr:148,role:'Opener'},        bowl:{name:'Rashid Khan',       wkts:10,eco:6.3,role:'Leg Spin'} },
   'LSG': { bat:{name:'Nicholas Pooran',   runs:185,avg:46,sr:181,role:'Wicketkeeper'},  bowl:{name:'Mohsin Khan',       wkts:8, eco:7.3,role:'Pacer'} },
-  'CSK': { bat:{name:'Ayush Mhatre',      runs:341,avg:34,sr:175,role:'Opener'},        bowl:{name:'Anshul Kamboj',     wkts:13,eco:7.8,role:'Pacer'} },
-  'MI':  { bat:{name:'Rohit Sharma',      runs:190,avg:38,sr:151,role:'Opener'},        bowl:{name:'Jasprit Bumrah',    wkts:10,eco:6.1,role:'Pacer'} },
+  'CSK': { bat:{name:'Ruturaj Gaikwad',   runs:198,avg:33,sr:158,role:'Captain'},        bowl:{name:'Anshul Kamboj',     wkts:13,eco:7.8,role:'Pacer'} },
+  'MI':  { bat:{name:'Tilak Varma',        runs:245,avg:49,sr:168,role:'Middle order'},        bowl:{name:'Jasprit Bumrah',    wkts:10,eco:6.1,role:'Pacer'} },
   'KKR': { bat:{name:'Ajinkya Rahane',    runs:293,avg:37,sr:150,role:'Opener'},        bowl:{name:'Varun Chakravarthy',wkts:7, eco:7.9,role:'Mystery Spin'} },
 };
 
