@@ -366,139 +366,68 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Events list */}
           {loading ? (
-            <div style={{display:'flex',flexDirection:'column',gap:8}}>
-              {[...Array(6)].map((_,i)=>(
-                <div key={i} style={{height:64,background:C.bg2,borderRadius:12,border:'1px solid '+C.border,opacity:0.2+i*0.1}}/>
+            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+              {[...Array(8)].map((_,i)=>(
+                <div key={i} style={{height:52,background:C.bg2,borderRadius:8,border:'1px solid '+C.border,opacity:0.15+i*0.08}}/>
               ))}
             </div>
           ) : events.length === 0 ? (
-            <div style={{textAlign:'center',padding:'40px 0',color:C.t3,fontSize:13}}>
-              No live markets found for this category right now.
-            </div>
+            <div style={{textAlign:'center',padding:'40px 0',color:C.t3,fontSize:13}}>No live markets found.</div>
           ) : (
-            <>
-              {/* TOP FEATURED — one from each major category */}
-              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:12}}>
-                {(() => {
-                  // Pick best from sports, world/politics, crypto — not just top 3 by volume
-                  const sports = events.find(e => ['sports'].includes(e.category) && !e.title.toLowerCase().includes('diplomatic'));
-                  const world = events.find(e => ['world','politics','economics'].includes(e.category));
-                  const crypto = events.find(e => e.category === 'crypto') || events.find(e => e.category === 'other');
-                  const featured = [sports, world, crypto].filter(Boolean) as typeof events;
-                  // Fill with top events if any slot is empty
-                  events.forEach(e => { if (featured.length < 3 && !featured.includes(e)) featured.push(e); });
-                  return featured.slice(0,3);
-                })().map((e,i)=>{
-                  const cs = CAT_COLORS[e.category] || CAT_COLORS.other;
-                  const isYes = e.yesPrice !== null && e.yesPrice >= 50;
-                  return (
-                    <button key={e.slug} onClick={()=>go(e.url)}
-                      style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:16,overflow:'hidden',cursor:'pointer',textAlign:'left' as const,transition:'all 0.15s',padding:0,display:'block',width:'100%'}}
-                      onMouseEnter={ev=>{ev.currentTarget.style.borderColor=C.border2;ev.currentTarget.style.transform='translateY(-2px)';}}
-                      onMouseLeave={ev=>{ev.currentTarget.style.borderColor=C.border;ev.currentTarget.style.transform='translateY(0)';}}>
-                      {/* Image */}
-                      <div style={{height:120,background:'linear-gradient(135deg,'+C.bg3+','+C.bg4+')',position:'relative',overflow:'hidden'}}>
-                        {e.image ? (
-                          <img src={e.image} alt={e.title} style={{width:'100%',height:'100%',objectFit:'cover',opacity:0.85}} onError={ev=>{(ev.target as HTMLImageElement).style.display='none';}}/>
-                        ) : (
-                          <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:48}}>{e.icon}</div>
-                        )}
-                        <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(6,6,10,0.9) 0%,transparent 60%)'}}/>
-                        {/* Live badge */}
-                        <div style={{position:'absolute',top:8,left:8,display:'flex',alignItems:'center',gap:4,background:'rgba(0,0,0,0.6)',padding:'3px 8px',borderRadius:100}}>
-                          <span style={{width:5,height:5,background:C.red,borderRadius:'50%',display:'block',boxShadow:'0 0 4px #ef4f6a'}}/>
-                          <span style={{fontSize:9,fontWeight:700,color:'#fff',textTransform:'uppercase' as const,letterSpacing:'0.5px'}}>Live</span>
-                        </div>
-                        {/* YES price on image */}
-                        {e.yesPrice !== null && (
-                          <div style={{position:'absolute',top:8,right:8,background:isYes?'rgba(46,204,138,0.9)':'rgba(239,79,106,0.9)',padding:'4px 10px',borderRadius:8}}>
-                            <span style={{fontSize:14,fontWeight:900,color:'#fff',fontFamily:'monospace'}}>{e.yesPrice}%</span>
-                          </div>
-                        )}
-                      </div>
-                      {/* Content */}
-                      <div style={{padding:'12px 14px'}}>
-                        <div style={{fontSize:12,fontWeight:700,color:C.t1,lineHeight:1.35,marginBottom:8,minHeight:32}}>{e.title}</div>
-                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                          <div style={{display:'flex',alignItems:'center',gap:6}}>
-                            <span style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:6,background:cs.bg,color:cs.color}}>{e.category}</span>
-                            <span style={{fontSize:10,color:C.t3}}>{e.volume24hFormatted}/24h</span>
-                          </div>
-                          <span style={{fontSize:11,fontWeight:600,color:C.purple}}>AI odds →</span>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
+            <div style={{border:'1px solid '+C.border,borderRadius:12,overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'28px 1fr 72px 80px 88px',padding:'8px 14px',background:C.bg3,borderBottom:'1px solid '+C.border}}>
+                {['#','Market','Odds','Volume',''].map((h,i)=>(
+                  <div key={i} style={{fontSize:9,fontWeight:700,color:C.t4,textTransform:'uppercase' as const,letterSpacing:'0.5px',textAlign:i>=2?'center' as const:'left' as const}}>{h}</div>
+                ))}
               </div>
-
-              {/* REST — grouped by category */}
-              <div style={{display:'flex',flexDirection:'column',gap:6}}>
-                {(() => {
-                  // Group events by category for better discovery
-                  const order = ['sports','world','politics','economics','crypto','other'];
-                  const grouped: Record<string, typeof events> = {};
-                  events.slice(3).forEach(e => {
-                    const cat = e.category || 'other';
-                    if (!grouped[cat]) grouped[cat] = [];
-                    grouped[cat].push(e);
-                  });
-                  // Flatten: show up to 3 per category, interleaved
-                  const result: typeof events = [];
-                  let added = true;
-                  let round = 0;
-                  while (added && result.length < 17) {
-                    added = false;
-                    order.forEach(cat => {
-                      if (grouped[cat] && grouped[cat][round]) {
-                        result.push(grouped[cat][round]);
-                        added = true;
-                      }
-                    });
-                    round++;
-                  }
-                  return result;
-                })().map((e,i)=>{
-                  const cs = CAT_COLORS[e.category] || CAT_COLORS.other;
-                  const isYes = e.yesPrice !== null && e.yesPrice >= 50;
-                  return (
-                    <button key={e.slug} onClick={()=>go(e.url)}
-                      style={{width:'100%',background:C.bg2,border:'1px solid '+C.border,borderRadius:10,padding:'10px 14px',cursor:'pointer',textAlign:'left' as const,transition:'all 0.1s',display:'flex',alignItems:'center',gap:12}}
-                      onMouseEnter={ev=>{ev.currentTarget.style.background=C.bg3;ev.currentTarget.style.borderColor=C.border2;}}
-                      onMouseLeave={ev=>{ev.currentTarget.style.background=C.bg2;ev.currentTarget.style.borderColor=C.border;}}>
-                      <div style={{fontSize:11,fontWeight:700,color:C.t4,minWidth:20,textAlign:'right' as const}}>{i+4}</div>
-                      {e.image ? (
-                        <img src={e.image} alt="" style={{width:32,height:32,borderRadius:6,objectFit:'cover',flexShrink:0}} onError={ev=>{(ev.target as HTMLImageElement).style.display='none';}}/>
-                      ) : (
-                        <div style={{fontSize:16,minWidth:32,textAlign:'center' as const}}>{e.icon}</div>
-                      )}
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:12,fontWeight:500,color:C.t1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{e.title}</div>
-                        <div style={{display:'flex',alignItems:'center',gap:6,marginTop:2}}>
-                          <span style={{fontSize:9,fontWeight:600,padding:'1px 6px',borderRadius:4,background:cs.bg,color:cs.color}}>{e.category}</span>
-                          <span style={{fontSize:9,color:C.t3}}>{e.volume24hFormatted}/24h</span>
-                          {e.marketCount > 1 && <span style={{fontSize:9,color:C.t3}}>{e.marketCount} outcomes</span>}
-                        </div>
+              {events.slice(0,20).map((e,i)=>{
+                const cs = CAT_COLORS[e.category]||CAT_COLORS.other;
+                const isYes = e.yesPrice!==null && e.yesPrice>=50;
+                const isStrong = e.yesPrice!==null && (e.yesPrice>=70||e.yesPrice<=30);
+                return (
+                  <button key={e.slug} onClick={()=>go(e.url)}
+                    style={{width:'100%',display:'grid',gridTemplateColumns:'28px 1fr 72px 80px 88px',padding:'10px 14px',background:'transparent',border:'none',borderBottom:i<events.slice(0,20).length-1?'1px solid rgba(255,255,255,0.04)':'none',cursor:'pointer',textAlign:'left' as const,transition:'background 0.1s',alignItems:'center'}}
+                    onMouseEnter={ev=>{ev.currentTarget.style.background=C.bg3;}}
+                    onMouseLeave={ev=>{ev.currentTarget.style.background='transparent';}}>
+                    <div style={{fontSize:10,fontWeight:600,color:C.t4}}>{i+1}</div>
+                    <div style={{minWidth:0,paddingRight:8}}>
+                      <div style={{fontSize:12,fontWeight:500,color:C.t1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const,marginBottom:2}}>
+                        {e.title.slice(0,55)}{e.title.length>55?'…':''}
                       </div>
-                      {e.yesPrice !== null && (
-                        <div style={{flexShrink:0,textAlign:'center' as const,padding:'4px 10px',borderRadius:8,background:isYes?'rgba(46,204,138,0.1)':'rgba(239,79,106,0.1)',border:'1px solid '+(isYes?'rgba(46,204,138,0.2)':'rgba(239,79,106,0.2)')}}>
-                          <div style={{fontSize:14,fontWeight:800,color:isYes?C.green:C.red,fontFamily:'monospace'}}>{e.yesPrice}%</div>
-                        </div>
-                      )}
-                      <div style={{flexShrink:0,fontSize:10,fontWeight:600,color:C.purple,padding:'4px 10px',borderRadius:6,border:'1px solid '+C.purpleBorder,background:C.purpleBg}}>
-                        AI odds →
+                      <div style={{display:'flex',alignItems:'center',gap:5}}>
+                        <span style={{fontSize:9,fontWeight:600,padding:'1px 6px',borderRadius:4,background:cs.bg,color:cs.color}}>{e.category}</span>
+                        {e.marketCount>1&&<span style={{fontSize:9,color:C.t4}}>{e.marketCount} outcomes</span>}
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </>
+                    </div>
+                    <div style={{textAlign:'center' as const}}>
+                      {e.yesPrice!==null?(
+                        <div>
+                          <div style={{fontSize:13,fontWeight:800,fontFamily:'monospace',color:isStrong?(isYes?C.green:C.red):C.t2}}>{e.yesPrice}%</div>
+                          <div style={{width:40,height:3,background:'rgba(255,255,255,0.06)',borderRadius:2,margin:'2px auto 0',overflow:'hidden'}}>
+                            <div style={{height:'100%',background:isYes?C.green:C.red,width:e.yesPrice+'%',borderRadius:2}}/>
+                          </div>
+                        </div>
+                      ):<span style={{fontSize:10,color:C.t4}}>—</span>}
+                    </div>
+                    <div style={{textAlign:'right' as const}}>
+                      <div style={{fontSize:11,fontWeight:600,color:C.t2,fontFamily:'monospace'}}>{e.volume24hFormatted}</div>
+                      <div style={{fontSize:9,color:C.t4}}>24h</div>
+                    </div>
+                    <div style={{textAlign:'right' as const}}>
+                      <span style={{fontSize:10,fontWeight:600,color:C.purpleL,padding:'4px 10px',borderRadius:6,border:'1px solid '+C.purpleBorder,background:C.purpleBg,whiteSpace:'nowrap' as const}}>
+                        Get edge →
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           )}
-        </div>
 
-        {/* HOW IT WORKS */}
+
+
+                {/* HOW IT WORKS */}
         <div style={{borderTop:'1px solid '+C.border,padding:'64px 40px'}}>
           <h2 style={{fontSize:22,fontWeight:700,letterSpacing:'-0.5px',textAlign:'center',marginBottom:6}}>How it works</h2>
           <p style={{textAlign:'center',color:C.t2,fontSize:14,marginBottom:40}}>Three steps from question to conviction</p>
