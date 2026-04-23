@@ -231,7 +231,23 @@ export async function POST(request: NextRequest) {
           else if ((VENUE_CITIES[c2]||[]).some(city => queryLower.includes(city))) homeTeam = c2;
           const homeAdv1 = homeTeam===c1 ? (HOME_ADV[c1]||0)*1.5 : 0;
           const homeAdv2 = homeTeam===c2 ? (HOME_ADV[c2]||0)*1.5 : 0;
-          let s1 = f1*0.35 + (t1.pts/Math.max(t1.pts+t2.pts,1))*100*0.30 + ((nrr1/nrrMax+1)/2*100*0.20) + homeAdv1;
+          // Get venue chase rate from cricket context
+          let venueChaseBonus = 0;
+          try {
+            const vRes = await fetch(new URL('/api/cricket-context', request.url).toString(), {
+              method:'POST', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({team1:c1, team2:c2}),
+              signal: AbortSignal.timeout(3000)
+            });
+            const vData = await vRes.json();
+            if (vData.venue?.chase) {
+              // chase rate above 50% means chasing team has advantage
+              // In "Will c1 beat c2", c1 is usually the chasing team
+              venueChaseBonus = (vData.venue.chase - 50) * 0.3;
+            }
+          } catch {}
+
+          let s1 = f1*0.35 + (t1.pts/Math.max(t1.pts+t2.pts,1))*100*0.30 + ((nrr1/nrrMax+1)/2*100*0.20) + homeAdv1 + venueChaseBonus;
           let s2 = f2*0.35 + (t2.pts/Math.max(t1.pts+t2.pts,1))*100*0.30 + ((nrr2/nrrMax+1)/2*100*0.20) + homeAdv2;
           const raw = s1/(s1+s2)*100;
           const stretched = 50+(raw-50)*1.6;
