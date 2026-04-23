@@ -860,7 +860,7 @@ function ScoresPageContent() {
                   </button>
                 </div>
               ) : (
-                <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} mtype={mtype} outcomes={outcomes} rawEvent={event} />
+                <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} mtype={mtype} outcomes={outcomes} rawEvent={event} breakdown={breakdown} />
               )}
                 {(invalidQuestion && !intel) || limitReached ? (
                   <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100%', padding:24, gap:12, textAlign:'center', background:C.bg2, border:'1px solid '+C.border, borderRadius:16 }}>
