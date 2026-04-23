@@ -26,7 +26,7 @@ const POINTS_TABLE: Record<string, { p:number; w:number; l:number; pts:number; n
 
 const VENUE_DATA: Record<string, { chase:number; dew:boolean; homeAdv:number; notes:string }> = {
   'Hyderabad':      { chase:62, dew:true,  homeAdv:8,  notes:'SRH fortress, heavy dew, avg 190+ scores. SRH beat RR by 57 runs here Apr 13' },
-  'Mumbai':         { chase:78, dew:true,  homeAdv:8,  notes:'Wankhede 2026: chasing team wins 78% of matches. Avg score 218. Dew heavily favors second innings. MI lead CSK 8-5 at this venue. Short boundaries, fast outfield.' },
+  'Mumbai':         { chase:78, dew:true,  homeAdv:10,  notes:'Wankhede 2026: chasing team wins 78% of matches. Avg score 218. Dew heavily favors second innings. MI lead CSK 8-5 at this venue. Short boundaries, fast outfield.' },
   'Bengaluru':      { chase:45, dew:false, homeAdv:7,  notes:'Chinnaswamy, RCB defending champions at home. High scoring venue' },
   'Chennai':        { chase:40, dew:false, homeAdv:8,  notes:'Chepauk slow turner, bat first wins 55%+. CSK beat KKR here Apr 14' },
   'Kolkata':        { chase:52, dew:true,  homeAdv:5,  notes:'Eden Gardens balanced, slight dew advantage' },
