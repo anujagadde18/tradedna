@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
             { factor: `Points table (${c1} ${t1.pts}pts vs ${c2} ${t2.pts}pts)`, value: t1.pts-t2.pts, delta: Math.round(((t1.pts/(Math.max(t1.pts+t2.pts,1)))-0.5)*100*0.30), cumulative: 0 },
             { factor: `Run rate (NRR ${t1.nrr} vs ${t2.nrr})`, value: nrr1-nrr2, delta: Math.round(((nrr1/nrrMax+1)/2*100 - (nrr2/nrrMax+1)/2*100)*0.20), cumulative: 0 },
           ];
-          if (homeAdv1 > 0) breakdown.push({ factor: `Home advantage (${c1} at ${homeTeam})`, value: homeAdv1, delta: Math.round(homeAdv1), cumulative: 0 });
+          if (homeAdv1 > 0) breakdown.push({ factor: `Home advantage (${c1} playing at home)`, value: homeAdv1, delta: Math.round(homeAdv1), cumulative: 0 });
           if (homeAdv2 > 0) breakdown.push({ factor: `Home advantage (${c2} at ${homeTeam})`, value: -homeAdv2, delta: -Math.round(homeAdv2), cumulative: 0 });
 
           // Calculate cumulative values
