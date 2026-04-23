@@ -283,16 +283,35 @@ export async function POST(request: NextRequest) {
             const lastInnings = liveData.score[liveData.score.length - 1];
             const runs = lastInnings?.r || 0;
             const wickets = lastInnings?.w || 0;
-            const overs = parseFloat(lastInnings?.o || '0');
-            const isBattingTeam1 = liveData.score[0]?.inning?.includes(fullT1);
-            // If batting team has lost 6+ wickets, reduce their probability
-            if (wickets >= 6) {
-              const wicketPenalty = (wickets - 5) * 4;
+            const overs = parseFloat(String(lastInnings?.o || '0'));
+            const isBattingTeam1 = liveData.score[0]?.inning?.toLowerCase().includes(fullT1.toLowerCase());
+
+            if (overs > 0) {
+              const runRate = runs / overs;
+              const oversLeft = 20 - overs;
+              const projectedScore = Math.round(runs + runRate * oversLeft);
+
+              // Projected score adjustment
+              // Average IPL score ~165. Every 10 runs above/below = ~3% shift
+              const avgScore = 165;
+              const scoreDiff = projectedScore - avgScore;
+              const scoreAdj = Math.round(scoreDiff / 10) * 3;
+
+              // Wicket adjustment — losing wickets hurts projected score
+              const wicketAdj = wickets >= 6 ? (wickets - 5) * 4 : 0;
+
               if (isBattingTeam1) {
-                cricketContext.baseProbability = Math.max(15, cricketContext.baseProbability - wicketPenalty);
+                // Team 1 batting — high score = good for team 1
+                cricketContext.baseProbability = Math.max(15, Math.min(85,
+                  cricketContext.baseProbability + Math.round(scoreAdj * 0.4) - wicketAdj
+                ));
               } else {
-                cricketContext.baseProbability = Math.min(85, cricketContext.baseProbability + wicketPenalty);
+                // Team 2 batting — high score = bad for team 1 (MI in this case)
+                cricketContext.baseProbability = Math.max(15, Math.min(85,
+                  cricketContext.baseProbability - Math.round(scoreAdj * 0.4) + wicketAdj
+                ));
               }
+              console.log(`[Live] ${fullT1} vs ${fullT2}: projected ${projectedScore}, adj ${scoreAdj}, new prob ${cricketContext.baseProbability}%`);
             }
           }
         } else if (liveData.success && liveData.matchEnded && liveData.status) {
