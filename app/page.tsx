@@ -283,6 +283,7 @@ export default function HomePage() {
               if (etitle.includes('gujarat titans vs mumbai indians')) return false;
               if (etitle.includes('punjab kings vs lucknow super giants')) return false;
               if (etitle.includes('kolkata knight riders vs rajasthan royals')) return false;
+              if (etitle.includes('mumbai indians vs chennai super kings')) return false;
               // Filter out esports and individual sports (tennis, chess, boxing)
               const title = e.title.toLowerCase();
               const badTerms = ['lol:','league of legends','counter-strike','dota','bo3','bo5','lec','lpl','lck','esport','yi zhou','kotov','chess','busan','boxing','ufc','mma','vs pavel','vs yi','tennis','table tennis'];
@@ -397,7 +398,7 @@ export default function HomePage() {
                       </div>
                       <div style={{display:'flex',alignItems:'center',gap:5}}>
                         <span style={{fontSize:9,fontWeight:600,padding:'1px 6px',borderRadius:4,background:cs.bg,color:cs.color}}>{e.category}</span>
-                        {e.marketCount>1&&<span style={{fontSize:9,color:C.t4}}>{e.marketCount} outcomes</span>}
+                
                       </div>
                     </div>
                     <div style={{textAlign:'center' as const}}>
