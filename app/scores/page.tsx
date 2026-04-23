@@ -293,7 +293,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
             </div>
           ))}
           <div style={{ marginTop:8, paddingTop:8, borderTop:"1px solid "+C.border, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-            <span style={{ fontSize:11, fontWeight:700, color:C.t3 }}>Final probability</span>
+            <span style={{ fontSize:11, fontWeight:700, color:C.t3 }}>Final probability (with live data)</span>
             <span style={{ fontSize:18, fontWeight:800, fontFamily:"monospace", color:aiPct>=60?C.green:aiPct>=40?C.amber:C.red }}>{aiPct}%</span>
           </div>
         </div>
