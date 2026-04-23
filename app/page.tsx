@@ -425,9 +425,9 @@ export default function HomePage() {
             </div>
           )}
 
+        </div>
 
-
-                {/* HOW IT WORKS */}
+        {/* HOW IT WORKS */}
         <div style={{borderTop:'1px solid '+C.border,padding:'64px 40px'}}>
           <h2 style={{fontSize:22,fontWeight:700,letterSpacing:'-0.5px',textAlign:'center',marginBottom:6}}>How it works</h2>
           <p style={{textAlign:'center',color:C.t2,fontSize:14,marginBottom:40}}>Three steps from question to conviction</p>
