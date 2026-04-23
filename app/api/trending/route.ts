@@ -245,9 +245,23 @@ export async function GET(req: NextRequest) {
       if (endDate && endDate < now) continue; // already ended
     }
 
+    // Clean up title for human readability
+    const cleanTitle = (t: string): string => {
+      return t
+        .replace(/ by\.\.\.\?/gi, '?')
+        .replace(/ by \.\.\./gi, '')
+        .replace(/ \.\.\./gi, '')
+        .replace(/\.\.\.\?/gi, '?')
+        .replace(/^Will the /i, 'Will ')
+        .replace(/^Who will /i, 'Who ')
+        .replace(/United States/gi, 'US')
+        .replace(/President of the US/gi, 'US President')
+        .trim();
+    };
+
     results.push({
       slug:               event.slug,
-      title:              event.title,
+      title:              cleanTitle(event.title),
       url:                'https://polymarket.com/event/' + event.slug,
       volume:             vol,
       volumeFormatted:    fmtVol(vol),
