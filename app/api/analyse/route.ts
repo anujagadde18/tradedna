@@ -134,7 +134,7 @@ ${metaContext}
 Headlines (ONLY use facts from these — do NOT invent any statistics, names, scores, or numbers not present here):
 ${headlineText || 'No headlines available. Use only general knowledge, no invented stats.'}
 
-Analysis guidance: ${typeContext}${nbaContext ? '\nNBA team context: ' + nbaContext : ''}
+Analysis guidance: ${typeContext}${nbaContext ? '\nUSE THIS TEAM DATA for bull/bear factors: ' + nbaContext : ''}
 
 STRICT RULES:
 1. NEVER invent statistics, player names, scores, or numbers not in the headlines above
