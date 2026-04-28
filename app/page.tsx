@@ -347,6 +347,43 @@ export default function HomePage() {
             );
           })()}
 
+          {/* FEATURED 3 — one sport, one world, one crypto */}
+          {events.length > 0 && (() => {
+            const sport = events.find(e => e.category === 'sports' && e.yesPrice !== null);
+            const world = events.find(e => ['world','economics'].includes(e.category));
+            const crypto = events.find(e => e.category === 'crypto' && e.yesPrice !== null);
+            const featured = [sport, world, crypto].filter(Boolean) as typeof events;
+            if (featured.length === 0) return null;
+            return (
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,marginBottom:16}}>
+                {featured.map((e,i) => {
+                  const cs = CAT_COLORS[e.category]||CAT_COLORS.other;
+                  const isYes = e.yesPrice !== null && e.yesPrice >= 50;
+                  return (
+                    <button key={e.slug} onClick={()=>go(e.url)}
+                      style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:14,padding:'14px',cursor:'pointer',textAlign:'left' as const,transition:'all 0.15s'}}
+                      onMouseEnter={ev=>{ev.currentTarget.style.borderColor=C.border2;ev.currentTarget.style.transform='translateY(-2px)';}}
+                      onMouseLeave={ev=>{ev.currentTarget.style.borderColor=C.border;ev.currentTarget.style.transform='translateY(0)';}}>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+                        <span style={{fontSize:10,fontWeight:600,padding:'2px 8px',borderRadius:6,background:cs.bg,color:cs.color}}>{e.icon} {e.category}</span>
+                        {e.yesPrice !== null && (
+                          <span style={{fontSize:18,fontWeight:800,fontFamily:'monospace',color:isYes?C.green:C.red}}>{e.yesPrice}%</span>
+                        )}
+                      </div>
+                      <div style={{fontSize:12,fontWeight:600,color:C.t1,lineHeight:1.4,marginBottom:8}}>
+                        {e.title.slice(0,50)}{e.title.length>50?'…':''}
+                      </div>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                        <span style={{fontSize:10,color:C.t3}}>{e.volume24hFormatted}/24h</span>
+                        <span style={{fontSize:10,fontWeight:600,color:C.purpleL}}>Get AI edge →</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
           {/* Header + category tabs */}
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16,flexWrap:'wrap' as const,gap:10}}>
             <div style={{display:'flex',alignItems:'center',gap:8}}>
