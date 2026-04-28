@@ -221,50 +221,6 @@ export default function HomePage() {
         {/* LIVE MARKETS */}
         <div style={{maxWidth:960,margin:'0 auto',padding:'0 24px 48px'}}>
 
-          {/* IPL 2026 MATCHES — auto-updating from API */}
-          {iplMatches.length > 0 && (
-            <div style={{marginBottom:24}}>
-              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
-                <span style={{fontSize:16}}>🏏</span>
-                <span style={{fontSize:13,fontWeight:700,color:C.t1}}>IPL 2026</span>
-                <span style={{fontSize:11,color:C.t3}}>· today & tomorrow</span>
-                <button onClick={()=>router.push('/ipl')} style={{marginLeft:'auto',fontSize:10,color:C.purpleL,background:C.purpleBg,border:'1px solid '+C.purpleBorder,borderRadius:6,padding:'3px 10px',cursor:'pointer'}}>Full schedule →</button>
-              </div>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
-                {iplMatches.map((m:any) => {
-                  const today = new Date().toISOString().split('T')[0];
-                  const isToday = m.date === today;
-                  const waMsg = encodeURIComponent(`🏏 IPL 2026 Match ${m.no}\n\n*${m.home} vs ${m.away}*\n📍 ${m.venue} · ${m.time} IST\n\nGet AI prediction 👇\nhttps://tradedna-8sn1.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} beat ${m.away} in IPL 2026?`)}\n\n#IPL2026 #Cricket`);
-                  return (
-                    <div key={m.no} style={{background:C.bg2,border:'1px solid '+(isToday?'rgba(239,79,106,0.4)':C.border),borderRadius:12,padding:'12px 14px'}}>
-                      {isToday && <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:8}}>
-                        <span style={{width:5,height:5,borderRadius:'50%',background:C.red,display:'block',boxShadow:'0 0 4px #ef4f6a'}}/>
-                        <span style={{fontSize:9,fontWeight:700,color:C.red,textTransform:'uppercase' as const,letterSpacing:'0.5px'}}>Today · Match {m.no}</span>
-                      </div>}
-                      {!isToday && <div style={{fontSize:9,color:C.t3,marginBottom:6}}>Match {m.no} · {new Date(m.date).toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})}</div>}
-                      <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:6,marginBottom:10}}>
-                        <div style={{fontSize:11,fontWeight:600,color:C.t1,textAlign:'center' as const,lineHeight:1.3}}>{m.home}</div>
-                        <div style={{fontSize:9,fontWeight:700,color:C.t4}}>VS</div>
-                        <div style={{fontSize:11,fontWeight:600,color:C.t1,textAlign:'center' as const,lineHeight:1.3}}>{m.away}</div>
-                      </div>
-                      <div style={{fontSize:9,color:C.t3,textAlign:'center' as const,marginBottom:10}}>📍 {m.venue} · {m.time} IST</div>
-                      <div style={{display:'flex',gap:6}}>
-                        <button onClick={()=>go(`Will ${m.home} beat ${m.away} in IPL 2026?`)}
-                          style={{flex:2,padding:'6px',borderRadius:7,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,cursor:'pointer',fontSize:11,fontWeight:600}}>
-                          🤖 AI prediction
-                        </button>
-                        <button onClick={()=>window.open('https://wa.me/?text='+waMsg,'_blank')}
-                          style={{flex:1,padding:'6px',borderRadius:7,background:'rgba(37,211,102,0.08)',border:'1px solid rgba(37,211,102,0.2)',color:'#25d366',cursor:'pointer',fontSize:11}}>
-                          Share
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
           {/* UPCOMING MATCHES — next games across all sports */}
           {(() => {
             const now = new Date();
@@ -464,6 +420,52 @@ export default function HomePage() {
           )}
 
         </div>
+
+
+          {/* IPL 2026 MATCHES — auto-updating from API */}
+          {iplMatches.length > 0 && (
+            <div style={{marginBottom:24}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+                <span style={{fontSize:16}}>🏏</span>
+                <span style={{fontSize:13,fontWeight:700,color:C.t1}}>IPL 2026</span>
+                <span style={{fontSize:11,color:C.t3}}>· today & tomorrow</span>
+                <button onClick={()=>router.push('/ipl')} style={{marginLeft:'auto',fontSize:10,color:C.purpleL,background:C.purpleBg,border:'1px solid '+C.purpleBorder,borderRadius:6,padding:'3px 10px',cursor:'pointer'}}>Full schedule →</button>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
+                {iplMatches.map((m:any) => {
+                  const today = new Date().toISOString().split('T')[0];
+                  const isToday = m.date === today;
+                  const waMsg = encodeURIComponent(`🏏 IPL 2026 Match ${m.no}\n\n*${m.home} vs ${m.away}*\n📍 ${m.venue} · ${m.time} IST\n\nGet AI prediction 👇\nhttps://tradedna-8sn1.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} beat ${m.away} in IPL 2026?`)}\n\n#IPL2026 #Cricket`);
+                  return (
+                    <div key={m.no} style={{background:C.bg2,border:'1px solid '+(isToday?'rgba(239,79,106,0.4)':C.border),borderRadius:12,padding:'12px 14px'}}>
+                      {isToday && <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:8}}>
+                        <span style={{width:5,height:5,borderRadius:'50%',background:C.red,display:'block',boxShadow:'0 0 4px #ef4f6a'}}/>
+                        <span style={{fontSize:9,fontWeight:700,color:C.red,textTransform:'uppercase' as const,letterSpacing:'0.5px'}}>Today · Match {m.no}</span>
+                      </div>}
+                      {!isToday && <div style={{fontSize:9,color:C.t3,marginBottom:6}}>Match {m.no} · {new Date(m.date).toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})}</div>}
+                      <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:6,marginBottom:10}}>
+                        <div style={{fontSize:11,fontWeight:600,color:C.t1,textAlign:'center' as const,lineHeight:1.3}}>{m.home}</div>
+                        <div style={{fontSize:9,fontWeight:700,color:C.t4}}>VS</div>
+                        <div style={{fontSize:11,fontWeight:600,color:C.t1,textAlign:'center' as const,lineHeight:1.3}}>{m.away}</div>
+                      </div>
+                      <div style={{fontSize:9,color:C.t3,textAlign:'center' as const,marginBottom:10}}>📍 {m.venue} · {m.time} IST</div>
+                      <div style={{display:'flex',gap:6}}>
+                        <button onClick={()=>go(`Will ${m.home} beat ${m.away} in IPL 2026?`)}
+                          style={{flex:2,padding:'6px',borderRadius:7,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,cursor:'pointer',fontSize:11,fontWeight:600}}>
+                          🤖 AI prediction
+                        </button>
+                        <button onClick={()=>window.open('https://wa.me/?text='+waMsg,'_blank')}
+                          style={{flex:1,padding:'6px',borderRadius:7,background:'rgba(37,211,102,0.08)',border:'1px solid rgba(37,211,102,0.2)',color:'#25d366',cursor:'pointer',fontSize:11}}>
+                          Share
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
 
         {/* HOW IT WORKS */}
         <div style={{borderTop:'1px solid '+C.border,padding:'64px 40px'}}>
