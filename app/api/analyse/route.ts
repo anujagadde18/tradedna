@@ -24,6 +24,29 @@ function detectMarketType(query: string): string {
   return 'general';
 }
 
+// NBA 2026 Playoff standings and context
+const NBA_CONTEXT: Record<string, string> = {
+  'timberwolves': 'Minnesota Timberwolves: 3rd seed West, Anthony Edwards averaging 28.5 PPG, Karl-Anthony Towns 22pts 9reb, strong defensive team, home court advantage',
+  'nuggets': 'Denver Nuggets: Nikola Jokic MVP candidate 26pts 12reb 9ast, Jamal Murray injury concern, 2023 champions, experienced playoff team',
+  'thunder': 'Oklahoma City Thunder: 1st seed West, Shai Gilgeous-Alexander MVP frontrunner 32PPG, youngest team in playoffs, home court advantage',
+  'celtics': 'Boston Celtics: 1st seed East, Jayson Tatum 26PPG, defending champions, deepest roster in NBA',
+  'cavaliers': 'Cleveland Cavaliers: 2nd seed East, Donovan Mitchell 28PPG, strong defensive rating, home court advantage',
+  'knicks': 'New York Knicks: Jalen Brunson 26PPG, physical defensive team, Madison Square Garden home advantage',
+  'warriors': 'Golden State Warriors: Stephen Curry still elite, experienced playoff team, Draymond Green defense',
+  'lakers': 'Los Angeles Lakers: LeBron James still performing, Anthony Davis 25pts 12reb, inconsistent season',
+  'heat': 'Miami Heat: Jimmy Butler clutch performer, strong playoff culture, Erik Spoelstra coaching edge',
+  'bucks': 'Milwaukee Bucks: Giannis Antetokounmpo 30PPG, Damian Lillard 25PPG, top Eastern Conference threat',
+};
+
+function getNBAContext(query: string): string {
+  const q = query.toLowerCase();
+  const contexts: string[] = [];
+  for (const [team, ctx] of Object.entries(NBA_CONTEXT)) {
+    if (q.includes(team)) contexts.push(ctx);
+  }
+  return contexts.join(' | ') || 'NBA Playoff game — analyze based on recent form, home court, and key player matchups';
+}
+
 function getMarketContext(type: string, query: string): string {
   const contexts: Record<string, string> = {
     cricket: 'Focus on: team form (last 5 matches), home advantage, head-to-head record, key players, pitch conditions. IPL 2026 season context.',
@@ -99,6 +122,7 @@ async function analyzeWithGroq(
     const marketContext = marketOdds ? `Prediction market (Polymarket) odds: ${marketOdds}%` : '';
     const metaContext = metaculusPct ? `Expert forecasters (Metaculus): ${metaculusPct}%` : '';
     const typeContext = getMarketContext(marketType, query);
+    const nbaContext = marketType === 'nba' ? getNBAContext(query) : '';
 
     const prompt = `You are a prediction market analyst. Return ONLY valid JSON. No other text.
 
@@ -110,7 +134,7 @@ ${metaContext}
 Headlines (ONLY use facts from these — do NOT invent any statistics, names, scores, or numbers not present here):
 ${headlineText || 'No headlines available. Use only general knowledge, no invented stats.'}
 
-Analysis guidance: ${typeContext}
+Analysis guidance: ${typeContext}${nbaContext ? '\nNBA team context: ' + nbaContext : ''}
 
 STRICT RULES:
 1. NEVER invent statistics, player names, scores, or numbers not in the headlines above
