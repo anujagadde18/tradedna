@@ -43,11 +43,11 @@ const SPORTS_CONTEXT: Record<string, string> = {
   'pistons': 'Detroit Pistons: Cade Cunningham 24PPG, surprising playoff run',
   'magic': 'Orlando Magic: Paolo Banchero 23PPG, young athletic team',
   // F1 Drivers
-  'verstappen': 'Max Verstappen: 4x World Champion, dominant in Red Bull, 400+ career points lead',
+  'verstappen': 'Max Verstappen: Struggling in 2026 with only 12 points after 3 races. Red Bull car uncompetitive with new regulations. Major title threat eliminated early.',
   'hamilton': 'Lewis Hamilton: 7x champion now at Ferrari, strong street circuits',
-  'leclerc': 'Charles Leclerc: Ferrari home races specialist, Monaco specialist',
-  'norris': 'Lando Norris: McLaren lead driver, strong 2025 form',
-  'russell': 'George Russell: Mercedes team leader, consistent points scorer',
+  'leclerc': 'Charles Leclerc: 3rd in F1 2026 championship with 49 points. Ferrari strong but behind Mercedes. Hamilton teammate at Ferrari in 2026.',
+  'norris': 'Lando Norris: 5th in F1 2026 championship. McLaren struggling with new regulations but improving. Miami could suit McLaren pace.',
+  'russell': 'George Russell: 2nd in F1 2026 championship with 63 points. Won Australia Round 1. Trails teammate Antonelli by 9 points. Miami Grand Prix Round 4 starts May 1.',
   'piastri': 'Oscar Piastri: McLaren, strong pace in 2025-26 season',
   // Tennis Players
   'zverev': 'Alexander Zverev: World No.2, strong clay court record, Madrid Open finalist 2024',
