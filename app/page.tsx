@@ -346,6 +346,37 @@ export default function HomePage() {
             );
           })()}
 
+          {/* F1 MIAMI GRAND PRIX */}
+          <div style={{marginBottom:24}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+              <span style={{fontSize:16}}>🏎️</span>
+              <span style={{fontSize:13,fontWeight:700,color:C.t1}}>F1 Miami Grand Prix</span>
+              <span style={{fontSize:11,color:C.t3}}>· May 1-3, 2026</span>
+              <button onClick={()=>router.push('/f1')} style={{marginLeft:'auto',fontSize:10,color:C.amber,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:6,padding:'3px 10px',cursor:'pointer'}}>Full analysis →</button>
+            </div>
+            <div style={{background:C.bg2,border:'1px solid rgba(245,166,35,0.15)',borderRadius:12,padding:'14px'}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginBottom:12}}>
+                {[
+                  {flag:'🇮🇹',name:'Antonelli',pct:45,color:'#2ecc8a'},
+                  {flag:'🇬🇧',name:'Russell',pct:43,color:'#2ecc8a'},
+                  {flag:'🇦🇺',name:'Piastri',pct:11,color:'#f5a623'},
+                  {flag:'🇳🇱',name:'Verstappen',pct:3,color:'#ef4f6a'},
+                ].map((d,i)=>(
+                  <div key={i} style={{background:C.bg3,borderRadius:8,padding:'10px',textAlign:'center' as const}}>
+                    <div style={{fontSize:16,marginBottom:2}}>{d.flag}</div>
+                    <div style={{fontSize:10,fontWeight:600,color:C.t2,marginBottom:4}}>{d.name}</div>
+                    <div style={{fontSize:16,fontWeight:800,fontFamily:'monospace',color:d.color}}>{d.pct}%</div>
+                    <div style={{fontSize:8,color:C.t3}}>win race</div>
+                  </div>
+                ))}
+              </div>
+              <button onClick={()=>router.push('/f1')}
+                style={{width:'100%',padding:'8px',borderRadius:8,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.2)',color:'#f5a623',cursor:'pointer',fontSize:12,fontWeight:600}}>
+                🏎️ See all 7 drivers + full breakdown
+              </button>
+            </div>
+          </div>
+
           {/* IPL 2026 MATCHES — auto-updating from API */}
           {iplMatches.length > 0 && (
             <div style={{marginBottom:24}}>
