@@ -144,6 +144,7 @@ export default function HomePage() {
           <button onClick={()=>router.push('/journal')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:500,color:C.t2,border:'none',background:'none',cursor:'pointer'}}>Journal</button>
           <button onClick={()=>router.push('/sources')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:500,color:C.t2,border:'none',background:'none',cursor:'pointer'}}>Sources</button>
           <button onClick={()=>router.push('/profile')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:500,color:C.t2,border:'none',background:'none',cursor:'pointer'}}>Profile</button>
+          <button onClick={()=>router.push('/f1')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:600,color:'#f5a623',border:'1px solid rgba(245,166,35,0.2)',background:'rgba(245,166,35,0.08)',cursor:'pointer'}}>🏎️ F1</button>
         </div>
       </nav>
 
