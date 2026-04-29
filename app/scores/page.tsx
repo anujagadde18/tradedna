@@ -448,7 +448,7 @@ function ScoresPageContent() {
   const [mktAdded, setMktAdded]     = useState<Record<string,boolean>>({});
   const [mktAdding, setMktAdding]   = useState<Record<string,boolean>>({});
 
-  const isPolymarketUrl = event.includes('polymarket.com/event/');
+  const isPolymarketUrl = event.includes('polymarket.com/event/') || event.includes('polymarket.com/sports/');
   useEffect(() => {
     setHasUrl(isPolymarketUrl);
     setOdds(null);
@@ -636,8 +636,8 @@ function ScoresPageContent() {
 
   const eventTitle = (() => {
     if (marketTitle) return marketTitle;
-    if (event.includes('polymarket.com/event/')) {
-      const idx = event.indexOf('polymarket.com/event/');
+    if (event.includes('polymarket.com/event/') || event.includes('polymarket.com/sports/')) {
+      const idx = event.includes('polymarket.com/event/') ? event.indexOf('polymarket.com/event/') : event.indexOf('polymarket.com/sports/');
       const slug = event.slice(idx+21).split('/')[0].split('?')[0];
       const NBA: Record<string,string> = {'cha':'Hornets','bos':'Celtics','chi':'Bulls','was':'Wizards','uta':'Jazz','nop':'Pelicans','min':'Timberwolves','ind':'Pacers','mil':'Bucks','bkn':'Nets','okc':'Thunder','lal':'Lakers','mia':'Heat','tor':'Raptors','sac':'Kings','gsw':'Warriors','hou':'Rockets','phx':'Suns','atl':'Braves','laa':'Angels','ari':'Diamondbacks','nym':'Mets','kc':'Royals','cle':'Guardians','tb':'Lightning','ott':'Senators','edm':'Oilers','cbj':'Blue Jackets','det':'Red Wings','oak':'Athletics','nyy':'Yankees'};
       const m = slug.match(/^(?:nba|nhl|mlb)-([a-z]+)-([a-z]+)-\d{4}/);

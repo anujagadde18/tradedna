@@ -24,6 +24,56 @@ function detectMarketType(query: string): string {
   return 'general';
 }
 
+// Global sports context for all markets
+const SPORTS_CONTEXT: Record<string, string> = {
+  // NBA Teams
+  'timberwolves': 'Minnesota Timberwolves: Anthony Edwards 28.5 PPG, home court advantage, strong defense',
+  'nuggets': 'Denver Nuggets: Nikola Jokic MVP candidate 26pts 12reb 9ast, experienced playoff team',
+  'thunder': 'Oklahoma City Thunder: 1st seed West, Shai Gilgeous-Alexander MVP frontrunner 32PPG',
+  'celtics': 'Boston Celtics: 1st seed East, Jayson Tatum 26PPG, defending champions',
+  'cavaliers': 'Cleveland Cavaliers: 2nd seed East, Donovan Mitchell 28PPG',
+  'knicks': 'New York Knicks: Jalen Brunson 26PPG, Madison Square Garden advantage',
+  'lakers': 'Los Angeles Lakers: LeBron James, Anthony Davis 25pts 12reb',
+  'warriors': 'Golden State Warriors: Stephen Curry still elite shooter',
+  '76ers': 'Philadelphia 76ers: Joel Embiid injury concerns, young supporting cast',
+  'heat': 'Miami Heat: Jimmy Butler clutch performer, strong playoff culture',
+  'spurs': 'San Antonio Spurs: Victor Wembanyama 22pts 10reb, young star',
+  'trail blazers': 'Portland Trail Blazers: Damian Lillard legacy, rebuilding team',
+  'hawks': 'Atlanta Hawks: Trae Young playmaker, inconsistent defense',
+  'pistons': 'Detroit Pistons: Cade Cunningham 24PPG, surprising playoff run',
+  'magic': 'Orlando Magic: Paolo Banchero 23PPG, young athletic team',
+  // F1 Drivers
+  'verstappen': 'Max Verstappen: 4x World Champion, dominant in Red Bull, 400+ career points lead',
+  'hamilton': 'Lewis Hamilton: 7x champion now at Ferrari, strong street circuits',
+  'leclerc': 'Charles Leclerc: Ferrari home races specialist, Monaco specialist',
+  'norris': 'Lando Norris: McLaren lead driver, strong 2025 form',
+  'russell': 'George Russell: Mercedes team leader, consistent points scorer',
+  'piastri': 'Oscar Piastri: McLaren, strong pace in 2025-26 season',
+  // Tennis Players
+  'zverev': 'Alexander Zverev: World No.2, strong clay court record, Madrid Open finalist 2024',
+  'alcaraz': 'Carlos Alcaraz: World No.1, defending Madrid Open champion, home crowd advantage',
+  'sinner': 'Jannik Sinner: World No.1, strong form all surfaces',
+  'djokovic': 'Novak Djokovic: 24 Grand Slams, clay court expert',
+  'medvedev': 'Daniil Medvedev: Hard court specialist, inconsistent on clay',
+  'mensik': 'Jakub Mensik: Rising Czech star, strong serve, upset potential',
+  // Soccer/UCL
+  'psg': 'Paris Saint-Germain: Kylian Mbappe gone, rebuilding around younger talent, Ligue 1 dominance',
+  'bayern': 'Bayern München: Harry Kane leading scorer, Bundesliga champions, experienced UCL team',
+  'real madrid': 'Real Madrid: UCL record 15 titles, Vinicius Jr and Bellingham, Bernabeu fortress',
+  'barcelona': 'Barcelona: Pedri and Yamal, attacking football, financial recovery',
+  'arsenal': 'Arsenal: Premier League title contenders, Saka and Odegaard key players',
+  'manchester city': 'Manchester City: Pep Guardiola system, Haaland goals, UCL experience',
+};
+
+function getGlobalSportsContext(query: string): string {
+  const q = query.toLowerCase();
+  const contexts: string[] = [];
+  for (const [team, ctx] of Object.entries(SPORTS_CONTEXT)) {
+    if (q.includes(team)) contexts.push(ctx);
+  }
+  return contexts.join(' | ');
+}
+
 // NBA 2026 Playoff standings and context
 const NBA_CONTEXT: Record<string, string> = {
   'timberwolves': 'Minnesota Timberwolves: 3rd seed West, Anthony Edwards averaging 28.5 PPG, Karl-Anthony Towns 22pts 9reb, strong defensive team, home court advantage',
@@ -123,6 +173,7 @@ async function analyzeWithGroq(
     const metaContext = metaculusPct ? `Expert forecasters (Metaculus): ${metaculusPct}%` : '';
     const typeContext = getMarketContext(marketType, query);
     const nbaContext = marketType === 'nba' ? getNBAContext(query) : '';
+    const globalSportsContext = getGlobalSportsContext(query);
 
     const prompt = `You are a prediction market analyst. Return ONLY valid JSON. No other text.
 
@@ -134,7 +185,7 @@ ${metaContext}
 Headlines (ONLY use facts from these — do NOT invent any statistics, names, scores, or numbers not present here):
 ${headlineText || 'No headlines available. Use only general knowledge, no invented stats.'}
 
-Analysis guidance: ${typeContext}${nbaContext ? '\nUSE THIS TEAM DATA for bull/bear factors: ' + nbaContext : ''}
+Analysis guidance: ${typeContext}${nbaContext ? '\nUSE THIS TEAM DATA: ' + nbaContext : ''}${globalSportsContext ? '\nTEAM/PLAYER DATA - use for specific bull/bear factors: ' + globalSportsContext : ''}
 
 STRICT RULES:
 1. NEVER invent statistics, player names, scores, or numbers not in the headlines above
