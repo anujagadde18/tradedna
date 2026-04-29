@@ -244,8 +244,8 @@ export default function HomePage() {
               const title = e.title.toLowerCase();
               const badTerms = ['lol:','league of legends','counter-strike','dota','bo3','bo5','lec','lpl','lck','esport','yi zhou','kotov','chess','busan','boxing','ufc','mma','vs pavel','vs yi','tennis','table tennis'];
               if (badTerms.some(t => title.includes(t))) return false;
-              // Only show team sports with recognizable team names
-              const goodSports = ['nba','nhl','mlb','nfl','ipl','cricket','premier league','champions league','la liga','bundesliga','serie a'];
+              // Show all major team sports
+              const goodSports = ['nba','nhl','mlb','nfl','ipl','cricket','premier league','champions league','la liga','bundesliga','serie a','madrid open','wimbledon','french open','atp','wta','formula','f1','grand prix','ufc 3','bellator'];
               const hasGoodSport = goodSports.some(s => e.slug?.includes(s.replace(/ /g,'-')) || title.includes(s));
               if (!hasGoodSport && !e.team1) return false;
               return true;
