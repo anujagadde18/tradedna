@@ -43,12 +43,12 @@ const SPORTS_CONTEXT: Record<string, string> = {
   'pistons': 'Detroit Pistons: Cade Cunningham 24PPG, surprising playoff run',
   'magic': 'Orlando Magic: Paolo Banchero 23PPG, young athletic team',
   // F1 Drivers
-  'verstappen': 'Max Verstappen: Struggling in 2026 with only 12 points after 3 races. Red Bull car uncompetitive with new regulations. Major title threat eliminated early.',
-  'hamilton': 'Lewis Hamilton: 7x champion now at Ferrari, strong street circuits',
-  'leclerc': 'Charles Leclerc: 3rd in F1 2026 championship with 49 points. Ferrari strong but behind Mercedes. Hamilton teammate at Ferrari in 2026.',
-  'norris': 'Lando Norris: 5th in F1 2026 championship. McLaren struggling with new regulations but improving. Miami could suit McLaren pace.',
-  'russell': 'George Russell: 2nd in F1 2026 championship with 63 points. Won Australia Round 1. Trails teammate Antonelli by 9 points. Miami Grand Prix Round 4 starts May 1.',
-  'piastri': 'Oscar Piastri: McLaren, strong pace in 2025-26 season',
+  'verstappen': 'Max Verstappen: ONLY 12 points after 3 races. Red Bull car failed to adapt to 2026 regs. Just 3% to win Miami. Threatened retirement. From dominant champion to 9th in standings — massive shock.',
+  'hamilton': 'Lewis Hamilton: 7x champion now at Ferrari in 2026. 6% to win Miami. Ferrari car improving but behind Mercedes. Hamilton vs Leclerc internal battle.',
+  'leclerc': 'Charles Leclerc: 3rd in championship 49pts. 8% to win Miami. Ferrari fast in qualifying but slower in race pace vs Mercedes. Hamilton now his teammate at Ferrari 2026.',
+  'norris': 'Lando Norris: 2025 World Champion but struggling in 2026. McLaren had DNS/DNF early season. 9% to win Miami. McLaren brought upgrades — could be dangerous.',
+  'russell': 'George Russell: 2nd in championship 63pts. Won Australia. 43% to win Miami GP. Tied with Antonelli in betting odds. Had battery issue in Japan dropped to 4th. Mercedes teammate battle ongoing.',
+  'piastri': 'Oscar Piastri: McLaren. 11% to win Miami. Finished 2nd in Japan after early DNS issues. McLaren upgraded car during 5-week break. Could surprise.',
   // Tennis Players
   'zverev': 'Alexander Zverev: World No.2, strong clay court record, Madrid Open finalist 2024',
   'alcaraz': 'Carlos Alcaraz: World No.1, defending Madrid Open champion, home crowd advantage',
