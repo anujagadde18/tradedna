@@ -304,11 +304,12 @@ export async function POST(request: NextRequest) {
           let homeTeam = c2;
           if ((VENUE_CITIES[c1]||[]).some(city => queryLower.includes(city))) homeTeam = c1;
           else if ((VENUE_CITIES[c2]||[]).some(city => queryLower.includes(city))) homeTeam = c2;
-          // Wankhede chase bonus — 78% chase win rate in IPL 2026
-          const isWankhede = query.toLowerCase().includes('mumbai') || query.toLowerCase().includes('wankhede') || c1==='MI' || c2==='MI';
-          const wankhedeChaseBonus = isWankhede ? 12 : 0;
-          const homeAdv1 = homeTeam===c1 ? (HOME_ADV[c1]||0)*1.5 + wankhedeChaseBonus : 0;
-          const homeAdv2 = homeTeam===c2 ? (HOME_ADV[c2]||0)*1.5 + wankhedeChaseBonus : 0;
+          // Home advantage — capped at 8% when home team is struggling (below 40% win rate)
+          const homeAdv1Raw = homeTeam===c1 ? (HOME_ADV[c1]||0)*1.5 : 0;
+          const homeAdv2Raw = homeTeam===c2 ? (HOME_ADV[c2]||0)*1.5 : 0;
+          // Cap home advantage if home team form is poor
+          const homeAdv1 = homeAdv1Raw > 0 && f1 < 40 ? Math.min(homeAdv1Raw, 8) : homeAdv1Raw;
+          const homeAdv2 = homeAdv2Raw > 0 && f2 < 40 ? Math.min(homeAdv2Raw, 8) : homeAdv2Raw;
           // Get venue chase rate from cricket context
           let venueChaseBonus = 0;
           try {
