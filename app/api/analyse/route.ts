@@ -283,7 +283,7 @@ export async function POST(request: NextRequest) {
           'MI':  {p:11, w:3, l:8, pts:6,  nrr:'-0.498', form:'WLLWLLLLWL'},
           'LSG': {p:11, w:3, l:8, pts:6,  nrr:'-0.512', form:'LLLWWWLLLL'},
           'CSK': {p:11, w:3, l:8, pts:6,  nrr:'-0.398', form:'LLLLLWWWLL'},
-          'KKR': {p:11, w:2, l:8, pts:4,  nrr:'-0.734', form:'LLLLLLLNLW'},
+          'KKR': {p:13, w:4, l:8, pts:8,  nrr:'-0.434', form:'LLLLLLLNLWWW'},
         };
         const HOME_ADV: Record<string,number> = {'SRH':8,'MI':6,'RCB':7,'CSK':8,'KKR':5,'DC':4,'RR':5,'GT':4,'LSG':5,'PBKS':4};
         const VENUE_CITIES: Record<string,string[]> = {

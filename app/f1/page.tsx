@@ -54,7 +54,7 @@ export default function F1Page() {
             Round 4 · Miami International Autodrome
           </div>
           <h1 style={{fontSize:32,fontWeight:800,letterSpacing:'-1px',marginBottom:8}}>2026 Miami Grand Prix</h1>
-          <p style={{fontSize:14,color:C.t2}}>Race Sunday May 3 · 4PM ET · AI win probabilities based on real championship data</p>
+          <p style={{fontSize:14,color:C.t2}}>🏆 RESULT: Antonelli WON! Norris P2, Piastri P3 — AI top 2 picks finished 1-2!</p>
         </div>
 
         <div style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:16,padding:'20px',marginBottom:24}}>

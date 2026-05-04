@@ -21,7 +21,7 @@ const POINTS_TABLE: Record<string, { p:number; w:number; l:number; pts:number; n
   'MI':  { p:11, w:3, l:8, pts:6,  nrr:'-0.498', form:'WLLWLLLLWL' },
   'LSG': { p:11, w:3, l:8, pts:6,  nrr:'-0.512', form:'LLLWWWLLLL' },
   'CSK': { p:11, w:3, l:8, pts:6,  nrr:'-0.398', form:'LLLLLWWWLL' },
-  'KKR': { p:11, w:2, l:8, pts:4,  nrr:'-0.734', form:'LLLLLLLNLW' },
+  'KKR': { p:13, w:4, l:8, pts:8,  nrr:'-0.434', form:'LLLLLLLNLWWW' },
 };
 
 const VENUE_DATA: Record<string, { chase:number; dew:boolean; homeAdv:number; notes:string }> = {
