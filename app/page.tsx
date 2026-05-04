@@ -48,6 +48,33 @@ export default function HomePage() {
   const [events, setEvents]     = useState<TrendingEvent[]>([]);
   const [iplMatches, setIplMatches] = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
+  const [followedTeams, setFollowedTeams] = useState<string[]>([]);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('pp_followed_teams');
+      if (saved) setFollowedTeams(JSON.parse(saved));
+      const seen = localStorage.getItem('pp_onboarded');
+      if (!seen) setShowOnboarding(true);
+    } catch {}
+  }, []);
+
+  const toggleFollow = (team: string) => {
+    try {
+      const current = JSON.parse(localStorage.getItem('pp_followed_teams') || '[]');
+      const updated = current.includes(team)
+        ? current.filter((t: string) => t !== team)
+        : [...current, team];
+      localStorage.setItem('pp_followed_teams', JSON.stringify(updated));
+      setFollowedTeams(updated);
+    } catch {}
+  };
+
+  const dismissOnboarding = () => {
+    try { localStorage.setItem('pp_onboarded', '1'); } catch {}
+    setShowOnboarding(false);
+  };
   const timer = useRef<NodeJS.Timeout|null>(null);
 
   const go = (q: string) => {
