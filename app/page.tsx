@@ -347,6 +347,78 @@ export default function HomePage() {
             );
           })()}
 
+          {/* PERSONALIZED — Your Teams */}
+          {followedTeams.length > 0 && (() => {
+            const myMatches = iplMatches.filter(m => 
+              followedTeams.includes(m.home) || followedTeams.includes(m.away)
+            );
+            if (myMatches.length === 0) return null;
+            return (
+              <div style={{marginBottom:20,background:'linear-gradient(135deg,rgba(124,111,247,0.08),rgba(46,204,138,0.05))',border:'1px solid rgba(124,111,247,0.2)',borderRadius:14,padding:'14px 16px'}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+                  <span style={{fontSize:14}}>🔔</span>
+                  <span style={{fontSize:13,fontWeight:700,color:C.purpleL}}>Your teams today</span>
+                  <span style={{fontSize:10,color:C.t3}}>· {followedTeams.join(', ')}</span>
+                </div>
+                {myMatches.map((m:any) => {
+                  const waMsg = encodeURIComponent(
+                    `🏏 Your team is playing today!
+
+*${m.home} vs ${m.away}*
+📍 ${m.venue} · ${m.time} IST
+
+Get AI prediction 👇
+https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} beat ${m.away} in IPL 2026?`)}
+
+#PlayPicks #IPL2026`
+                  );
+                  return (
+                    <div key={m.no} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:600,color:C.t1}}>{m.home} vs {m.away}</div>
+                        <div style={{fontSize:11,color:C.t3}}>{m.time} IST · {m.venue}</div>
+                      </div>
+                      <div style={{display:'flex',gap:6}}>
+                        <button onClick={()=>go(`Will ${m.home} beat ${m.away} in IPL 2026?`)}
+                          style={{padding:'6px 12px',borderRadius:8,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,cursor:'pointer',fontSize:11,fontWeight:600,whiteSpace:'nowrap' as const}}>
+                          🤖 AI pick
+                        </button>
+                        <button onClick={()=>window.open('https://wa.me/?text='+waMsg,'_blank')}
+                          style={{padding:'6px 12px',borderRadius:8,background:'rgba(37,211,102,0.08)',border:'1px solid rgba(37,211,102,0.2)',color:'#25d366',cursor:'pointer',fontSize:11,whiteSpace:'nowrap' as const}}>
+                          📲 Alert me
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {/* FOLLOW YOUR TEAMS */}
+          <div style={{marginBottom:20,background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'14px 16px'}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.t3,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:12}}>🔔 Follow teams — get alerts before their matches</div>
+            <div style={{display:'flex',flexWrap:'wrap' as const,gap:8}}>
+              {['PBKS','RCB','SRH','RR','GT','DC','MI','CSK','LSG','KKR'].map(team => (
+                <button key={team} onClick={()=>toggleFollow(team)}
+                  style={{
+                    padding:'6px 14px',borderRadius:100,fontSize:12,fontWeight:600,cursor:'pointer',
+                    border:'1px solid '+(followedTeams.includes(team)?'rgba(124,111,247,0.4)':C.border),
+                    background:followedTeams.includes(team)?C.purpleBg:'transparent',
+                    color:followedTeams.includes(team)?C.purpleL:C.t2,
+                    transition:'all 0.15s',
+                  }}>
+                  {followedTeams.includes(team) ? '✓ ' : ''}{team}
+                </button>
+              ))}
+            </div>
+            {followedTeams.length > 0 && (
+              <div style={{marginTop:10,fontSize:11,color:C.t3}}>
+                Following: {followedTeams.join(', ')} · We'll show your matches at the top
+              </div>
+            )}
+          </div>
+
           {/* F1 MIAMI GRAND PRIX */}
           <div style={{marginBottom:24}}>
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
@@ -413,6 +485,10 @@ export default function HomePage() {
                         <button onClick={()=>window.open('https://wa.me/?text='+waMsg,'_blank')}
                           style={{flex:1,padding:'6px',borderRadius:7,background:'rgba(37,211,102,0.08)',border:'1px solid rgba(37,211,102,0.2)',color:'#25d366',cursor:'pointer',fontSize:11}}>
                           Share
+                        </button>
+                        <button onClick={()=>toggleFollow(m.home)}
+                          style={{flex:1,padding:'6px',borderRadius:7,background:followedTeams.includes(m.home)?'rgba(124,111,247,0.2)':'rgba(124,111,247,0.08)',border:'1px solid '+(followedTeams.includes(m.home)?'rgba(124,111,247,0.4)':'rgba(124,111,247,0.2)'),color:C.purpleL,cursor:'pointer',fontSize:11}}>
+                          {followedTeams.includes(m.home) ? '✓ Following' : '+ Follow'}
                         </button>
                       </div>
                     </div>
