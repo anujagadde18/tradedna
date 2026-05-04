@@ -179,18 +179,36 @@ export default function HomePage() {
       <div style={{paddingTop:52}}>
 
         {/* HERO */}
-        <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'56px 24px 36px',textAlign:'center',position:'relative',overflow:'hidden'}}>
-          <div style={{position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',width:800,height:500,background:'radial-gradient(ellipse,rgba(124,111,247,0.07) 0%,transparent 65%)',pointerEvents:'none'}}/>
-          <div style={{display:'inline-flex',alignItems:'center',gap:6,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,padding:'4px 12px',borderRadius:100,fontSize:11,fontWeight:600,letterSpacing:'0.4px',textTransform:'uppercase',marginBottom:20}}>
-            <span style={{width:5,height:5,background:C.red,borderRadius:'50%',display:'block',boxShadow:'0 0 6px #ef4f6a'}}/>
-            Live AI predictions
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'48px 24px 28px',textAlign:'center',position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',width:900,height:600,background:'radial-gradient(ellipse,rgba(124,111,247,0.08) 0%,transparent 65%)',pointerEvents:'none'}}/>
+          
+          {/* Live badge */}
+          <div style={{display:'inline-flex',alignItems:'center',gap:6,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,padding:'5px 14px',borderRadius:100,fontSize:11,fontWeight:600,letterSpacing:'0.4px',textTransform:'uppercase' as const,marginBottom:20}}>
+            <span style={{width:6,height:6,background:C.red,borderRadius:'50%',display:'block',boxShadow:'0 0 8px #ef4f6a'}}/>
+            Live AI predictions · {new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})}
           </div>
-          <h1 style={{fontSize:'clamp(36px,5.5vw,64px)',fontWeight:800,letterSpacing:'-2.5px',lineHeight:1.02,marginBottom:14,maxWidth:640}}>
-            AI odds for anything<br/><span style={{color:C.purpleL}}>happening right now.</span>
+
+          <h1 style={{fontSize:'clamp(40px,6vw,72px)',fontWeight:900,letterSpacing:'-3px',lineHeight:1.0,marginBottom:16,maxWidth:700}}>
+            AI odds for any sport,<br/><span style={{color:C.purpleL}}>any market, right now.</span>
           </h1>
-          <p style={{fontSize:15,color:C.t2,maxWidth:420,lineHeight:1.7,marginBottom:28}}>
-            Ask any question. Get AI probability from real news, social signals and live market data.
+          <p style={{fontSize:15,color:C.t2,maxWidth:480,lineHeight:1.7,marginBottom:24}}>
+            Cricket · NBA · F1 · Polymarket · Politics · Crypto<br/>
+            Real signals. Public accuracy record. No black box.
           </p>
+
+          {/* 3 feature pills */}
+          <div style={{display:'flex',gap:8,flexWrap:'wrap' as const,justifyContent:'center',marginBottom:28}}>
+            {[
+              {icon:'📊',text:'Probability breakdown'},
+              {icon:'🎯',text:'Daily picks'},
+              {icon:'✅',text:'Public accuracy record'},
+              {icon:'🔔',text:'Team alerts'},
+            ].map((f,i)=>(
+              <div key={i} style={{display:'flex',alignItems:'center',gap:5,background:C.bg2,border:'1px solid '+C.border,borderRadius:100,padding:'5px 12px',fontSize:12,color:C.t2}}>
+                <span>{f.icon}</span><span>{f.text}</span>
+              </div>
+            ))}
+          </div>
 
           {/* SEARCH */}
           <div style={{width:'100%',maxWidth:580,position:'relative',marginBottom:8}}>
@@ -422,26 +440,45 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             );
           })()}
 
-          {/* FOLLOW YOUR TEAMS */}
-          <div style={{marginBottom:20,background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'14px 16px'}}>
-            <div style={{fontSize:11,fontWeight:700,color:C.t3,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:12}}>🔔 Follow teams — get alerts before their matches</div>
+          {/* FOLLOW YOUR TEAMS — prominent */}
+          <div style={{marginBottom:20,background:'linear-gradient(135deg,rgba(124,111,247,0.08),rgba(46,204,138,0.05))',border:'1px solid rgba(124,111,247,0.25)',borderRadius:16,padding:'18px 20px'}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+              <div>
+                <div style={{fontSize:15,fontWeight:700,color:C.t1,marginBottom:3}}>🔔 Follow your teams</div>
+                <div style={{fontSize:12,color:C.t3}}>Get AI predictions before every match · personalized for you</div>
+              </div>
+              {followedTeams.length > 0 && (
+                <div style={{fontSize:11,color:C.purpleL,fontWeight:600}}>{followedTeams.length} team{followedTeams.length>1?'s':''} followed</div>
+              )}
+            </div>
             <div style={{display:'flex',flexWrap:'wrap' as const,gap:8}}>
-              {['PBKS','RCB','SRH','RR','GT','DC','MI','CSK','LSG','KKR'].map(team => (
-                <button key={team} onClick={()=>toggleFollow(team)}
+              {[
+                {code:'PBKS',name:'Punjab Kings',color:'#d4163c'},
+                {code:'RCB',name:'Royal Challengers',color:'#e02020'},
+                {code:'SRH',name:'Sunrisers',color:'#f26522'},
+                {code:'RR',name:'Rajasthan',color:'#254aa5'},
+                {code:'GT',name:'Gujarat Titans',color:'#1c1c6e'},
+                {code:'DC',name:'Delhi Capitals',color:'#0078bc'},
+                {code:'MI',name:'Mumbai Indians',color:'#004ba0'},
+                {code:'CSK',name:'Chennai',color:'#f9cd05'},
+                {code:'LSG',name:'Lucknow',color:'#a72b6d'},
+                {code:'KKR',name:'Kolkata',color:'#3a225d'},
+              ].map(team => (
+                <button key={team.code} onClick={()=>toggleFollow(team.code)}
                   style={{
-                    padding:'6px 14px',borderRadius:100,fontSize:12,fontWeight:600,cursor:'pointer',
-                    border:'1px solid '+(followedTeams.includes(team)?'rgba(124,111,247,0.4)':C.border),
-                    background:followedTeams.includes(team)?C.purpleBg:'transparent',
-                    color:followedTeams.includes(team)?C.purpleL:C.t2,
+                    padding:'8px 16px',borderRadius:100,fontSize:13,fontWeight:600,cursor:'pointer',
+                    border:'2px solid '+(followedTeams.includes(team.code)?team.color:C.border),
+                    background:followedTeams.includes(team.code)?team.color+'22':'transparent',
+                    color:followedTeams.includes(team.code)?C.t1:C.t2,
                     transition:'all 0.15s',
                   }}>
-                  {followedTeams.includes(team) ? '✓ ' : ''}{team}
+                  {followedTeams.includes(team.code) ? '✓ ' : ''}{team.code}
                 </button>
               ))}
             </div>
             {followedTeams.length > 0 && (
-              <div style={{marginTop:10,fontSize:11,color:C.t3}}>
-                Following: {followedTeams.join(', ')} · We'll show your matches at the top
+              <div style={{marginTop:12,padding:'10px 14px',background:C.bg2,borderRadius:10,fontSize:12,color:C.t2}}>
+                ✅ Your matches will appear at the top · click "Alert me" on any match to send via WhatsApp
               </div>
             )}
           </div>
