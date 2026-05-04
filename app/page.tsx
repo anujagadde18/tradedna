@@ -453,26 +453,28 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             </div>
             <div style={{display:'flex',flexWrap:'wrap' as const,gap:8}}>
               {[
-                {code:'PBKS',name:'Punjab Kings',color:'#d4163c'},
-                {code:'RCB',name:'Royal Challengers',color:'#e02020'},
-                {code:'SRH',name:'Sunrisers',color:'#f26522'},
-                {code:'RR',name:'Rajasthan',color:'#254aa5'},
-                {code:'GT',name:'Gujarat Titans',color:'#1c1c6e'},
-                {code:'DC',name:'Delhi Capitals',color:'#0078bc'},
-                {code:'MI',name:'Mumbai Indians',color:'#004ba0'},
-                {code:'CSK',name:'Chennai',color:'#f9cd05'},
-                {code:'LSG',name:'Lucknow',color:'#a72b6d'},
-                {code:'KKR',name:'Kolkata',color:'#3a225d'},
+                {code:'PBKS',emoji:'🦁',color:'#d4163c'},
+                {code:'RCB',emoji:'🔴',color:'#e02020'},
+                {code:'SRH',emoji:'🌅',color:'#f26522'},
+                {code:'RR',emoji:'💙',color:'#254aa5'},
+                {code:'GT',emoji:'⚡',color:'#1c9e8a'},
+                {code:'DC',emoji:'🔵',color:'#0078bc'},
+                {code:'MI',emoji:'💙',color:'#004ba0'},
+                {code:'CSK',emoji:'🦁',color:'#f9a825'},
+                {code:'LSG',emoji:'🦟',color:'#a72b6d'},
+                {code:'KKR',emoji:'👑',color:'#7b3fa0'},
               ].map(team => (
                 <button key={team.code} onClick={()=>toggleFollow(team.code)}
                   style={{
-                    padding:'8px 16px',borderRadius:100,fontSize:13,fontWeight:600,cursor:'pointer',
-                    border:'2px solid '+(followedTeams.includes(team.code)?team.color:C.border),
-                    background:followedTeams.includes(team.code)?team.color+'22':'transparent',
+                    padding:'10px 18px',borderRadius:12,fontSize:13,fontWeight:700,cursor:'pointer',
+                    border:'2px solid '+(followedTeams.includes(team.code)?team.color:'rgba(255,255,255,0.08)'),
+                    background:followedTeams.includes(team.code)?team.color+'25':C.bg3,
                     color:followedTeams.includes(team.code)?C.t1:C.t2,
-                    transition:'all 0.15s',
+                    transition:'all 0.2s',
+                    display:'flex',alignItems:'center',gap:6,
                   }}>
-                  {followedTeams.includes(team.code) ? '✓ ' : ''}{team.code}
+                  <span style={{fontSize:16}}>{team.emoji}</span>
+                  <span>{followedTeams.includes(team.code) ? '✓ ' : ''}{team.code}</span>
                 </button>
               ))}
             </div>
@@ -483,34 +485,18 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             )}
           </div>
 
-          {/* F1 MIAMI GRAND PRIX */}
-          <div style={{marginBottom:24}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
-              <span style={{fontSize:16}}>🏎️</span>
-              <span style={{fontSize:13,fontWeight:700,color:C.t1}}>F1 Miami Grand Prix</span>
-              <span style={{fontSize:11,color:C.t3}}>· May 1-3, 2026</span>
-              <button onClick={()=>router.push('/f1')} style={{marginLeft:'auto',fontSize:10,color:C.amber,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:6,padding:'3px 10px',cursor:'pointer'}}>Full analysis →</button>
-            </div>
-            <div style={{background:C.bg2,border:'1px solid rgba(245,166,35,0.15)',borderRadius:12,padding:'14px'}}>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginBottom:12}}>
-                {[
-                  {flag:'🇮🇹',name:'Antonelli',pct:45,color:'#2ecc8a'},
-                  {flag:'🇬🇧',name:'Russell',pct:43,color:'#2ecc8a'},
-                  {flag:'🇦🇺',name:'Piastri',pct:11,color:'#f5a623'},
-                  {flag:'🇳🇱',name:'Verstappen',pct:3,color:'#ef4f6a'},
-                ].map((d,i)=>(
-                  <div key={i} style={{background:C.bg3,borderRadius:8,padding:'10px',textAlign:'center' as const}}>
-                    <div style={{fontSize:16,marginBottom:2}}>{d.flag}</div>
-                    <div style={{fontSize:10,fontWeight:600,color:C.t2,marginBottom:4}}>{d.name}</div>
-                    <div style={{fontSize:16,fontWeight:800,fontFamily:'monospace',color:d.color}}>{d.pct}%</div>
-                    <div style={{fontSize:8,color:C.t3}}>win race</div>
-                  </div>
-                ))}
+          {/* F1 RESULT — Antonelli won Miami */}
+          <div style={{marginBottom:20,background:'linear-gradient(135deg,rgba(0,210,190,0.06),rgba(124,111,247,0.04))',border:'1px solid rgba(0,210,190,0.15)',borderRadius:14,padding:'14px 16px',cursor:'pointer'}} onClick={()=>router.push('/f1')}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <span style={{fontSize:24}}>🏎️</span>
+                <div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>F1 Miami GP — RESULT</div>
+                  <div style={{fontSize:12,color:'#00d2be',fontWeight:600}}>🥇 Antonelli WON · 🥈 Norris P2 · 🥉 Piastri P3</div>
+                  <div style={{fontSize:10,color:C.t3,marginTop:2}}>AI picked top 3 correctly · See full analysis</div>
+                </div>
               </div>
-              <button onClick={()=>router.push('/f1')}
-                style={{width:'100%',padding:'8px',borderRadius:8,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.2)',color:'#f5a623',cursor:'pointer',fontSize:12,fontWeight:600}}>
-                🏎️ See all 7 drivers + full breakdown
-              </button>
+              <span style={{fontSize:11,color:C.purpleL,fontWeight:600}}>F1 analysis →</span>
             </div>
           </div>
 
