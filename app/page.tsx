@@ -441,40 +441,44 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
           })()}
 
           {/* FOLLOW YOUR TEAMS — prominent */}
-          <div style={{marginBottom:20,background:'linear-gradient(135deg,rgba(124,111,247,0.08),rgba(46,204,138,0.05))',border:'1px solid rgba(124,111,247,0.25)',borderRadius:16,padding:'18px 20px'}}>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+          <div style={{marginBottom:20,background:'linear-gradient(135deg,rgba(124,111,247,0.1),rgba(46,204,138,0.06))',border:'1px solid rgba(124,111,247,0.3)',borderRadius:16,padding:'20px 22px'}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
               <div>
-                <div style={{fontSize:15,fontWeight:700,color:C.t1,marginBottom:3}}>🔔 Follow your teams</div>
-                <div style={{fontSize:12,color:C.t3}}>Get AI predictions before every match · personalized for you</div>
+                <div style={{fontSize:17,fontWeight:800,color:C.t1,marginBottom:4,letterSpacing:'-0.3px'}}>🔔 Follow your teams</div>
+                <div style={{fontSize:13,color:C.t2}}>Get AI predictions before every match · personalized for you</div>
               </div>
               {followedTeams.length > 0 && (
-                <div style={{fontSize:11,color:C.purpleL,fontWeight:600}}>{followedTeams.length} team{followedTeams.length>1?'s':''} followed</div>
+                <div style={{fontSize:13,color:C.green,fontWeight:700,padding:'4px 12px',background:'rgba(46,204,138,0.1)',borderRadius:100,border:'1px solid rgba(46,204,138,0.2)'}}>{followedTeams.length} following</div>
               )}
             </div>
             <div style={{display:'flex',flexWrap:'wrap' as const,gap:8}}>
               {[
-                {code:'PBKS',emoji:'🦁',color:'#d4163c'},
-                {code:'RCB',emoji:'🔴',color:'#e02020'},
-                {code:'SRH',emoji:'🌅',color:'#f26522'},
-                {code:'RR',emoji:'💙',color:'#254aa5'},
-                {code:'GT',emoji:'⚡',color:'#1c9e8a'},
-                {code:'DC',emoji:'🔵',color:'#0078bc'},
-                {code:'MI',emoji:'💙',color:'#004ba0'},
-                {code:'CSK',emoji:'🦁',color:'#f9a825'},
-                {code:'LSG',emoji:'🦟',color:'#a72b6d'},
-                {code:'KKR',emoji:'👑',color:'#7b3fa0'},
+                {code:'PBKS',emoji:'🦁',color:'#e63946',name:'Punjab'},
+                {code:'RCB',emoji:'🔥',color:'#e02020',name:'Bengaluru'},
+                {code:'SRH',emoji:'🌅',color:'#f4793b',name:'Hyderabad'},
+                {code:'RR',emoji:'💎',color:'#4361ee',name:'Rajasthan'},
+                {code:'GT',emoji:'⚡',color:'#1c9e8a',name:'Gujarat'},
+                {code:'DC',emoji:'🦅',color:'#0096c7',name:'Delhi'},
+                {code:'MI',emoji:'🌊',color:'#0466c8',name:'Mumbai'},
+                {code:'CSK',emoji:'🦁',color:'#f9a825',name:'Chennai'},
+                {code:'LSG',emoji:'🦟',color:'#b5179e',name:'Lucknow'},
+                {code:'KKR',emoji:'👑',color:'#7b2d8b',name:'Kolkata'},
               ].map(team => (
                 <button key={team.code} onClick={()=>toggleFollow(team.code)}
                   style={{
-                    padding:'10px 18px',borderRadius:12,fontSize:13,fontWeight:700,cursor:'pointer',
+                    padding:'12px 16px',borderRadius:14,fontSize:13,fontWeight:700,cursor:'pointer',
                     border:'2px solid '+(followedTeams.includes(team.code)?team.color:'rgba(255,255,255,0.08)'),
-                    background:followedTeams.includes(team.code)?team.color+'25':C.bg3,
-                    color:followedTeams.includes(team.code)?C.t1:C.t2,
+                    background:followedTeams.includes(team.code)?team.color+'30':C.bg2,
+                    color:followedTeams.includes(team.code)?C.t1:C.t3,
                     transition:'all 0.2s',
-                    display:'flex',alignItems:'center',gap:6,
-                  }}>
-                  <span style={{fontSize:16}}>{team.emoji}</span>
-                  <span>{followedTeams.includes(team.code) ? '✓ ' : ''}{team.code}</span>
+                    display:'flex',flexDirection:'column' as const,alignItems:'center',gap:4,
+                    minWidth:72,
+                  }}
+                  onMouseEnter={ev=>{if(!followedTeams.includes(team.code)){ev.currentTarget.style.borderColor=team.color+'60';ev.currentTarget.style.color=C.t2;}}}
+                  onMouseLeave={ev=>{if(!followedTeams.includes(team.code)){ev.currentTarget.style.borderColor='rgba(255,255,255,0.08)';ev.currentTarget.style.color=C.t3;}}}>
+                  <span style={{fontSize:22}}>{team.emoji}</span>
+                  <span style={{fontSize:11,fontWeight:800,letterSpacing:'0.5px'}}>{team.code}</span>
+                  {followedTeams.includes(team.code) && <span style={{fontSize:9,color:team.color,fontWeight:700}}>FOLLOWING</span>}
                 </button>
               ))}
             </div>
