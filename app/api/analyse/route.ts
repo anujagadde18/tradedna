@@ -182,7 +182,11 @@ Market type: ${marketType}
 ${marketContext}
 ${metaContext}
 
-Headlines (ONLY use facts from these — do NOT invent any statistics, names, scores, or numbers not present here):
+VERIFIED TEAM FACTS (use these first for bull/bear analysis):
+${globalSportsContext || ''}
+${nbaContext || ''}
+
+Headlines (secondary source — use if team facts above don't cover the topic):
 ${headlineText || 'No headlines available. Use only general knowledge, no invented stats.'}
 
 Analysis guidance: ${typeContext}${nbaContext ? '\nUSE THIS TEAM DATA: ' + nbaContext : ''}${globalSportsContext ? '\nTEAM/PLAYER DATA - use for specific bull/bear factors: ' + globalSportsContext : ''}
