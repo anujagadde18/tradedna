@@ -440,6 +440,42 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             );
           })()}
 
+          {/* NBA PLAYOFFS — Round 2 */}
+          <div style={{marginBottom:20}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+              <span style={{fontSize:16}}>🏀</span>
+              <span style={{fontSize:13,fontWeight:700,color:C.t1}}>NBA Playoffs</span>
+              <span style={{fontSize:11,color:C.t3}}>· Round 2</span>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
+              {[
+                {home:'OKC Thunder',away:'LA Lakers',time:'7:30 PM CDT',homePct:89,awayPct:11,game:'Game 1',q:'Will OKC Thunder beat LA Lakers in NBA Playoffs 2026?'},
+                {home:'Detroit Pistons',away:'Cleveland Cavaliers',time:'6:00 PM CDT',homePct:57,awayPct:43,game:'Game 1',q:'Will Detroit Pistons beat Cleveland Cavaliers in NBA Playoffs 2026?'},
+                {home:'NY Knicks',away:'Philadelphia 76ers',time:'Wed 6PM CDT',homePct:70,awayPct:30,game:'Game 2',q:'Will New York Knicks beat Philadelphia 76ers in NBA Playoffs 2026?'},
+                {home:'SA Spurs',away:'Minnesota Timberwolves',time:'Wed 8:30PM CDT',homePct:77,awayPct:23,game:'Game 2',q:'Will San Antonio Spurs beat Minnesota Timberwolves in NBA Playoffs 2026?'},
+              ].map((m,i)=>(
+                <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'12px 14px'}}>
+                  <div style={{fontSize:9,color:C.t3,marginBottom:6,fontWeight:600}}>{m.game} · {m.time}</div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:6,marginBottom:10}}>
+                    <div style={{textAlign:'center' as const}}>
+                      <div style={{fontSize:11,fontWeight:600,color:C.t1,lineHeight:1.3}}>{m.home}</div>
+                      <div style={{fontSize:14,fontWeight:800,color:C.green,fontFamily:'monospace',marginTop:2}}>{m.homePct}%</div>
+                    </div>
+                    <div style={{fontSize:9,fontWeight:700,color:C.t4,padding:'3px 6px',borderRadius:4,background:C.bg3}}>VS</div>
+                    <div style={{textAlign:'center' as const}}>
+                      <div style={{fontSize:11,fontWeight:600,color:C.t1,lineHeight:1.3}}>{m.away}</div>
+                      <div style={{fontSize:14,fontWeight:800,color:C.t3,fontFamily:'monospace',marginTop:2}}>{m.awayPct}%</div>
+                    </div>
+                  </div>
+                  <button onClick={()=>go(m.q)}
+                    style={{width:'100%',padding:'6px',borderRadius:7,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,cursor:'pointer',fontSize:11,fontWeight:600}}>
+                    🤖 AI prediction
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* FOLLOW YOUR TEAMS — prominent */}
           <div style={{marginBottom:20,background:'linear-gradient(135deg,rgba(124,111,247,0.1),rgba(46,204,138,0.06))',border:'1px solid rgba(124,111,247,0.3)',borderRadius:16,padding:'20px 22px'}}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>

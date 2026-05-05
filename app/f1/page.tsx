@@ -11,22 +11,22 @@ const C = {
 };
 
 const DRIVERS = [
-  { pos:1, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:26, podiumPct:78, champPct:36, pts:72, champPos:1, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
+  { pos:1, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:26, podiumPct:78, champPct:36, pts:97, champPos:1, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
     bull:['GP POLE POSITION — starts P1 Sunday','Won last 2 races','Championship leader 72pts','Recovered from sprint qualifying P2'],
     bear:['McLaren upgrades now matching Mercedes','Verstappen starting alongside on front row'] },
   { pos:2, name:'Lando Norris', team:'McLaren', flag:'🇬🇧', winPct:29, podiumPct:75, champPct:14, pts:30, champPos:5, color:'#ff8000', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
     bull:['SPRINT POLE — McLaren upgrades working','Won Miami Sprint race','2025 World Champion knows Miami','McLaren strongest car this weekend'],
     bear:['Starting further back in GP after sprint','Points deficit hard to overcome'] },
-  { pos:3, name:'Oscar Piastri', team:'McLaren', flag:'🇦🇺', winPct:15, podiumPct:62, champPct:9, pts:26, champPos:6, color:'#ff8000', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
+  { pos:3, name:'Oscar Piastri', team:'McLaren', flag:'🇦🇺', winPct:15, podiumPct:62, champPct:9, pts:41, champPos:4, color:'#ff8000', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
     bull:['P3 in sprint qualifying','McLaren fastest car this weekend','Strong race pace','Big upgrade package working'],
     bear:['Needs others to make mistakes','Points gap too large for title'] },
-  { pos:4, name:'Max Verstappen', team:'Red Bull', flag:'🇳🇱', winPct:8, podiumPct:35, champPct:4, pts:12, champPos:9, color:'#1e41ff', verdict:'WATCH', verdictColor:'#f5a623',
+  { pos:4, name:'Max Verstappen', team:'Red Bull', flag:'🇳🇱', winPct:8, podiumPct:35, champPct:4, pts:22, champPos:7, color:'#1e41ff', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['GP QUALIFYING P2 — front row start!','Best result of 2026 season','Red Bull upgrades working in heat'],
     bear:['Still 60pts behind Antonelli','Inconsistent season so far'] },
-  { pos:5, name:'Charles Leclerc', team:'Ferrari', flag:'🇲🇨', winPct:5, podiumPct:30, champPct:4, pts:49, champPos:3, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
+  { pos:5, name:'Charles Leclerc', team:'Ferrari', flag:'🇲🇨', winPct:5, podiumPct:30, champPct:4, pts:49, champPos:5, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['GP Qualifying P3 — strong Ferrari','Ferrari upgrades working','Consistent podium finisher'],
     bear:['Race pace slightly behind McLaren/Mercedes','Hamilton pressure internally'] },
-  { pos:6, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:15, podiumPct:65, champPct:38, pts:63, champPos:2, color:'#00d2be', verdict:'WATCH', verdictColor:'#f5a623',
+  { pos:6, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:15, podiumPct:65, champPct:38, pts:81, champPos:2, color:'#00d2be', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['Championship P2 — still in title fight','Won Australia Round 1','Same car as Antonelli'],
     bear:['P6 in sprint qualifying — off pace','Battery issue recurring concern'] },
   { pos:7, name:'Lewis Hamilton', team:'Ferrari', flag:'🇬🇧', winPct:3, podiumPct:20, champPct:2, pts:40, champPos:4, color:'#dc0000', verdict:'LONGSHOT', verdictColor:'#9996b8',
@@ -160,8 +160,19 @@ export default function F1Page() {
           </div>
         )}
 
+        {/* Monaco GP coming up */}
+        <div style={{background:'linear-gradient(135deg,rgba(245,166,35,0.08),rgba(124,111,247,0.05))',border:'1px solid rgba(245,166,35,0.2)',borderRadius:12,padding:'14px 16px',marginBottom:16,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div>
+            <div style={{fontSize:13,fontWeight:700,color:C.t1,marginBottom:3}}>🏎️ Next: Monaco Grand Prix</div>
+            <div style={{fontSize:11,color:C.t3}}>May 22-25 · Circuit de Monaco · Round 5</div>
+          </div>
+          <div style={{textAlign:'right' as const}}>
+            <div style={{fontSize:11,color:C.amber,fontWeight:600}}>18 days away</div>
+          </div>
+        </div>
+
         <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,marginBottom:16}}>
-          {[{label:'Sprint Qualifying',value:'Fri May 1 · 4:30PM ET'},{label:'Qualifying',value:'Sat May 2 · 4PM ET'},{label:'Race',value:'Sun May 3 · 4PM ET'}].map((item,i) => (
+          {[{label:'Miami GP Result',value:'Antonelli WON 🏆'},{label:'Championship Leader',value:'Antonelli — 97pts'},{label:'Next Race',value:'Monaco May 25'}].map((item,i) => (
             <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:10,padding:'12px',textAlign:'center' as const}}>
               <div style={{fontSize:10,color:C.t3,marginBottom:4}}>{item.label}</div>
               <div style={{fontSize:12,fontWeight:600,color:C.t1}}>{item.value}</div>
