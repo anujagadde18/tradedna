@@ -57,7 +57,7 @@ const PLAYER_SPOTLIGHT: Record<string, { bat:{name:string;runs:number;avg:number
   'RR':  { bat:{name:'Yashasvi Jaiswal',  runs:280,avg:56,sr:171,role:'Opener'},       bowl:{name:'Ravi Bishnoi',      wkts:11,eco:6.7,role:'Leg Spin'} },
   'RCB': { bat:{name:'Virat Kohli',       runs:247,avg:49,sr:162,role:'Batter'},        bowl:{name:'Jacob Duffy',       wkts:10,eco:7.6,role:'Pacer'} },
   'PBKS':{ bat:{name:'Shashank Singh',    runs:210,avg:53,sr:174,role:'Middle order'},  bowl:{name:'Vijaykumar Vyshak', wkts:10,eco:7.1,role:'Pacer'} },
-  'DC':  { bat:{name:'KL Rahul',          runs:230,avg:57,sr:158,role:'Wicketkeeper'},  bowl:{name:'Kuldeep Yadav',     wkts:9, eco:7.0,role:'Wrist Spin'} },
+  'DC':  { bat:{name:'KL Rahul',          runs:433,avg:54,sr:185,role:'Wicketkeeper/Orange Cap'},  bowl:{name:'Kuldeep Yadav',     wkts:9, eco:7.0,role:'Wrist Spin'} },
   'SRH': { bat:{name:'Abhishek Sharma',   runs:425,avg:47,sr:210,role:'Opener'},        bowl:{name:'Eshan Malinga',     wkts:14,eco:7.8,role:'Pacer'} },
   'GT':  { bat:{name:'Shubman Gill',      runs:265,avg:44,sr:148,role:'Opener'},        bowl:{name:'Rashid Khan',       wkts:10,eco:6.3,role:'Leg Spin'} },
   'LSG': { bat:{name:'Nicholas Pooran',   runs:185,avg:46,sr:181,role:'Wicketkeeper'},  bowl:{name:'Mohsin Khan',       wkts:8, eco:7.3,role:'Pacer'} },
