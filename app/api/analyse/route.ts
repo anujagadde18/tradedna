@@ -175,6 +175,8 @@ async function analyzeWithGroq(
     const nbaContext = marketType === 'nba' ? getNBAContext(query) : '';
     const globalSportsContext = getGlobalSportsContext(query);
 
+    const teamFacts = [globalSportsContext, nbaContext].filter(Boolean).join(' | ');
+    
     const prompt = `You are a prediction market analyst. Return ONLY valid JSON. No other text.
 
 Question: "${query}"
@@ -182,27 +184,26 @@ Market type: ${marketType}
 ${marketContext}
 ${metaContext}
 
-VERIFIED TEAM FACTS (use these first for bull/bear analysis):
-${globalSportsContext || ''}
-${nbaContext || ''}
+VERIFIED FACTS about these teams/players (treat these as ground truth):
+${teamFacts || 'No specific team data available.'}
 
-Headlines (secondary source — use if team facts above don't cover the topic):
-${headlineText || 'No headlines available. Use only general knowledge, no invented stats.'}
+Supporting headlines:
+${headlineText || 'No headlines available.'}
 
-Analysis guidance: ${typeContext}${nbaContext ? '\nUSE THIS TEAM DATA: ' + nbaContext : ''}${globalSportsContext ? '\nTEAM/PLAYER DATA - use for specific bull/bear factors: ' + globalSportsContext : ''}
+Analysis guidance: ${typeContext}
 
-STRICT RULES:
-1. NEVER invent statistics, player names, scores, or numbers not in the headlines above
-2. If headlines have no relevant data, say "Limited data available" as a factor
+RULES:
+1. Use VERIFIED FACTS above as primary source for bull/bear factors
+2. Use team names from the question — never substitute wrong team names
 3. probability must be integer 0-100
 4. If Polymarket odds given: stay within +-8% of them
 5. If Metaculus given: weight it at 40%
-6. Each factor max 12 words, must be factual not opinion
-7. NO "based on analysis", "it appears", "I believe", "historically speaking"
-8. If you are not certain of a fact, do not include it
+6. Each factor max 12 words
+7. Never say "Limited data available" if VERIFIED FACTS are provided above
+8. Bull = reasons the YES outcome happens. Bear = reasons it does NOT happen.
 
 Return ONLY this JSON:
-{"probability":65,"bull":["Fact from headlines or known data","Fact 2","Fact 3"],"bear":["Risk factor 1","Risk factor 2","Risk factor 3"],"keyRisk":"Most important unknown, max 12 words","verdict":"3-5 word verdict"}
+{"probability":65,"bull":["Specific fact about team/player","Fact 2","Fact 3"],"bear":["Specific risk factor","Risk 2","Risk 3"],"keyRisk":"Most important unknown, max 12 words","verdict":"3-5 word verdict"}
 
 Verdict options: "Strong YES signal", "Leaning YES", "Too close to call", "Leaning NO", "Strong NO signal"`;
 
