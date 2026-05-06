@@ -14,7 +14,7 @@ const TEAM_MAP: Record<string, string> = {
 const POINTS_TABLE: Record<string, { p:number; w:number; l:number; pts:number; nrr:string; form:string }> = {
   'RR':  { p:10, w:7, l:3, pts:14, nrr:'+0.656', form:'WWWWWLWLL' },
   'RCB': { p:11, w:9, l:2, pts:18, nrr:'+0.812', form:'WWLLWWWWWW' },
-  'PBKS':{ p:9,  w:5, l:3, pts:10, nrr:'+0.612', form:'WLWLWWW' },
+  'PBKS':{ p:13, w:8, l:2, pts:16, nrr:'+0.612', form:'WWWWWWWWLL' },
   'DC':  { p:11, w:5, l:6, pts:10, nrr:'-0.201', form:'LWWLWLWLL' },
   'GT':  { p:11, w:6, l:5, pts:12, nrr:'+0.121', form:'LWLWLWWLW' },
   'SRH': { p:11, w:7, l:4, pts:14, nrr:'+0.445', form:'WLLWLLWLWWW' },
