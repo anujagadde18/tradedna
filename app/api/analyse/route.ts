@@ -103,7 +103,7 @@ function getMarketContext(type: string, query: string): string {
     nba: 'Focus on: team record, playoff seeding, home court advantage, key injuries, head-to-head, historical championship odds for #1 seeds (~30%).',
     f1: 'Focus on: driver championship points, team performance, circuit history, recent race results, reliability.',
     soccer: 'Focus on: league position, recent form, head-to-head, home/away record, key injuries, European competition context.',
-    eurovision: 'Focus on: betting market history (markets predict winner 70%+ accuracy), country performance history, song style trends, televote vs jury split.',
+    eurovision: 'Focus on: betting market history (markets predict winner 70%+ accuracy), country performance history, song style trends, televote vs jury split. Eurovision 2026 context: Finland leading at 35% with upbeat pop entry. Greece surging to 18% with Mediterranean ballad. Denmark 13% with strong jury appeal. Australia 8% with power ballad. France 7% with French-language entry. Eurovision held in Basel Switzerland May 13-17 2026. Grand Final May 17. Finland won 2023 with Lordi-style rock. Markets have predicted winner correctly 8 of last 10 years.',
     tennis: 'Focus on: ATP/WTA ranking, surface win rate (clay/grass/hard), recent tournament results, head-to-head on this surface.',
     economics: 'Focus on: actual market-implied probabilities (CME FedWatch), current inflation rate, employment data, Fed speaker tone, historical rate decision patterns.',
     crypto: 'Focus on: current price vs target, distance to target (%), historical volatility, market cycle phase, macro conditions.',
