@@ -194,13 +194,15 @@ Analysis guidance: ${typeContext}
 
 RULES:
 1. Use VERIFIED FACTS above as primary source for bull/bear factors
-2. Use team names from the question — never substitute wrong team names
+2. Use EXACT team names from the question — never substitute wrong team names
 3. probability must be integer 0-100
 4. If Polymarket odds given: stay within +-8% of them
 5. If Metaculus given: weight it at 40%
 6. Each factor max 12 words
 7. Never say "Limited data available" if VERIFIED FACTS are provided above
 8. Bull = reasons the YES outcome happens. Bear = reasons it does NOT happen.
+9. If VERIFIED FACTS mention a specific win probability percentage, use that as your probability base
+10. For NBA games: if facts say "89% favorites", set probability to 87-91%
 
 Return ONLY this JSON:
 {"probability":65,"bull":["Specific fact about team/player","Fact 2","Fact 3"],"bear":["Specific risk factor","Risk 2","Risk 3"],"keyRisk":"Most important unknown, max 12 words","verdict":"3-5 word verdict"}
