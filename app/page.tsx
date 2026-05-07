@@ -168,7 +168,8 @@ export default function HomePage() {
           </div>
         </div>
         <div style={{display:'flex',gap:4}}>
-          <button onClick={()=>router.push('/picks')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:600,color:C.green,border:'1px solid rgba(46,204,138,0.2)',background:'rgba(46,204,138,0.08)',cursor:'pointer'}}>🎯 Picks</button>
+          <button onClick={()=>router.push('/predict')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:600,color:C.green,border:'1px solid rgba(46,204,138,0.2)',background:'rgba(46,204,138,0.08)',cursor:'pointer'}}>🎯 Pick</button>
+          <button onClick={()=>router.push('/leaderboard')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:600,color:C.amber,border:'1px solid rgba(245,166,35,0.2)',background:'rgba(245,166,35,0.08)',cursor:'pointer'}}>🏆 Board</button>
           <button onClick={()=>router.push('/journal')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:500,color:C.t2,border:'none',background:'none',cursor:'pointer'}}>Journal</button>
           <button onClick={()=>router.push('/sources')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:500,color:C.t2,border:'none',background:'none',cursor:'pointer'}}>Sources</button>
           <button onClick={()=>router.push('/profile')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:500,color:C.t2,border:'none',background:'none',cursor:'pointer'}}>Profile</button>
@@ -471,6 +472,33 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
                     style={{width:'100%',padding:'6px',borderRadius:7,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,cursor:'pointer',fontSize:11,fontWeight:600}}>
                     🤖 AI prediction
                   </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* PREDICTION CHALLENGE WIDGET */}
+          <div style={{marginBottom:20,background:'linear-gradient(135deg,rgba(46,204,138,0.08),rgba(124,111,247,0.06))',border:'1px solid rgba(46,204,138,0.25)',borderRadius:16,padding:'18px 20px',cursor:'pointer'}} onClick={()=>router.push('/predict')}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+              <div>
+                <div style={{fontSize:16,fontWeight:800,color:C.t1,marginBottom:3}}>🎯 Daily Prediction Challenge</div>
+                <div style={{fontSize:12,color:C.t2}}>Pick winners · Earn points · Climb the leaderboard</div>
+              </div>
+              <div style={{textAlign:'right' as const}}>
+                <div style={{fontSize:11,color:C.green,fontWeight:600}}>Make pick →</div>
+              </div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+              {[
+                {sport:'🏏',match:'SRH vs PBKS',time:'Today 7:30 PM IST'},
+                {sport:'🏀',match:'OKC vs Lakers',time:'Tonight 8:30 PM CDT'},
+              ].map((m,i)=>(
+                <div key={i} style={{background:C.bg2,borderRadius:10,padding:'10px 12px',display:'flex',alignItems:'center',gap:8}}>
+                  <span style={{fontSize:16}}>{m.sport}</span>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:600,color:C.t1}}>{m.match}</div>
+                    <div style={{fontSize:10,color:C.t3}}>{m.time}</div>
+                  </div>
                 </div>
               ))}
             </div>
