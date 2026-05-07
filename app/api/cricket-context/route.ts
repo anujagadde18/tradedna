@@ -55,7 +55,7 @@ const HEAD_TO_HEAD: Record<string, string> = {
 
 const PLAYER_SPOTLIGHT: Record<string, { bat:{name:string;runs:number;avg:number;sr:number;role:string}; bowl:{name:string;wkts:number;eco:number;role:string} }> = {
   'RR':  { bat:{name:'Yashasvi Jaiswal',  runs:280,avg:56,sr:171,role:'Opener'},       bowl:{name:'Ravi Bishnoi',      wkts:11,eco:6.7,role:'Leg Spin'} },
-  'RCB': { bat:{name:'Virat Kohli',       runs:247,avg:49,sr:162,role:'Batter'},        bowl:{name:'Jacob Duffy',       wkts:10,eco:7.6,role:'Pacer'} },
+  'RCB': { bat:{name:'Virat Kohli',       runs:310,avg:52,sr:165,role:'Batter'},        bowl:{name:'Bhuvneshwar Kumar', wkts:12,eco:7.2,role:'Pacer'} },
   'PBKS':{ bat:{name:'Priyansh Arya',     runs:380,avg:48,sr:195,role:'Opener'},        bowl:{name:'Arshdeep Singh',    wkts:14,eco:7.8,role:'Pacer'} },
   'DC':  { bat:{name:'KL Rahul',          runs:433,avg:54,sr:185,role:'Wicketkeeper/Orange Cap'},  bowl:{name:'Kuldeep Yadav',     wkts:9, eco:7.0,role:'Wrist Spin'} },
   'SRH': { bat:{name:'Abhishek Sharma',   runs:460,avg:47,sr:215,role:'Opener/Orange Cap'}, bowl:{name:'Pat Cummins',    wkts:12,eco:8.1,role:'Pacer/Captain'} },
