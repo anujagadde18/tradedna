@@ -11,8 +11,9 @@ const C = {
 };
 
 const TODAY_MATCHES = [
-  {id:'srh-pbks-ipl-may6-2026',title:'SRH vs PBKS — IPL 2026',team1:'Sunrisers Hyderabad',team2:'Punjab Kings',time:'May 6 · 7:30 PM IST',venue:'Rajiv Gandhi Stadium, Hyderabad',aiPrediction:'Too close to call',aiConfidence:49,sport:'🏏',date:'2026-05-06'},
-  {id:'okc-lal-nba-may5-2026',title:'OKC Thunder vs LA Lakers — NBA Playoffs',team1:'OKC Thunder',team2:'LA Lakers',time:'May 5 · 8:30 PM CDT',venue:'Paycom Center, Oklahoma City',aiPrediction:'OKC Thunder',aiConfidence:87,sport:'🏀',date:'2026-05-05'},
+  {id:'dc-kkr-ipl-may7-2026',title:'DC vs KKR — IPL 2026',team1:'Delhi Capitals',team2:'Kolkata Knight Riders',time:'May 7 · 7:30 PM IST',venue:'Arun Jaitley Stadium, Delhi',aiPrediction:'Delhi Capitals',aiConfidence:65,sport:'🏏',date:'2026-05-07'},
+  {id:'knicks-76ers-nba-g3-2026',title:'Knicks vs 76ers — NBA Playoffs Game 3',team1:'NY Knicks',team2:'Philadelphia 76ers',time:'Tonight · 6PM CDT',venue:'Wells Fargo Center, Philadelphia',aiPrediction:'NY Knicks',aiConfidence:72,sport:'🏀',date:'2026-05-08'},
+  {id:'spurs-wolves-nba-g3-2026',title:'Spurs vs Timberwolves — NBA Playoffs Game 3',team1:'SA Spurs',team2:'Minnesota Timberwolves',time:'Tonight · 8:30PM CDT',venue:'Target Center, Minneapolis',aiPrediction:'SA Spurs',aiConfidence:65,sport:'🏀',date:'2026-05-08'},
 ];
 
 export default function PredictPage() {

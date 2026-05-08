@@ -450,10 +450,10 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
               {[
-                {home:'OKC Thunder',away:'LA Lakers',time:'7:30 PM CDT',homePct:89,awayPct:11,game:'Game 1',q:'Will OKC Thunder beat LA Lakers in NBA Playoffs 2026?'},
-                {home:'Detroit Pistons',away:'Cleveland Cavaliers',time:'6:00 PM CDT',homePct:57,awayPct:43,game:'Game 1',q:'Will Detroit Pistons beat Cleveland Cavaliers in NBA Playoffs 2026?'},
-                {home:'NY Knicks',away:'Philadelphia 76ers',time:'Wed 6PM CDT',homePct:70,awayPct:30,game:'Game 2',q:'Will New York Knicks beat Philadelphia 76ers in NBA Playoffs 2026?'},
-                {home:'SA Spurs',away:'Minnesota Timberwolves',time:'Wed 8:30PM CDT',homePct:77,awayPct:23,game:'Game 2',q:'Will San Antonio Spurs beat Minnesota Timberwolves in NBA Playoffs 2026?'},
+                {home:'OKC Thunder',away:'LA Lakers',time:'Game 2 · May 7',homePct:91,awayPct:9,game:'Game 2',q:'Will OKC Thunder beat LA Lakers in NBA Playoffs 2026?'},
+                {home:'NY Knicks',away:'Philadelphia 76ers',time:'Game 3 · Tonight',homePct:72,awayPct:28,game:'Game 3',q:'Will New York Knicks beat Philadelphia 76ers in NBA Playoffs 2026?'},
+                {home:'SA Spurs',away:'Minnesota Timberwolves',time:'Game 3 · Tonight',homePct:75,awayPct:25,game:'Game 3',q:'Will San Antonio Spurs beat Minnesota Timberwolves in NBA Playoffs 2026?'},
+                {home:'Detroit Pistons',away:'Cleveland Cavaliers',time:'Game 2 · Tonight',homePct:55,awayPct:45,game:'Game 2',q:'Will Detroit Pistons beat Cleveland Cavaliers in NBA Playoffs 2026?'},
               ].map((m,i)=>(
                 <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'12px 14px'}}>
                   <div style={{fontSize:9,color:C.t3,marginBottom:6,fontWeight:600}}>{m.game} · {m.time}</div>
@@ -490,8 +490,8 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
               {[
-                {sport:'🏏',match:'SRH vs PBKS',time:'Today 7:30 PM IST'},
-                {sport:'🏀',match:'OKC vs Lakers',time:'Tonight 8:30 PM CDT'},
+                {sport:'🏏',match:'DC vs KKR',time:'Today 7:30 PM IST'},
+                {sport:'🏀',match:'Knicks vs 76ers',time:'Tonight 6PM CDT'},
               ].map((m,i)=>(
                 <div key={i} style={{background:C.bg2,borderRadius:10,padding:'10px 12px',display:'flex',alignItems:'center',gap:8}}>
                   <span style={{fontSize:16}}>{m.sport}</span>
