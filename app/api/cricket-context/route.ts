@@ -63,7 +63,7 @@ const PLAYER_SPOTLIGHT: Record<string, { bat:{name:string;runs:number;avg:number
   'LSG': { bat:{name:'Nicholas Pooran',   runs:185,avg:46,sr:181,role:'Wicketkeeper'},  bowl:{name:'Mohsin Khan',       wkts:8, eco:7.3,role:'Pacer'} },
   'CSK': { bat:{name:'Ruturaj Gaikwad',   runs:198,avg:33,sr:158,role:'Captain'},        bowl:{name:'Anshul Kamboj',     wkts:13,eco:7.8,role:'Pacer'} },
   'MI':  { bat:{name:'Tilak Varma',        runs:245,avg:49,sr:168,role:'Middle order'},        bowl:{name:'Jasprit Bumrah',    wkts:10,eco:6.1,role:'Pacer'} },
-  'KKR': { bat:{name:'Ajinkya Rahane',    runs:293,avg:37,sr:150,role:'Opener'},        bowl:{name:'Varun Chakravarthy',wkts:7, eco:7.9,role:'Mystery Spin'} },
+  'KKR': { bat:{name:'Venkatesh Iyer',    runs:280,avg:40,sr:178,role:'Opener'},        bowl:{name:'Varun Chakravarthy',wkts:12,eco:7.2,role:'Mystery Spin'} },
 };
 
 export async function POST(request: NextRequest) {
