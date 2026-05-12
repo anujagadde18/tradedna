@@ -453,7 +453,7 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
                 {home:'OKC Thunder',away:'LA Lakers',time:'OKC leads 3-0',homePct:74,awayPct:26,game:'Game 4 Tonight',q:'Will OKC Thunder beat LA Lakers in NBA Playoffs 2026?'},
                 {home:'Cleveland Cavaliers',away:'Detroit Pistons',time:'CLE leads 2-1',homePct:58,awayPct:42,game:'Game 4 Tonight',q:'Will Cleveland Cavaliers beat Detroit Pistons in NBA Playoffs 2026?'},
                 {home:'SA Spurs',away:'MN Timberwolves',time:'Series tied 2-2',homePct:52,awayPct:48,game:'Game 5 May 13',q:'Will San Antonio Spurs beat Minnesota Timberwolves in NBA Playoffs 2026?'},
-                {home:'Detroit Pistons',away:'Cleveland Cavaliers',time:'Game 2 · Tonight',homePct:55,awayPct:45,game:'Game 2',q:'Will Detroit Pistons beat Cleveland Cavaliers in NBA Playoffs 2026?'},
+                {home:'NY Knicks',away:'TBD',time:'ECF Starting Soon',homePct:60,awayPct:40,game:'ECF',q:'Will New York Knicks win NBA Eastern Conference Finals 2026?'},
               ].map((m,i)=>(
                 <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'12px 14px'}}>
                   <div style={{fontSize:9,color:C.t3,marginBottom:6,fontWeight:600}}>{m.game} · {m.time}</div>
@@ -490,8 +490,8 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
               {[
-                {sport:'🏏',match:'DC vs KKR',time:'Today 7:30 PM IST'},
-                {sport:'🏀',match:'Knicks vs 76ers',time:'Tonight 6PM CDT'},
+                {sport:'🏏',match:'RCB vs KKR',time:'Today 7:30 PM IST'},
+                {sport:'🏀',match:'OKC vs Lakers G4',time:'Sweep Alert!'},
               ].map((m,i)=>(
                 <div key={i} style={{background:C.bg2,borderRadius:10,padding:'10px 12px',display:'flex',alignItems:'center',gap:8}}>
                   <span style={{fontSize:16}}>{m.sport}</span>
@@ -553,18 +553,18 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             )}
           </div>
 
-          {/* F1 RESULT — Antonelli won Miami */}
-          <div style={{marginBottom:20,background:'linear-gradient(135deg,rgba(0,210,190,0.06),rgba(124,111,247,0.04))',border:'1px solid rgba(0,210,190,0.15)',borderRadius:14,padding:'14px 16px',cursor:'pointer'}} onClick={()=>router.push('/f1')}>
+          {/* F1 MONACO */}
+          <div style={{marginBottom:20,background:'linear-gradient(135deg,rgba(245,166,35,0.06),rgba(124,111,247,0.04))',border:'1px solid rgba(245,166,35,0.15)',borderRadius:14,padding:'14px 16px',cursor:'pointer'}} onClick={()=>router.push('/f1')}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <span style={{fontSize:24}}>🏎️</span>
                 <div>
-                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>F1 Miami GP — RESULT</div>
-                  <div style={{fontSize:12,color:'#00d2be',fontWeight:600}}>🥇 Antonelli WON · 🥈 Norris P2 · 🥉 Piastri P3</div>
-                  <div style={{fontSize:10,color:C.t3,marginTop:2}}>AI picked top 3 correctly · See full analysis</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🇲🇨 F1 Monaco GP — May 25</div>
+                  <div style={{fontSize:12,color:C.amber,fontWeight:600}}>Antonelli leads championship · 13 days away</div>
+                  <div style={{fontSize:10,color:C.t3,marginTop:2}}>Miami ✅ AI called top 3 correctly · See all driver odds</div>
                 </div>
               </div>
-              <span style={{fontSize:11,color:C.purpleL,fontWeight:600}}>F1 analysis →</span>
+              <span style={{fontSize:11,color:C.purpleL,fontWeight:600}}>Driver odds →</span>
             </div>
           </div>
 
