@@ -450,9 +450,9 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
               {[
-                {home:'OKC Thunder',away:'LA Lakers',time:'Game 2 · May 7',homePct:91,awayPct:9,game:'Game 2',q:'Will OKC Thunder beat LA Lakers in NBA Playoffs 2026?'},
-                {home:'NY Knicks',away:'Philadelphia 76ers',time:'Game 3 · Tonight',homePct:72,awayPct:28,game:'Game 3',q:'Will New York Knicks beat Philadelphia 76ers in NBA Playoffs 2026?'},
-                {home:'SA Spurs',away:'Minnesota Timberwolves',time:'Game 3 · Tonight',homePct:75,awayPct:25,game:'Game 3',q:'Will San Antonio Spurs beat Minnesota Timberwolves in NBA Playoffs 2026?'},
+                {home:'OKC Thunder',away:'LA Lakers',time:'OKC leads 3-0',homePct:74,awayPct:26,game:'Game 4 Tonight',q:'Will OKC Thunder beat LA Lakers in NBA Playoffs 2026?'},
+                {home:'Cleveland Cavaliers',away:'Detroit Pistons',time:'CLE leads 2-1',homePct:58,awayPct:42,game:'Game 4 Tonight',q:'Will Cleveland Cavaliers beat Detroit Pistons in NBA Playoffs 2026?'},
+                {home:'SA Spurs',away:'MN Timberwolves',time:'Series tied 2-2',homePct:52,awayPct:48,game:'Game 5 May 13',q:'Will San Antonio Spurs beat Minnesota Timberwolves in NBA Playoffs 2026?'},
                 {home:'Detroit Pistons',away:'Cleveland Cavaliers',time:'Game 2 · Tonight',homePct:55,awayPct:45,game:'Game 2',q:'Will Detroit Pistons beat Cleveland Cavaliers in NBA Playoffs 2026?'},
               ].map((m,i)=>(
                 <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'12px 14px'}}>
