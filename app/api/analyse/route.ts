@@ -177,7 +177,7 @@ async function analyzeWithGroq(
 
     // For Eurovision, inject country data directly
     const eurovisionFacts = marketType === 'eurovision' || query.toLowerCase().includes('eurovision') ? 
-      'Eurovision 2026 Basel Switzerland May 17 Grand Final. Current market leaders: Finland 35% (upbeat pop, strong televote appeal), Greece 18% rising fast (Mediterranean ballad, jury favourite), Denmark 13% (Nordic pop, strong jury support), Australia 8% (power ballad), France 7% (French-language entry). Betting markets have predicted Eurovision winner correctly 8 of last 10 years. Finland last won in 2023. Greece has strong recent history. Televote usually favours energetic upbeat songs. Jury favours sophisticated compositions.' : '';
+      'Eurovision 2026 is the 70th edition held in Vienna Austria. FINAL IS MAY 16 2026. Finland 45% clear favorite — Linda Lampenius and Pete Parkkonen performing Liekinheitin (Flamethrower) — live violin performance, fire imagery, theatrical staging. Has led betting markets for months. Denmark 13% — strong jury appeal Nordic pop entry My System by Felicia. Greece 13% — dropped from 18%, Akylas performing Ferto, Mediterranean ballad. CONTROVERSY: Spain, Ireland, Netherlands, Iceland, Slovenia BOYCOTTED over Israel inclusion — fewer countries than usual. Israel 5% — boosted by government ad campaigns in 2024 and 2025. Betting markets predicted winner correctly 8 of last 10 years. Televote favours energetic memorable songs. Jury favours sophisticated vocals.' : '';
     
     const teamFacts = [globalSportsContext, nbaContext, eurovisionFacts].filter(Boolean).join(' | ');
     
