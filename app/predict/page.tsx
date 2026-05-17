@@ -11,7 +11,6 @@ const C = {
 };
 
 const TODAY_MATCHES = [
-  {id:'pbks-rcb-ipl-may17-2026',title:'PBKS vs RCB — IPL 2026',team1:'Punjab Kings',team2:'Royal Challengers Bengaluru',time:'Today · 3:30 PM IST',venue:'HPCA Stadium, Dharamsala',aiPrediction:'RCB',aiConfidence:68,sport:'🏏',date:'2026-05-17'},
   {id:'csk-srh-ipl-may17-2026',title:'CSK vs SRH — IPL 2026',team1:'Chennai Super Kings',team2:'Sunrisers Hyderabad',time:'Today · 7:30 PM IST',venue:'MA Chidambaram Stadium, Chennai',aiPrediction:'SRH',aiConfidence:58,sport:'🏏',date:'2026-05-17'},
 ];
 
