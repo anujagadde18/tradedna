@@ -490,8 +490,8 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
               {[
-                {sport:'🏏',match:'RCB vs KKR',time:'Today 7:30 PM IST'},
-                {sport:'🏀',match:'OKC vs Lakers G4',time:'Sweep Alert!'},
+                {sport:'🏏',match:'PBKS vs RCB',time:'Today 3:30 PM IST'},
+                {sport:'🏏',match:'CSK vs SRH',time:'Today 7:30 PM IST'},
               ].map((m,i)=>(
                 <div key={i} style={{background:C.bg2,borderRadius:10,padding:'10px 12px',display:'flex',alignItems:'center',gap:8}}>
                   <span style={{fontSize:16}}>{m.sport}</span>
