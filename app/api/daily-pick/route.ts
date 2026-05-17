@@ -116,8 +116,12 @@ export async function GET(req: NextRequest) {
       const yesPrice = getYesPrice(event);
       if (!yesPrice) continue;
 
-      // Skip markets too close to 50%
-      if (yesPrice > 42 && yesPrice < 58) continue;
+      // Skip markets too close to 50% — only high conviction
+      if (yesPrice > 38 && yesPrice < 62) continue;
+      
+      // Skip boring long-term politics markets
+      const skipTerms = ['2028','2027','nominee','prime minister','next french','next german'];
+      if (skipTerms.some(t => titleLower.includes(t))) continue;
 
       const category = detectCategory(title);
       if (usedCategories.has(category)) continue;
