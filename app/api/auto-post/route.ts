@@ -11,18 +11,19 @@ async function fetchDailyPicks() {
 }
 
 function formatTweet(pick: any): string {
+  const title = pick.title.slice(0, 60);
   const confidence = pick.confidence;
-  const title = pick.title.slice(0, 55);
-  const reason = pick.reasoning?.[0]?.slice(0, 70) || '';
-  
-  let tweet = `${pick.icon} PlayPicks Daily Pick\n\n`;
-  tweet += `${title}\n`;
-  tweet += `Market: ${confidence}% probability\n\n`;
-  if (reason) tweet += `${reason}\n\n`;
-  tweet += `tradedna.vercel.app/picks\n\n`;
-  tweet += `#PlayPicks #Polymarket #AIpredictions`;
-  
-  return tweet.slice(0, 280);
+  const icon = pick.icon;
+  const direction = confidence >= 58 ? 'YES' : 'NO';
+  const vol = pick.volumeFormatted || '';
+
+  let tweet = `${icon} ${title}\n\n`;
+  tweet += `${direction} — ${confidence}% market odds\n`;
+  tweet += `${vol} traded today\n\n`;
+  tweet += `tradedna.vercel.app/picks\n`;
+  tweet += `#Polymarket #PlayPicks`;
+
+  return tweet.slice(0, 275);
 }
 
 async function postToX(text: string): Promise<{ success: boolean; error?: string }> {
