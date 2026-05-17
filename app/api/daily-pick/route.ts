@@ -95,6 +95,17 @@ export async function GET(req: NextRequest) {
       return parseFloat(b.volume24hr || '0') - parseFloat(a.volume24hr || '0');
     });
 
+    // Sort to prioritize sports then world events over politics
+    events.sort((a: any, b: any) => {
+      const aTitle = (a.title || '').toLowerCase();
+      const bTitle = (b.title || '').toLowerCase();
+      const aIsSports = aTitle.includes(' vs ') || aTitle.includes('nba') || aTitle.includes('ipl') || aTitle.includes('f1') || aTitle.includes('world cup');
+      const bIsSports = bTitle.includes(' vs ') || bTitle.includes('nba') || bTitle.includes('ipl') || bTitle.includes('f1') || bTitle.includes('world cup');
+      if (aIsSports && !bIsSports) return -1;
+      if (!aIsSports && bIsSports) return 1;
+      return parseFloat(b.volume24hr || '0') - parseFloat(a.volume24hr || '0');
+    });
+
     for (const event of events) {
       if (picks.length >= 3) break;
 
