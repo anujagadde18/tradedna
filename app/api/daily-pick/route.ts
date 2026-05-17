@@ -18,6 +18,8 @@ async function fetchTopPolymarketEvents() {
 function getYesPrice(event: any): number | null {
   try {
     const markets = event.markets || [];
+    
+    // Binary market — single yes/no
     if (markets.length === 1) {
       const m = markets[0];
       const prices = m.outcomePrices
@@ -28,7 +30,29 @@ function getYesPrice(event: any): number | null {
         const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
         if (pct >= 5 && pct <= 95) return pct;
       }
+      // Try lastTradePrice
+      if (m.lastTradePrice) {
+        const p = parseFloat(m.lastTradePrice);
+        const pct = p <= 1 ? Math.round(p * 100) : Math.round(p);
+        if (pct >= 5 && pct <= 95) return pct;
+      }
     }
+    
+    // Multi-outcome — find the leading outcome price
+    if (markets.length > 1) {
+      const bestMarket = markets.reduce((best: any, m: any) => {
+        const p = parseFloat(m.lastTradePrice || '0');
+        const bp = parseFloat(best?.lastTradePrice || '0');
+        return p > bp ? m : best;
+      }, markets[0]);
+      
+      if (bestMarket?.lastTradePrice) {
+        const p = parseFloat(bestMarket.lastTradePrice);
+        const pct = p <= 1 ? Math.round(p * 100) : Math.round(p);
+        if (pct >= 5 && pct <= 95) return pct;
+      }
+    }
+    
     return null;
   } catch { return null; }
 }
