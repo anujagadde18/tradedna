@@ -490,8 +490,8 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
               {[
-                {sport:'🏏',match:'PBKS vs RCB',time:'Today 3:30 PM IST'},
-                {sport:'🏏',match:'CSK vs SRH',time:'Today 7:30 PM IST'},
+                {sport:'🏀',match:'OKC vs Pacers',time:'WCF Game 1 Tonight'},
+                {sport:'🏀',match:'Knicks vs Cavs',time:'ECF Game 1 Tonight'},
               ].map((m,i)=>(
                 <div key={i} style={{background:C.bg2,borderRadius:10,padding:'10px 12px',display:'flex',alignItems:'center',gap:8}}>
                   <span style={{fontSize:16}}>{m.sport}</span>
@@ -553,15 +553,15 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             )}
           </div>
 
-          {/* F1 MONACO */}
+          {/* F1 CANADA */}
           <div style={{marginBottom:20,background:'linear-gradient(135deg,rgba(245,166,35,0.06),rgba(124,111,247,0.04))',border:'1px solid rgba(245,166,35,0.15)',borderRadius:14,padding:'14px 16px',cursor:'pointer'}} onClick={()=>router.push('/f1')}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <span style={{fontSize:24}}>🏎️</span>
                 <div>
-                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🇲🇨 F1 Monaco GP — May 25</div>
-                  <div style={{fontSize:12,color:C.amber,fontWeight:600}}>Antonelli leads championship · 13 days away</div>
-                  <div style={{fontSize:10,color:C.t3,marginTop:2}}>Miami ✅ AI called top 3 correctly · See all driver odds</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🍁 F1 Canadian GP — May 22-24</div>
+                  <div style={{fontSize:12,color:C.amber,fontWeight:600}}>Antonelli leads 97pts · THIS WEEKEND</div>
+                  <div style={{fontSize:10,color:C.t3,marginTop:2}}>Sprint weekend · Circuit Gilles Villeneuve · Montreal</div>
                 </div>
               </div>
               <span style={{fontSize:11,color:C.purpleL,fontWeight:600}}>Driver odds →</span>

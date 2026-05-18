@@ -33,9 +33,9 @@ export default function PredictPage() {
 
     // Today's fixed matches + live Polymarket markets
     const fixedMatches = [
-      {id:'csk-srh-ipl-may17-2026',title:'CSK vs SRH — IPL 2026',team1:'Chennai Super Kings',team2:'Sunrisers Hyderabad',time:'Today · 7:30 PM IST',venue:'Chepauk, Chennai',aiPrediction:'SRH',aiConfidence:58,sport:'🏏',date:'2026-05-17',category:'cricket'},
-      {id:'okc-ind-wcf-2026',title:'OKC Thunder vs Indiana Pacers — NBA WCF',team1:'OKC Thunder',team2:'Indiana Pacers',time:'Tonight · NBA Conference Finals',venue:'Paycom Center',aiPrediction:'OKC Thunder',aiConfidence:75,sport:'🏀',date:'2026-05-17',category:'nba'},
-      {id:'knicks-cavs-ecf-2026',title:'NY Knicks vs Cleveland Cavaliers — NBA ECF',team1:'NY Knicks',team2:'Cleveland Cavaliers',time:'Tonight · NBA Conference Finals',venue:'MSG New York',aiPrediction:'NY Knicks',aiConfidence:62,sport:'🏀',date:'2026-05-17',category:'nba'},
+      {id:'okc-ind-wcf-g1-may18-2026',title:'OKC Thunder vs Indiana Pacers — WCF Game 1',team1:'OKC Thunder',team2:'Indiana Pacers',time:'Tonight · 8:30 PM ET',venue:'Paycom Center, Oklahoma City',aiPrediction:'OKC Thunder',aiConfidence:72,sport:'🏀',date:'2026-05-18',category:'nba'},
+      {id:'knicks-cavs-ecf-g1-may18-2026',title:'NY Knicks vs Cleveland Cavaliers — ECF Game 1',team1:'NY Knicks',team2:'Cleveland Cavaliers',time:'Tonight · 6:00 PM ET',venue:'Rocket Mortgage FieldHouse, Cleveland',aiPrediction:'NY Knicks',aiConfidence:58,sport:'🏀',date:'2026-05-18',category:'nba'},
+      {id:'rr-lsg-ipl-may18-2026',title:'RR vs LSG — IPL 2026',team1:'Rajasthan Royals',team2:'Lucknow Super Giants',time:'Today · 7:30 PM IST',venue:'Sawai Mansingh Stadium, Jaipur',aiPrediction:'Rajasthan Royals',aiConfidence:62,sport:'🏏',date:'2026-05-18',category:'cricket'},
     ];
 
     // Also fetch live Polymarket vs matches
