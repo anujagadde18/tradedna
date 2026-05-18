@@ -31,41 +31,48 @@ export default function PredictPage() {
       if (savedPreds) setSubmitted(JSON.parse(savedPreds));
     } catch {}
 
-    // Always show today's real matches + Polymarket picks
-    const todayMatches = [
-      {id:'csk-srh-ipl-may17-2026',title:'CSK vs SRH — IPL 2026',team1:'Chennai Super Kings',team2:'Sunrisers Hyderabad',time:'Today · 7:30 PM IST',venue:'MA Chidambaram Stadium, Chennai',aiPrediction:'SRH',aiConfidence:58,sport:'🏏',date:'2026-05-17',category:'cricket'},
+    // Today's fixed matches + live Polymarket markets
+    const fixedMatches = [
+      {id:'csk-srh-ipl-may17-2026',title:'CSK vs SRH — IPL 2026',team1:'Chennai Super Kings',team2:'Sunrisers Hyderabad',time:'Today · 7:30 PM IST',venue:'Chepauk, Chennai',aiPrediction:'SRH',aiConfidence:58,sport:'🏏',date:'2026-05-17',category:'cricket'},
+      {id:'okc-ind-wcf-2026',title:'OKC Thunder vs Indiana Pacers — NBA WCF',team1:'OKC Thunder',team2:'Indiana Pacers',time:'Tonight · NBA Conference Finals',venue:'Paycom Center',aiPrediction:'OKC Thunder',aiConfidence:75,sport:'🏀',date:'2026-05-17',category:'nba'},
+      {id:'knicks-cavs-ecf-2026',title:'NY Knicks vs Cleveland Cavaliers — NBA ECF',team1:'NY Knicks',team2:'Cleveland Cavaliers',time:'Tonight · NBA Conference Finals',venue:'MSG New York',aiPrediction:'NY Knicks',aiConfidence:62,sport:'🏀',date:'2026-05-17',category:'nba'},
     ];
 
-    fetch('/api/daily-pick')
+    // Also fetch live Polymarket vs matches
+    fetch('https://gamma-api.polymarket.com/events?active=true&closed=false&limit=30&order=volume24hr&ascending=false')
       .then(r => r.json())
-      .then(d => {
-        const picks = d.picks || [];
-        const polyMatches = picks
-          .filter((p: any) => p.title.toLowerCase().includes(' vs '))
-          .map((p: any) => {
-            const parts = p.title.split(/\s+vs\.?\s+/i);
+      .then((events: any[]) => {
+        const noise = ['epstein','hantavirus','alien','kiss','foul','suicide','ufc','prelim'];
+        const polyMatches = events
+          .filter((e: any) => {
+            const t = (e.title||'').toLowerCase();
+            return t.includes(' vs ') && !noise.some(n => t.includes(n));
+          })
+          .slice(0, 4)
+          .map((e: any) => {
+            const parts = e.title.split(/\s+vs\.?\s+/i);
+            const vol = parseFloat(e.volume24hr||'0');
             return {
-              id: p.id,
-              title: p.title,
-              team1: parts[0].trim().slice(0,30),
-              team2: parts[1].trim().slice(0,30),
+              id: e.slug || String(e.id),
+              title: e.title.slice(0,60),
+              team1: parts[0].trim().slice(0,25),
+              team2: (parts[1]||'').trim().slice(0,25),
               time: 'Today · Polymarket',
-              venue: `${p.volumeFormatted} traded today`,
-              aiPrediction: parts[0].trim().slice(0,30),
-              aiConfidence: p.confidence,
-              sport: p.icon,
-              date: p.date,
-              category: p.category,
+              venue: `$${(vol/1000000).toFixed(1)}M traded today`,
+              aiPrediction: parts[0].trim().slice(0,25),
+              aiConfidence: 60,
+              sport: '🏆',
+              date: new Date().toISOString().split('T')[0],
+              category: 'sports',
             };
           });
-        // Combine today's IPL matches with Polymarket picks, no duplicates
-        const allIds = new Set(todayMatches.map((m:any) => m.id));
-        const combined = [...todayMatches, ...polyMatches.filter((m:any) => !allIds.has(m.id))];
+        const allIds = new Set(fixedMatches.map((m:any) => m.id));
+        const combined = [...fixedMatches, ...polyMatches.filter((m:any) => !allIds.has(m.id))];
         setMatches(combined);
         setLoadingMatches(false);
       })
       .catch(() => {
-        setMatches(todayMatches);
+        setMatches(fixedMatches);
         setLoadingMatches(false);
       });
   }, []);
