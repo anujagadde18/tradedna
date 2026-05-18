@@ -197,17 +197,17 @@ export default function HomePage() {
             Real signals. Public accuracy record. No black box.
           </p>
 
-          {/* 3 feature pills */}
+          {/* Feature pills — clickable */}
           <div style={{display:'flex',gap:8,flexWrap:'wrap' as const,justifyContent:'center',marginBottom:28}}>
             {[
-              {icon:'📊',text:'Probability breakdown'},
-              {icon:'🎯',text:'Daily picks'},
-              {icon:'✅',text:'Public accuracy record'},
-              {icon:'🔔',text:'Team alerts'},
+              {icon:'📊',text:'Probability breakdown',link:'/scores?event=Will+RCB+beat+KKR+in+IPL+2026%3F',color:'rgba(124,111,247,0.15)',border:'rgba(124,111,247,0.3)',tc:C.purpleL},
+              {icon:'🎯',text:'Daily picks',link:'/picks',color:'rgba(46,204,138,0.1)',border:'rgba(46,204,138,0.25)',tc:C.green},
+              {icon:'✅',text:'Public accuracy record',link:'/accuracy',color:'rgba(77,157,224,0.1)',border:'rgba(77,157,224,0.25)',tc:'#4d9de0'},
+              {icon:'🔔',text:'Team alerts',link:'/predict',color:'rgba(245,166,35,0.1)',border:'rgba(245,166,35,0.25)',tc:C.amber},
             ].map((f,i)=>(
-              <div key={i} style={{display:'flex',alignItems:'center',gap:5,background:C.bg2,border:'1px solid '+C.border,borderRadius:100,padding:'5px 12px',fontSize:12,color:C.t2}}>
-                <span>{f.icon}</span><span>{f.text}</span>
-              </div>
+              <button key={i} onClick={()=>router.push(f.link)} style={{display:'flex',alignItems:'center',gap:6,background:f.color,border:'1px solid '+f.border,borderRadius:100,padding:'7px 14px',fontSize:12,fontWeight:600,color:f.tc,cursor:'pointer'}}>
+                <span style={{fontSize:14}}>{f.icon}</span><span>{f.text}</span>
+              </button>
             ))}
           </div>
 
