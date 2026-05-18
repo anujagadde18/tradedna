@@ -31,39 +31,43 @@ export default function PredictPage() {
       if (savedPreds) setSubmitted(JSON.parse(savedPreds));
     } catch {}
 
-    // Load today's picks from API - only sports vs matches
+    // Always show today's real matches + Polymarket picks
+    const todayMatches = [
+      {id:'csk-srh-ipl-may17-2026',title:'CSK vs SRH — IPL 2026',team1:'Chennai Super Kings',team2:'Sunrisers Hyderabad',time:'Today · 7:30 PM IST',venue:'MA Chidambaram Stadium, Chennai',aiPrediction:'SRH',aiConfidence:58,sport:'🏏',date:'2026-05-17',category:'cricket'},
+    ];
+
     fetch('/api/daily-pick')
       .then(r => r.json())
       .then(d => {
         const picks = d.picks || [];
-        const formatted = picks
-          .filter((p: any) => {
-            const t = p.title.toLowerCase();
-            // Only show clear vs matches or binary events
-            return t.includes(' vs ') || t.includes('win') || t.includes('beat') ||
-                   t.includes('champion') || t.includes('qualify') || t.includes('reach');
-          })
+        const polyMatches = picks
+          .filter((p: any) => p.title.toLowerCase().includes(' vs '))
           .map((p: any) => {
-            const isVsMatch = p.title.toLowerCase().includes(' vs ');
-            const parts = isVsMatch ? p.title.split(/\s+vs\.?\s+/i) : null;
+            const parts = p.title.split(/\s+vs\.?\s+/i);
             return {
               id: p.id,
               title: p.title,
-              team1: parts ? parts[0].trim().slice(0,30) : 'YES',
-              team2: parts ? parts[1].trim().slice(0,30) : 'NO',
+              team1: parts[0].trim().slice(0,30),
+              team2: parts[1].trim().slice(0,30),
               time: 'Today · Polymarket',
               venue: `${p.volumeFormatted} traded today`,
-              aiPrediction: parts ? parts[0].trim().slice(0,30) : (p.confidence >= 58 ? 'YES' : 'NO'),
+              aiPrediction: parts[0].trim().slice(0,30),
               aiConfidence: p.confidence,
               sport: p.icon,
               date: p.date,
               category: p.category,
             };
           });
-        setMatches(formatted);
+        // Combine today's IPL matches with Polymarket picks, no duplicates
+        const allIds = new Set(todayMatches.map((m:any) => m.id));
+        const combined = [...todayMatches, ...polyMatches.filter((m:any) => !allIds.has(m.id))];
+        setMatches(combined);
         setLoadingMatches(false);
       })
-      .catch(() => setLoadingMatches(false));
+      .catch(() => {
+        setMatches(todayMatches);
+        setLoadingMatches(false);
+      });
   }, []);
 
   const saveUsername = () => {
