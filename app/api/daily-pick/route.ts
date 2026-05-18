@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
       if (yesPrice > 38 && yesPrice < 62) continue;
       
       // Skip boring long-term politics markets
-      const skipTerms = ['2028','2027','nominee','prime minister','next french','next german'];
+      const skipTerms = ['2028','2027','nominee','prime minister','next french','next german','pahlavi','iran','hormuz','epstein','hantavirus','alien','ufO','declassif','starmer','reza'];
       if (skipTerms.some(t => titleLower.includes(t))) continue;
 
       const category = detectCategory(title);
