@@ -44,16 +44,16 @@ export default function F1Page() {
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:52,background:'rgba(6,6,10,0.95)',backdropFilter:'blur(20px)',borderBottom:'1px solid '+C.border,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 24px'}}>
         <button onClick={()=>router.push('/')} style={{background:'none',border:'none',color:C.purpleL,cursor:'pointer',fontSize:13,fontWeight:600}}>← PlayPicks AI</button>
         <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🏎️ F1 Canadian Grand Prix</div>
-        <div style={{fontSize:11,color:C.t3}}>May 3, 2026</div>
+        <div style={{fontSize:11,color:C.t3}}>May 22-24, 2026</div>
       </nav>
 
       <div style={{maxWidth:960,margin:'0 auto',padding:'72px 24px 48px'}}>
         <div style={{textAlign:'center',marginBottom:32}}>
           <div style={{display:'inline-flex',alignItems:'center',gap:6,background:'rgba(239,79,106,0.1)',border:'1px solid rgba(239,79,106,0.2)',color:C.red,padding:'4px 12px',borderRadius:100,fontSize:11,fontWeight:600,letterSpacing:'0.4px',textTransform:'uppercase' as const,marginBottom:16}}>
             <span style={{width:5,height:5,background:C.red,borderRadius:'50%',display:'block',boxShadow:'0 0 6px #ef4f6a'}}/>
-            Round 4 · Miami International Autodrome
+            Round 5 · Circuit Gilles Villeneuve, Montreal
           </div>
-          <h1 style={{fontSize:32,fontWeight:800,letterSpacing:'-1px',marginBottom:8}}>2026 Miami Grand Prix</h1>
+          <h1 style={{fontSize:32,fontWeight:800,letterSpacing:'-1px',marginBottom:8}}>2026 Canadian Grand Prix</h1>
           <p style={{fontSize:14,color:C.t2}}>🏆 RESULT: Antonelli WON! Norris P2, Piastri P3 — AI top 2 picks finished 1-2!</p>
         </div>
 
