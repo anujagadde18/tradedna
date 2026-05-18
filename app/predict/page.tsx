@@ -31,24 +31,35 @@ export default function PredictPage() {
       if (savedPreds) setSubmitted(JSON.parse(savedPreds));
     } catch {}
 
-    // Load today's picks from API
+    // Load today's picks from API - only sports vs matches
     fetch('/api/daily-pick')
       .then(r => r.json())
       .then(d => {
         const picks = d.picks || [];
-        const formatted = picks.map((p: any) => ({
-          id: p.id,
-          title: p.title,
-          team1: p.prediction === 'YES — likely to happen' ? 'YES' : 'NO',
-          team2: p.prediction === 'YES — likely to happen' ? 'NO' : 'YES',
-          time: 'Today · Polymarket',
-          venue: `${p.volumeFormatted} traded today`,
-          aiPrediction: p.prediction.includes('YES') ? 'YES' : 'NO',
-          aiConfidence: p.confidence,
-          sport: p.icon,
-          date: p.date,
-          category: p.category,
-        }));
+        const formatted = picks
+          .filter((p: any) => {
+            const t = p.title.toLowerCase();
+            // Only show clear vs matches or binary events
+            return t.includes(' vs ') || t.includes('win') || t.includes('beat') ||
+                   t.includes('champion') || t.includes('qualify') || t.includes('reach');
+          })
+          .map((p: any) => {
+            const isVsMatch = p.title.toLowerCase().includes(' vs ');
+            const parts = isVsMatch ? p.title.split(/\s+vs\.?\s+/i) : null;
+            return {
+              id: p.id,
+              title: p.title,
+              team1: parts ? parts[0].trim().slice(0,30) : 'YES',
+              team2: parts ? parts[1].trim().slice(0,30) : 'NO',
+              time: 'Today · Polymarket',
+              venue: `${p.volumeFormatted} traded today`,
+              aiPrediction: parts ? parts[0].trim().slice(0,30) : (p.confidence >= 58 ? 'YES' : 'NO'),
+              aiConfidence: p.confidence,
+              sport: p.icon,
+              date: p.date,
+              category: p.category,
+            };
+          });
         setMatches(formatted);
         setLoadingMatches(false);
       })
