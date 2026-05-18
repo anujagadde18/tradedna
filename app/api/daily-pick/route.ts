@@ -120,7 +120,23 @@ export async function GET(req: NextRequest) {
       if (yesPrice > 38 && yesPrice < 62) continue;
       
       // Skip boring long-term politics markets
-      const skipTerms = ['2028','2027','nominee','prime minister','next french','next german','pahlavi','iran','hormuz','epstein','hantavirus','alien','ufO','declassif','starmer','reza'];
+      // Skip boring/niche/long-term markets
+      const skipTerms = [
+        // Long term politics
+        '2028','2027','nominee','prime minister','next french','next german','next uk',
+        // Niche world events
+        'pahlavi','hormuz','epstein','hantavirus','alien','ufo','declassif','starmer','reza',
+        // Niche elections
+        'mayoral','municipal','gubernatorial','seoul','jakarta','lima','bogota','manila',
+        // F1 season championship (too long term)
+        'drivers champion','constructors champion','f1 champion',
+        // Niche sports
+        'esport','counter-strike','dota','valorant','lol:','iem','lcs',
+        // What will X say
+        'what will trump','what will biden','what will',
+        // When will
+        'when will bitcoin','when will ethereum',
+      ];
       if (skipTerms.some(t => titleLower.includes(t))) continue;
 
       const category = detectCategory(title);
