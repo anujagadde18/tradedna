@@ -490,7 +490,7 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
               {[
-                {sport:'🏀',match:'OKC vs Pacers',time:'WCF Game 1 Tonight'},
+                {sport:'🏀',match:'OKC vs Spurs',time:'WCF Game 2 Tonight'},
                 {sport:'🏀',match:'Knicks vs Cavs',time:'ECF Game 1 Tonight'},
               ].map((m,i)=>(
                 <div key={i} style={{background:C.bg2,borderRadius:10,padding:'10px 12px',display:'flex',alignItems:'center',gap:8}}>
