@@ -41,7 +41,7 @@ export default function PredictPage() {
     fetch('https://gamma-api.polymarket.com/events?active=true&closed=false&limit=30&order=volume24hr&ascending=false')
       .then(r => r.json())
       .then((events: any[]) => {
-        const noise = ['epstein','hantavirus','alien','kiss','foul','suicide','ufc','prelim','counter-strike','league of legends','lol:','dota','esport','iem','lcs','bo3','bo5','karmine','valorant','cs2'];
+        const noise = ['epstein','hantavirus','alien','kiss','foul','suicide','ufc','prelim','counter-strike','league of legends','lol:','dota','esport','iem','lcs','bo3','bo5','karmine','valorant','cs2','european open','atp','wta','open:','hambur','roland','masters 1000','bnl','internazionali'];
         const polyMatches = events
           .filter((e: any) => {
             const t = (e.title||'').toLowerCase();
