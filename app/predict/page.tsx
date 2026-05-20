@@ -35,6 +35,7 @@ export default function PredictPage() {
     const fixedMatches = [
       {id:'okc-spurs-wcf-g2-may19-2026',title:'OKC Thunder vs San Antonio Spurs — WCF Game 2',team1:'OKC Thunder',team2:'SA Spurs',time:'Tonight · 8:30 PM ET',venue:'Paycom Center, Oklahoma City',aiPrediction:'OKC Thunder',aiConfidence:65,sport:'🏀',date:'2026-05-19',category:'nba'},
       {id:'knicks-cavs-ecf-g1-may19-2026',title:'NY Knicks vs Cleveland Cavaliers — ECF Game 1',team1:'NY Knicks',team2:'Cleveland Cavaliers',time:'Tonight · 6:00 PM ET',venue:'MSG, New York',aiPrediction:'NY Knicks',aiConfidence:60,sport:'🏀',date:'2026-05-19',category:'nba'},
+      {id:'kkr-mi-ipl-may20-2026',title:'KKR vs MI — IPL 2026',team1:'Kolkata Knight Riders',team2:'Mumbai Indians',time:'Tomorrow · 7:30 PM IST',venue:'Eden Gardens, Kolkata',aiPrediction:'KKR',aiConfidence:65,sport:'🏏',date:'2026-05-20',category:'cricket'},
     ];
 
     // Also fetch live Polymarket vs matches
