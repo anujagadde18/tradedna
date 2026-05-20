@@ -132,14 +132,10 @@ export default function HomePage() {
   }, [category]);
 
   useEffect(() => {
-    // Fetch next 3 days of matches (timezone safe)
+    // Fetch upcoming matches - show next 4 regardless of timezone
     fetch('/api/ipl').then(r=>r.json()).then(d=>{
-      const now = Date.now();
-      const in3days = now + 3 * 86400000;
-      const filtered = (d.matches||[]).filter((m:any) => {
-        const matchDate = new Date(m.date).getTime();
-        return matchDate >= now - 86400000 && matchDate <= in3days;
-      }).slice(0,4);
+      const todayStr = new Date().toISOString().slice(0,10);
+      const filtered = (d.matches||[]).filter((m:any) => m.date >= todayStr).slice(0,4);
       setIplMatches(filtered);
     }).catch(()=>{});
   }, []);
