@@ -33,7 +33,7 @@ const SPORTS_CONTEXT: Record<string, string> = {
   'celtics': 'Boston Celtics: ELIMINATED in Round 1 by 76ers 3-4. Massive upset. Defending champions gone.',
   'canadiens': 'Montreal Canadiens: 2026 NHL Playoffs. Won series 3-2 vs Sabres before Game 6. Lost Game 6 at home 3-8 — massive collapse. Series now tied 3-3. Game 7 in BUFFALO tonight (home ice for Sabres). Canadiens won earlier in Buffalo this series 6-3. Nick Suzuki, Cole Caufield, Juraj Slafkovsky, Ivan Demidov key players.',
   'sabres': 'Buffalo Sabres: 2026 NHL Playoffs. Forced Game 7 with 8-3 comeback win in Game 6. Rasmus Dahlin had 5 points in Game 6. Home ice advantage tonight at KeyBank Center. Tage Thompson driving offense. Sabres are -122 favorites on moneyline. Winner faces Carolina Hurricanes.',
-  'cavaliers': 'Cleveland Cavaliers: 2nd seed East, Donovan Mitchell 28PPG',
+  'cavaliers': 'Cleveland Cavaliers: ECF vs Knicks. LOST Game 1 104-115 OT — blew 22pt lead with 7:52 left. Donovan Mitchell 31PPG but struggled late. Must bounce back in Game 2 at MSG. Trail series 0-1.',
   'knicks': 'New York Knicks: ECF vs Cavaliers. WON Game 1 115-104 OT — historic 22pt comeback! Brunson 38pts. Down 93-71 with 7:52 left, outscored Cavs 44-11. Series lead 1-0. Game 2 tonight at MSG.',
   'lakers': 'Los Angeles Lakers: Beat Rockets 4-2 in Round 1. LeBron James 27PPG in playoffs. Anthony Davis 26pts 13reb. Huge underdogs vs OKC at 11% — need upsets on road to have a chance.',
   'warriors': 'Golden State Warriors: Stephen Curry still elite shooter',
@@ -83,7 +83,7 @@ const NBA_CONTEXT: Record<string, string> = {
   'thunder': 'Oklahoma City Thunder: 1st seed West. Swept Suns 4-0 in Round 1. SGA averaging 34PPG in playoffs. Best record in NBA. Home court advantage. 89% favorites vs Lakers. Wembanyama-level defense.',
   'celtics': 'Boston Celtics: 1st seed East, Jayson Tatum 26PPG, defending champions, deepest roster in NBA',  'canadiens': 'Montreal Canadiens: 2026 NHL Playoffs. Won series 3-2 vs Sabres before Game 6. Lost Game 6 at home 3-8 — massive collapse. Series now tied 3-3. Game 7 in BUFFALO tonight (home ice for Sabres). Canadiens won earlier in Buffalo this series 6-3. Nick Suzuki, Cole Caufield, Juraj Slafkovsky, Ivan Demidov key players.',
   'sabres': 'Buffalo Sabres: 2026 NHL Playoffs. Forced Game 7 with 8-3 comeback win in Game 6. Rasmus Dahlin had 5 points in Game 6. Home ice advantage tonight at KeyBank Center. Tage Thompson driving offense. Sabres are -122 favorites on moneyline. Winner faces Carolina Hurricanes.',
-  'cavaliers': 'Cleveland Cavaliers: 4th seed East. Beat Raptors 4-3 in Round 1. Now Round 2 vs Pistons. Donovan Mitchell 31PPG this playoffs. Evan Mobley dominant defense. Won Game 1 on road. Series lead 1-0.',
+
   'knicks': 'New York Knicks: Jalen Brunson 26PPG, physical defensive team, Madison Square Garden home advantage',
   'warriors': 'Golden State Warriors: Stephen Curry still elite, experienced playoff team, Draymond Green defense',
   'lakers': 'Los Angeles Lakers: LeBron James still performing, Anthony Davis 25pts 12reb, inconsistent season',
