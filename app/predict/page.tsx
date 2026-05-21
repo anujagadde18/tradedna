@@ -32,10 +32,11 @@ export default function PredictPage() {
     } catch {}
 
     // Today's fixed matches + live Polymarket markets
-    // NBA Conference Finals - series updates
+    // NBA + F1 Conference Finals
     const nbaMatches = [
       {id:'knicks-cavs-ecf-g2-2026',title:'NY Knicks vs Cleveland Cavaliers — ECF Game 2',team1:'NY Knicks',team2:'Cleveland Cavaliers',time:'Tonight · 8:00 PM ET',venue:'MSG, New York',aiPrediction:'NY Knicks',aiConfidence:68,sport:'🏀',date:new Date().toISOString().slice(0,10),category:'nba'},
-      {id:'okc-spurs-wcf-g3-2026',title:'OKC Thunder vs SA Spurs — WCF Game 3',team1:'SA Spurs',team2:'OKC Thunder',time:'Tomorrow · 8:30 PM ET',venue:'AT&T Center, San Antonio',aiPrediction:'OKC Thunder',aiConfidence:58,sport:'🏀',date:new Date(Date.now()+86400000).toISOString().slice(0,10),category:'nba'},
+      {id:'okc-spurs-wcf-g3-2026',title:'SA Spurs vs OKC Thunder — WCF Game 3',team1:'SA Spurs',team2:'OKC Thunder',time:'Tomorrow · 8:30 PM ET',venue:'AT&T Center, San Antonio',aiPrediction:'OKC Thunder',aiConfidence:62,sport:'🏀',date:new Date(Date.now()+86400000).toISOString().slice(0,10),category:'nba'},
+      {id:'f1-canada-2026',title:'F1 Canadian GP — Antonelli vs Norris vs Russell',team1:'Antonelli',team2:'Norris/Russell',time:'Race Sun May 24 · 2PM ET',venue:'Circuit Gilles Villeneuve, Montreal',aiPrediction:'Antonelli',aiConfidence:30,sport:'🏎️',date:new Date(Date.now()+86400000).toISOString().slice(0,10),category:'f1'},
     ];
 
     // Pull IPL matches from API + Polymarket sports matches
