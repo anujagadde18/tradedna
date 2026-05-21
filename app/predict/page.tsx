@@ -32,6 +32,12 @@ export default function PredictPage() {
     } catch {}
 
     // Today's fixed matches + live Polymarket markets
+    // NBA Conference Finals - manually added, update as series progresses
+    const nbaMatches = [
+      {id:'okc-spurs-wcf-2026',title:'OKC Thunder vs SA Spurs — WCF',team1:'OKC Thunder',team2:'SA Spurs',time:'Tonight · 8:30 PM ET',venue:'Paycom Center, Oklahoma City',aiPrediction:'OKC Thunder',aiConfidence:65,sport:'🏀',date:new Date().toISOString().slice(0,10),category:'nba'},
+      {id:'knicks-cavs-ecf-2026',title:'NY Knicks vs Cleveland Cavaliers — ECF',team1:'NY Knicks',team2:'Cleveland Cavaliers',time:'Tonight · 6:00 PM ET',venue:'MSG, New York',aiPrediction:'NY Knicks',aiConfidence:62,sport:'🏀',date:new Date().toISOString().slice(0,10),category:'nba'},
+    ];
+
     // Pull IPL matches from API + Polymarket sports matches
     const todayStr = new Date().toISOString().slice(0,10);
     const noise = ['epstein','hantavirus','alien','kiss','foul','suicide','ufc','prelim',
@@ -90,8 +96,9 @@ export default function PredictPage() {
       .catch(() => []);
 
     Promise.all([iplPromise, polyPromise]).then(([ipl, poly]) => {
-      const iplIds = new Set(ipl.map((m:any) => m.id));
-      const combined = [...ipl, ...poly.filter((m:any) => !iplIds.has(m.id))];
+      const allFixed = [...nbaMatches, ...ipl];
+      const fixedIds = new Set(allFixed.map((m:any) => m.id));
+      const combined = [...allFixed, ...poly.filter((m:any) => !fixedIds.has(m.id))];
       setMatches(combined.slice(0,5));
       setLoadingMatches(false);
     });
