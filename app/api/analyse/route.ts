@@ -296,7 +296,7 @@ export async function POST(request: NextRequest) {
           'SRH': {p:11, w:7, l:4, pts:14, nrr:'+0.445', form:'WLLWLLWLWWW'},
           'MI':  {p:11, w:3, l:8, pts:6,  nrr:'-0.498', form:'WLLWLLLLWL'},
           'LSG': {p:13, w:3, l:9, pts:6,  nrr:'-0.612', form:'LLLWWWLLLLL'},
-          'CSK': {p:11, w:3, l:8, pts:6,  nrr:'-0.398', form:'LLLLLWWWLL'},
+          'CSK': {p:13, w:5, l:8, pts:10, nrr:'-0.198', form:'LLLLLWWWLLWL'},
           'KKR': {p:13, w:6, l:6, pts:13,  nrr:'+0.011', form:'LLLLLLLNLWWWW'},
         };
         const HOME_ADV: Record<string,number> = {'SRH':8,'MI':6,'RCB':7,'CSK':8,'KKR':5,'DC':4,'RR':5,'GT':4,'LSG':5,'PBKS':4};
