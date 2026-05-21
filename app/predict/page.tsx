@@ -32,10 +32,10 @@ export default function PredictPage() {
     } catch {}
 
     // Today's fixed matches + live Polymarket markets
-    // NBA Conference Finals - manually added, update as series progresses
+    // NBA Conference Finals - series updates
     const nbaMatches = [
-      {id:'okc-spurs-wcf-2026',title:'OKC Thunder vs SA Spurs — WCF',team1:'OKC Thunder',team2:'SA Spurs',time:'Tonight · 8:30 PM ET',venue:'Paycom Center, Oklahoma City',aiPrediction:'OKC Thunder',aiConfidence:65,sport:'🏀',date:new Date().toISOString().slice(0,10),category:'nba'},
-      {id:'knicks-cavs-ecf-2026',title:'NY Knicks vs Cleveland Cavaliers — ECF',team1:'NY Knicks',team2:'Cleveland Cavaliers',time:'Tonight · 6:00 PM ET',venue:'MSG, New York',aiPrediction:'NY Knicks',aiConfidence:62,sport:'🏀',date:new Date().toISOString().slice(0,10),category:'nba'},
+      {id:'knicks-cavs-ecf-g2-2026',title:'NY Knicks vs Cleveland Cavaliers — ECF Game 2',team1:'NY Knicks',team2:'Cleveland Cavaliers',time:'Tonight · 8:00 PM ET',venue:'MSG, New York',aiPrediction:'NY Knicks',aiConfidence:68,sport:'🏀',date:new Date().toISOString().slice(0,10),category:'nba'},
+      {id:'okc-spurs-wcf-g3-2026',title:'OKC Thunder vs SA Spurs — WCF Game 3',team1:'SA Spurs',team2:'OKC Thunder',time:'Tomorrow · 8:30 PM ET',venue:'AT&T Center, San Antonio',aiPrediction:'OKC Thunder',aiConfidence:58,sport:'🏀',date:new Date(Date.now()+86400000).toISOString().slice(0,10),category:'nba'},
     ];
 
     // Pull IPL matches from API + Polymarket sports matches

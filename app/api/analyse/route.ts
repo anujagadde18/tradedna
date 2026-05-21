@@ -34,12 +34,12 @@ const SPORTS_CONTEXT: Record<string, string> = {
   'canadiens': 'Montreal Canadiens: 2026 NHL Playoffs. Won series 3-2 vs Sabres before Game 6. Lost Game 6 at home 3-8 — massive collapse. Series now tied 3-3. Game 7 in BUFFALO tonight (home ice for Sabres). Canadiens won earlier in Buffalo this series 6-3. Nick Suzuki, Cole Caufield, Juraj Slafkovsky, Ivan Demidov key players.',
   'sabres': 'Buffalo Sabres: 2026 NHL Playoffs. Forced Game 7 with 8-3 comeback win in Game 6. Rasmus Dahlin had 5 points in Game 6. Home ice advantage tonight at KeyBank Center. Tage Thompson driving offense. Sabres are -122 favorites on moneyline. Winner faces Carolina Hurricanes.',
   'cavaliers': 'Cleveland Cavaliers: 2nd seed East, Donovan Mitchell 28PPG',
-  'knicks': 'New York Knicks: Swept 76ers 4-0. Now in ECF vs Cleveland Cavaliers. Jalen Brunson 31PPG in playoffs. MSG fortress. Brunson and Anunoby elite two-way players.',
+  'knicks': 'New York Knicks: ECF vs Cavaliers. WON Game 1 115-104 OT — historic 22pt comeback! Brunson 38pts. Down 93-71 with 7:52 left, outscored Cavs 44-11. Series lead 1-0. Game 2 tonight at MSG.'
   'lakers': 'Los Angeles Lakers: Beat Rockets 4-2 in Round 1. LeBron James 27PPG in playoffs. Anthony Davis 26pts 13reb. Huge underdogs vs OKC at 11% — need upsets on road to have a chance.',
   'warriors': 'Golden State Warriors: Stephen Curry still elite shooter',
   '76ers': 'Philadelphia 76ers: SHOCKED Celtics 4-3 in Round 1. Tyrese Maxey 31PPG series average. Lost Game 1 at MSG 98-137 badly. Trail series 0-1. Joel Embiid health key concern for rest of series.',
   'heat': 'Miami Heat: Jimmy Butler clutch performer, strong playoff culture',
-  'spurs': 'San Antonio Spurs: WCF vs OKC Thunder. WON Game 1 125-118 in double overtime! Wembanyama 41pts 24reb — joined Wilt Chamberlain as only player with 40+pts 20+reb in Conference Finals debut. Dylan Harper 24pts 11reb 7steals. Historic upset of defending champions. Series lead 1-0.',
+  'spurs': 'San Antonio Spurs: WCF vs OKC — series tied 1-1. Won Game 1 in 2OT (Wemby 41pts). Lost Game 2 113-122. Castle 25pts 8ast. Game 3 at home in San Antonio tonight — home crowd advantage.'
   'trail blazers': 'Portland Trail Blazers: Damian Lillard legacy, rebuilding team',
   'hawks': 'Atlanta Hawks: Trae Young playmaker, inconsistent defense',
   'pistons': 'Detroit Pistons: 1st seed East. Beat Magic 4-3 in Round 1. Home court advantage vs Cavaliers Round 2. Cade Cunningham 27PPG. Lost Game 1 at home to CLE. Must bounce back in Game 2.',
