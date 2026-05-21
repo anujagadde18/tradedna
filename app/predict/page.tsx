@@ -32,49 +32,69 @@ export default function PredictPage() {
     } catch {}
 
     // Today's fixed matches + live Polymarket markets
-    const fixedMatches = [
-      {id:'okc-spurs-wcf-g2-may19-2026',title:'OKC Thunder vs San Antonio Spurs — WCF Game 2',team1:'OKC Thunder',team2:'SA Spurs',time:'Tonight · 8:30 PM ET',venue:'Paycom Center, Oklahoma City',aiPrediction:'OKC Thunder',aiConfidence:65,sport:'🏀',date:'2026-05-19',category:'nba'},
-      {id:'knicks-cavs-ecf-g1-may19-2026',title:'NY Knicks vs Cleveland Cavaliers — ECF Game 1',team1:'NY Knicks',team2:'Cleveland Cavaliers',time:'Tonight · 6:00 PM ET',venue:'MSG, New York',aiPrediction:'NY Knicks',aiConfidence:60,sport:'🏀',date:'2026-05-19',category:'nba'},
-      {id:'kkr-mi-ipl-may20-2026',title:'KKR vs MI — IPL 2026',team1:'Kolkata Knight Riders',team2:'Mumbai Indians',time:'Tomorrow · 7:30 PM IST',venue:'Eden Gardens, Kolkata',aiPrediction:'KKR',aiConfidence:65,sport:'🏏',date:'2026-05-20',category:'cricket'},
-    ];
+    // Pull IPL matches from API + Polymarket sports matches
+    const todayStr = new Date().toISOString().slice(0,10);
+    const noise = ['epstein','hantavirus','alien','kiss','foul','suicide','ufc','prelim',
+      'counter-strike','league of legends','lol:','dota','esport','iem','lcs','bo3','bo5',
+      'karmine','valorant','cs2','european open','atp','wta','open:','hambur','roland',
+      'masters 1000','bnl','internazionali'];
 
-    // Also fetch live Polymarket vs matches
-    fetch('https://gamma-api.polymarket.com/events?active=true&closed=false&limit=30&order=volume24hr&ascending=false')
+    // Fetch IPL matches
+    const iplPromise = fetch('/api/ipl')
       .then(r => r.json())
-      .then((events: any[]) => {
-        const noise = ['epstein','hantavirus','alien','kiss','foul','suicide','ufc','prelim','counter-strike','league of legends','lol:','dota','esport','iem','lcs','bo3','bo5','karmine','valorant','cs2','european open','atp','wta','open:','hambur','roland','masters 1000','bnl','internazionali'];
-        const polyMatches = events
-          .filter((e: any) => {
-            const t = (e.title||'').toLowerCase();
-            return t.includes(' vs ') && !noise.some(n => t.includes(n));
-          })
-          .slice(0, 4)
-          .map((e: any) => {
-            const parts = e.title.split(/\s+vs\.?\s+/i);
-            const vol = parseFloat(e.volume24hr||'0');
-            return {
-              id: e.slug || String(e.id),
-              title: e.title.slice(0,60),
-              team1: parts[0].trim().slice(0,25),
-              team2: (parts[1]||'').trim().slice(0,25),
-              time: 'Today · Polymarket',
-              venue: `$${(vol/1000000).toFixed(1)}M traded today`,
-              aiPrediction: parts[0].trim().slice(0,25),
-              aiConfidence: 60,
-              sport: '🏆',
-              date: new Date().toISOString().split('T')[0],
-              category: 'sports',
-            };
-          });
-        const allIds = new Set(fixedMatches.map((m:any) => m.id));
-        const combined = [...fixedMatches, ...polyMatches.filter((m:any) => !allIds.has(m.id))];
-        setMatches(combined);
-        setLoadingMatches(false);
-      })
-      .catch(() => {
-        setMatches(fixedMatches);
-        setLoadingMatches(false);
-      });
+      .then(d => (d.matches||[])
+        .filter((m:any) => m.date >= todayStr)
+        .slice(0,2)
+        .map((m:any) => ({
+          id: `ipl-${m.no}`,
+          title: `${m.home} vs ${m.away} — IPL 2026`,
+          team1: m.home,
+          team2: m.away,
+          time: `${m.date === todayStr ? 'Today' : 'Tomorrow'} · ${m.time} IST`,
+          venue: m.venue,
+          aiPrediction: m.home,
+          aiConfidence: 60,
+          sport: '🏏',
+          date: m.date,
+          category: 'cricket',
+        })))
+      .catch(() => []);
+
+    // Fetch Polymarket sports vs matches
+    const polyPromise = fetch('https://gamma-api.polymarket.com/events?active=true&closed=false&limit=30&order=volume24hr&ascending=false')
+      .then(r => r.json())
+      .then((events: any[]) => events
+        .filter((e:any) => {
+          const t = (e.title||'').toLowerCase();
+          const vol = parseFloat(e.volume24hr||'0');
+          return t.includes(' vs ') && vol > 500000 && !noise.some(n => t.includes(n));
+        })
+        .slice(0,3)
+        .map((e:any) => {
+          const parts = e.title.split(/\s+vs\.?\s+/i);
+          const vol = parseFloat(e.volume24hr||'0');
+          return {
+            id: e.slug || String(e.id),
+            title: e.title.slice(0,55),
+            team1: parts[0].trim().slice(0,28),
+            team2: (parts[1]||'').trim().slice(0,28),
+            time: 'Today · Polymarket',
+            venue: `$${(vol/1000000).toFixed(1)}M traded`,
+            aiPrediction: parts[0].trim().slice(0,28),
+            aiConfidence: 60,
+            sport: '🏆',
+            date: todayStr,
+            category: 'sports',
+          };
+        }))
+      .catch(() => []);
+
+    Promise.all([iplPromise, polyPromise]).then(([ipl, poly]) => {
+      const iplIds = new Set(ipl.map((m:any) => m.id));
+      const combined = [...ipl, ...poly.filter((m:any) => !iplIds.has(m.id))];
+      setMatches(combined.slice(0,5));
+      setLoadingMatches(false);
+    });
   }, []);
 
   const saveUsername = () => {
