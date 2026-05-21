@@ -34,7 +34,7 @@ const SPORTS_CONTEXT: Record<string, string> = {
   'canadiens': 'Montreal Canadiens: 2026 NHL Playoffs. Won series 3-2 vs Sabres before Game 6. Lost Game 6 at home 3-8 — massive collapse. Series now tied 3-3. Game 7 in BUFFALO tonight (home ice for Sabres). Canadiens won earlier in Buffalo this series 6-3. Nick Suzuki, Cole Caufield, Juraj Slafkovsky, Ivan Demidov key players.',
   'sabres': 'Buffalo Sabres: 2026 NHL Playoffs. Forced Game 7 with 8-3 comeback win in Game 6. Rasmus Dahlin had 5 points in Game 6. Home ice advantage tonight at KeyBank Center. Tage Thompson driving offense. Sabres are -122 favorites on moneyline. Winner faces Carolina Hurricanes.',
   'cavaliers': 'Cleveland Cavaliers: 2nd seed East, Donovan Mitchell 28PPG',
-  'knicks': 'New York Knicks: ECF vs Cavaliers. WON Game 1 115-104 OT — historic 22pt comeback! Brunson 38pts. Down 93-71 with 7:52 left, outscored Cavs 44-11. Series lead 1-0. Game 2 tonight at MSG.'
+  'knicks': 'New York Knicks: ECF vs Cavaliers. WON Game 1 115-104 OT — historic 22pt comeback! Brunson 38pts. Down 93-71 with 7:52 left, outscored Cavs 44-11. Series lead 1-0. Game 2 tonight at MSG.',
   'lakers': 'Los Angeles Lakers: Beat Rockets 4-2 in Round 1. LeBron James 27PPG in playoffs. Anthony Davis 26pts 13reb. Huge underdogs vs OKC at 11% — need upsets on road to have a chance.',
   'warriors': 'Golden State Warriors: Stephen Curry still elite shooter',
   '76ers': 'Philadelphia 76ers: SHOCKED Celtics 4-3 in Round 1. Tyrese Maxey 31PPG series average. Lost Game 1 at MSG 98-137 badly. Trail series 0-1. Joel Embiid health key concern for rest of series.',
