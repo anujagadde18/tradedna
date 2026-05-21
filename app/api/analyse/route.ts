@@ -212,7 +212,7 @@ RULES:
 10. For NBA games: if facts say "89% favorites", set probability to 87-91%
 
 Return ONLY this JSON:
-{"probability":65,"bull":["Specific fact about team/player","Fact 2","Fact 3"],"bear":["Specific risk factor","Risk 2","Risk 3"],"keyRisk":"Most important unknown, max 12 words","verdict":"3-5 word verdict"}
+{"probability":58,"bull":["Specific fact supporting YES outcome","Second fact","Third fact"],"bear":["Specific risk or counter-argument","Second risk","Third risk"],"keyRisk":"Most important unknown factor","verdict":"3-5 word verdict"}
 
 Verdict options: "Strong YES signal", "Leaning YES", "Too close to call", "Leaning NO", "Strong NO signal"`;
 
