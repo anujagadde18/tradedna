@@ -11,6 +11,9 @@ const C = {
 };
 
 const DRIVERS = [
+  { pos:1, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:35, podiumPct:85, champPct:40, pts:81, champPos:2, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
+    bull:['Canada GP POLE POSITION — starts P1','Won Sprint Race Saturday','3rd straight Canadian GP pole','Mercedes brought major upgrades to Montreal','0.068s faster than Antonelli in qualifying'],
+    bear:['Antonelli P2 — teammate could overtake at start','McLaren strong race pace this weekend','Must convert pole to win'] },
   { pos:2, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:28, podiumPct:78, champPct:36, pts:97, champPos:1, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
     bull:['GP POLE POSITION — starts P1 Sunday','Won last 2 races','Championship leader 72pts','Recovered from sprint qualifying P2'],
     bear:['McLaren upgrades now matching Mercedes','Verstappen starting alongside on front row'] },
@@ -26,9 +29,7 @@ const DRIVERS = [
   { pos:5, name:'Charles Leclerc', team:'Ferrari', flag:'🇲🇨', winPct:5, podiumPct:30, champPct:4, pts:49, champPos:6, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['GP Qualifying P3 — strong Ferrari','Ferrari upgrades working','Consistent podium finisher'],
     bear:['Race pace slightly behind McLaren/Mercedes','Hamilton pressure internally'] },
-  { pos:1, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:35, podiumPct:85, champPct:40, pts:81, champPos:2, color:'#00d2be', verdict:'WATCH', verdictColor:'#f5a623',
-    bull:['Championship P2 — still in title fight','Won Australia Round 1','Same car as Antonelli'],
-    bear:['P6 in sprint qualifying — off pace','Battery issue recurring concern'] },
+
   { pos:7, name:'Lewis Hamilton', team:'Ferrari', flag:'🇬🇧', winPct:3, podiumPct:20, champPct:2, pts:40, champPos:4, color:'#dc0000', verdict:'LONGSHOT', verdictColor:'#9996b8',
     bull:['7x World Champion — experience','Ferrari P3 on grid','Miami street circuit experience'],
     bear:['P7 in sprint qualifying','Ruined promising lap at Turn 17','Leclerc faster this weekend'] },
