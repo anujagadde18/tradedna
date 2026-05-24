@@ -573,7 +573,7 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
               <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
                 <span style={{fontSize:16}}>🏏</span>
                 <span style={{fontSize:13,fontWeight:700,color:C.t1}}>IPL 2026</span>
-                <span style={{fontSize:11,color:C.t3}}>· today & tomorrow</span>
+                <span style={{fontSize:11,color:C.t3}}>· PLAYOFFS May 26-31</span>
                 <button onClick={()=>router.push('/ipl')} style={{marginLeft:'auto',fontSize:10,color:C.purpleL,background:C.purpleBg,border:'1px solid '+C.purpleBorder,borderRadius:6,padding:'3px 10px',cursor:'pointer'}}>Full schedule →</button>
               </div>
               <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>

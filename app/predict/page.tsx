@@ -32,11 +32,12 @@ export default function PredictPage() {
     } catch {}
 
     // Today's fixed matches + live Polymarket markets
-    // NBA + F1 Conference Finals
+    // IPL Playoffs + NBA Conference Finals
     const nbaMatches = [
-      {id:'knicks-cavs-ecf-g2-2026',title:'NY Knicks vs Cleveland Cavaliers — ECF Game 2',team1:'NY Knicks',team2:'Cleveland Cavaliers',time:'Tonight · 8:00 PM ET',venue:'MSG, New York',aiPrediction:'NY Knicks',aiConfidence:68,sport:'🏀',date:new Date().toISOString().slice(0,10),category:'nba'},
-      {id:'okc-spurs-wcf-g3-2026',title:'SA Spurs vs OKC Thunder — WCF Game 3',team1:'SA Spurs',team2:'OKC Thunder',time:'Tomorrow · 8:30 PM ET',venue:'AT&T Center, San Antonio',aiPrediction:'OKC Thunder',aiConfidence:62,sport:'🏀',date:new Date(Date.now()+86400000).toISOString().slice(0,10),category:'nba'},
-      {id:'f1-canada-2026',title:'F1 Canadian GP — Antonelli vs Norris vs Russell',team1:'Antonelli',team2:'Norris/Russell',time:'Race Sun May 24 · 2PM ET',venue:'Circuit Gilles Villeneuve, Montreal',aiPrediction:'Antonelli',aiConfidence:30,sport:'🏎️',date:new Date(Date.now()+86400000).toISOString().slice(0,10),category:'f1'},
+      {id:'rcb-gt-q1-may26-2026',title:'RCB vs GT — IPL Qualifier 1',team1:'Royal Challengers Bengaluru',team2:'Gujarat Titans',time:'May 26 · 7:30 PM IST',venue:'HPCA Stadium, Dharamsala',aiPrediction:'Royal Challengers Bengaluru',aiConfidence:55,sport:'🏏',date:'2026-05-26',category:'cricket'},
+      {id:'srh-rr-elim-may27-2026',title:'SRH vs RR — IPL Eliminator',team1:'Sunrisers Hyderabad',team2:'Rajasthan Royals',time:'May 27 · 7:30 PM IST',venue:'New International Cricket Stadium, Mullanpur',aiPrediction:'Sunrisers Hyderabad',aiConfidence:55,sport:'🏏',date:'2026-05-27',category:'cricket'},
+      {id:'knicks-cavs-ecf-2026',title:'NY Knicks vs Cleveland Cavaliers — ECF',team1:'NY Knicks',team2:'Cleveland Cavaliers',time:'Ongoing · NBA ECF',venue:'MSG, New York',aiPrediction:'NY Knicks',aiConfidence:62,sport:'🏀',date:new Date().toISOString().slice(0,10),category:'nba'},
+      {id:'okc-spurs-wcf-2026',title:'OKC Thunder vs SA Spurs — WCF',team1:'OKC Thunder',team2:'SA Spurs',time:'Ongoing · NBA WCF',venue:'Paycom Center',aiPrediction:'OKC Thunder',aiConfidence:62,sport:'🏀',date:new Date().toISOString().slice(0,10),category:'nba'},
     ];
 
     // Pull IPL matches from API + Polymarket sports matches
