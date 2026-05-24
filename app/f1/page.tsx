@@ -26,7 +26,7 @@ const DRIVERS = [
   { pos:5, name:'Charles Leclerc', team:'Ferrari', flag:'🇲🇨', winPct:5, podiumPct:30, champPct:4, pts:49, champPos:6, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['GP Qualifying P3 — strong Ferrari','Ferrari upgrades working','Consistent podium finisher'],
     bear:['Race pace slightly behind McLaren/Mercedes','Hamilton pressure internally'] },
-  { pos:1, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:35, podiumPct:82, champPct:40, pts:81, champPos:2, color:'#00d2be', verdict:'WATCH', verdictColor:'#f5a623',
+  { pos:1, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:35, podiumPct:85, champPct:40, pts:81, champPos:2, color:'#00d2be', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['Championship P2 — still in title fight','Won Australia Round 1','Same car as Antonelli'],
     bear:['P6 in sprint qualifying — off pace','Battery issue recurring concern'] },
   { pos:7, name:'Lewis Hamilton', team:'Ferrari', flag:'🇬🇧', winPct:3, podiumPct:20, champPct:2, pts:40, champPos:4, color:'#dc0000', verdict:'LONGSHOT', verdictColor:'#9996b8',
