@@ -449,10 +449,10 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
               {[
-                {home:'OKC Thunder',away:'LA Lakers',time:'OKC leads 3-0',homePct:74,awayPct:26,game:'Game 4 Tonight',q:'Will OKC Thunder beat LA Lakers in NBA Playoffs 2026?'},
-                {home:'Cleveland Cavaliers',away:'Detroit Pistons',time:'CLE leads 2-1',homePct:58,awayPct:42,game:'Game 4 Tonight',q:'Will Cleveland Cavaliers beat Detroit Pistons in NBA Playoffs 2026?'},
-                {home:'SA Spurs',away:'MN Timberwolves',time:'Series tied 2-2',homePct:52,awayPct:48,game:'Game 5 May 13',q:'Will San Antonio Spurs beat Minnesota Timberwolves in NBA Playoffs 2026?'},
-                {home:'NY Knicks',away:'TBD',time:'ECF Starting Soon',homePct:60,awayPct:40,game:'ECF',q:'Will New York Knicks win NBA Eastern Conference Finals 2026?'},
+                {home:'OKC Thunder',away:'SA Spurs',time:'WCF · Series tied 1-1',homePct:56,awayPct:44,game:'WCF G3',q:'Will OKC Thunder beat San Antonio Spurs in NBA Conference Finals 2026?'},
+                {home:'NY Knicks',away:'Cleveland Cavaliers',time:'ECF · Knicks lead 1-0',homePct:62,awayPct:38,game:'ECF G2',q:'Will New York Knicks beat Cleveland Cavaliers in NBA Conference Finals 2026?'},
+                {home:'RCB',away:'Gujarat Titans',time:'IPL Q1 · May 26',homePct:55,awayPct:45,game:'Qualifier 1',q:'Will Royal Challengers Bengaluru beat Gujarat Titans in IPL 2026 Qualifier 1?'},
+                {home:'SRH',away:'Rajasthan Royals',time:'IPL Eliminator · May 27',homePct:52,awayPct:48,game:'Eliminator',q:'Will Sunrisers Hyderabad beat Rajasthan Royals in IPL 2026 Eliminator?'},
               ].map((m,i)=>(
                 <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'12px 14px'}}>
                   <div style={{fontSize:9,color:C.t3,marginBottom:6,fontWeight:600}}>{m.game} · {m.time}</div>
