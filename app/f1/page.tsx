@@ -11,10 +11,10 @@ const C = {
 };
 
 const DRIVERS = [
-  { pos:1, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:26, podiumPct:78, champPct:36, pts:97, champPos:1, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
+  { pos:2, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:28, podiumPct:78, champPct:36, pts:97, champPos:1, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
     bull:['GP POLE POSITION — starts P1 Sunday','Won last 2 races','Championship leader 72pts','Recovered from sprint qualifying P2'],
     bear:['McLaren upgrades now matching Mercedes','Verstappen starting alongside on front row'] },
-  { pos:2, name:'Lando Norris', team:'McLaren', flag:'🇬🇧', winPct:29, podiumPct:75, champPct:14, pts:67, champPos:4, color:'#ff8000', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
+  { pos:3, name:'Lando Norris', team:'McLaren', flag:'🇬🇧', winPct:18, podiumPct:75, champPct:14, pts:67, champPos:4, color:'#ff8000', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
     bull:['SPRINT POLE — McLaren upgrades working','Won Miami Sprint race','2025 World Champion knows Miami','McLaren strongest car this weekend'],
     bear:['Starting further back in GP after sprint','Points deficit hard to overcome'] },
   { pos:3, name:'Oscar Piastri', team:'McLaren', flag:'🇦🇺', winPct:15, podiumPct:62, champPct:9, pts:56, champPos:5, color:'#ff8000', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
@@ -26,7 +26,7 @@ const DRIVERS = [
   { pos:5, name:'Charles Leclerc', team:'Ferrari', flag:'🇲🇨', winPct:5, podiumPct:30, champPct:4, pts:49, champPos:6, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['GP Qualifying P3 — strong Ferrari','Ferrari upgrades working','Consistent podium finisher'],
     bear:['Race pace slightly behind McLaren/Mercedes','Hamilton pressure internally'] },
-  { pos:6, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:15, podiumPct:65, champPct:38, pts:81, champPos:2, color:'#00d2be', verdict:'WATCH', verdictColor:'#f5a623',
+  { pos:1, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:35, podiumPct:82, champPct:40, pts:81, champPos:2, color:'#00d2be', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['Championship P2 — still in title fight','Won Australia Round 1','Same car as Antonelli'],
     bear:['P6 in sprint qualifying — off pace','Battery issue recurring concern'] },
   { pos:7, name:'Lewis Hamilton', team:'Ferrari', flag:'🇬🇧', winPct:3, podiumPct:20, champPct:2, pts:40, champPos:4, color:'#dc0000', verdict:'LONGSHOT', verdictColor:'#9996b8',
@@ -54,7 +54,7 @@ export default function F1Page() {
             Round 5 · Circuit Gilles Villeneuve, Montreal
           </div>
           <h1 style={{fontSize:32,fontWeight:800,letterSpacing:'-1px',marginBottom:8}}>2026 Canadian Grand Prix</h1>
-          <p style={{fontSize:14,color:C.t2}}>🍁 NEXT: Canadian GP · May 22-24 · Sprint Weekend · Antonelli leads 97pts</p>
+          <p style={{fontSize:14,color:C.t2}}>🍁 CANADIAN GP RACE DAY · Russell POLE · Race starts 2PM ET today!</p>
         </div>
 
         <div style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:16,padding:'20px',marginBottom:24}}>
