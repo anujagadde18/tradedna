@@ -11,10 +11,10 @@ const C = {
 };
 
 const DRIVERS = [
-  { pos:1, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:35, podiumPct:85, champPct:40, pts:81, champPos:2, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
+  { pos:1, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:35, podiumPct:85, champPct:40, pts:81, champPos:3, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
     bull:['Canada GP POLE POSITION — starts P1','Won Sprint Race Saturday','3rd straight Canadian GP pole','Mercedes brought major upgrades to Montreal','0.068s faster than Antonelli in qualifying'],
     bear:['Antonelli P2 — teammate could overtake at start','McLaren strong race pace this weekend','Must convert pole to win'] },
-  { pos:2, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:28, podiumPct:78, champPct:36, pts:97, champPos:1, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
+  { pos:2, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:28, podiumPct:78, champPct:36, pts:122, champPos:1, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
     bull:['GP POLE POSITION — starts P1 Sunday','Won last 2 races','Championship leader 72pts','Recovered from sprint qualifying P2'],
     bear:['McLaren upgrades now matching Mercedes','Verstappen starting alongside on front row'] },
   { pos:3, name:'Lando Norris', team:'McLaren', flag:'🇬🇧', winPct:18, podiumPct:75, champPct:14, pts:67, champPos:4, color:'#ff8000', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
@@ -55,7 +55,7 @@ export default function F1Page() {
             Round 5 · Circuit Gilles Villeneuve, Montreal
           </div>
           <h1 style={{fontSize:32,fontWeight:800,letterSpacing:'-1px',marginBottom:8}}>2026 Canadian Grand Prix</h1>
-          <p style={{fontSize:14,color:C.t2}}>🍁 CANADIAN GP RACE DAY · Russell POLE · Race starts 2PM ET today!</p>
+          <p style={{fontSize:14,color:C.t2}}>🏆 CANADA RESULT: Antonelli WON (4th win!) · Russell retired · Hamilton P2 · Verstappen P3</p>
         </div>
 
         <div style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:16,padding:'20px',marginBottom:24}}>
@@ -176,7 +176,7 @@ export default function F1Page() {
         </div>
 
         <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,marginBottom:16}}>
-          {[{label:'Canada GP Sprint',value:'Sat May 23 · 4PM ET'},{label:'Canada Qualifying',value:'Sat May 23 · 7PM ET'},{label:'Canada Race',value:'Sun May 24 · 2PM ET'}].map((item,i) => (
+          {[{label:'Canada Result',value:'Antonelli WON 🏆'},{label:'Next: Monaco GP',value:'June 5-7 · Round 6'},{label:'Championship Lead',value:'Antonelli +43pts'}].map((item,i) => (
             <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:10,padding:'12px',textAlign:'center' as const}}>
               <div style={{fontSize:10,color:C.t3,marginBottom:4}}>{item.label}</div>
               <div style={{fontSize:12,fontWeight:600,color:C.t1}}>{item.value}</div>
