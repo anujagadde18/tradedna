@@ -301,7 +301,7 @@ export async function POST(request: NextRequest) {
         };
         const HOME_ADV: Record<string,number> = {'SRH':8,'MI':6,'RCB':7,'CSK':8,'KKR':5,'DC':4,'RR':5,'GT':4,'LSG':5,'PBKS':4};
         const VENUE_CITIES: Record<string,string[]> = {
-          'SRH':['hyderabad'],'MI':['mumbai','wankhede'],'RCB':['bengaluru','bangalore','chinnaswamy'],
+          'SRH':['hyderabad'],'MI':['mumbai','wankhede'],'RCB':['bengaluru','bangalore','chinnaswamy','dharamsala','dharamshala'],
           'CSK':['chennai','chepauk'],'KKR':['kolkata','eden'],'DC':['delhi'],
           'RR':['jaipur','guwahati'],'GT':['ahmedabad','narendra'],'LSG':['lucknow'],
           'PBKS':['chandigarh','dharamshala','mohali'],
