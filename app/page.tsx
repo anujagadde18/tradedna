@@ -449,10 +449,10 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
               {[
-                {home:'OKC Thunder',away:'SA Spurs',time:'WCF · Series tied 1-1',homePct:56,awayPct:44,game:'WCF G3',q:'Will OKC Thunder beat San Antonio Spurs in NBA Conference Finals 2026?'},
-                {home:'NY Knicks',away:'Cleveland Cavaliers',time:'ECF · Knicks lead 1-0',homePct:62,awayPct:38,game:'ECF G2',q:'Will New York Knicks beat Cleveland Cavaliers in NBA Conference Finals 2026?'},
-                {home:'RCB',away:'Gujarat Titans',time:'IPL Q1 · May 26',homePct:55,awayPct:45,game:'Qualifier 1',q:'Will Royal Challengers Bengaluru beat Gujarat Titans in IPL 2026 Qualifier 1?'},
-                {home:'SRH',away:'Rajasthan Royals',time:'IPL Eliminator · May 27',homePct:52,awayPct:48,game:'Eliminator',q:'Will Sunrisers Hyderabad beat Rajasthan Royals in IPL 2026 Eliminator?'},
+                {home:'OKC Thunder',away:'SA Spurs',time:'WCF G6 Tonight · OKC leads 3-2',homePct:68,awayPct:32,game:'WCF G6',q:'Will OKC Thunder beat San Antonio Spurs in NBA Conference Finals 2026?'},
+                {home:'NY Knicks',away:'Cleveland Cavaliers',time:'Knicks SWEPT Cavs 4-0 🏆',homePct:100,awayPct:0,game:'ECF Done',q:'Will New York Knicks win 2026 NBA Finals?'},
+                {home:'RCB',away:'RR or GT',time:'IPL Final · May 31 Ahmedabad',homePct:55,awayPct:45,game:'Final',q:'Will Royal Challengers Bengaluru win IPL 2026?'},
+                {home:'GT',away:'RR',time:'IPL Q2 · May 29',homePct:52,awayPct:48,game:'Qualifier 2',q:'Will Gujarat Titans beat Rajasthan Royals in IPL 2026 Qualifier 2?'},
               ].map((m,i)=>(
                 <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'12px 14px'}}>
                   <div style={{fontSize:9,color:C.t3,marginBottom:6,fontWeight:600}}>{m.game} · {m.time}</div>
@@ -489,8 +489,8 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
               {[
-                {sport:'🏏',match:'RCB vs GT',time:'Q1 · May 26 7:30 PM IST'},
-                {sport:'🏏',match:'SRH vs RR',time:'Eliminator · May 27'},
+                {sport:'🏀',match:'OKC vs Spurs',time:'WCF G6 Tonight'},
+                {sport:'🏏',match:'GT vs RR',time:'IPL Q2 · May 29'},
               ].map((m,i)=>(
                 <div key={i} style={{background:C.bg2,borderRadius:10,padding:'10px 12px',display:'flex',alignItems:'center',gap:8}}>
                   <span style={{fontSize:16}}>{m.sport}</span>
@@ -558,9 +558,9 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <span style={{fontSize:24}}>🏎️</span>
                 <div>
-                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🍁 F1 Canadian GP — Race Day Today!</div>
-                  <div style={{fontSize:12,color:C.amber,fontWeight:600}}>Russell POLE · Race 2PM ET · Next: Monaco June 5-7</div>
-                  <div style={{fontSize:10,color:C.t3,marginTop:2}}>Antonelli leads championship 97pts · See all driver odds</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🏎️ Antonelli WON Canada GP · Now Monaco June 5-7</div>
+                  <div style={{fontSize:12,color:C.amber,fontWeight:600}}>4 wins from 5 races · Leads championship by 43pts</div>
+                  <div style={{fontSize:10,color:C.t3,marginTop:2}}>Circuit de Monaco · Round 6 · See driver odds</div>
                 </div>
               </div>
               <span style={{fontSize:11,color:C.purpleL,fontWeight:600}}>Driver odds →</span>
