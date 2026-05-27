@@ -39,7 +39,7 @@ const SPORTS_CONTEXT: Record<string, string> = {
   'warriors': 'Golden State Warriors: Stephen Curry still elite shooter',
   '76ers': 'Philadelphia 76ers: SHOCKED Celtics 4-3 in Round 1. Tyrese Maxey 31PPG series average. Lost Game 1 at MSG 98-137 badly. Trail series 0-1. Joel Embiid health key concern for rest of series.',
   'heat': 'Miami Heat: Jimmy Butler clutch performer, strong playoff culture',
-  'spurs': 'San Antonio Spurs: WCF vs OKC — series tied 1-1. Won Game 1 in 2OT (Wemby 41pts). Lost Game 2 113-122. Castle 25pts 8ast. Game 3 at home in San Antonio tonight — home crowd advantage.',
+  'spurs': 'San Antonio Spurs: WCF vs OKC — trail 2-3. Won Games 1(2OT Wemby 41pts) and 4(103-82). Lost Games 2,3,5. Wembanyama warned for media violations. Castle and Vassell key scorers. Fighting for survival in Game 6 tonight at home.',
   'trail blazers': 'Portland Trail Blazers: Damian Lillard legacy, rebuilding team',
   'hawks': 'Atlanta Hawks: Trae Young playmaker, inconsistent defense',
   'pistons': 'Detroit Pistons: 1st seed East. Beat Magic 4-3 in Round 1. Home court advantage vs Cavaliers Round 2. Cade Cunningham 27PPG. Lost Game 1 at home to CLE. Must bounce back in Game 2.',
