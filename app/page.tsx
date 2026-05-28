@@ -441,40 +441,62 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
           })()}
 
           {/* NBA PLAYOFFS — Round 2 */}
-          <div style={{marginBottom:20}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
-              <span style={{fontSize:16}}>🏀</span>
-              <span style={{fontSize:13,fontWeight:700,color:C.t1}}>NBA Playoffs</span>
-              <span style={{fontSize:11,color:C.t3}}>· Round 2</span>
-            </div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
-              {[
-                {home:'OKC Thunder',away:'SA Spurs',time:'WCF G6 Tonight · OKC leads 3-2',homePct:68,awayPct:32,game:'WCF G6',q:'Will OKC Thunder beat San Antonio Spurs in NBA Conference Finals 2026?'},
-                {home:'NY Knicks',away:'Cleveland Cavaliers',time:'Knicks SWEPT Cavs 4-0 🏆',homePct:100,awayPct:0,game:'ECF Done',q:'Will New York Knicks win 2026 NBA Finals?'},
-                {home:'RCB',away:'RR or GT',time:'IPL Final · May 31 Ahmedabad',homePct:55,awayPct:45,game:'Final',q:'Will Royal Challengers Bengaluru win IPL 2026?'},
-                {home:'GT',away:'RR',time:'IPL Q2 · May 29',homePct:52,awayPct:48,game:'Qualifier 2',q:'Will Gujarat Titans beat Rajasthan Royals in IPL 2026 Qualifier 2?'},
-              ].map((m,i)=>(
-                <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'12px 14px'}}>
-                  <div style={{fontSize:9,color:C.t3,marginBottom:6,fontWeight:600}}>{m.game} · {m.time}</div>
-                  <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:6,marginBottom:10}}>
-                    <div style={{textAlign:'center' as const}}>
-                      <div style={{fontSize:11,fontWeight:600,color:C.t1,lineHeight:1.3}}>{m.home}</div>
-                      <div style={{fontSize:14,fontWeight:800,color:C.green,fontFamily:'monospace',marginTop:2}}>{m.homePct}%</div>
-                    </div>
-                    <div style={{fontSize:9,fontWeight:700,color:C.t4,padding:'3px 6px',borderRadius:4,background:C.bg3}}>VS</div>
-                    <div style={{textAlign:'center' as const}}>
-                      <div style={{fontSize:11,fontWeight:600,color:C.t1,lineHeight:1.3}}>{m.away}</div>
-                      <div style={{fontSize:14,fontWeight:800,color:C.t3,fontFamily:'monospace',marginTop:2}}>{m.awayPct}%</div>
-                    </div>
-                  </div>
-                  <button onClick={()=>go(m.q)}
-                    style={{width:'100%',padding:'6px',borderRadius:7,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,cursor:'pointer',fontSize:11,fontWeight:600}}>
-                    🤖 AI prediction
-                  </button>
+          {/* LIVE SPORTS CARDS — auto from Polymarket */}
+          {(() => {
+            const bad = ['esport','counter-strike','dota','lol:','valorant','prelim','ufc fight night','indian premier league:'];
+            const liveCards = events.filter(e => {
+              if (e.category !== 'sports') return false;
+              const t = (e.title||'').toLowerCase();
+              if (!t.includes(' vs')) return false;
+              if (e.yesPrice !== null && (e.yesPrice >= 95 || e.yesPrice <= 5)) return false;
+              if (bad.some(b => t.includes(b))) return false;
+              return true;
+            }).slice(0,4).map(e => {
+              const parts = e.title.split(/\s+vs\.?\s+/i);
+              const yes = e.yesPrice ?? 50;
+              return {
+                home: parts[0]?.trim().slice(0,22) || e.title.slice(0,22),
+                away: (parts[1]||'?').trim().slice(0,22),
+                time: e.volume24hFormatted + ' traded',
+                homePct: yes,
+                awayPct: 100-yes,
+                game: e.category,
+                q: e.title,
+              };
+            });
+            if (liveCards.length === 0) return null;
+            return (
+              <div style={{marginBottom:20}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+                  <span style={{fontSize:16}}>🏆</span>
+                  <span style={{fontSize:13,fontWeight:700,color:C.t1}}>Live Sports Markets</span>
+                  <span style={{fontSize:11,color:C.t3}}>· from Polymarket</span>
                 </div>
-              ))}
-            </div>
-          </div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
+                  {liveCards.map((m,i)=>(
+                    <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'12px 14px'}}>
+                      <div style={{fontSize:9,color:C.t3,marginBottom:6,fontWeight:600}}>{m.game} · {m.time}</div>
+                      <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:6,marginBottom:10}}>
+                        <div style={{textAlign:'center' as const}}>
+                          <div style={{fontSize:11,fontWeight:600,color:C.t1,lineHeight:1.3}}>{m.home}</div>
+                          <div style={{fontSize:14,fontWeight:800,color:C.green,fontFamily:'monospace',marginTop:2}}>{m.homePct}%</div>
+                        </div>
+                        <div style={{fontSize:9,fontWeight:700,color:C.t4,padding:'3px 6px',borderRadius:4,background:C.bg3}}>VS</div>
+                        <div style={{textAlign:'center' as const}}>
+                          <div style={{fontSize:11,fontWeight:600,color:C.t1,lineHeight:1.3}}>{m.away}</div>
+                          <div style={{fontSize:14,fontWeight:800,color:C.t3,fontFamily:'monospace',marginTop:2}}>{m.awayPct}%</div>
+                        </div>
+                      </div>
+                      <button onClick={()=>go(m.q)}
+                        style={{width:'100%',padding:'6px',borderRadius:7,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,cursor:'pointer',fontSize:11,fontWeight:600}}>
+                        🤖 AI prediction
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* PREDICTION CHALLENGE WIDGET */}
           <div style={{marginBottom:20,background:'linear-gradient(135deg,rgba(46,204,138,0.08),rgba(124,111,247,0.06))',border:'1px solid rgba(46,204,138,0.25)',borderRadius:16,padding:'18px 20px',cursor:'pointer'}} onClick={()=>router.push('/predict')}>
