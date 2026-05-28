@@ -276,7 +276,8 @@ export default function HomePage() {
               if (!e.title.toLowerCase().includes(' vs')) return false;
               if (e.marketCount < 2) return false;
               // Filter out finished games
-              if (e.yesPrice !== null && (e.yesPrice >= 95 || e.yesPrice <= 5)) return false;
+              if (e.yesPrice === null || e.yesPrice === 0) return false;
+              if (e.yesPrice >= 95 || e.yesPrice <= 5) return false;
               // Filter out ended games
               if (e.endDate && new Date(e.endDate) < now) return false;
               // Filter out completed IPL matches
@@ -443,12 +444,13 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
           {/* NBA PLAYOFFS — Round 2 */}
           {/* LIVE SPORTS CARDS — auto from Polymarket */}
           {(() => {
-            const bad = ['esport','counter-strike','dota','lol:','valorant','prelim','ufc fight night','indian premier league:'];
+            const bad = ['esport','counter-strike','dota','lol:','valorant','prelim','ufc fight night','indian premier league:','roland garros atp:','roland garros wta:','atp:','wta:'];
             const liveCards = events.filter(e => {
               if (e.category !== 'sports') return false;
               const t = (e.title||'').toLowerCase();
               if (!t.includes(' vs')) return false;
-              if (e.yesPrice !== null && (e.yesPrice >= 95 || e.yesPrice <= 5)) return false;
+              if (e.yesPrice === null || e.yesPrice === 0) return false;
+              if (e.yesPrice >= 95 || e.yesPrice <= 5) return false;
               if (bad.some(b => t.includes(b))) return false;
               return true;
             }).slice(0,4).map(e => {
