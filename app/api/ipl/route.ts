@@ -91,8 +91,12 @@ export async function GET(request: NextRequest) {
   }
 
   if (type === 'upcoming') {
-    // Today + next 4 days
-    const upcoming = IPL_SCHEDULE.filter(m => m.date >= todayIST).slice(0, 5);
+    const PLAYOFFS = [
+      { no:66, date:'2026-05-29', home:'Gujarat Titans', away:'Rajasthan Royals', venue:'Mullanpur', time:'7:30 PM' },
+      { no:67, date:'2026-05-31', home:'Royal Challengers Bengaluru', away:'TBD (GT or RR)', venue:'Ahmedabad', time:'7:30 PM' },
+    ];
+    const allMatches = [...IPL_SCHEDULE, ...PLAYOFFS];
+    const upcoming = allMatches.filter((m:any) => m.date >= todayIST).slice(0, 5);
     return Response.json({ matches: upcoming });
   }
 
