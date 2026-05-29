@@ -292,7 +292,7 @@ export async function POST(request: NextRequest) {
           'RCB': {p:11, w:9, l:2, pts:18, nrr:'+0.812', form:'WWLLWWWWWW'},
           'PBKS':{p:13, w:8, l:2, pts:16, nrr:'+0.612', form:'WWWWWWWWLL'},
           'DC':  {p:11, w:5, l:6, pts:10, nrr:'-0.201', form:'LWWLWLWLL'},
-          'GT':  {p:11, w:6, l:5, pts:12, nrr:'+0.121', form:'LWLWLWWLW'},
+          'GT':  {p:14, w:9, l:5, pts:18, nrr:'+0.695', form:'LWLWLWWLWWWWWL'},
           'SRH': {p:11, w:7, l:4, pts:14, nrr:'+0.445', form:'WLLWLLWLWWW'},
           'MI':  {p:11, w:3, l:8, pts:6,  nrr:'-0.498', form:'WLLWLLLLWL'},
           'LSG': {p:13, w:3, l:9, pts:6,  nrr:'-0.612', form:'LLLWWWLLLLL'},
