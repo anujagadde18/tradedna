@@ -175,7 +175,7 @@ async function analyzeWithGroq(
     // Auto-fetch Polymarket odds if not provided
     if (!marketOdds) {
       try {
-        const searchQuery = encodeURIComponent(question.slice(0, 50));
+        const searchQuery = encodeURIComponent(query.slice(0, 50));
         const pmRes = await fetch(
           `https://gamma-api.polymarket.com/events?active=true&closed=false&limit=5&search=${searchQuery}`,
           { signal: AbortSignal.timeout(4000) }
