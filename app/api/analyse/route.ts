@@ -201,7 +201,7 @@ async function analyzeWithGroq(
       } catch {}
     }
 
-    const marketContext = marketOdds ? \`Prediction market (Polymarket) odds: \${marketOdds}% — this is the crowd consensus, your probability must stay within 8% of this\` : '';
+    const marketContext = marketOdds ? `Prediction market (Polymarket) odds: ${marketOdds}% — crowd consensus, stay within 8%` : '';
     const metaContext = metaculusPct ? `Expert forecasters (Metaculus): ${metaculusPct}%` : '';
     const typeContext = getMarketContext(marketType, query);
     const nbaContext = marketType === 'nba' ? getNBAContext(query) : '';
