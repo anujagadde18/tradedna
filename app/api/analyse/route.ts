@@ -172,7 +172,36 @@ async function analyzeWithGroq(
   if (!GROQ_API_KEY) return null;
   try {
     const headlineText = headlines.slice(0, 8).map((h, i) => `${i+1}. ${h}`).join('\n');
-    const marketContext = marketOdds ? `Prediction market (Polymarket) odds: ${marketOdds}%` : '';
+    // Auto-fetch Polymarket odds if not provided
+    if (!marketOdds) {
+      try {
+        const searchQuery = encodeURIComponent(question.slice(0, 50));
+        const pmRes = await fetch(
+          `https://gamma-api.polymarket.com/events?active=true&closed=false&limit=5&search=${searchQuery}`,
+          { signal: AbortSignal.timeout(4000) }
+        );
+        if (pmRes.ok) {
+          const pmData = await pmRes.json();
+          if (Array.isArray(pmData) && pmData.length > 0) {
+            const event = pmData[0];
+            const markets = event.markets || [];
+            if (markets.length === 1) {
+              const prices = markets[0].outcomePrices;
+              const parsed = typeof prices === 'string' ? JSON.parse(prices) : prices;
+              if (parsed && parsed.length >= 2) {
+                const yes = parseFloat(parsed[0]);
+                const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
+                if (pct >= 5 && pct <= 95) {
+                  marketOdds = pct;
+                }
+              }
+            }
+          }
+        }
+      } catch {}
+    }
+
+    const marketContext = marketOdds ? \`Prediction market (Polymarket) odds: \${marketOdds}% — this is the crowd consensus, your probability must stay within 8% of this\` : '';
     const metaContext = metaculusPct ? `Expert forecasters (Metaculus): ${metaculusPct}%` : '';
     const typeContext = getMarketContext(marketType, query);
     const nbaContext = marketType === 'nba' ? getNBAContext(query) : '';
