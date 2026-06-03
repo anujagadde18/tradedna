@@ -11,12 +11,12 @@ const C = {
 };
 
 const DRIVERS = [
-  { pos:2, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:22, podiumPct:75, champPct:28, pts:81, champPos:2, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
-    bull:['Canada GP POLE POSITION — starts P1','Won Sprint Race Saturday','3rd straight Canadian GP pole','Mercedes brought major upgrades to Montreal','0.068s faster than Antonelli in qualifying'],
-    bear:['Antonelli P2 — teammate could overtake at start','McLaren strong race pace this weekend','Must convert pole to win'] },
   { pos:1, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:35, podiumPct:85, champPct:45, pts:122, champPos:1, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
     bull:['GP POLE POSITION — starts P1 Sunday','Won last 2 races','Championship leader 72pts','Recovered from sprint qualifying P2'],
     bear:['McLaren upgrades now matching Mercedes','Verstappen starting alongside on front row'] },
+  { pos:2, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:22, podiumPct:75, champPct:28, pts:81, champPos:2, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
+    bull:['Canada GP POLE POSITION — starts P1','Won Sprint Race Saturday','3rd straight Canadian GP pole','Mercedes brought major upgrades to Montreal','0.068s faster than Antonelli in qualifying'],
+    bear:['Antonelli P2 — teammate could overtake at start','McLaren strong race pace this weekend','Must convert pole to win'] },
   { pos:3, name:'Lando Norris', team:'McLaren', flag:'🇬🇧', winPct:18, podiumPct:75, champPct:14, pts:67, champPos:4, color:'#ff8000', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
     bull:['SPRINT POLE — McLaren upgrades working','Won Miami Sprint race','2025 World Champion knows Miami','McLaren strongest car this weekend'],
     bear:['Starting further back in GP after sprint','Points deficit hard to overcome'] },
