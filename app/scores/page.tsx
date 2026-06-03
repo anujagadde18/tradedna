@@ -151,14 +151,14 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
             {/* Winner banner */}
             <div style={{ textAlign:"center", marginBottom:16, padding:"10px", borderRadius:10, background:aiPct>=50?"rgba(46,204,138,0.08)":"rgba(124,111,247,0.08)", border:"1px solid "+(aiPct>=50?"rgba(46,204,138,0.2)":"rgba(124,111,247,0.2)") }}>
               <div style={{ fontSize:13, color:C.t3, marginBottom:2 }}>AI picks</div>
-              <div style={{ fontSize:22, fontWeight:800, color:aiPct>=50?C.green:C.purpleL }}>{aiPct>=50?team1:team2} to win</div>
+              <div style={{ fontSize:22, fontWeight:800, color:aiPct>=50?C.green:C.purpleL }}>{aiPct>=50?team1.split(' ').slice(0,3).join(' '):team2.split(' ').slice(0,3).join(' ')} to win</div>
               <div style={{ fontSize:13, color:C.t2, marginTop:2 }}>{verdictText}</div>
             </div>
             {/* Probability bar */}
             <div style={{ marginBottom:12 }}>
               <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-                <span style={{ fontSize:13, fontWeight:700, color:C.t1 }}>{team1}</span>
-                <span style={{ fontSize:13, fontWeight:700, color:C.t1 }}>{team2}</span>
+                <span style={{ fontSize:13, fontWeight:700, color:C.t1 }}>{team1.split(' ').slice(0,3).join(' ')}</span>
+                <span style={{ fontSize:13, fontWeight:700, color:C.t1 }}>{team2.split(' ').slice(0,3).join(' ')}</span>
               </div>
               <div style={{ height:12, borderRadius:6, background:"rgba(255,255,255,0.08)", overflow:"hidden", position:"relative" }}>
                 <div style={{ position:"absolute", left:0, top:0, height:"100%", width:aiPct+"%", background:"linear-gradient(90deg,"+C.green+",rgba(46,204,138,0.6))", borderRadius:6, transition:"width 1s ease" }} />
