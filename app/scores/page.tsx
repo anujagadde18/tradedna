@@ -204,39 +204,25 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
         )}
       </div>
 
-      {/* BULL vs BEAR — redesigned clean layout */}
+      {/* REASONS — clean scannable layout */}
       {(bullSources.length > 0 || bearSources.length > 0) && (
-        <div style={{ borderBottom:"1px solid "+C.border }}>
-          {bullSources.length > 0 && (
-            <div style={{ padding:"14px 16px", borderBottom: bearSources.length > 0 ? "1px solid "+C.border : "none" }}>
-              <div style={{ fontSize:11, fontWeight:700, color:C.green, textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:10 }}>
-                ✅ Why this might happen
-              </div>
-              {bullSources.map((s, i) => (
-                <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, marginBottom:8 }}>
-                  <div style={{ width:6, height:6, borderRadius:"50%", background:C.green, marginTop:5, flexShrink:0 }} />
-                  <div style={{ fontSize:13, color:C.t1, lineHeight:1.5 }}>
-                    {s.sig?.slice(0,120)}{(s.sig?.length||0)>120?"…":""}
-                  </div>
-                </div>
-              ))}
+        <div style={{ padding:"16px", borderBottom:"1px solid "+C.border }}>
+          {bullSources.slice(0,3).map((s, i) => (
+            <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:12, marginBottom:12 }}>
+              <span style={{ fontSize:16, flexShrink:0 }}>✅</span>
+              <span style={{ fontSize:14, color:C.t1, lineHeight:1.5, fontWeight: i===0 ? 600 : 400 }}>
+                {s.sig?.slice(0,100)}{(s.sig?.length||0)>100?"…":""}
+              </span>
             </div>
-          )}
-          {bearSources.length > 0 && (
-            <div style={{ padding:"14px 16px" }}>
-              <div style={{ fontSize:11, fontWeight:700, color:C.amber, textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:10 }}>
-                ⚠️ Risks to watch
-              </div>
-              {bearSources.map((s, i) => (
-                <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, marginBottom:8 }}>
-                  <div style={{ width:6, height:6, borderRadius:"50%", background:C.amber, marginTop:5, flexShrink:0 }} />
-                  <div style={{ fontSize:13, color:C.t1, lineHeight:1.5 }}>
-                    {s.sig?.slice(0,120)}{(s.sig?.length||0)>120?"…":""}
-                  </div>
-                </div>
-              ))}
+          ))}
+          {bearSources.slice(0,2).map((s, i) => (
+            <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:12, marginBottom: i===bearSources.slice(0,2).length-1 ? 0 : 12 }}>
+              <span style={{ fontSize:16, flexShrink:0 }}>⚠️</span>
+              <span style={{ fontSize:14, color:C.t2, lineHeight:1.5 }}>
+                {s.sig?.slice(0,100)}{(s.sig?.length||0)>100?"…":""}
+              </span>
             </div>
-          )}
+          ))}
         </div>
       )}
 
