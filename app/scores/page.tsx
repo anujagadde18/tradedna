@@ -144,33 +144,53 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
   return (
     <div style={{ background:C.bg2, border:"1px solid "+C.border, borderRadius:16, overflow:"hidden" }}>
 
-      {/* BIG NUMBER */}
-      <div style={{ padding:"24px 20px 16px", borderBottom:"1px solid "+C.border }}>
+      {/* BIG NUMBER — redesigned */}
+      <div style={{ padding:"20px", borderBottom:"1px solid "+C.border }}>
         {isMatchup ? (
           <div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:12, alignItems:"center", marginBottom:16 }}>
-              <div style={{ textAlign:"center", padding:"16px 10px", borderRadius:14, background:aiPct>=50?"rgba(46,204,138,0.07)":"rgba(255,255,255,0.02)", border:"1px solid "+(aiPct>=50?"rgba(46,204,138,0.2)":C.border) }}>
-                <div style={{ fontSize:11, color:C.t3, marginBottom:8, fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{team1}</div>
-                <div style={{ fontSize:44, fontWeight:800, color:aiPct>=50?C.green:C.t3, fontFamily:"monospace", letterSpacing:"-2px", lineHeight:1 }}>{aiPct}%</div>
-                <div style={{ fontSize:9, color:C.t3, marginTop:6, textTransform:"uppercase", letterSpacing:"0.5px" }}>AI confidence</div>
-                {marketValid && <div style={{ fontSize:10, color:C.t3, marginTop:3 }}>Market: <b style={{color:C.t2}}>{marketPct}%</b></div>}
+            {/* Winner banner */}
+            <div style={{ textAlign:"center", marginBottom:16, padding:"10px", borderRadius:10, background:aiPct>=50?"rgba(46,204,138,0.08)":"rgba(124,111,247,0.08)", border:"1px solid "+(aiPct>=50?"rgba(46,204,138,0.2)":"rgba(124,111,247,0.2)") }}>
+              <div style={{ fontSize:13, color:C.t3, marginBottom:2 }}>AI picks</div>
+              <div style={{ fontSize:22, fontWeight:800, color:aiPct>=50?C.green:C.purpleL }}>{aiPct>=50?team1:team2} to win</div>
+              <div style={{ fontSize:13, color:C.t2, marginTop:2 }}>{verdictText}</div>
+            </div>
+            {/* Probability bar */}
+            <div style={{ marginBottom:12 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                <span style={{ fontSize:13, fontWeight:700, color:C.t1 }}>{team1}</span>
+                <span style={{ fontSize:13, fontWeight:700, color:C.t1 }}>{team2}</span>
               </div>
-              <div style={{ textAlign:"center" }}>
-                <div style={{ fontSize:11, fontWeight:700, color:C.t4, marginBottom:4 }}>VS</div>
-                {edge !== null && Math.abs(edge) >= 3 && (
-                  <div style={{ fontSize:10, fontWeight:700, padding:"3px 8px", borderRadius:6, background:edge>0?"rgba(46,204,138,0.1)":"rgba(239,79,106,0.1)", color:edge>0?C.green:C.red, border:"1px solid "+(edge>0?"rgba(46,204,138,0.2)":"rgba(239,79,106,0.2)") }}>
-                    {edge>0?"+":""}{edge}%
-                  </div>
-                )}
+              <div style={{ height:12, borderRadius:6, background:"rgba(255,255,255,0.08)", overflow:"hidden", position:"relative" }}>
+                <div style={{ position:"absolute", left:0, top:0, height:"100%", width:aiPct+"%", background:"linear-gradient(90deg,"+C.green+",rgba(46,204,138,0.6))", borderRadius:6, transition:"width 1s ease" }} />
               </div>
-              <div style={{ textAlign:"center", padding:"16px 10px", borderRadius:14, background:aiPct<50?"rgba(46,204,138,0.07)":"rgba(255,255,255,0.02)", border:"1px solid "+(aiPct<50?"rgba(46,204,138,0.2)":C.border) }}>
-                <div style={{ fontSize:11, color:C.t3, marginBottom:8, fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{team2}</div>
-                <div style={{ fontSize:44, fontWeight:800, color:aiPct<50?C.green:C.t3, fontFamily:"monospace", letterSpacing:"-2px", lineHeight:1 }}>{aiTeam2Pct}%</div>
-                <div style={{ fontSize:9, color:C.t3, marginTop:6, textTransform:"uppercase", letterSpacing:"0.5px" }}>AI confidence</div>
-                {marketValid && <div style={{ fontSize:10, color:C.t3, marginTop:3 }}>Market: <b style={{color:C.t2}}>{100-marketPct}%</b></div>}
+              <div style={{ display:"flex", justifyContent:"space-between", marginTop:6 }}>
+                <div style={{ textAlign:"center" }}>
+                  <div style={{ fontSize:28, fontWeight:800, color:aiPct>=50?C.green:C.t3, fontFamily:"monospace" }}>{aiPct}%</div>
+                  <div style={{ fontSize:10, color:C.t3 }}>AI odds</div>
+                </div>
+                <div style={{ textAlign:"center" }}>
+                  <div style={{ fontSize:28, fontWeight:800, color:aiPct<50?C.green:C.t3, fontFamily:"monospace" }}>{aiTeam2Pct}%</div>
+                  <div style={{ fontSize:10, color:C.t3 }}>AI odds</div>
+                </div>
               </div>
             </div>
-            <div style={{ textAlign:"center", fontSize:16, fontWeight:700, color:verdictColor }}>{verdictText}</div>
+            {/* Market vs AI */}
+            {marketValid && (
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, padding:"10px", background:"rgba(255,255,255,0.03)", borderRadius:10, border:"1px solid "+C.border }}>
+                <div style={{ textAlign:"center" }}>
+                  <div style={{ fontSize:10, color:C.t3, marginBottom:3 }}>Market says</div>
+                  <div style={{ fontSize:16, fontWeight:700, color:C.t2, fontFamily:"monospace" }}>{marketPct}%</div>
+                </div>
+                <div style={{ textAlign:"center" }}>
+                  <div style={{ fontSize:10, color:C.t3, marginBottom:3 }}>AI says</div>
+                  <div style={{ fontSize:16, fontWeight:700, color:C.green, fontFamily:"monospace" }}>{aiPct}%</div>
+                </div>
+                <div style={{ textAlign:"center" }}>
+                  <div style={{ fontSize:10, color:C.t3, marginBottom:3 }}>AI edge</div>
+                  <div style={{ fontSize:16, fontWeight:700, color:edge!>0?C.green:C.red, fontFamily:"monospace" }}>{edge!>0?"+":""}{edge}%</div>
+                </div>
+              </div>
+            )}
           </div>
         ) : isCategorical && topOutcomes.length > 0 ? (
           <div>
