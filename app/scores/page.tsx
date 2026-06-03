@@ -55,8 +55,8 @@ function getConviction(aiPct: number, marketPct: number) {
 function getVerdictText(aiPct: number): string {
   if (aiPct >= 80) return 'Very likely yes';
   if (aiPct >= 65) return 'Likely yes';
-  if (aiPct >= 50) return 'Uncertain - lean yes';
-  if (aiPct >= 35) return 'Uncertain - lean no';
+  if (aiPct >= 50) return 'More likely YES';
+  if (aiPct >= 35) return 'More likely NO';
   return 'Likely no';
 }
 
@@ -115,8 +115,8 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
   const aiTeam2Pct = 100 - aiPct;
 
   const verdictText = isMatchup
-    ? aiPct >= 70 ? `${team1} favoured` : aiPct >= 58 ? `${team1} slight edge` : aiPct >= 42 ? "Too close to call" : aiPct >= 30 ? `${team2} slight edge` : `${team2} favoured`
-    : aiPct >= 75 ? "Strong YES signal" : aiPct >= 60 ? "Leaning YES" : aiPct >= 45 ? "Uncertain" : aiPct >= 30 ? "Leaning NO" : "Strong NO signal";
+    ? aiPct >= 70 ? `${team1} wins — high confidence` : aiPct >= 58 ? `${team1} has the edge` : aiPct >= 42 ? `Too close — could go either way` : aiPct >= 30 ? `${team2} has the edge` : `${team2} wins — high confidence`
+    : aiPct >= 75 ? "Very likely to happen" : aiPct >= 60 ? "Probably YES" : aiPct >= 45 ? "Could go either way" : aiPct >= 30 ? "Probably NO" : "Very unlikely to happen";
 
   const verdictColor = aiPct >= 60 ? C.green : aiPct >= 40 ? C.amber : C.red;
 
@@ -307,7 +307,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
           </div>
         ) : (
           <div style={{ fontSize:12, color:C.t3, padding:"8px 12px", background:"rgba(255,255,255,0.02)", borderRadius:8, border:"1px solid "+C.border }}>
-            {aiPct>=65?"✅ Strong signal — worth researching more":aiPct>=45?"⚠️ Mixed signals — watch and wait":"❌ Weak signal — probably skip"}
+            {aiPct>=65?"✅ AI has high conviction on this":aiPct>=45?"🔍 Moderate conviction — do your research":"⚠️ Low conviction — market is uncertain"}
           </div>
         )}
       </div>
@@ -600,7 +600,7 @@ function ScoresPageContent() {
             localStorage.setItem('pp_journal', JSON.stringify(journal));
           }
         } catch {}
-        setIntel({ confidence: rawConf, direction: rawConf >= 50 ? 'YES' : 'NO', probabilityLabel: rawConf >= 65 ? 'Very likely YES' : rawConf >= 55 ? 'Probably YES' : rawConf >= 45 ? 'Uncertain' : rawConf >= 35 ? 'Probably NO' : 'Very likely NO', predictionStrength: rawConf >= 70 ? 'Strong' : rawConf >= 55 ? 'Medium' : 'Weak', strengthScore: rawConf, riskLevel: rawConf >= 70 || rawConf <= 30 ? 'Low' : 'Medium', marketEdge: marketOddsForAI ? rawConf - marketOddsForAI : null, edgeContext: '', modelComponents: [], confidenceDrivers: { positive: [], negative: [] }, explanation: '' });
+        setIntel({ confidence: rawConf, direction: rawConf >= 50 ? 'YES' : 'NO', probabilityLabel: rawConf >= 65 ? 'AI is confident this happens' : rawConf >= 55 ? 'More likely than not' : rawConf >= 45 ? 'Could go either way' : rawConf >= 35 ? 'Probably not' : 'AI thinks this is unlikely', predictionStrength: rawConf >= 70 ? 'Strong' : rawConf >= 55 ? 'Medium' : 'Weak', strengthScore: rawConf, riskLevel: rawConf >= 70 || rawConf <= 30 ? 'Low' : 'Medium', marketEdge: marketOddsForAI ? rawConf - marketOddsForAI : null, edgeContext: '', modelComponents: [], confidenceDrivers: { positive: [], negative: [] }, explanation: '' });
         if (data.sources && data.sources.length > 0) setRealSources(data.sources);
         if (data.breakdown && data.breakdown.length > 0) setBreakdown(data.breakdown);
       } else {
