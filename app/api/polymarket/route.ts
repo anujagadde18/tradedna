@@ -92,17 +92,43 @@ export async function GET(request: NextRequest) {
     );
 
     // For multi-market events (NBA games etc), find the moneyline/game winner market
-    const moneylineMarket = markets.length > 1 ? markets.find((m: any) => {
-      const q = (m.question || m.groupItemTitle || '').toLowerCase();
-      // Moneyline has no spread/total keywords and is the main winner market
-      return !q.includes('o/u') && !q.includes('over') && !q.includes('under') && 
-             !q.includes('spread') && !q.includes('+') && !q.includes('points') &&
-             !q.includes('rebounds') && !q.includes('assists') && !q.includes('3-pointer') &&
-             !q.includes('half') && !q.includes('quarter') && !q.includes('tip') &&
-             !q.includes('score') && !q.includes('odd') && !q.includes('even') &&
-             (q.includes('win') || q.includes('knicks') || q.includes('spurs') || 
-              q.includes('moneyline') || (m.outcomePrices && JSON.parse(typeof m.outcomePrices === 'string' ? m.outcomePrices : JSON.stringify(m.outcomePrices)).length === 2));
-    }) : null;
+    const findMoneyline = (markets: any[]) => {
+      // First try: find market with question matching exactly "If X wins" pattern
+      const winnerMarket = markets.find((m: any) => {
+        const q = (m.question || '').toLowerCase();
+        const active = m.active !== false && m.closed !== true;
+        const price = m.lastTradePrice || m.outcomePrices;
+        // Must be active and have a price between 10-90% (not completed)
+        let pct = 50;
+        try {
+          const prices = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices;
+          if (prices) pct = Math.round(parseFloat(prices[0]) * 100);
+        } catch {}
+        if (pct <= 5 || pct >= 95) return false; // completed/invalid
+        // Match moneyline patterns
+        return (q.includes('if the') && q.includes('win')) ||
+               q.match(/will .* win the game/) ||
+               (q.includes('moneyline') && !q.includes('o/u'));
+      });
+      if (winnerMarket) return winnerMarket;
+      
+      // Second try: find market with valid odds between 20-80%
+      return markets.find((m: any) => {
+        try {
+          const prices = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices;
+          if (!prices) return false;
+          const pct = Math.round(parseFloat(prices[0]) * 100);
+          const q = (m.question || '').toLowerCase();
+          const isNotProp = !q.includes('o/u') && !q.includes('points') && 
+                           !q.includes('rebounds') && !q.includes('assists') &&
+                           !q.includes('3-pointer') && !q.includes('score') &&
+                           !q.includes('half') && !q.includes('tip');
+          return pct >= 20 && pct <= 80 && isNotProp;
+        } catch { return false; }
+      });
+    };
+
+    const moneylineMarket = markets.length > 1 ? findMoneyline(markets) : null;
 
     if (!hasGroupItems && (markets.length === 1 || moneylineMarket)) {
       // -- BINARY --
