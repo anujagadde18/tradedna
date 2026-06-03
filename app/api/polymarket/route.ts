@@ -91,9 +91,22 @@ export async function GET(request: NextRequest) {
       (m: any) => m.groupItemTitle && m.groupItemTitle.trim() !== ''
     );
 
-    if (!hasGroupItems && markets.length === 1) {
+    // For multi-market events (NBA games etc), find the moneyline/game winner market
+    const moneylineMarket = markets.length > 1 ? markets.find((m: any) => {
+      const q = (m.question || m.groupItemTitle || '').toLowerCase();
+      // Moneyline has no spread/total keywords and is the main winner market
+      return !q.includes('o/u') && !q.includes('over') && !q.includes('under') && 
+             !q.includes('spread') && !q.includes('+') && !q.includes('points') &&
+             !q.includes('rebounds') && !q.includes('assists') && !q.includes('3-pointer') &&
+             !q.includes('half') && !q.includes('quarter') && !q.includes('tip') &&
+             !q.includes('score') && !q.includes('odd') && !q.includes('even') &&
+             (q.includes('win') || q.includes('knicks') || q.includes('spurs') || 
+              q.includes('moneyline') || (m.outcomePrices && JSON.parse(typeof m.outcomePrices === 'string' ? m.outcomePrices : JSON.stringify(m.outcomePrices)).length === 2));
+    }) : null;
+
+    if (!hasGroupItems && (markets.length === 1 || moneylineMarket)) {
       // -- BINARY --
-      const market = markets[0];
+      const market = moneylineMarket || markets[0];
 
       // Extract both YES and NO token IDs for binary markets
       let yesTokenId: string | null = null;
