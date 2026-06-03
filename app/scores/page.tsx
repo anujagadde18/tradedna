@@ -204,37 +204,39 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
         )}
       </div>
 
-      {/* BULL vs BEAR */}
+      {/* BULL vs BEAR — redesigned clean layout */}
       {(bullSources.length > 0 || bearSources.length > 0) && (
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:0, borderBottom:"1px solid "+C.border }}>
-          <div style={{ padding:"14px 16px", borderRight:"1px solid "+C.border }}>
-            <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:10 }}>
-              <div style={{ width:8, height:8, borderRadius:"50%", background:C.green }} />
-              <span style={{ fontSize:10, fontWeight:700, color:C.green, textTransform:"uppercase", letterSpacing:"0.5px" }}>For</span>
-            </div>
-            {bullSources.length > 0
-              ? bullSources.map((s, i) => (
-                <div key={i} style={{ fontSize:11, color:C.t2, marginBottom:6, lineHeight:1.45, paddingLeft:8, borderLeft:"2px solid rgba(46,204,138,0.3)" }}>
-                  {s.sig?.slice(0,80)}{(s.sig?.length||0)>80?"…":""}
+        <div style={{ borderBottom:"1px solid "+C.border }}>
+          {bullSources.length > 0 && (
+            <div style={{ padding:"14px 16px", borderBottom: bearSources.length > 0 ? "1px solid "+C.border : "none" }}>
+              <div style={{ fontSize:11, fontWeight:700, color:C.green, textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:10 }}>
+                ✅ Why this might happen
+              </div>
+              {bullSources.map((s, i) => (
+                <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, marginBottom:8 }}>
+                  <div style={{ width:6, height:6, borderRadius:"50%", background:C.green, marginTop:5, flexShrink:0 }} />
+                  <div style={{ fontSize:13, color:C.t1, lineHeight:1.5 }}>
+                    {s.sig?.slice(0,120)}{(s.sig?.length||0)>120?"…":""}
+                  </div>
                 </div>
-              ))
-              : <div style={{ fontSize:11, color:C.t3 }}>No positive signals found</div>
-            }
-          </div>
-          <div style={{ padding:"14px 16px" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:10 }}>
-              <div style={{ width:8, height:8, borderRadius:"50%", background:C.red }} />
-              <span style={{ fontSize:10, fontWeight:700, color:C.red, textTransform:"uppercase", letterSpacing:"0.5px" }}>Against</span>
+              ))}
             </div>
-            {bearSources.length > 0
-              ? bearSources.map((s, i) => (
-                <div key={i} style={{ fontSize:11, color:C.t2, marginBottom:6, lineHeight:1.45, paddingLeft:8, borderLeft:"2px solid rgba(239,79,106,0.3)" }}>
-                  {s.sig?.slice(0,80)}{(s.sig?.length||0)>80?"…":""}
+          )}
+          {bearSources.length > 0 && (
+            <div style={{ padding:"14px 16px" }}>
+              <div style={{ fontSize:11, fontWeight:700, color:C.amber, textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:10 }}>
+                ⚠️ Risks to watch
+              </div>
+              {bearSources.map((s, i) => (
+                <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, marginBottom:8 }}>
+                  <div style={{ width:6, height:6, borderRadius:"50%", background:C.amber, marginTop:5, flexShrink:0 }} />
+                  <div style={{ fontSize:13, color:C.t1, lineHeight:1.5 }}>
+                    {s.sig?.slice(0,120)}{(s.sig?.length||0)>120?"…":""}
+                  </div>
                 </div>
-              ))
-              : <div style={{ fontSize:11, color:C.t3 }}>No negative signals found</div>
-            }
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
