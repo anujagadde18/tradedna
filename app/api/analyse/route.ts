@@ -42,9 +42,7 @@ const SPORTS_CONTEXT: Record<string, string> = {
   'usa': 'USA: Host nation. Pulisic leads, McKennie, Reyna, Musah midfield. Massive home crowd advantage. Group D vs Argentina, Turkey, Australia. Playing at SoFi Stadium LA. Historic chance to go deep as hosts.',
   'mexico': 'Mexico: Host nation. Raul Jimenez, Hirving Lozano. Group A vs South Africa, South Korea, Czechia. Opening game at Azteca June 11. Massive home support.',
   'canada': 'Canada: Host nation. Alphonso Davies electric. Group B vs Bosnia, Qatar, Switzerland. BMO Field Toronto June 12.',
-  'usa': 'USA: Host nation, automatic qualification. Pulisic, Reyna, McKennie. Playing Group D vs Paraguay, Australia, Turkey. Home crowd massive advantage.',
-  'mexico': 'Mexico: Host nation. Opening game vs South Africa June 11 at Azteca. Passionate home support. Group A.',
-  'canada': 'Canada: Host nation. Group B vs Bosnia, Qatar, Switzerland. BMO Field Toronto June 12. Davies key player.',
+
 
   'canadiens': 'Montreal Canadiens: 2026 NHL Playoffs. Won series 3-2 vs Sabres before Game 6. Lost Game 6 at home 3-8 — massive collapse. Series now tied 3-3. Game 7 in BUFFALO tonight (home ice for Sabres). Canadiens won earlier in Buffalo this series 6-3. Nick Suzuki, Cole Caufield, Juraj Slafkovsky, Ivan Demidov key players.',
   'sabres': 'Buffalo Sabres: 2026 NHL Playoffs. Forced Game 7 with 8-3 comeback win in Game 6. Rasmus Dahlin had 5 points in Game 6. Home ice advantage tonight at KeyBank Center. Tage Thompson driving offense. Sabres are -122 favorites on moneyline. Winner faces Carolina Hurricanes.',
@@ -107,9 +105,7 @@ const NBA_CONTEXT: Record<string, string> = {
   'usa': 'USA: Host nation. Pulisic leads, McKennie, Reyna, Musah midfield. Massive home crowd advantage. Group D vs Argentina, Turkey, Australia. Playing at SoFi Stadium LA. Historic chance to go deep as hosts.',
   'mexico': 'Mexico: Host nation. Raul Jimenez, Hirving Lozano. Group A vs South Africa, South Korea, Czechia. Opening game at Azteca June 11. Massive home support.',
   'canada': 'Canada: Host nation. Alphonso Davies electric. Group B vs Bosnia, Qatar, Switzerland. BMO Field Toronto June 12.',
-  'usa': 'USA: Host nation, automatic qualification. Pulisic, Reyna, McKennie. Playing Group D vs Paraguay, Australia, Turkey. Home crowd massive advantage.',
-  'mexico': 'Mexico: Host nation. Opening game vs South Africa June 11 at Azteca. Passionate home support. Group A.',
-  'canada': 'Canada: Host nation. Group B vs Bosnia, Qatar, Switzerland. BMO Field Toronto June 12. Davies key player.',
+
 
   'canadiens': 'Montreal Canadiens: 2026 NHL Playoffs. Won series 3-2 vs Sabres before Game 6. Lost Game 6 at home 3-8 — massive collapse. Series now tied 3-3. Game 7 in BUFFALO tonight (home ice for Sabres). Canadiens won earlier in Buffalo this series 6-3. Nick Suzuki, Cole Caufield, Juraj Slafkovsky, Ivan Demidov key players.',
   'sabres': 'Buffalo Sabres: 2026 NHL Playoffs. Forced Game 7 with 8-3 comeback win in Game 6. Rasmus Dahlin had 5 points in Game 6. Home ice advantage tonight at KeyBank Center. Tage Thompson driving offense. Sabres are -122 favorites on moneyline. Winner faces Carolina Hurricanes.',
