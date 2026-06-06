@@ -163,9 +163,9 @@ export default function F1Page() {
         {/* Race results + upcoming */}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:16}}>
           <div style={{background:'rgba(46,204,138,0.06)',border:'1px solid rgba(46,204,138,0.2)',borderRadius:12,padding:'12px 14px'}}>
-            <div style={{fontSize:10,color:C.green,fontWeight:700,textTransform:'uppercase' as const,marginBottom:4}}>Miami GP Result</div>
-            <div style={{fontSize:12,fontWeight:600,color:C.t1}}>🥇 Antonelli WON</div>
-            <div style={{fontSize:11,color:C.t3}}>Norris P2 · Piastri P3</div>
+            <div style={{fontSize:10,color:C.green,fontWeight:700,textTransform:'uppercase' as const,marginBottom:4}}>Monaco Qualifying</div>
+            <div style={{fontSize:12,fontWeight:600,color:C.t1}}>🏆 Antonelli POLE</div>
+            <div style={{fontSize:11,color:C.t3}}>Verstappen P2 · Hamilton P3</div>
           </div>
           <div style={{background:'rgba(245,166,35,0.06)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:12,padding:'12px 14px'}}>
             <div style={{fontSize:10,color:C.amber,fontWeight:700,textTransform:'uppercase' as const,marginBottom:4}}>Next: Monaco GP</div>
