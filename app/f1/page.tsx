@@ -168,9 +168,9 @@ export default function F1Page() {
             <div style={{fontSize:11,color:C.t3}}>Verstappen P2 · Hamilton P3</div>
           </div>
           <div style={{background:'rgba(245,166,35,0.06)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:12,padding:'12px 14px'}}>
-            <div style={{fontSize:10,color:C.amber,fontWeight:700,textTransform:'uppercase' as const,marginBottom:4}}>Next: Monaco GP</div>
-            <div style={{fontSize:12,fontWeight:600,color:C.t1}}>🇲🇨 Monte Carlo</div>
-            <div style={{fontSize:11,color:C.t3}}>June 5-7 · Round 6</div>
+            <div style={{fontSize:10,color:C.amber,fontWeight:700,textTransform:'uppercase' as const,marginBottom:4}}>Race Day</div>
+            <div style={{fontSize:12,fontWeight:600,color:C.t1}}>🇲🇨 Tomorrow 9AM ET</div>
+            <div style={{fontSize:11,color:C.t3}}>Circuit de Monaco · 78 laps</div>
           </div>
         </div>
 
