@@ -11,25 +11,25 @@ const C = {
 };
 
 const DRIVERS = [
-  { pos:1, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:45, podiumPct:90, champPct:48, pts:122, champPos:1, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
+  { pos:1, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:45, podiumPct:90, champPct:48, pts:122, champPos:1, gridPos:1, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
     bull:['Monaco POLE — starts P1 Sunday','4 wins from 5 races — dominant season','Championship leader +43pts over Russell','Magic lap 1:12.051 — beat Verstappen by 0.043s'],
     bear:['Monaco unpredictable — safety cars common','Verstappen dangerous from P2','Title not over — must finish'] },
-  { pos:2, name:'Max Verstappen', team:'Red Bull', flag:'🇳🇱', winPct:20, podiumPct:55, champPct:6, pts:98, champPos:3, color:'#1e41ff', verdict:'WATCH', verdictColor:'#f5a623',
+  { pos:2, name:'Max Verstappen', team:'Red Bull', flag:'🇳🇱', winPct:20, podiumPct:55, champPct:6, pts:98, champPos:3, gridPos:2, color:'#1e41ff', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['Qualifying P2 — front row start','0.043s from pole — Red Bull fast here','Monaco specialist — knows every barrier'],
     bear:['60pts behind Antonelli in championship','Red Bull reliability concerns'] },
-  { pos:3, name:'Lewis Hamilton', team:'Ferrari', flag:'🇬🇧', winPct:12, podiumPct:45, champPct:3, pts:65, champPos:4, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
+  { pos:3, name:'Lewis Hamilton', team:'Ferrari', flag:'🇬🇧', winPct:12, podiumPct:45, champPct:3, pts:65, champPos:4, gridPos:3, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['Qualifying P3 — strong Ferrari showing','7x World Champion Monaco experience','Kim Kardashian in paddock for support'],
     bear:['Ferrari havent won since Mexico 2024','Needs Antonelli/Verstappen to hit issues'] },
-  { pos:4, name:'Charles Leclerc', team:'Ferrari', flag:'🇲🇨', winPct:8, podiumPct:40, champPct:4, pts:71, champPos:5, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
+  { pos:4, name:'Charles Leclerc', team:'Ferrari', flag:'🇲🇨', winPct:8, podiumPct:40, champPct:4, pts:71, champPos:5, gridPos:4, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['Home race in Monaco — massive crowd support','Qualifying P4 — strong Ferrari','Monaco specialist — born here'],
     bear:['Hit wall at end of Q3 — car damage risk','Faces nervous wait on stewards investigation'] },
-  { pos:6, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:8, podiumPct:30, champPct:22, pts:81, champPos:2, color:'#00d2be', verdict:'WATCH', verdictColor:'#f5a623',
+  { pos:6, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:8, podiumPct:30, champPct:22, pts:81, champPos:2, gridPos:6, color:'#00d2be', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['Championship P2 — 81pts','Mercedes strong car','Can gain points if Antonelli has issues'],
     bear:['Qualifying P6 — disappointing','Hard to overtake in Monaco from P6'] },
-  { pos:7, name:'Oscar Piastri', team:'McLaren', flag:'🇦🇺', winPct:10, podiumPct:35, champPct:9, pts:78, champPos:6, color:'#ff8000', verdict:'WATCH', verdictColor:'#f5a623',
+  { pos:7, name:'Oscar Piastri', team:'McLaren', flag:'🇦🇺', winPct:10, podiumPct:35, champPct:9, pts:78, champPos:6, gridPos:7, color:'#ff8000', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['McLaren strong race pace','Can benefit from safety cars'],
     bear:['Qualifying P7 — starting too far back','Monaco impossible to overtake'] },
-  { pos:8, name:'Lando Norris', team:'McLaren', flag:'🇬🇧', winPct:5, podiumPct:25, champPct:8, pts:89, champPos:3, color:'#ff8000', verdict:'WATCH', verdictColor:'#f5a623',
+  { pos:8, name:'Lando Norris', team:'McLaren', flag:'🇬🇧', winPct:5, podiumPct:25, champPct:8, pts:89, champPos:3, gridPos:8, color:'#ff8000', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['P3 in championship — needs points','McLaren upgrades working'],
     bear:['Qualifying P8 — very hard from here','Monaco favors qualifying position heavily'] },
 ];
@@ -65,7 +65,7 @@ export default function F1Page() {
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
                   <div>
                     <div style={{fontSize:13,fontWeight:700}}>{d.flag} {d.name}</div>
-                    <div style={{fontSize:10,color:C.t3,marginTop:2}}>{d.team} · P{d.champPos}</div>
+                    <div style={{fontSize:10,color:C.t3,marginTop:2}}>{d.team} · Champ P{d.champPos}</div>
                   </div>
                   <div style={{textAlign:'right' as const}}>
                     <div style={{fontSize:22,fontWeight:800,fontFamily:'monospace',color:'#00d2be'}}>{d.pts}</div>
@@ -103,7 +103,7 @@ export default function F1Page() {
                 <div style={{fontSize:13,fontWeight:600,color:C.t1}}>{d.flag} {d.name}</div>
                 <div style={{display:'flex',alignItems:'center',gap:6,marginTop:2}}>
                   <span style={{width:8,height:8,borderRadius:'50%',background:d.color,display:'inline-block'}}/>
-                  <span style={{fontSize:10,color:C.t3}}>{d.team} · P{d.champPos} · {d.pts}pts</span>
+                  <span style={{fontSize:10,color:C.t3}}>{d.team} · Grid P{(d as any).gridPos||d.champPos} · {d.pts}pts</span>
                 </div>
               </div>
               <div style={{textAlign:'center' as const}}>
