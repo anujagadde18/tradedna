@@ -11,10 +11,10 @@ const C = {
 };
 
 const DRIVERS = [
-  { pos:1, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:35, podiumPct:85, champPct:45, pts:122, champPos:1, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
+  { pos:1, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:45, podiumPct:90, champPct:48, pts:122, champPos:1, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
     bull:['GP POLE POSITION — starts P1 Sunday','Won last 2 races','Championship leader 72pts','Recovered from sprint qualifying P2'],
     bear:['McLaren upgrades now matching Mercedes','Verstappen starting alongside on front row'] },
-  { pos:2, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:22, podiumPct:75, champPct:28, pts:81, champPos:2, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
+  { pos:6, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:8, podiumPct:35, champPct:22, pts:81, champPos:2, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
     bull:['Canada GP POLE POSITION — starts P1','Won Sprint Race Saturday','3rd straight Canadian GP pole','Mercedes brought major upgrades to Montreal','0.068s faster than Antonelli in qualifying'],
     bear:['Antonelli P2 — teammate could overtake at start','McLaren strong race pace this weekend','Must convert pole to win'] },
   { pos:3, name:'Lando Norris', team:'McLaren', flag:'🇬🇧', winPct:18, podiumPct:75, champPct:14, pts:67, champPos:4, color:'#ff8000', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
@@ -23,14 +23,14 @@ const DRIVERS = [
   { pos:3, name:'Oscar Piastri', team:'McLaren', flag:'🇦🇺', winPct:15, podiumPct:62, champPct:9, pts:56, champPos:5, color:'#ff8000', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
     bull:['P3 in sprint qualifying','McLaren fastest car this weekend','Strong race pace','Big upgrade package working'],
     bear:['Needs others to make mistakes','Points gap too large for title'] },
-  { pos:4, name:'Max Verstappen', team:'Red Bull', flag:'🇳🇱', winPct:8, podiumPct:35, champPct:4, pts:22, champPos:7, color:'#1e41ff', verdict:'WATCH', verdictColor:'#f5a623',
+  { pos:2, name:'Max Verstappen', team:'Red Bull', flag:'🇳🇱', winPct:20, podiumPct:55, champPct:6, pts:22, champPos:7, color:'#1e41ff', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['GP QUALIFYING P2 — front row start!','Best result of 2026 season','Red Bull upgrades working in heat'],
     bear:['Still 60pts behind Antonelli','Inconsistent season so far'] },
   { pos:5, name:'Charles Leclerc', team:'Ferrari', flag:'🇲🇨', winPct:5, podiumPct:30, champPct:4, pts:49, champPos:6, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['GP Qualifying P3 — strong Ferrari','Ferrari upgrades working','Consistent podium finisher'],
     bear:['Race pace slightly behind McLaren/Mercedes','Hamilton pressure internally'] },
 
-  { pos:7, name:'Lewis Hamilton', team:'Ferrari', flag:'🇬🇧', winPct:3, podiumPct:20, champPct:2, pts:40, champPos:4, color:'#dc0000', verdict:'LONGSHOT', verdictColor:'#9996b8',
+  { pos:3, name:'Lewis Hamilton', team:'Ferrari', flag:'🇬🇧', winPct:12, podiumPct:45, champPct:3, pts:40, champPos:4, color:'#dc0000', verdict:'LONGSHOT', verdictColor:'#9996b8',
     bull:['7x World Champion — experience','Ferrari P3 on grid','Miami street circuit experience'],
     bear:['P7 in sprint qualifying','Ruined promising lap at Turn 17','Leclerc faster this weekend'] },
 ];
