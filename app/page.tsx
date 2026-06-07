@@ -533,9 +533,9 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <span style={{fontSize:24}}>🏎️</span>
                 <div>
-                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🏎️ Antonelli WON Canada GP · Now Monaco June 5-7</div>
-                  <div style={{fontSize:12,color:C.amber,fontWeight:600}}>4 wins from 5 races · Leads championship by 43pts</div>
-                  <div style={{fontSize:10,color:C.t3,marginTop:2}}>Circuit de Monaco · Round 6 · See driver odds</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🏎️ Antonelli WON Monaco GP! 5th straight win!</div>
+                  <div style={{fontSize:12,color:C.amber,fontWeight:600}}>Leads championship by 66pts · Next: Barcelona Jun 12-14</div>
+                  <div style={{fontSize:10,color:C.t3,marginTop:2}}>Hamilton P2 · Hadjar P3 · Verstappen DNF</div>
                 </div>
               </div>
               <span style={{fontSize:11,color:C.purpleL,fontWeight:600}}>Driver odds →</span>
