@@ -513,8 +513,8 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
               {[
-                {sport:'🏀',match:'Knicks vs Spurs G2',time:'Fri Jun 5 · 8:30 PM ET'},
-                {sport:'🏎️',match:'Monaco GP',time:'Starts Tomorrow!'},
+                {sport:'🏀',match:'Knicks vs Spurs G3',time:'Mon Jun 8 · 8:30 PM ET · MSG'},
+                {sport:'⚽',match:'World Cup 2026',time:'Starts June 11!'},
               ].map((m,i)=>(
                 <div key={i} style={{background:C.bg2,borderRadius:10,padding:'10px 12px',display:'flex',alignItems:'center',gap:8}}>
                   <span style={{fontSize:16}}>{m.sport}</span>
