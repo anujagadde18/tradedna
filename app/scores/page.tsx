@@ -163,16 +163,22 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
           </div>
 
           {/* SVG GAUGE */}
-          <div style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>
-            <svg width="200" height="115" viewBox="0 0 200 115">
-              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="14" strokeLinecap="round"/>
-              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke={aiPct>=50?C.green:C.red} strokeWidth="14" strokeLinecap="round" strokeDasharray={`${(aiPct/100)*251.2} 251.2`} style={{transition:"stroke-dasharray 1s ease"}} opacity="0.9"/>
-              <text x="16" y="114" fontSize="9" fill="rgba(255,255,255,0.3)" textAnchor="middle">{t2short.slice(0,8)}</text>
-              <text x="184" y="114" fontSize="9" fill="rgba(255,255,255,0.3)" textAnchor="middle">{t1short.slice(0,8)}</text>
-              <text x="100" y="88" fontSize="30" fontWeight="800" fill={aiPct>=50?C.green:C.red} textAnchor="middle" fontFamily="monospace">{aiPct}%</text>
-              <text x="100" y="108" fontSize="10" fill="rgba(255,255,255,0.35)" textAnchor="middle">{winner} probability</text>
-            </svg>
-          </div>
+          {(() => {
+            const gaugeColor = aiPct>=50 ? C.green : C.red;
+            const dash = (aiPct/100)*251.2;
+            return (
+              <div style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>
+                <svg width="220" height="120" viewBox="0 0 220 120">
+                  <path d="M 20 105 A 90 90 0 0 1 200 105" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="14" strokeLinecap="round"/>
+                  <path d="M 20 105 A 90 90 0 0 1 200 105" fill="none" stroke={gaugeColor} strokeWidth="14" strokeLinecap="round" strokeDasharray={dash + " 283"} opacity="0.9"/>
+                  <text x="20" y="118" fontSize="9" fill="rgba(255,255,255,0.3)" textAnchor="middle">{t2short.slice(0,8)}</text>
+                  <text x="200" y="118" fontSize="9" fill="rgba(255,255,255,0.3)" textAnchor="middle">{t1short.slice(0,8)}</text>
+                  <text x="110" y="92" fontSize="32" fontWeight="800" fill={gaugeColor} textAnchor="middle" fontFamily="monospace">{aiPct}%</text>
+                  <text x="110" y="112" fontSize="10" fill="rgba(255,255,255,0.35)" textAnchor="middle">{winner} to win</text>
+                </svg>
+              </div>
+            );
+          })()}
 
           {/* Two team boxes */}
           <div style={{ display:"grid", gridTemplateColumns:"1fr 32px 1fr", alignItems:"center", gap:8, marginBottom:16 }}>
