@@ -177,9 +177,17 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
             </div>
           </div>
 
-          {/* Probability bar */}
-          <div style={{ height:8, borderRadius:4, background:"rgba(255,255,255,0.06)", overflow:"hidden" }}>
-            <div style={{ height:"100%", width:aiPct+"%", background:C.green, borderRadius:4, transition:"width 1s ease" }} />
+          {/* Probability bar with labels */}
+          <div style={{ marginBottom:4 }}>
+            <div style={{ height:10, borderRadius:5, background:"rgba(255,255,255,0.06)", overflow:"hidden", position:"relative" }}>
+              <div style={{ position:"absolute", left:0, top:0, height:"100%", width:aiPct+"%", background:"linear-gradient(90deg,"+C.green+",rgba(46,204,138,0.7))", borderRadius:5, transition:"width 1s ease" }} />
+              <div style={{ position:"absolute", left:"50%", top:0, height:"100%", width:1, background:"rgba(255,255,255,0.15)" }} />
+            </div>
+            <div style={{ display:"flex", justifyContent:"space-between", marginTop:3 }}>
+              <span style={{ fontSize:10, color:C.t3 }}>← {t1short} wins</span>
+              <span style={{ fontSize:10, color:C.t3 }}>50/50</span>
+              <span style={{ fontSize:10, color:C.t3 }}>{t2short} wins →</span>
+            </div>
           </div>
 
           {/* Market vs AI strip */}
@@ -205,21 +213,30 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
       {/* BINARY (YES/NO) CARD */}
       {!isMatchup && !isCategorical && (
         <div style={{ padding:"20px", borderBottom:"1px solid "+C.border }}>
-          <div style={{ display:"flex", alignItems:"center", gap:16, marginBottom:14 }}>
-            <div style={{ fontSize:56, fontWeight:800, color:verdictColor, fontFamily:"monospace", letterSpacing:"-2px", lineHeight:1 }}>{aiPct}%</div>
-            <div>
-              <div style={{ fontSize:18, fontWeight:700, color:verdictColor, marginBottom:4 }}>{verdictText}</div>
-              {marketValid 
-                ? <div style={{ fontSize:12, color:C.t3 }}>Market: <b style={{color:C.t2}}>{marketPct}%</b> · AI edge: <b style={{color:edge!>0?C.green:C.red}}>{edge!>0?"+":""}{edge}%</b></div>
-                : <div style={{ fontSize:11, color:C.t3 }}>AI from news + forecasters · no market data</div>
-              }
-            </div>
+          {/* SVG GAUGE */}
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", marginBottom:16 }}>
+            <svg width="200" height="110" viewBox="0 0 200 110">
+              {/* Background arc */}
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="14" strokeLinecap="round"/>
+              {/* Colored arc - animated */}
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke={verdictColor} strokeWidth="14" strokeLinecap="round"
+                strokeDasharray={`${(aiPct/100)*251.2} 251.2`} style={{transition:"stroke-dasharray 1s ease"}} opacity="0.9"/>
+              {/* Zone markers */}
+              <text x="16" y="115" fontSize="9" fill="rgba(255,255,255,0.25)" textAnchor="middle">0%</text>
+              <text x="100" y="22" fontSize="9" fill="rgba(255,255,255,0.25)" textAnchor="middle">50%</text>
+              <text x="184" y="115" fontSize="9" fill="rgba(255,255,255,0.25)" textAnchor="middle">100%</text>
+              {/* Center number */}
+              <text x="100" y="90" fontSize="32" fontWeight="800" fill={verdictColor} textAnchor="middle" fontFamily="monospace">{aiPct}%</text>
+              <text x="100" y="108" fontSize="11" fill="rgba(255,255,255,0.4)" textAnchor="middle">{verdictText}</text>
+            </svg>
+            {!marketValid && <div style={{ fontSize:11, color:C.t3, marginTop:-8 }}>AI from news + forecasters</div>}
           </div>
-          <div style={{ height:8, borderRadius:4, background:"rgba(255,255,255,0.06)", overflow:"hidden" }}>
-            <div style={{ height:"100%", borderRadius:4, background:verdictColor, width:aiPct+"%", transition:"width 0.8s ease" }} />
+          {/* Bar */}
+          <div style={{ height:6, borderRadius:3, background:"rgba(255,255,255,0.06)", overflow:"hidden", marginBottom:12 }}>
+            <div style={{ height:"100%", borderRadius:3, background:verdictColor, width:aiPct+"%", transition:"width 0.8s ease" }} />
           </div>
           {marketValid && (
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:6, marginTop:12 }}>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:6 }}>
               <div style={{ textAlign:"center", padding:"8px", background:"rgba(255,255,255,0.03)", borderRadius:8 }}>
                 <div style={{ fontSize:10, color:C.t3, marginBottom:2 }}>Market</div>
                 <div style={{ fontSize:15, fontWeight:700, color:C.t2 }}>{marketPct}%</div>
