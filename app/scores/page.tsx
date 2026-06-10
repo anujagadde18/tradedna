@@ -162,6 +162,18 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
             </div>
           </div>
 
+          {/* SVG GAUGE */}
+          <div style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>
+            <svg width="200" height="115" viewBox="0 0 200 115">
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="14" strokeLinecap="round"/>
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke={aiPct>=50?C.green:C.red} strokeWidth="14" strokeLinecap="round" strokeDasharray={`${(aiPct/100)*251.2} 251.2`} style={{transition:"stroke-dasharray 1s ease"}} opacity="0.9"/>
+              <text x="16" y="114" fontSize="9" fill="rgba(255,255,255,0.3)" textAnchor="middle">{t2short.slice(0,8)}</text>
+              <text x="184" y="114" fontSize="9" fill="rgba(255,255,255,0.3)" textAnchor="middle">{t1short.slice(0,8)}</text>
+              <text x="100" y="88" fontSize="30" fontWeight="800" fill={aiPct>=50?C.green:C.red} textAnchor="middle" fontFamily="monospace">{aiPct}%</text>
+              <text x="100" y="108" fontSize="10" fill="rgba(255,255,255,0.35)" textAnchor="middle">{winner} probability</text>
+            </svg>
+          </div>
+
           {/* Two team boxes */}
           <div style={{ display:"grid", gridTemplateColumns:"1fr 32px 1fr", alignItems:"center", gap:8, marginBottom:16 }}>
             <div style={{ padding:"14px 12px", borderRadius:12, background:aiPct>=50?"rgba(46,204,138,0.07)":"rgba(255,255,255,0.02)", border:"1px solid "+(aiPct>=50?"rgba(46,204,138,0.2)":C.border), textAlign:"center" }}>
