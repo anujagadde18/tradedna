@@ -130,6 +130,11 @@ export async function GET(request: NextRequest) {
 
     const moneylineMarket = markets.length > 1 ? findMoneyline(markets) : null;
 
+    // If no moneyline found in multi-market event, reject it
+    if (markets.length > 10 && !moneylineMarket) {
+      return Response.json({ error: 'Multi-market prop event — please type your question directly instead of pasting URL' }, { status: 400 });
+    }
+
     if (!hasGroupItems && (markets.length === 1 || moneylineMarket)) {
       // -- BINARY --
       const market = moneylineMarket || markets[0];
