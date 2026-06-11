@@ -289,6 +289,7 @@ Question: "${query}"
 Market type: ${marketType}
 ${marketContext}
 ${metaContext}
+${homeTeamHint}
 
 VERIFIED FACTS about these teams/players (treat these as ground truth):
 ${teamFacts || 'No specific team data available.'}
