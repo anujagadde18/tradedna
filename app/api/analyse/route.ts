@@ -201,24 +201,68 @@ async function analyzeWithGroq(
     // Auto-fetch Polymarket odds if not provided
     if (!marketOdds) {
       try {
-        const searchQuery = encodeURIComponent(query.slice(0, 50));
-        const pmRes = await fetch(
-          `https://gamma-api.polymarket.com/events?active=true&closed=false&limit=5&search=${searchQuery}`,
-          { signal: AbortSignal.timeout(4000) }
-        );
-        if (pmRes.ok) {
-          const pmData = await pmRes.json();
-          if (Array.isArray(pmData) && pmData.length > 0) {
-            const event = pmData[0];
-            const markets = event.markets || [];
-            if (markets.length === 1) {
-              const prices = markets[0].outcomePrices;
-              const parsed = typeof prices === 'string' ? JSON.parse(prices) : prices;
-              if (parsed && parsed.length >= 2) {
-                const yes = parseFloat(parsed[0]);
-                const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
-                if (pct >= 5 && pct <= 95) {
-                  marketOdds = pct;
+        // Build slug from query for NBA games
+        const q = query.toLowerCase();
+        let slug = '';
+        
+        // NBA team slug mapping
+        const nbaTeams: Record<string,string> = {
+          'knicks':'nyk','spurs':'sas','celtics':'bos','lakers':'lal',
+          'warriors':'gsw','heat':'mia','bucks':'mil','nuggets':'den',
+          'suns':'phx','clippers':'lac','mavericks':'dal','nets':'bkn',
+          'sixers':'phi','76ers':'phi','raptors':'tor','hawks':'atl',
+          'bulls':'chi','cavaliers':'cle','pistons':'det','pacers':'ind',
+          'wizards':'was','hornets':'cha','magic':'orl','thunder':'okc',
+          'blazers':'por','jazz':'uta','kings':'sac','pelicans':'nop',
+          'timberwolves':'min','rockets':'hou','grizzlies':'mem','spurs':'sas'
+        };
+        
+        // Find team slugs
+        const foundTeams: string[] = [];
+        for (const [name, abbr] of Object.entries(nbaTeams)) {
+          if (q.includes(name)) foundTeams.push(abbr);
+          if (foundTeams.length === 2) break;
+        }
+        
+        if (foundTeams.length === 2) {
+          // Try today and next 3 days
+          const today = new Date();
+          for (let d = 0; d < 4; d++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() + d);
+            const dateStr = date.toISOString().slice(0,10).replace(/-/g,'');
+            const yr = date.getFullYear();
+            const mo = String(date.getMonth()+1).padStart(2,'0');
+            const dy = String(date.getDate()).padStart(2,'0');
+            const dateSlug = `${yr}-${mo}-${dy}`;
+            
+            const trySlug = `nba-${foundTeams[0]}-${foundTeams[1]}-${dateSlug}`;
+            const pmRes = await fetch(
+              `https://gamma-api.polymarket.com/events?slug=${trySlug}`,
+              { signal: AbortSignal.timeout(3000) }
+            );
+            if (pmRes.ok) {
+              const pmData = await pmRes.json();
+              if (Array.isArray(pmData) && pmData.length > 0) {
+                const event = pmData[0];
+                const markets = event.markets || [];
+                // Find moneyline market
+                const moneyline = markets.find((m: any) => {
+                  const q2 = (m.question||'').toLowerCase();
+                  return !q2.includes('o/u') && !q2.includes('spread') && !q2.includes('points') && !q2.includes('rebounds') && m.active !== false;
+                }) || (markets.length === 1 ? markets[0] : null);
+                
+                if (moneyline) {
+                  const prices = moneyline.outcomePrices;
+                  const parsed = typeof prices === 'string' ? JSON.parse(prices) : prices;
+                  if (parsed && parsed.length >= 2) {
+                    const yes = parseFloat(parsed[0]);
+                    const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
+                    if (pct >= 5 && pct <= 95) {
+                      marketOdds = pct;
+                      break;
+                    }
+                  }
                 }
               }
             }
