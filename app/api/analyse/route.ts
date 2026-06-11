@@ -264,7 +264,10 @@ RULES:
 7. Never say "Limited data available" if VERIFIED FACTS are provided above
 8. Bull = reasons the YES outcome happens. Bear = reasons it does NOT happen.
 9. If VERIFIED FACTS mention a specific win probability percentage, use that as your probability base
-10. For NBA games: if facts say "89% favorites", set probability to 87-91%
+10. For NBA/sports games: if facts mention betting odds like "-218" or "+180", convert them: -218 means 68% favorite, +180 means 36% favorite. Use that as your probability base.
+11. If facts say team is "home favorite" or "must-win elimination game", factor in home advantage (+8%) and elimination motivation (+5%)
+12. NEVER default to 58% — always reason from the facts provided
+13. For NBA Finals: series leader momentum matters — team leading 3-1 has ~65% chance even on road
 
 Return ONLY this JSON:
 {"probability":58,"bull":["Specific fact supporting YES outcome","Second fact","Third fact"],"bear":["Specific risk or counter-argument","Second risk","Third risk"],"keyRisk":"Most important unknown factor","verdict":"3-5 word verdict"}
