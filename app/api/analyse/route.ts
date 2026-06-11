@@ -283,13 +283,14 @@ async function analyzeWithGroq(
     
     const teamFacts = [globalSportsContext, nbaContext, eurovisionFacts].filter(Boolean).join(' | ');
     
+    const hint = typeof homeTeamHint !== 'undefined' ? homeTeamHint : '';
     const prompt = `You are a prediction market analyst. Return ONLY valid JSON. No other text.
 
 Question: "${query}"
 Market type: ${marketType}
 ${marketContext}
 ${metaContext}
-${homeTeamHint}
+${hint}
 
 VERIFIED FACTS about these teams/players (treat these as ground truth):
 ${teamFacts || 'No specific team data available.'}
