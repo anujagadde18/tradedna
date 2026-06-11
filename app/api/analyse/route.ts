@@ -214,7 +214,7 @@ async function analyzeWithGroq(
           'bulls':'chi','cavaliers':'cle','pistons':'det','pacers':'ind',
           'wizards':'was','hornets':'cha','magic':'orl','thunder':'okc',
           'blazers':'por','jazz':'uta','kings':'sac','pelicans':'nop',
-          'timberwolves':'min','rockets':'hou','grizzlies':'mem','spurs':'sas'
+          'timberwolves':'min','rockets':'hou','grizzlies':'mem'
         };
         
         // Find team slugs
