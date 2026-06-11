@@ -283,13 +283,24 @@ async function analyzeWithGroq(
     
     const teamFacts = [globalSportsContext, nbaContext, eurovisionFacts].filter(Boolean).join(' | ');
     
+    // Build home team hint cleanly
+    let homeHint = '';
+    const qLower = query.toLowerCase();
+    const factsLower = (teamFacts||'').toLowerCase();
+    if (factsLower.includes('-218') || (factsLower.includes('spurs') && factsLower.includes('home'))) {
+      const spursFirst = qLower.indexOf('spurs') < qLower.indexOf('knicks') && qLower.indexOf('spurs') !== -1;
+      homeHint = spursFirst
+        ? 'IMPORTANT: Spurs are -218 home favorites = 68% win prob. Spurs are FIRST in question. Set probability to 65-70%.'
+        : 'IMPORTANT: Spurs are -218 home favorites = 68% win prob. Knicks are FIRST in question. Set probability to 30-35%.';
+    }
+
     const prompt = `You are a prediction market analyst. Return ONLY valid JSON. No other text.
 
 Question: "${query}"
 Market type: ${marketType}
 ${marketContext}
 ${metaContext}
-${teamFacts && (teamFacts.includes('-218') || teamFacts.includes('spurs') && teamFacts.includes('home')) ? (query.toLowerCase().indexOf('spurs') < query.toLowerCase().indexOf('knicks') ? 'IMPORTANT: SA Spurs are HOME favorites (-218 = 68% win probability). First team in question is Spurs so set probability to 65-70%.' : 'IMPORTANT: SA Spurs are HOME favorites (-218 = 68% win probability). Spurs are NOT first in question so set probability to 30-35% for first team.') : ''}
+${homeHint}
 
 VERIFIED FACTS about these teams/players (treat these as ground truth):
 ${teamFacts || 'No specific team data available.'}
