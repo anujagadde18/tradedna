@@ -52,7 +52,7 @@ const SPORTS_CONTEXT: Record<string, string> = {
   'warriors': 'Golden State Warriors: Stephen Curry still elite shooter',
   '76ers': 'Philadelphia 76ers: SHOCKED Celtics 4-3 in Round 1. Tyrese Maxey 31PPG series average. Lost Game 1 at MSG 98-137 badly. Trail series 0-1. Joel Embiid health key concern for rest of series.',
   'heat': 'Miami Heat: Jimmy Butler clutch performer, strong playoff culture',
-  'spurs': 'San Antonio Spurs: NBA FINALS vs Knicks — TRAIL 1-3. MUST WIN Game 5 at home Saturday June 13 or season over. Led Game 4 by 29pts but collapsed in second half. Spurs -218 home favorites. Wemby needs monster game. Home crowd will be electric — elimination game atmosphere. Castle and Fox need big games.',
+  'spurs': 'San Antonio Spurs: NBA FINALS vs Knicks — TRAIL 1-3. MUST WIN Game 5 at home. Spurs -218 favorites = 68% implied win probability. Home court + elimination motivation = massive advantage. Wemby averaged 32pts in Game 3 win. Home crowd at Frost Bank Center will be electric. Historical data: home teams win 65%+ of elimination games.',
   'trail blazers': 'Portland Trail Blazers: Damian Lillard legacy, rebuilding team',
   'hawks': 'Atlanta Hawks: Trae Young playmaker, inconsistent defense',
   'pistons': 'Detroit Pistons: 1st seed East. Beat Magic 4-3 in Round 1. Home court advantage vs Cavaliers Round 2. Cade Cunningham 27PPG. Lost Game 1 at home to CLE. Must bounce back in Game 2.',
