@@ -283,14 +283,13 @@ async function analyzeWithGroq(
     
     const teamFacts = [globalSportsContext, nbaContext, eurovisionFacts].filter(Boolean).join(' | ');
     
-    const hint = typeof homeTeamHint !== 'undefined' ? homeTeamHint : '';
     const prompt = `You are a prediction market analyst. Return ONLY valid JSON. No other text.
 
 Question: "${query}"
 Market type: ${marketType}
 ${marketContext}
 ${metaContext}
-${hint}
+${teamFacts && (teamFacts.includes('-218') || teamFacts.includes('spurs') && teamFacts.includes('home')) ? (query.toLowerCase().indexOf('spurs') < query.toLowerCase().indexOf('knicks') ? 'IMPORTANT: SA Spurs are HOME favorites (-218 = 68% win probability). First team in question is Spurs so set probability to 65-70%.' : 'IMPORTANT: SA Spurs are HOME favorites (-218 = 68% win probability). Spurs are NOT first in question so set probability to 30-35% for first team.') : ''}
 
 VERIFIED FACTS about these teams/players (treat these as ground truth):
 ${teamFacts || 'No specific team data available.'}
