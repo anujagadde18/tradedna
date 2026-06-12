@@ -336,9 +336,9 @@ Verdict options: "Strong YES signal", "Leaning YES", "Too close to call", "Leani
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
+        model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 500,
+        max_tokens: 800,
         temperature: 0.1,
       }),
       signal: AbortSignal.timeout(10000),
