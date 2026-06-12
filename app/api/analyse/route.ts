@@ -43,9 +43,6 @@ const SPORTS_CONTEXT: Record<string, string> = {
   'argentina': 'Argentina: Defending champions 2022. Messi final World Cup at 38 — legendary send-off possible. Alvarez, Mac Allister, De Paul supporting cast. Group vs USA, Turkey, Australia. 9% market odds.',
   'germany': 'Germany: Musiala, Wirtz young core. Rebuilding under Nagelsmann. Hosting Euro 2024 was good prep. Playing in North American venues. Dark horse at 7% odds.',
   'portugal': 'Portugal: Ronaldo legacy at 41 — possibly final World Cup. Vitinha, Leao, Fernandes the future. Bruno Fernandes creative hub. 10% market odds.',
-  'usa': 'USA: Host nation. Pulisic leads, McKennie, Reyna, Musah midfield. Massive home crowd advantage. Group D vs Argentina, Turkey, Australia. Playing at SoFi Stadium LA. Historic chance to go deep as hosts.',
-  'mexico': 'Mexico: Host nation. Raul Jimenez, Hirving Lozano. Group A vs South Africa, South Korea, Czechia. Opening game at Azteca June 11. Massive home support.',
-  'canada': 'Canada: Host nation. Alphonso Davies electric. Group B vs Bosnia, Qatar, Switzerland. BMO Field Toronto June 12.',
 
 
   'canadiens': 'Montreal Canadiens: 2026 NHL Playoffs. Won series 3-2 vs Sabres before Game 6. Lost Game 6 at home 3-8 — massive collapse. Series now tied 3-3. Game 7 in BUFFALO tonight (home ice for Sabres). Canadiens won earlier in Buffalo this series 6-3. Nick Suzuki, Cole Caufield, Juraj Slafkovsky, Ivan Demidov key players.',
@@ -110,9 +107,6 @@ const NBA_CONTEXT: Record<string, string> = {
   'argentina': 'Argentina: Defending champions 2022. Messi final World Cup at 38 — legendary send-off possible. Alvarez, Mac Allister, De Paul supporting cast. Group vs USA, Turkey, Australia. 9% market odds.',
   'germany': 'Germany: Musiala, Wirtz young core. Rebuilding under Nagelsmann. Hosting Euro 2024 was good prep. Playing in North American venues. Dark horse at 7% odds.',
   'portugal': 'Portugal: Ronaldo legacy at 41 — possibly final World Cup. Vitinha, Leao, Fernandes the future. Bruno Fernandes creative hub. 10% market odds.',
-  'usa': 'USA: Host nation. Pulisic leads, McKennie, Reyna, Musah midfield. Massive home crowd advantage. Group D vs Argentina, Turkey, Australia. Playing at SoFi Stadium LA. Historic chance to go deep as hosts.',
-  'mexico': 'Mexico: Host nation. Raul Jimenez, Hirving Lozano. Group A vs South Africa, South Korea, Czechia. Opening game at Azteca June 11. Massive home support.',
-  'canada': 'Canada: Host nation. Alphonso Davies electric. Group B vs Bosnia, Qatar, Switzerland. BMO Field Toronto June 12.',
 
 
   'canadiens': 'Montreal Canadiens: 2026 NHL Playoffs. Won series 3-2 vs Sabres before Game 6. Lost Game 6 at home 3-8 — massive collapse. Series now tied 3-3. Game 7 in BUFFALO tonight (home ice for Sabres). Canadiens won earlier in Buffalo this series 6-3. Nick Suzuki, Cole Caufield, Juraj Slafkovsky, Ivan Demidov key players.',
