@@ -513,8 +513,8 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
               {[
-                {sport:'🏀',match:'Knicks vs Spurs G5',time:'Tonight · 8:30 PM ET · SA'},
-                {sport:'⚽',match:'World Cup 2026',time:'Starts June 11!'},
+                {sport:'🏀',match:'Knicks vs Spurs G5',time:'Sat Jun 13 · 8:30 PM ET · SA'},
+                {sport:'⚽',match:'USA vs Paraguay',time:'Tomorrow · 3PM ET · LA'},
               ].map((m,i)=>(
                 <div key={i} style={{background:C.bg2,borderRadius:10,padding:'10px 12px',display:'flex',alignItems:'center',gap:8}}>
                   <span style={{fontSize:16}}>{m.sport}</span>
@@ -533,9 +533,9 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <span style={{fontSize:24}}>🏎️</span>
                 <div>
-                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🏎️ Antonelli WON Monaco GP! 5th straight win!</div>
-                  <div style={{fontSize:12,color:C.amber,fontWeight:600}}>Leads championship by 66pts · Next: Barcelona Jun 12-14</div>
-                  <div style={{fontSize:10,color:C.t3,marginTop:2}}>Hamilton P2 · Hadjar P3 · Verstappen DNF</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🏎️ F1 Barcelona GP — THIS WEEKEND!</div>
+                  <div style={{fontSize:12,color:C.amber,fontWeight:600}}>Jun 12-14 · Antonelli leads +66pts · Round 7</div>
+                  <div style={{fontSize:10,color:C.t3,marginTop:2}}>Antonelli 5 wins from 6 races · See driver odds</div>
                 </div>
               </div>
               <span style={{fontSize:11,color:C.purpleL,fontWeight:600}}>Driver odds →</span>
