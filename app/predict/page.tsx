@@ -101,8 +101,11 @@ export default function PredictPage() {
 
     Promise.all([iplPromise, polyPromise]).then(([ipl, poly]) => {
       const iplIds = new Set(ipl.map((m:any) => m.id));
-      const combined = [...ipl, ...poly.filter((m:any) => !iplIds.has(m.id))];
-      setMatches(combined.slice(0,5));
+      const polyFiltered = poly.filter((m:any) => !iplIds.has(m.id));
+      const allIds = new Set([...ipl, ...polyFiltered].map((m:any) => m.id));
+      const hardcoded = nbaMatches.filter((m:any) => !allIds.has(m.id));
+      const combined = [...hardcoded, ...ipl, ...polyFiltered];
+      setMatches(combined.slice(0,6));
       setLoadingMatches(false);
     });
   }, []);
