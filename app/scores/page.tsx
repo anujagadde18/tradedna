@@ -499,7 +499,7 @@ function ScoresPageContent() {
   const [breakdown, setBreakdown]    = useState<any[]>([]);
   const [realSources, setRealSources] = useState<any[]>([]);
   const [invalidQuestion, setInvalidQuestion] = useState<{reason:string;examples:string[]}|null>(null);
-  const [odds, setOdds]             = useState<number|null>(null);
+  const [odds, setOdds]             = useState<number|null>(urlMarketOdds ? parseInt(urlMarketOdds) : null);
   const [marketTitle, setMarketTitle] = useState<string>('');
   const [mtype, setMtype]           = useState<'binary'|'categorical'>('binary');
   const [outcomes, setOutcomes]     = useState<any[]>([]);

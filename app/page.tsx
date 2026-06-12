@@ -489,7 +489,7 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
                           <div style={{fontSize:14,fontWeight:800,color:C.t3,fontFamily:'monospace',marginTop:2}}>{m.awayPct}%</div>
                         </div>
                       </div>
-                      <button onClick={()=>go(m.q)}
+                      <button onClick={()=>go(m.q, m.homePct)}
                         style={{width:'100%',padding:'6px',borderRadius:7,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,cursor:'pointer',fontSize:11,fontWeight:600}}>
                         🤖 AI prediction
                       </button>
