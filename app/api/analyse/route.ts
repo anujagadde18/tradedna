@@ -32,6 +32,10 @@ const SPORTS_CONTEXT: Record<string, string> = {
   'thunder': 'Oklahoma City Thunder: 1st seed West, Shai Gilgeous-Alexander MVP frontrunner 32PPG',
   'celtics': 'Boston Celtics: ELIMINATED in Round 1 by 76ers 3-4. Massive upset. Defending champions gone.',
   // WORLD CUP 2026 TEAMS — real data
+  'usa': 'USA: Host nation World Cup 2026. Pulisic leads, McKennie, Reyna, Musah midfield. Playing Group D vs Paraguay, Australia, Turkey. Home crowd massive advantage at SoFi Stadium LA. Market gives USA ~65% to beat Paraguay.',
+  'paraguay': 'Paraguay: Group D vs USA June 12. Underdog — market gives ~35% chance vs USA. Physical defensive team.',
+  'canada': 'Canada: Host nation World Cup 2026. Alphonso Davies key player. Group B vs Bosnia June 12 Toronto. Home crowd advantage. Market gives Canada ~60% to beat Bosnia.',
+  'bosnia': 'Bosnia: Group B vs Canada June 12. First World Cup appearance. Edin Dzeko aging but experienced. Market gives ~40% vs Canada.',
   'spain': 'Spain: FIFA #1 ranked. EURO 2024 champions. Youngest squad in tournament — Yamal 18, Pedri 23, Nico Williams 22. Tiki-taka evolved with pace. Group stage vs Croatia, Morocco, Brazil. Rodri anchors midfield. 16% Polymarket odds. Goldman Sachs model gives Spain 26% win probability — highest of any team.',
   'france': 'France: FIFA #2. Mbappe leads attack at peak powers. Tchouameni, Rabiot midfield. Cherki emerging star. Lost EURO 2024 final to Spain. Deep squad. Group vs Argentina, Australia, Poland. 17% market odds — slight favorite. Strong historically in tournaments.',
   'england': 'England: Bellingham, Saka, Foden core. Finally turning potential into results. Lost EURO 2024 final to Spain. Group vs Serbia, Nigeria, South Korea. 11% market odds. Playing in USA venues — no true home advantage but English fans travel in numbers.',
@@ -95,6 +99,10 @@ const NBA_CONTEXT: Record<string, string> = {
   'nuggets': 'Denver Nuggets: Nikola Jokic MVP candidate 26pts 12reb 9ast, Jamal Murray injury concern, 2023 champions, experienced playoff team',
   'thunder': 'Oklahoma City Thunder: 1st seed West. Swept Suns 4-0 in Round 1. SGA averaging 34PPG in playoffs. Best record in NBA. Home court advantage. 89% favorites vs Lakers. Wembanyama-level defense.',
   'celtics': 'Boston Celtics: 1st seed East, Jayson Tatum 26PPG, defending champions, deepest roster in NBA',  // WORLD CUP 2026 TEAMS — real data
+  'usa': 'USA: Host nation World Cup 2026. Pulisic leads, McKennie, Reyna, Musah midfield. Playing Group D vs Paraguay, Australia, Turkey. Home crowd massive advantage at SoFi Stadium LA. Market gives USA ~65% to beat Paraguay.',
+  'paraguay': 'Paraguay: Group D vs USA June 12. Underdog — market gives ~35% chance vs USA. Physical defensive team.',
+  'canada': 'Canada: Host nation World Cup 2026. Alphonso Davies key player. Group B vs Bosnia June 12 Toronto. Home crowd advantage. Market gives Canada ~60% to beat Bosnia.',
+  'bosnia': 'Bosnia: Group B vs Canada June 12. First World Cup appearance. Edin Dzeko aging but experienced. Market gives ~40% vs Canada.',
   'spain': 'Spain: FIFA #1 ranked. EURO 2024 champions. Youngest squad in tournament — Yamal 18, Pedri 23, Nico Williams 22. Tiki-taka evolved with pace. Group stage vs Croatia, Morocco, Brazil. Rodri anchors midfield. 16% Polymarket odds. Goldman Sachs model gives Spain 26% win probability — highest of any team.',
   'france': 'France: FIFA #2. Mbappe leads attack at peak powers. Tchouameni, Rabiot midfield. Cherki emerging star. Lost EURO 2024 final to Spain. Deep squad. Group vs Argentina, Australia, Poland. 17% market odds — slight favorite. Strong historically in tournaments.',
   'england': 'England: Bellingham, Saka, Foden core. Finally turning potential into results. Lost EURO 2024 final to Spain. Group vs Serbia, Nigeria, South Korea. 11% market odds. Playing in USA venues — no true home advantage but English fans travel in numbers.',

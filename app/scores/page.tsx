@@ -141,7 +141,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
   const metaculusSource = allSources.find(s => s.name === "Metaculus");
   const polymarketSource = allSources.find(s => s.name === "Polymarket");
 
-  const cleanTeam = (n: string) => n.replace(/\s*(nba|nfl|nhl|mlb|ipl|f1|finals|game\s*\d+|series|playoffs|wcf|ecf|round\s*\d+|championship).*$/i,'').trim();
+  const cleanTeam = (n: string) => n.replace(/\s*(nba|nfl|nhl|mlb|ipl|f1|finals|game\s*\d+|series|playoffs|wcf|ecf|round\s*\d+|championship|world cup|—|\s*world\s*$).*$/i,'').trim();
   const t1short = cleanTeam(team1).split(' ').slice(0,3).join(' ');
   const t2short = cleanTeam(team2).split(' ').slice(0,3).join(' ');
   const winner = aiPct >= 50 ? t1short : t2short;
