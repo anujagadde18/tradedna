@@ -110,7 +110,7 @@ const NBA_CONTEXT: Record<string, string> = {
   'canadiens': 'Montreal Canadiens: 2026 NHL Playoffs. Won series 3-2 vs Sabres before Game 6. Lost Game 6 at home 3-8 — massive collapse. Series now tied 3-3. Game 7 in BUFFALO tonight (home ice for Sabres). Canadiens won earlier in Buffalo this series 6-3. Nick Suzuki, Cole Caufield, Juraj Slafkovsky, Ivan Demidov key players.',
   'sabres': 'Buffalo Sabres: 2026 NHL Playoffs. Forced Game 7 with 8-3 comeback win in Game 6. Rasmus Dahlin had 5 points in Game 6. Home ice advantage tonight at KeyBank Center. Tage Thompson driving offense. Sabres are -122 favorites on moneyline. Winner faces Carolina Hurricanes.',
 
-  'knicks': 'New York Knicks: Brunson 31PPG playoffs, Towns and Anunoby key, MSG fortress home advantage, 11 game playoff winning streak.',
+  'knicks': 'New York Knicks: NBA FINALS lead 3-1. Brunson 36pts in Game 4. Knicks are +180 ROAD UNDERDOGS for Game 5 at San Antonio = 36% win probability for Game 5.',
   'warriors': 'Golden State Warriors: Stephen Curry still elite, experienced playoff team, Draymond Green defense',
   'lakers': 'Los Angeles Lakers: LeBron James still performing, Anthony Davis 25pts 12reb, inconsistent season',
   'heat': 'Miami Heat: Jimmy Butler clutch performer, strong playoff culture, Erik Spoelstra coaching edge',
