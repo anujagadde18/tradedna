@@ -34,10 +34,9 @@ export default function PredictPage() {
     // Today's fixed matches + live Polymarket markets
     // IPL Playoffs + NBA Conference Finals
     const nbaMatches = [
-      {id:'rcb-gt-q1-may26-2026',title:'RCB vs GT — IPL Qualifier 1',team1:'Royal Challengers Bengaluru',team2:'Gujarat Titans',time:'May 26 · 7:30 PM IST',venue:'HPCA Stadium, Dharamsala',aiPrediction:'Royal Challengers Bengaluru',aiConfidence:55,sport:'🏏',date:'2026-05-26',category:'cricket'},
-      {id:'srh-rr-elim-may27-2026',title:'SRH vs RR — IPL Eliminator',team1:'Sunrisers Hyderabad',team2:'Rajasthan Royals',time:'May 27 · 7:30 PM IST',venue:'New International Cricket Stadium, Mullanpur',aiPrediction:'Sunrisers Hyderabad',aiConfidence:55,sport:'🏏',date:'2026-05-27',category:'cricket'},
-      {id:'knicks-cavs-ecf-2026',title:'NY Knicks vs Cleveland Cavaliers — ECF',team1:'NY Knicks',team2:'Cleveland Cavaliers',time:'Ongoing · NBA ECF',venue:'MSG, New York',aiPrediction:'NY Knicks',aiConfidence:62,sport:'🏀',date:new Date().toISOString().slice(0,10),category:'nba'},
-      {id:'okc-spurs-wcf-g6-2026',title:'SA Spurs vs OKC Thunder — WCF Game 6',team1:'SA Spurs',team2:'OKC Thunder',time:'Tonight · 8:30 PM ET · San Antonio',venue:'AT&T Center, San Antonio',aiPrediction:'OKC Thunder',aiConfidence:65,sport:'🏀',date:new Date().toISOString().slice(0,10),category:'nba'},
+      {id:'usa-paraguay-wc-jun12',title:'USA vs Paraguay — World Cup 2026',team1:'USA',team2:'Paraguay',time:'Tomorrow · 3PM ET · SoFi Stadium LA',venue:'SoFi Stadium, Los Angeles',aiPrediction:'USA',aiConfidence:68,sport:'⚽',date:'2026-06-12',category:'soccer'},
+      {id:'canada-bosnia-wc-jun12',title:'Canada vs Bosnia — World Cup 2026',team1:'Canada',team2:'Bosnia',time:'Tomorrow · 6PM ET · Toronto',venue:'BMO Field, Toronto',aiPrediction:'Canada',aiConfidence:62,sport:'⚽',date:'2026-06-12',category:'soccer'},
+      {id:'spurs-knicks-finals-g5-jun13',title:'SA Spurs vs NY Knicks — NBA Finals Game 5',team1:'SA Spurs',team2:'NY Knicks',time:'Sat Jun 13 · 8:30 PM ET',venue:'Frost Bank Center, San Antonio',aiPrediction:'SA Spurs',aiConfidence:65,sport:'🏀',date:'2026-06-13',category:'nba'},
     ];
 
     // FULLY AUTOMATIC — IPL API + Polymarket, zero manual updates needed
