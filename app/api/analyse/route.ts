@@ -601,7 +601,7 @@ export async function POST(request: NextRequest) {
       // Add fallback bull/bear from headlines if groqResult failed
       if (!groqResult && headlines.length > 0) {
         headlines.slice(0,3).forEach(h => extraSources.push({ name: 'Signal', sig: h.slice(0,100), url: '', category: 'news', type: 'strong', contribution: 5 }));
-        if (teamFacts) extraSources.push({ name: 'Signal', sig: teamFacts.slice(0,100), url: '', category: 'news', type: 'contrary', contribution: -5 });
+        
       }
       const sources = buildSources(groqResult, extraSources);
       fetch(new URL('/api/track', request.url).toString(), {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({anonId:anonId||'',name:'analysis_run',props:{query:query.slice(0,100),confidence:cricketContext.baseProbability}})}).catch(()=>{});
@@ -626,7 +626,7 @@ export async function POST(request: NextRequest) {
       // Add fallback bull/bear from headlines if groqResult failed
       if (!groqResult && headlines.length > 0) {
         headlines.slice(0,3).forEach(h => extraSources.push({ name: 'Signal', sig: h.slice(0,100), url: '', category: 'news', type: 'strong', contribution: 5 }));
-        if (teamFacts) extraSources.push({ name: 'Signal', sig: teamFacts.slice(0,100), url: '', category: 'news', type: 'contrary', contribution: -5 });
+        
       }
       const sources = buildSources(groqResult, extraSources);
       fetch(new URL('/api/track', request.url).toString(), {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({anonId:anonId||'',name:'analysis_run',props:{query:query.slice(0,100),confidence:finalConfidence}})}).catch(()=>{});
