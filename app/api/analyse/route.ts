@@ -598,6 +598,11 @@ export async function POST(request: NextRequest) {
         { name: 'IPL Stats', sig: `${t1.code}: ${t1.form} (${t1.formScore}% wins, ${t1.pts}pts) vs ${t2.code}: ${t2.form} (${t2.formScore}% wins, ${t2.pts}pts)`, url: '', category: 'market', type: t1.formScore>t2.formScore?'strong':'contrary', contribution: Math.round((t1.formScore-t2.formScore)/5) },
       ];
       if (metaculus.probability !== null) extraSources.push({ name: 'Metaculus', sig: `Forecasters: ${metaculus.probability}%`, url: 'https://metaculus.com', category: 'community', type: 'mixed', contribution: Math.round((metaculus.probability-50)/5) });
+      // Add fallback bull/bear from headlines if groqResult failed
+      if (!groqResult && headlines.length > 0) {
+        headlines.slice(0,3).forEach(h => extraSources.push({ name: 'Signal', sig: h.slice(0,100), url: '', category: 'news', type: 'strong', contribution: 5 }));
+        if (teamFacts) extraSources.push({ name: 'Signal', sig: teamFacts.slice(0,100), url: '', category: 'news', type: 'contrary', contribution: -5 });
+      }
       const sources = buildSources(groqResult, extraSources);
       fetch(new URL('/api/track', request.url).toString(), {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({anonId:anonId||'',name:'analysis_run',props:{query:query.slice(0,100),confidence:cricketContext.baseProbability}})}).catch(()=>{});
       return Response.json({ valid: true, confidence: cricketContext.baseProbability, keywords, articleCount: relevantArticles.length, sources, groqVerdict: groqResult?.verdict||null, marketType, breakdown: cricketContext.breakdown||null });
@@ -618,9 +623,15 @@ export async function POST(request: NextRequest) {
       ];
       if (metaculus.probability !== null) extraSources.push({ name: 'Metaculus', sig: `Expert forecasters: ${metaculus.probability}%`, url: 'https://metaculus.com', category: 'community', type: metaculus.probability>55?'strong':'contrary', contribution: Math.round((metaculus.probability-50)/3) });
       relevantArticles.slice(0,3).forEach(a => extraSources.push({ name: a.source, sig: a.title, url: a.url, category: a.category, type: 'mixed', contribution: 1 }));
+      // Add fallback bull/bear from headlines if groqResult failed
+      if (!groqResult && headlines.length > 0) {
+        headlines.slice(0,3).forEach(h => extraSources.push({ name: 'Signal', sig: h.slice(0,100), url: '', category: 'news', type: 'strong', contribution: 5 }));
+        if (teamFacts) extraSources.push({ name: 'Signal', sig: teamFacts.slice(0,100), url: '', category: 'news', type: 'contrary', contribution: -5 });
+      }
       const sources = buildSources(groqResult, extraSources);
       fetch(new URL('/api/track', request.url).toString(), {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({anonId:anonId||'',name:'analysis_run',props:{query:query.slice(0,100),confidence:finalConfidence}})}).catch(()=>{});
-      return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources, groqVerdict: groqResult?.verdict||null, marketType });
+      const finalSources = sources.length > 0 ? sources : fallbackSources;
+    return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources: finalSources, groqVerdict: groqResult?.verdict||null, marketType });
     }
 
     const groqResult = await analyzeWithGroq(query, headlines, metaculus.probability, null, marketType);
@@ -628,6 +639,12 @@ export async function POST(request: NextRequest) {
       return Response.json({ valid: true, confidence: 0, keywords, articleCount: 0, sources: [], noData: true, message: 'No data found. Paste a Polymarket URL for live market analysis.' });
     }
     let finalConfidence = 50;
+    // Add fallback signals from headlines when Groq fails
+    const fallbackSources: any[] = [];
+    if (!groqResult) {
+      relevantArticles.slice(0,3).forEach((a:any) => fallbackSources.push({ name: 'Signal', sig: a.title?.slice(0,100)||'', url: a.url||'', category: 'news', type: 'strong', contribution: 5 }));
+      if (teamFacts) fallbackSources.push({ name: 'Signal', sig: teamFacts.slice(0,100), url: '', category: 'news', type: 'contrary', contribution: -5 });
+    }
     if (groqResult) {
       finalConfidence = groqResult.probability;
       if (metaculus.probability !== null) finalConfidence = Math.round(groqResult.probability*wNews + metaculus.probability*wTech);
@@ -640,7 +657,8 @@ export async function POST(request: NextRequest) {
     relevantArticles.slice(0,4).forEach(a => extraSources.push({ name: a.source, sig: a.title, url: a.url, category: a.category, type: 'mixed', contribution: 1 }));
     const sources = buildSources(groqResult, extraSources);
     fetch(new URL('/api/track', request.url).toString(), {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({anonId:anonId||'',name:'analysis_run',props:{query:query.slice(0,100),confidence:finalConfidence}})}).catch(()=>{});
-    return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources, groqVerdict: groqResult?.verdict||null, marketType });
+    const finalSources = sources.length > 0 ? sources : fallbackSources;
+    return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources: finalSources, groqVerdict: groqResult?.verdict||null, marketType });
 
   } catch (err: any) {
     return Response.json({ error: err.message }, { status: 500 });
