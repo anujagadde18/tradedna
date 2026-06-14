@@ -630,8 +630,7 @@ export async function POST(request: NextRequest) {
       }
       const sources = buildSources(groqResult, extraSources);
       fetch(new URL('/api/track', request.url).toString(), {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({anonId:anonId||'',name:'analysis_run',props:{query:query.slice(0,100),confidence:finalConfidence}})}).catch(()=>{});
-      const finalSources = sources.length > 0 ? sources : fallbackSources;
-    return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources: finalSources, groqVerdict: groqResult?.verdict||null, marketType });
+    return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources, groqVerdict: groqResult?.verdict||null, marketType });
     }
 
     const groqResult = await analyzeWithGroq(query, headlines, metaculus.probability, null, marketType);
@@ -657,8 +656,8 @@ export async function POST(request: NextRequest) {
     relevantArticles.slice(0,4).forEach(a => extraSources.push({ name: a.source, sig: a.title, url: a.url, category: a.category, type: 'mixed', contribution: 1 }));
     const sources = buildSources(groqResult, extraSources);
     fetch(new URL('/api/track', request.url).toString(), {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({anonId:anonId||'',name:'analysis_run',props:{query:query.slice(0,100),confidence:finalConfidence}})}).catch(()=>{});
-    const finalSources = sources.length > 0 ? sources : fallbackSources;
-    return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources: finalSources, groqVerdict: groqResult?.verdict||null, marketType });
+    const allSources = [...sources, ...fallbackSources];
+    return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources: allSources.length > 0 ? allSources : sources, groqVerdict: groqResult?.verdict||null, marketType });
 
   } catch (err: any) {
     return Response.json({ error: err.message }, { status: 500 });
