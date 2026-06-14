@@ -642,7 +642,6 @@ export async function POST(request: NextRequest) {
     const fallbackSources: any[] = [];
     if (!groqResult) {
       relevantArticles.slice(0,3).forEach((a:any) => fallbackSources.push({ name: 'Signal', sig: a.title?.slice(0,100)||'', url: a.url||'', category: 'news', type: 'strong', contribution: 5 }));
-      if (teamFacts) fallbackSources.push({ name: 'Signal', sig: teamFacts.slice(0,100), url: '', category: 'news', type: 'contrary', contribution: -5 });
     }
     if (groqResult) {
       finalConfidence = groqResult.probability;
