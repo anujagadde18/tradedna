@@ -334,7 +334,7 @@ export default function HomePage() {
                         </div>
                         <div style={{fontSize:9,color:C.t3,textAlign:'center' as const}}>{e.volume24hFormatted} traded today · {e.marketCount} outcomes</div>
                         <div style={{display:'flex',gap:6}}>
-                          <button onClick={()=>go(e.url)}
+                          <button onClick={()=>go(e.title)}
                             style={{flex:2,padding:'7px',borderRadius:8,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,cursor:'pointer',fontSize:11,fontWeight:600}}>
                             🤖 AI prediction
                           </button>
@@ -369,7 +369,7 @@ export default function HomePage() {
                   const cs = CAT_COLORS[e.category]||CAT_COLORS.other;
                   const isYes = e.yesPrice !== null && e.yesPrice >= 50;
                   return (
-                    <button key={e.slug} onClick={()=>go(e.url)}
+                    <button key={e.slug} onClick={()=>go(e.title)}
                       style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:14,padding:'14px',cursor:'pointer',textAlign:'left' as const,transition:'all 0.15s'}}
                       onMouseEnter={ev=>{ev.currentTarget.style.borderColor=C.border2;ev.currentTarget.style.transform='translateY(-2px)';}}
                       onMouseLeave={ev=>{ev.currentTarget.style.borderColor=C.border;ev.currentTarget.style.transform='translateY(0)';}}>
@@ -631,7 +631,7 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
                 const isYes = e.yesPrice!==null && e.yesPrice>=50;
                 const isStrong = e.yesPrice!==null && (e.yesPrice>=70||e.yesPrice<=30);
                 return (
-                  <button key={e.slug} onClick={()=>go(e.url)}
+                  <button key={e.slug} onClick={()=>go(e.title)}
                     style={{width:'100%',display:'grid',gridTemplateColumns:'28px 1fr 72px 80px 88px',padding:'10px 14px',background:'transparent',border:'none',borderBottom:i<events.slice(0,20).length-1?'1px solid rgba(255,255,255,0.04)':'none',cursor:'pointer',textAlign:'left' as const,transition:'background 0.1s',alignItems:'center'}}
                     onMouseEnter={ev=>{ev.currentTarget.style.background=C.bg3;}}
                     onMouseLeave={ev=>{ev.currentTarget.style.background='transparent';}}>
