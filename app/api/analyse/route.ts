@@ -190,6 +190,43 @@ async function fetchMetaculus(keywords: string): Promise<{ probability: number |
   } catch { return { probability: null, count: 0 }; }
 }
 
+
+function calculateProbability(query: string, marketOdds: number | null): number {
+  if (marketOdds && marketOdds > 0) return marketOdds;
+  
+  const q = query.toLowerCase();
+  
+  // World Cup team strength rankings (win probability vs average team)
+  const strength: Record<string, number> = {
+    'spain': 88, 'france': 86, 'england': 78, 'brazil': 82, 'argentina': 83,
+    'germany': 80, 'portugal': 77, 'netherlands': 76, 'belgium': 75, 'italy': 72,
+    'croatia': 68, 'uruguay': 70, 'mexico': 65, 'usa': 62, 'canada': 58,
+    'japan': 60, 'south korea': 58, 'morocco': 63, 'senegal': 60, 'nigeria': 55,
+    'egypt': 52, 'iran': 48, 'saudi arabia': 50, 'australia': 52, 'ecuador': 50,
+    'paraguay': 48, 'bolivia': 40, 'cape verde': 28, 'cabo verde': 28,
+    'curaçao': 20, 'curacao': 20, 'new zealand': 35, 'jordan': 38,
+    'knicks': 58, 'spurs': 52, 'lakers': 55, 'celtics': 60,
+  };
+  
+  // Find teams in query
+  const teams: {name: string, str: number}[] = [];
+  for (const [team, str] of Object.entries(strength)) {
+    if (q.includes(team)) teams.push({name: team, str});
+  }
+  
+  if (teams.length >= 2) {
+    // Sort by position in query (first team = home/favorite context)
+    teams.sort((a, b) => q.indexOf(a.name) - q.indexOf(b.name));
+    const t1 = teams[0].str;
+    const t2 = teams[1].str;
+    // Convert strength to win probability using Bradley-Terry model
+    const prob = Math.round((t1 / (t1 + t2)) * 100);
+    return Math.max(10, Math.min(90, prob));
+  }
+  
+  return 60; // default when unknown teams
+}
+
 async function analyzeWithGroq(
   query: string,
   headlines: string[],
@@ -677,7 +714,9 @@ export async function POST(request: NextRequest) {
     }
     const enrichedHeadlines = [...ctxLines, ...headlines].filter(Boolean).slice(0,6);
     const finalHeadlines = enrichedHeadlines.length > 0 ? enrichedHeadlines : ['Analyze based on general football/sports knowledge'];
-    const groqResult = await analyzeWithGroq(query, finalHeadlines, metaculus.probability, computedProb, marketType);
+    // Calculate probability from team strengths, pass to Groq
+    const calcProb = calculateProbability(query, marketOdds || null);
+    const groqResult = await analyzeWithGroq(query, finalHeadlines, metaculus.probability, calcProb, marketType);
     if (!groqResult && metaculus.probability === null && relevantArticles.length === 0) {
       return Response.json({ valid: true, confidence: 0, keywords, articleCount: 0, sources: [], noData: true, message: 'No data found. Paste a Polymarket URL for live market analysis.' });
     }
