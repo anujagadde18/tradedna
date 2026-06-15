@@ -122,17 +122,24 @@ function getYesPrice(event: any): number | null {
       }
     }
 
-    // For matchup markets — find the moneyline "win" market
+    // For matchup markets — find the moneyline market (exactly 2 outcomes, no prop keywords)
     if (markets.length > 1) {
       const moneyline = markets.find((m: any) => {
         const q = (m.question || m.groupItemTitle || '').toLowerCase();
-        return q.includes('moneyline') || q.includes('win') || q.includes('winner');
+        // Skip prop bets
+        if (q.includes('o/u') || q.includes('over') || q.includes('under') || 
+            q.includes('spread') || q.includes('points') || q.includes('rebounds') ||
+            q.includes('assists') || q.includes('goals') || q.includes('exact') ||
+            q.includes('first half') || q.includes('1h') || q.includes('nrfi')) return false;
+        // Prefer markets with exactly 2 outcomes (binary win/lose)
+        const prices = m.outcomePrices ? (typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices) : [];
+        return prices.length === 2;
       });
-      const target = moneyline || markets[0];
-      if (target?.outcomePrices) {
-        const prices = typeof target.outcomePrices === 'string'
-          ? JSON.parse(target.outcomePrices)
-          : target.outcomePrices;
+      // Only use moneyline — never fall back to markets[0] which could be a prop
+      if (moneyline?.outcomePrices) {
+        const prices = typeof moneyline.outcomePrices === 'string'
+          ? JSON.parse(moneyline.outcomePrices)
+          : moneyline.outcomePrices;
         if (prices && prices.length >= 2) {
           const yes = parseFloat(prices[0]);
           const yesPct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
