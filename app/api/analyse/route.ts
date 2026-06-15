@@ -657,8 +657,15 @@ export async function POST(request: NextRequest) {
     return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources, groqVerdict: groqResult?.verdict||null, marketType });
     }
 
-    const enrichedHeadlines = headlines.length > 0 ? headlines : ['No specific data available'];
-    const groqResult = await analyzeWithGroq(query, enrichedHeadlines, metaculus.probability, null, marketType);
+    // Build context from SPORTS_CONTEXT and NBA_CONTEXT for this query
+    const qCtx = query.toLowerCase();
+    const ctxLines: string[] = [];
+    for (const [k, v] of Object.entries({...SPORTS_CONTEXT, ...NBA_CONTEXT})) {
+      if (qCtx.includes(k.toLowerCase())) ctxLines.push(String(v).slice(0,300));
+    }
+    const enrichedHeadlines = [...ctxLines, ...headlines].filter(Boolean).slice(0,6);
+    const finalHeadlines = enrichedHeadlines.length > 0 ? enrichedHeadlines : ['Analyze based on general football/sports knowledge'];
+    const groqResult = await analyzeWithGroq(query, finalHeadlines, metaculus.probability, null, marketType);
     if (!groqResult && metaculus.probability === null && relevantArticles.length === 0) {
       return Response.json({ valid: true, confidence: 0, keywords, articleCount: 0, sources: [], noData: true, message: 'No data found. Paste a Polymarket URL for live market analysis.' });
     }
