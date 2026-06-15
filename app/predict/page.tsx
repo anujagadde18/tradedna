@@ -31,13 +31,8 @@ export default function PredictPage() {
       if (savedPreds) setSubmitted(JSON.parse(savedPreds));
     } catch {}
 
-    // Today's fixed matches + live Polymarket markets
-    // IPL Playoffs + NBA Conference Finals
-    const nbaMatches = [
-      {id:'france-senegal-wc-jun17',title:'France vs Senegal — World Cup 2026',team1:'France',team2:'Senegal',time:'Tue Jun 17 · 2PM CT',venue:'MetLife Stadium, New Jersey',aiPrediction:'France',aiConfidence:72,sport:'⚽',date:'2026-06-17',category:'soccer'},
-      {id:'argentina-algeria-wc-jun17',title:'Argentina vs Algeria — World Cup 2026',team1:'Argentina',team2:'Algeria',time:'Tue Jun 17 · 8PM CT',venue:'AT&T Stadium, Dallas',aiPrediction:'Argentina',aiConfidence:78,sport:'⚽',date:'2026-06-17',category:'soccer'},
-      {id:'england-croatia-wc-jun17',title:'England vs Croatia — World Cup 2026',team1:'England',team2:'Croatia',time:'Tue Jun 17 · noon CT',venue:'SoFi Stadium, LA',aiPrediction:'England',aiConfidence:65,sport:'⚽',date:'2026-06-17',category:'soccer'},
-    ];
+    // NO hardcoded matches — fully automatic from Polymarket
+    const nbaMatches: any[] = [];
 
     // FULLY AUTOMATIC — IPL API + Polymarket, zero manual updates needed
     const todayStr = new Date().toISOString().slice(0,10);
@@ -71,7 +66,11 @@ export default function PredictPage() {
           if (!t.includes(' vs ')) return false;
           if (vol < 300000) return false;
           if (noise.some(n => t.includes(n))) return false;
-          if ((e.markets||[]).length !== 1) return false;
+          // Skip if no markets
+          if (!(e.markets||[]).length) return false;
+          // Skip if title has more-markets suffix
+          if ((e.title||'').toLowerCase().includes('more markets')) return false;
+          if ((e.title||'').toLowerCase().includes('exact score')) return false;
           return true;
         })
         .slice(0,4)
@@ -80,7 +79,15 @@ export default function PredictPage() {
           const vol = parseFloat(e.volume24hr||'0');
           let conf = 58;
           try {
-            const prices = JSON.parse(e.markets[0].outcomePrices||'[]');
+            // Find moneyline market (2 outcomes, no prop keywords)
+            const ml = (e.markets||[]).find((m:any) => {
+              const mq = (m.question||'').toLowerCase();
+              if (mq.includes('o/u') || mq.includes('spread') || mq.includes('points') || 
+                  mq.includes('over') || mq.includes('under') || mq.includes('exact')) return false;
+              const prices = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : (m.outcomePrices||[]);
+              return prices.length === 2;
+            }) || e.markets[0];
+            const prices = typeof ml.outcomePrices === 'string' ? JSON.parse(ml.outcomePrices) : (ml.outcomePrices||[]);
             const p = parseFloat(prices[0]);
             const pct = p <= 1 ? Math.round(p*100) : Math.round(p);
             if (pct >= 5 && pct <= 95) conf = pct;
