@@ -149,7 +149,7 @@ async function fetchGDELT(keywords: string): Promise<any[]> {
   try {
     const q = encodeURIComponent(keywords);
     const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${q}&mode=artlist&maxrecords=8&format=json&timespan=7d&sourcelang=eng`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
     const data = await res.json();
     return (data.articles || []).slice(0, 6);
   } catch { return []; }
@@ -159,7 +159,7 @@ async function fetchHackerNews(keywords: string): Promise<any[]> {
   try {
     const q = encodeURIComponent(keywords);
     const url = `https://hn.algolia.com/api/v1/search?query=${q}&tags=story&numericFilters=created_at_i>${Math.floor(Date.now()/1000) - 604800}&hitsPerPage=6`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
     const data = await res.json();
     return (data.hits || []).slice(0, 4);
   } catch { return []; }
@@ -169,7 +169,7 @@ async function fetchNewsAPI(keywords: string): Promise<any[]> {
   if (!NEWS_API_KEY) return [];
   try {
     const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(keywords)}&sortBy=publishedAt&pageSize=8&language=en&apiKey=${NEWS_API_KEY}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
     const data = await res.json();
     return (data.articles || []).slice(0, 6);
   } catch { return []; }
@@ -179,7 +179,7 @@ async function fetchMetaculus(keywords: string): Promise<{ probability: number |
   try {
     const q = encodeURIComponent(keywords);
     const url = `https://www.metaculus.com/api2/questions/?search=${q}&status=open&order_by=-activity&limit=3`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
     const data = await res.json();
     const questions = data.results || [];
     if (questions.length === 0) return { probability: null, count: 0 };
@@ -352,7 +352,7 @@ Return ONLY: {"probability":75,"bull":["reason1","reason2","reason3"],"bear":["r
           max_tokens: 800,
           temperature: 0.1,
         }),
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(8000),
       });
       if (res.ok) {
         const data = await res.json();
@@ -510,7 +510,7 @@ export async function POST(request: NextRequest) {
         const fullT2 = TEAM_FULL[cricketContext.team2?.code] || '';
         const liveRes = await fetch(
           new URL(`/api/live-cricket?team1=${encodeURIComponent(fullT1)}&team2=${encodeURIComponent(fullT2)}`, request.url).toString(),
-          { signal: AbortSignal.timeout(4000) }
+          { signal: AbortSignal.timeout(2000) }
         );
         const liveData = await liveRes.json();
         if (liveData.success && liveData.isLive && liveData.liveContext) {
