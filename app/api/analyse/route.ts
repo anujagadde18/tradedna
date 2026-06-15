@@ -40,7 +40,7 @@ const SPORTS_CONTEXT: Record<string, string> = {
   'iran': 'Iran: Group G World Cup 2026. Playing in LA vs New Zealand. 54% favorites. Solid defensive team.',
   'new zealand': 'New Zealand: Group G World Cup 2026. Playing in LA vs Iran. 46% underdogs. Physical team.',
   'senegal': 'Senegal: Africa Cup winners. Mane leads attack. 60% favorites vs France in Group C.',
-  'france': 'France: FIFA #2. Mbappe at peak. Won 2018 World Cup. 40% underdogs vs Senegal? No — France 70% favorites. Tchouameni, Rabiot midfield. Deep squad.',
+
   'bosnia': 'Bosnia: Group B vs Canada June 12. First World Cup appearance. Edin Dzeko aging but experienced. Market gives ~40% vs Canada.',
   'spain': 'Spain: FIFA #1 ranked. EURO 2024 champions. Youngest squad in tournament — Yamal 18, Pedri 23, Nico Williams 22. Tiki-taka evolved with pace. Group stage vs Croatia, Morocco, Brazil. Rodri anchors midfield. 16% Polymarket odds. Won EURO 2024 — most experienced young squad in tournament.',
   'france': 'France: FIFA #2. Mbappe leads attack at peak powers. Tchouameni, Rabiot midfield. Cherki emerging star. Lost EURO 2024 final to Spain. Deep squad. Group vs Argentina, Australia, Poland. 17% market odds — slight favorite. Strong historically in tournaments.',
