@@ -657,7 +657,11 @@ export async function POST(request: NextRequest) {
     return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources, groqVerdict: groqResult?.verdict||null, marketType });
     }
 
-    const groqResult = await analyzeWithGroq(query, headlines, metaculus.probability, null, marketType);
+    // Inject teamFacts into headlines so Groq always has context
+    const enrichedHeadlines = teamFacts 
+      ? [teamFacts.slice(0,400), ...headlines].slice(0,6)
+      : headlines;
+    const groqResult = await analyzeWithGroq(query, enrichedHeadlines, metaculus.probability, null, marketType);
     if (!groqResult && metaculus.probability === null && relevantArticles.length === 0) {
       return Response.json({ valid: true, confidence: 0, keywords, articleCount: 0, sources: [], noData: true, message: 'No data found. Paste a Polymarket URL for live market analysis.' });
     }
