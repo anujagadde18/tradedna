@@ -11,13 +11,13 @@ const C = {
 };
 
 const DRIVERS = [
-  { pos:1, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:45, podiumPct:90, champPct:48, pts:147, champPos:1, gridPos:1, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
+  { pos:6, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:35, podiumPct:75, champPct:38, pts:147, champPos:1, gridPos:6, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
     bull:['Monaco POLE — starts P1 Sunday','4 wins from 5 races — dominant season','Championship leader +43pts over Russell','Magic lap 1:12.051 — beat Verstappen by 0.043s'],
     bear:['Monaco unpredictable — safety cars common','Verstappen dangerous from P2','Title not over — must finish'] },
   { pos:2, name:'Max Verstappen', team:'Red Bull', flag:'🇳🇱', winPct:20, podiumPct:55, champPct:6, pts:72, champPos:3, gridPos:2, color:'#1e41ff', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['Qualifying P2 — front row start','0.043s from pole — Red Bull fast here','Monaco specialist — knows every barrier'],
     bear:['60pts behind Antonelli in championship','Red Bull reliability concerns'] },
-  { pos:3, name:'Lewis Hamilton', team:'Ferrari', flag:'🇬🇧', winPct:12, podiumPct:45, champPct:3, pts:83, champPos:2, gridPos:3, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
+  { pos:1, name:'Lewis Hamilton', team:'Ferrari', flag:'🇬🇧', winPct:22, podiumPct:60, champPct:15, pts:83, champPos:2, gridPos:1, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['Qualifying P3 — strong Ferrari showing','7x World Champion Monaco experience','Kim Kardashian in paddock for support'],
     bear:['Ferrari havent won since Mexico 2024','Needs Antonelli/Verstappen to hit issues'] },
   { pos:4, name:'Charles Leclerc', team:'Ferrari', flag:'🇲🇨', winPct:8, podiumPct:40, champPct:4, pts:71, champPos:5, gridPos:4, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
