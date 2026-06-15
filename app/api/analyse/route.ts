@@ -298,7 +298,7 @@ async function analyzeWithGroq(
     // Build concise prompt - Groq fails with long prompts
     const factsShort = (teamFacts||'').slice(0,500);
     const headlinesShort = headlines.slice(0,3).join(' | ').slice(0,300);
-    const prob = computedProb || marketOdds || null;
+    const prob = marketOdds || null;
     const prompt = `Sports analyst. Return ONLY valid JSON. No markdown.
 
 Match: "${query}"
