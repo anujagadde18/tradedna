@@ -34,9 +34,9 @@ export default function PredictPage() {
     // Today's fixed matches + live Polymarket markets
     // IPL Playoffs + NBA Conference Finals
     const nbaMatches = [
-      {id:'usa-paraguay-wc-jun12',title:'USA vs Paraguay — World Cup 2026',team1:'USA',team2:'Paraguay',time:'Tomorrow · 3PM ET · SoFi Stadium LA',venue:'SoFi Stadium, Los Angeles',aiPrediction:'USA',aiConfidence:68,sport:'⚽',date:'2026-06-12',category:'soccer'},
-      {id:'canada-bosnia-wc-jun12',title:'Canada vs Bosnia — World Cup 2026',team1:'Canada',team2:'Bosnia',time:'Tomorrow · 6PM ET · Toronto',venue:'BMO Field, Toronto',aiPrediction:'Canada',aiConfidence:62,sport:'⚽',date:'2026-06-12',category:'soccer'},
-      {id:'spurs-knicks-finals-g5-jun13',title:'SA Spurs vs NY Knicks — NBA Finals Game 5',team1:'SA Spurs',team2:'NY Knicks',time:'Sat Jun 13 · 8:30 PM ET',venue:'Frost Bank Center, San Antonio',aiPrediction:'SA Spurs',aiConfidence:65,sport:'🏀',date:'2026-06-13',category:'nba'},
+      {id:'france-senegal-wc-jun17',title:'France vs Senegal — World Cup 2026',team1:'France',team2:'Senegal',time:'Tue Jun 17 · 2PM CT',venue:'MetLife Stadium, New Jersey',aiPrediction:'France',aiConfidence:72,sport:'⚽',date:'2026-06-17',category:'soccer'},
+      {id:'argentina-algeria-wc-jun17',title:'Argentina vs Algeria — World Cup 2026',team1:'Argentina',team2:'Algeria',time:'Tue Jun 17 · 8PM CT',venue:'AT&T Stadium, Dallas',aiPrediction:'Argentina',aiConfidence:78,sport:'⚽',date:'2026-06-17',category:'soccer'},
+      {id:'england-croatia-wc-jun17',title:'England vs Croatia — World Cup 2026',team1:'England',team2:'Croatia',time:'Tue Jun 17 · noon CT',venue:'SoFi Stadium, LA',aiPrediction:'England',aiConfidence:65,sport:'⚽',date:'2026-06-17',category:'soccer'},
     ];
 
     // FULLY AUTOMATIC — IPL API + Polymarket, zero manual updates needed
