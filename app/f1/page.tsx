@@ -29,7 +29,7 @@ const DRIVERS = [
   { pos:7, name:'Oscar Piastri', team:'McLaren', flag:'🇦🇺', winPct:10, podiumPct:35, champPct:9, pts:78, champPos:6, gridPos:7, color:'#ff8000', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['McLaren strong race pace','Can benefit from safety cars'],
     bear:['Qualifying P7 — starting too far back','Monaco impossible to overtake'] },
-  { pos:8, name:'Lando Norris', team:'McLaren', flag:'🇬🇧', winPct:5, podiumPct:25, champPct:8, pts:89, champPos:3, gridPos:8, color:'#ff8000', verdict:'WATCH', verdictColor:'#f5a623',
+  { pos:8, name:'Lando Norris', team:'McLaren', flag:'🇬🇧', winPct:5, podiumPct:25, champPct:8, pts:104, champPos:4, gridPos:3, color:'#ff8000', verdict:'WATCH', verdictColor:'#f5a623',
     bull:['P3 in championship — needs points','McLaren upgrades working'],
     bear:['Qualifying P8 — very hard from here','Monaco favors qualifying position heavily'] },
 ];
@@ -53,7 +53,7 @@ export default function F1Page() {
             <span style={{width:5,height:5,background:C.red,borderRadius:'50%',display:'block',boxShadow:'0 0 6px #ef4f6a'}}/>
             Round 6 · Circuit de Monaco, Monte Carlo
           </div>
-          <h1 style={{fontSize:32,fontWeight:800,letterSpacing:'-1px',marginBottom:8}}>2026 Monaco Grand Prix</h1>
+          <h1 style={{fontSize:32,fontWeight:800,letterSpacing:'-1px',marginBottom:8}}>2026 Barcelona-Catalunya GP</h1>
           <p style={{fontSize:14,color:C.t2}}>🏆 BARCELONA RESULT: Hamilton WON for Ferrari! 🔴 Russell P2 · Norris P3 · Antonelli DNF</p>
         </div>
 
