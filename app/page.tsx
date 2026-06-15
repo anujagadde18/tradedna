@@ -515,8 +515,8 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
               {[
-                {sport:'🏀',match:'Knicks vs Spurs G5',time:'Sat Jun 13 · 8:30 PM ET · SA'},
-                {sport:'⚽',match:'USA vs Paraguay',time:'Tomorrow · 3PM ET · LA'},
+                {sport:'⚽',match:'Argentina vs Algeria',time:'Tue Jun 17 · 9PM ET'},
+                {sport:'⚽',match:'France vs Senegal',time:'Tue Jun 17 · 3PM ET'},
               ].map((m,i)=>(
                 <div key={i} style={{background:C.bg2,borderRadius:10,padding:'10px 12px',display:'flex',alignItems:'center',gap:8}}>
                   <span style={{fontSize:16}}>{m.sport}</span>
@@ -535,9 +535,9 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <span style={{fontSize:24}}>🏎️</span>
                 <div>
-                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🏎️ F1 Barcelona GP — THIS WEEKEND!</div>
-                  <div style={{fontSize:12,color:C.amber,fontWeight:600}}>Jun 12-14 · Antonelli leads +66pts · Round 7</div>
-                  <div style={{fontSize:10,color:C.t3,marginTop:2}}>Antonelli 5 wins from 6 races · See driver odds</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🏎️ Hamilton WON Barcelona! Ferrari first win!</div>
+                  <div style={{fontSize:12,color:C.amber,fontWeight:600}}>Next: Austrian GP · Jun 26-28 · Round 8</div>
+                  <div style={{fontSize:10,color:C.t3,marginTop:2}}>Antonelli leads championship · Russell P2 · Norris P3</div>
                 </div>
               </div>
               <span style={{fontSize:11,color:C.purpleL,fontWeight:600}}>Driver odds →</span>
