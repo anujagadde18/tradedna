@@ -197,7 +197,6 @@ async function analyzeWithGroq(
   marketOdds: number | null,
   marketType: string
 ): Promise<{ probability: number; bull: string[]; bear: string[]; keyRisk: string; verdict: string } | null> {
-  if (!GROQ_API_KEY) return null;
   try {
     const headlineText = headlines.slice(0, 8).map((h, i) => `${i+1}. ${h}`).join('\n');
     // Auto-fetch Polymarket odds if not provided
@@ -332,21 +331,49 @@ Return ONLY this JSON:
 
 Verdict options: "Strong YES signal", "Leaning YES", "Too close to call", "Leaning NO", "Strong NO signal"`;
 
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: 'mixtral-8x7b-32768',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 800,
-        temperature: 0.1,
-      }),
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!res.ok) return null;
-    const data = await res.json();
-    const text = data.choices?.[0]?.message?.content || '';
+    // Try Anthropic API first, fall back to Groq
+    let text = '';
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    
+    if (anthropicKey) {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json', 
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 800,
+          messages: [{ role: 'user', content: prompt }],
+        }),
+        signal: AbortSignal.timeout(15000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        text = data.content?.[0]?.text || '';
+      }
+    }
+    
+    // Fallback to Groq if Anthropic fails
+    if (!text && GROQ_API_KEY) {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
+        body: JSON.stringify({
+          model: 'llama3-70b-8192',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 800,
+          temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        text = data.choices?.[0]?.message?.content || '';
+      }
+    }
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return null;
     const parsed = JSON.parse(jsonMatch[0]);
