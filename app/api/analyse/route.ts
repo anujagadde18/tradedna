@@ -660,12 +660,24 @@ export async function POST(request: NextRequest) {
     // Build context from SPORTS_CONTEXT and NBA_CONTEXT for this query
     const qCtx = query.toLowerCase();
     const ctxLines: string[] = [];
+    let computedProb: number | null = null;
     for (const [k, v] of Object.entries({...SPORTS_CONTEXT, ...NBA_CONTEXT})) {
-      if (qCtx.includes(k.toLowerCase())) ctxLines.push(String(v).slice(0,300));
+      if (qCtx.includes(k.toLowerCase())) {
+        const vStr = String(v);
+        ctxLines.push(vStr.slice(0,300));
+        // Extract probability hints from context
+        const probMatch = vStr.match(/(\d+)%\s*(?:to win|win probability|implied|market)/i);
+        const oddsMatch = vStr.match(/([+-]\d+)\s*(?:odds|favorite|underdog)/i);
+        if (probMatch && !computedProb) computedProb = parseInt(probMatch[1]);
+        if (oddsMatch && !computedProb) {
+          const odds = parseInt(oddsMatch[1]);
+          computedProb = odds < 0 ? Math.round(Math.abs(odds)/(Math.abs(odds)+100)*100) : Math.round(100/(odds+100)*100);
+        }
+      }
     }
     const enrichedHeadlines = [...ctxLines, ...headlines].filter(Boolean).slice(0,6);
     const finalHeadlines = enrichedHeadlines.length > 0 ? enrichedHeadlines : ['Analyze based on general football/sports knowledge'];
-    const groqResult = await analyzeWithGroq(query, finalHeadlines, metaculus.probability, null, marketType);
+    const groqResult = await analyzeWithGroq(query, finalHeadlines, metaculus.probability, computedProb, marketType);
     if (!groqResult && metaculus.probability === null && relevantArticles.length === 0) {
       return Response.json({ valid: true, confidence: 0, keywords, articleCount: 0, sources: [], noData: true, message: 'No data found. Paste a Polymarket URL for live market analysis.' });
     }
