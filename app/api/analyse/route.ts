@@ -403,7 +403,7 @@ Return ONLY valid JSON: {"probability":85,"bull":["reason1","reason2","reason3"]
     if (!Array.isArray(parsed.bull) || !Array.isArray(parsed.bear)) return null;
 
     return {
-      probability: Math.max(5, Math.min(95, Math.round(parsed.probability))),
+      probability: marketOdds ? Math.max(5, Math.min(95, marketOdds)) : Math.max(5, Math.min(95, Math.round(parsed.probability))),
       bull: parsed.bull.slice(0, 3).map((s: string) => String(s).slice(0, 100)),
       bear: parsed.bear.slice(0, 3).map((s: string) => String(s).slice(0, 100)),
       keyRisk: String(parsed.keyRisk || '').slice(0, 120),
