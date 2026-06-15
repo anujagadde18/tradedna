@@ -54,7 +54,7 @@ export default function F1Page() {
             Round 6 · Circuit de Monaco, Monte Carlo
           </div>
           <h1 style={{fontSize:32,fontWeight:800,letterSpacing:'-1px',marginBottom:8}}>2026 Monaco Grand Prix</h1>
-          <p style={{fontSize:14,color:C.t2}}>🏆 MONACO RESULT: Antonelli WON! 5th straight win! Hamilton P2 · Hadjar P3 · Verstappen DNF</p>
+          <p style={{fontSize:14,color:C.t2}}>🏆 BARCELONA RESULT: Hamilton WON for Ferrari! 🔴 Russell P2 · Norris P3 · Antonelli DNF</p>
         </div>
 
         <div style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:16,padding:'20px',marginBottom:24}}>
