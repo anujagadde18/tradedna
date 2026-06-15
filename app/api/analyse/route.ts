@@ -362,7 +362,7 @@ Verdict options: "Strong YES signal", "Leaning YES", "Too close to call", "Leani
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
         body: JSON.stringify({
-          model: 'llama3-70b-8192',
+          model: 'llama-3.1-8b-instant',
           messages: [{ role: 'user', content: prompt }],
           max_tokens: 800,
           temperature: 0.1,
