@@ -657,7 +657,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources, groqVerdict: groqResult?.verdict||null, marketType });
     }
 
-    // Build context from SPORTS_CONTEXT and NBA_CONTEXT for this query
+    // Build context from SPORTS_CONTEXT and NBA_CONTEXT for this query // v2
     const qCtx = query.toLowerCase();
     const ctxLines: string[] = [];
     let computedProb: number | null = null;
