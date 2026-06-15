@@ -516,7 +516,7 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
               {(events.filter(e => e.title?.toLowerCase().includes(' vs ')).slice(0,2).map(e => {
                 const parts = e.title.split(/\s+vs\.?\s+/i);
-                return {sport:'🏆', match: e.title.slice(0,30), time: `${e.yesPrice||'?'}% odds · $${((parseFloat(e.volume24hr||'0'))/1000000).toFixed(1)}M`};
+                return {sport:'🏆', match: e.title.slice(0,30), time: `${e.yesPrice||'?'}% odds · $${((parseFloat(e.volume24h||'0'))/1000000).toFixed(1)}M`};
               })).map((m,i)=>(
                 <div key={i} style={{background:C.bg2,borderRadius:10,padding:'10px 12px',display:'flex',alignItems:'center',gap:8}}>
                   <span style={{fontSize:16}}>{m.sport}</span>
