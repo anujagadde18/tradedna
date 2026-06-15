@@ -298,23 +298,21 @@ async function analyzeWithGroq(
     // Build concise prompt - Groq fails with long prompts
     const factsShort = (teamFacts||'').slice(0,500);
     const headlinesShort = headlines.slice(0,3).join(' | ').slice(0,300);
-    const prompt = `Prediction market analyst. Return ONLY valid JSON.
+    const prob = computedProb || marketOdds || null;
+    const prompt = `Sports analyst. Return ONLY valid JSON. No markdown.
 
-Q: "${query}"
-Facts: ${factsShort || 'No data'}
-Headlines: ${headlinesShort || 'No headlines'}
-${marketOdds ? `Market odds: ${marketOdds}% for first team` : ''}
+Match: "${query}"
+${prob ? `Win probability for first team: ${prob}% (USE THIS EXACT NUMBER +-3%)` : ''}
+Context: ${factsShort || 'General sports knowledge'}
+News: ${headlinesShort || 'No recent news'}
 ${homeHint}
 
-Rules:
-- probability = chance FIRST team wins (0-100)
-- If market odds given, stay within 8% of them
-- If facts mention "-218" odds = 68% favorite, "+180" = 36%
-- Bull = reasons first team wins (max 12 words each)
-- Bear = reasons first team loses (max 12 words each)
-- NEVER return 58% as default — reason from facts
+Task: Write 3 specific bull reasons (why first team wins) and 2 bear reasons (why they might lose).
+- Each reason max 10 words, be specific to these teams
+- probability MUST be ${prob ? prob + ' (already calculated)' : 'based on team quality difference'}
+- keyRisk: main uncertainty in 8 words
 
-Return ONLY: {"probability":75,"bull":["reason1","reason2","reason3"],"bear":["risk1","risk2"],"keyRisk":"key unknown","verdict":"3-5 words"}`;
+Return ONLY: {"probability":${prob || 65},"bull":["specific reason 1","specific reason 2","specific reason 3"],"bear":["specific risk 1","specific risk 2"],"keyRisk":"main uncertainty here","verdict":"Team A wins"}`;
 
     // Try Anthropic API first, fall back to Groq
     let text = '';
