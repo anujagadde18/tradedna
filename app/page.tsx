@@ -80,7 +80,9 @@ export default function HomePage() {
   const go = (q: string) => {
     setAnalyzing(true);
     setShowResults(false);
-    router.push('/scores?event=' + encodeURIComponent(q));
+    // Clean up title for better analysis
+    const clean = q.replace(' - More Markets','').replace(/\s+vs\.\s+/i,' vs ').trim();
+    router.push('/scores?event=' + encodeURIComponent(clean));
   };
 
   // Autocomplete
