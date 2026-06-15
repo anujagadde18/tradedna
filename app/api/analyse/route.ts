@@ -295,41 +295,26 @@ async function analyzeWithGroq(
         : 'IMPORTANT: Spurs are -218 home favorites = 68% win prob. Knicks are FIRST in question. Set probability to 30-35%.';
     }
 
-    const prompt = `You are a prediction market analyst. Return ONLY valid JSON. No other text.
+    // Build concise prompt - Groq fails with long prompts
+    const factsShort = (teamFacts||'').slice(0,500);
+    const headlinesShort = headlines.slice(0,3).join(' | ').slice(0,300);
+    const prompt = `Prediction market analyst. Return ONLY valid JSON.
 
-Question: "${query}"
-Market type: ${marketType}
-${marketContext}
-${metaContext}
+Q: "${query}"
+Facts: ${factsShort || 'No data'}
+Headlines: ${headlinesShort || 'No headlines'}
+${marketOdds ? `Market odds: ${marketOdds}% for first team` : ''}
 ${homeHint}
 
-VERIFIED FACTS about these teams/players (treat these as ground truth):
-${teamFacts || 'No specific team data available.'}
+Rules:
+- probability = chance FIRST team wins (0-100)
+- If market odds given, stay within 8% of them
+- If facts mention "-218" odds = 68% favorite, "+180" = 36%
+- Bull = reasons first team wins (max 12 words each)
+- Bear = reasons first team loses (max 12 words each)
+- NEVER return 58% as default — reason from facts
 
-Supporting headlines:
-${headlineText || 'No headlines available.'}
-
-Analysis guidance: ${typeContext}
-
-RULES:
-1. Use VERIFIED FACTS above as primary source for bull/bear factors
-2. Use EXACT team names from the question — never substitute wrong team names
-3. probability must be integer 0-100 — represents chance the FIRST team in the question wins
-4. If Polymarket odds given: stay within +-8% of them
-5. If Metaculus given: weight it at 40%
-6. Each factor max 12 words
-7. Never say "Limited data available" if VERIFIED FACTS are provided above
-8. Bull = reasons the FIRST TEAM wins. Bear = reasons the FIRST TEAM loses.
-9. If VERIFIED FACTS mention betting odds, convert: -218 = 68% favorite, +180 = 36% underdog, -150 = 60%, +130 = 43%
-10. CRITICAL: If facts say the FIRST TEAM is an underdog (e.g. +180), set probability to 36-42%. If FIRST TEAM is favorite (-218), set to 65-70%.
-11. Home court in elimination games = +8-12% boost for home team
-12. NEVER default to 58% — always derive from the betting odds in VERIFIED FACTS
-13. The question order matters: "Knicks vs Spurs" means probability = Knicks win chance
-
-Return ONLY this JSON:
-{"probability":58,"bull":["Specific fact supporting YES outcome","Second fact","Third fact"],"bear":["Specific risk or counter-argument","Second risk","Third risk"],"keyRisk":"Most important unknown factor","verdict":"3-5 word verdict"}
-
-Verdict options: "Strong YES signal", "Leaning YES", "Too close to call", "Leaning NO", "Strong NO signal"`;
+Return ONLY: {"probability":75,"bull":["reason1","reason2","reason3"],"bear":["risk1","risk2"],"keyRisk":"key unknown","verdict":"3-5 words"}`;
 
     // Try Anthropic API first, fall back to Groq
     let text = '';
