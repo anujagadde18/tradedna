@@ -69,25 +69,34 @@ function teamsFromSlug(slug: string): { team1: string; team2: string } | null {
 function getMoneylineOdds(event: any): number | null {
   try {
     const markets = event.markets || [];
-    // Only look for true binary winner markets — skip props, totals, spreads
-    for (const m of markets) {
+    
+    // Find the moneyline market - binary (2 outcomes), no prop keywords
+    const moneyline = markets.find((m: any) => {
       const q = (m.question || m.groupItemTitle || '').toLowerCase();
-      const isWinner = q.includes('moneyline') || q === 'winner' ||
-        q === 'win' || q.includes('win the game') ||
-        q.includes('to win') || q.includes('will win');
-      const isProps = q.includes('points') || q.includes('rebounds') ||
-        q.includes('assists') || q.includes('total') || q.includes('over') ||
-        q.includes('under') || q.includes('spread') || q.includes('quarter') ||
-        q.includes('half') || q.includes('first') || q.includes('hits') ||
-        q.includes('runs') || q.includes('strikeout');
-      if (!isWinner || isProps) continue;
-      const price = m.lastTradePrice || m.bestAsk;
-      if (!price) continue;
-      const pct = parseFloat(price) <= 1
-        ? Math.round(parseFloat(price) * 100)
-        : Math.round(parseFloat(price));
-      if (pct >= 10 && pct <= 90) return pct;
-    }
+      // Skip prop bets
+      if (q.includes('o/u') || q.includes('over') || q.includes('under') ||
+          q.includes('spread') || q.includes('points') || q.includes('rebounds') ||
+          q.includes('assists') || q.includes('total') || q.includes('quarter') ||
+          q.includes('half') || q.includes('first') || q.includes('hits') ||
+          q.includes('runs') || q.includes('strikeout') || q.includes('exact') ||
+          q.includes('score') || q.includes('nrfi')) return false;
+      // Must have exactly 2 outcome prices
+      const prices = m.outcomePrices 
+        ? (typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices)
+        : [];
+      return prices.length === 2;
+    });
+    
+    if (!moneyline) return null;
+    
+    const prices = moneyline.outcomePrices
+      ? (typeof moneyline.outcomePrices === 'string' ? JSON.parse(moneyline.outcomePrices) : moneyline.outcomePrices)
+      : null;
+    if (!prices || prices.length < 2) return null;
+    
+    const yes = parseFloat(prices[0]);
+    const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
+    if (pct >= 5 && pct <= 95) return pct;
     return null;
   } catch { return null; }
 }
