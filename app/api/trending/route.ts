@@ -297,3 +297,4 @@ export async function GET(req: NextRequest) {
   results.sort((a, b) => b.volume24h - a.volume24h);
   return Response.json({ results: results.slice(0, 20) });
 }
+// cache bust Mon Jun 15 20:22:21 CDT 2026
