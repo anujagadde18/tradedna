@@ -151,77 +151,62 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
   return (
     <div style={{ background:C.bg2, border:"1px solid "+C.border, borderRadius:16, overflow:"hidden" }}>
 
-      {/* MATCHUP CARD */}
+      {/* MATCHUP CARD — new shareable design */}
       {isMatchup && (
-        <div style={{ padding:"20px", borderBottom:"1px solid "+C.border }}>
-          
-          {/* Winner pill */}
-          <div style={{ display:"flex", justifyContent:"center", marginBottom:16 }}>
-            <div style={{ padding:"6px 16px", borderRadius:20, background:aiPct>=50?"rgba(46,204,138,0.12)":"rgba(239,79,106,0.12)", border:"1px solid "+(aiPct>=50?"rgba(46,204,138,0.3)":"rgba(239,79,106,0.3)") }}>
-              <span style={{ fontSize:13, fontWeight:700, color:aiPct>=50?C.green:C.red }}>AI picks {winner} to win</span>
-            </div>
-          </div>
+        <div style={{ borderBottom:"1px solid "+C.border }}>
 
-          {/* SVG GAUGE */}
-          {(() => {
-            const gaugeColor = aiPct>=50 ? C.green : C.red;
-            const dash = (aiPct/100)*251.2;
-            return (
-              <div style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>
-                <svg width="220" height="120" viewBox="0 0 220 120">
-                  <path d="M 20 105 A 90 90 0 0 1 200 105" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="14" strokeLinecap="round"/>
-                  <path d="M 20 105 A 90 90 0 0 1 200 105" fill="none" stroke={gaugeColor} strokeWidth="14" strokeLinecap="round" strokeDasharray={dash + " 283"} opacity="0.9"/>
-                  <text x="20" y="118" fontSize="9" fill="rgba(255,255,255,0.3)" textAnchor="middle">{t2short.slice(0,8)}</text>
-                  <text x="200" y="118" fontSize="9" fill="rgba(255,255,255,0.3)" textAnchor="middle">{t1short.slice(0,8)}</text>
-                  <text x="110" y="92" fontSize="32" fontWeight="800" fill={gaugeColor} textAnchor="middle" fontFamily="monospace">{aiPct}%</text>
-                  <text x="110" y="112" fontSize="10" fill="rgba(255,255,255,0.35)" textAnchor="middle">{winner} to win</text>
-                </svg>
-              </div>
-            );
-          })()}
+          {/* Header with badge */}
+          <div style={{ padding:"16px 20px 12px", background:"linear-gradient(135deg,rgba(15,26,46,0.8),rgba(10,15,26,0.9))", borderBottom:"1px solid rgba(255,255,255,0.05)", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", top:-40, right:-40, width:120, height:120, background:"radial-gradient(circle,rgba(124,111,247,0.25) 0%,transparent 70%)", borderRadius:"50%", pointerEvents:"none" }} />
+            <div style={{ display:"inline-flex", alignItems:"center", gap:5, background:"rgba(124,111,247,0.15)", border:"1px solid rgba(124,111,247,0.3)", borderRadius:20, padding:"3px 10px", fontSize:11, color:"#a89cf8", fontWeight:600, marginBottom:8 }}>
+              {/world cup|fifa/i.test(question) ? "⚽ World Cup 2026" : /nba|finals/i.test(question) ? "🏀 NBA 2026" : /ipl|cricket/i.test(question) ? "🏏 IPL 2026" : /f1|formula/i.test(question) ? "🏎️ F1 2026" : "🏆 Live Match"}
+            </div>
+            <div style={{ fontSize:11, color:C.t3 }}>AI picks {winner} to win</div>
+          </div>
 
           {/* Two team boxes */}
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 32px 1fr", alignItems:"center", gap:8, marginBottom:16 }}>
-            <div style={{ padding:"14px 12px", borderRadius:12, background:aiPct>=50?"rgba(46,204,138,0.07)":"rgba(255,255,255,0.02)", border:"1px solid "+(aiPct>=50?"rgba(46,204,138,0.2)":C.border), textAlign:"center" }}>
-              <div style={{ fontSize:12, color:aiPct>=50?C.green:C.t3, fontWeight:600, marginBottom:6, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t1short}</div>
-              <div style={{ fontSize:38, fontWeight:800, color:aiPct>=50?C.green:C.t3, fontFamily:"monospace", lineHeight:1 }}>{aiPct}%</div>
-              {marketValid && <div style={{ fontSize:10, color:C.t3, marginTop:4 }}>mkt {marketPct}%</div>}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 40px 1fr", alignItems:"center", gap:8, padding:"16px 16px 12px" }}>
+            <div style={{ textAlign:"center", padding:"14px 8px", borderRadius:14, background:aiPct>=50?"rgba(46,204,138,0.08)":"rgba(255,255,255,0.02)", border:"1px solid "+(aiPct>=50?"rgba(46,204,138,0.2)":C.border) }}>
+              <div style={{ fontSize:11, fontWeight:700, color:aiPct>=50?C.green:C.t3, marginBottom:8, textTransform:"uppercase", letterSpacing:"0.3px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t1short}</div>
+              <div style={{ fontSize:40, fontWeight:900, color:aiPct>=50?C.green:"#3a3856", fontFamily:"monospace", lineHeight:1 }}>{aiPct}%</div>
+              <div style={{ fontSize:10, marginTop:5, color:aiPct>=50?"rgba(46,204,138,0.6)":"#3a3856", fontWeight:500 }}>{aiPct>=50?"AI pick":"AI odds"}</div>
+              {marketValid && <div style={{ fontSize:10, color:C.t3, marginTop:2 }}>mkt {marketPct}%</div>}
             </div>
-            <div style={{ textAlign:"center", fontSize:11, fontWeight:700, color:C.t4 }}>VS</div>
-            <div style={{ padding:"14px 12px", borderRadius:12, background:aiPct<50?"rgba(46,204,138,0.07)":"rgba(255,255,255,0.02)", border:"1px solid "+(aiPct<50?"rgba(46,204,138,0.2)":C.border), textAlign:"center" }}>
-              <div style={{ fontSize:12, color:aiPct<50?C.green:C.t3, fontWeight:600, marginBottom:6, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t2short}</div>
-              <div style={{ fontSize:38, fontWeight:800, color:aiPct<50?C.green:C.t3, fontFamily:"monospace", lineHeight:1 }}>{aiTeam2Pct}%</div>
-              {marketValid && <div style={{ fontSize:10, color:C.t3, marginTop:4 }}>mkt {100-marketPct}%</div>}
-            </div>
-          </div>
-
-          {/* Probability bar with labels */}
-          <div style={{ marginBottom:4 }}>
-            <div style={{ height:10, borderRadius:5, background:"rgba(255,255,255,0.06)", overflow:"hidden", position:"relative" }}>
-              <div style={{ position:"absolute", left:0, top:0, height:"100%", width:aiPct+"%", background:"linear-gradient(90deg,"+C.green+",rgba(46,204,138,0.7))", borderRadius:5, transition:"width 1s ease" }} />
-              <div style={{ position:"absolute", left:"50%", top:0, height:"100%", width:1, background:"rgba(255,255,255,0.15)" }} />
-            </div>
-            <div style={{ display:"flex", justifyContent:"space-between", marginTop:3 }}>
-              <span style={{ fontSize:10, color:C.t3 }}>← {t1short} wins</span>
-              <span style={{ fontSize:10, color:C.t3 }}>50/50</span>
-              <span style={{ fontSize:10, color:C.t3 }}>{t2short} wins →</span>
+            <div style={{ textAlign:"center", fontSize:11, fontWeight:700, color:"#2e2c44" }}>VS</div>
+            <div style={{ textAlign:"center", padding:"14px 8px", borderRadius:14, background:aiPct<50?"rgba(46,204,138,0.08)":"rgba(255,255,255,0.02)", border:"1px solid "+(aiPct<50?"rgba(46,204,138,0.2)":C.border) }}>
+              <div style={{ fontSize:11, fontWeight:700, color:aiPct<50?C.green:C.t3, marginBottom:8, textTransform:"uppercase", letterSpacing:"0.3px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t2short}</div>
+              <div style={{ fontSize:40, fontWeight:900, color:aiPct<50?C.green:"#3a3856", fontFamily:"monospace", lineHeight:1 }}>{aiTeam2Pct}%</div>
+              <div style={{ fontSize:10, marginTop:5, color:aiPct<50?"rgba(46,204,138,0.6)":"#3a3856", fontWeight:500 }}>{aiPct<50?"AI pick":"AI odds"}</div>
+              {marketValid && <div style={{ fontSize:10, color:C.t3, marginTop:2 }}>mkt {100-marketPct}%</div>}
             </div>
           </div>
 
-          {/* Market vs AI strip */}
+          {/* Probability bar */}
+          <div style={{ padding:"0 16px 12px" }}>
+            <div style={{ height:6, borderRadius:3, background:"rgba(255,255,255,0.05)", overflow:"hidden", marginBottom:6 }}>
+              <div style={{ height:"100%", width:aiPct+"%", background:"linear-gradient(90deg,"+C.green+",rgba(46,204,138,0.5))", borderRadius:3 }} />
+            </div>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#3a3856" }}>
+              <span>← {t1short} wins</span>
+              <span>50/50</span>
+              <span>{t2short} wins →</span>
+            </div>
+          </div>
+
+          {/* Market/AI/Edge strip */}
           {marketValid && (
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:6, marginTop:14 }}>
-              <div style={{ textAlign:"center", padding:"8px", background:"rgba(255,255,255,0.03)", borderRadius:8 }}>
-                <div style={{ fontSize:10, color:C.t3, marginBottom:2 }}>Market</div>
-                <div style={{ fontSize:15, fontWeight:700, color:C.t2 }}>{marketPct}%</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", borderTop:"1px solid rgba(255,255,255,0.05)" }}>
+              <div style={{ padding:"10px 8px", textAlign:"center", borderRight:"1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ fontSize:9, color:"#3a3856", textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:4, fontWeight:600 }}>Market</div>
+                <div style={{ fontSize:16, fontWeight:800, color:C.t3, fontVariantNumeric:"tabular-nums" }}>{marketPct}%</div>
               </div>
-              <div style={{ textAlign:"center", padding:"8px", background:"rgba(46,204,138,0.07)", borderRadius:8 }}>
-                <div style={{ fontSize:10, color:C.green, marginBottom:2 }}>AI says</div>
-                <div style={{ fontSize:15, fontWeight:700, color:C.green }}>{aiPct}%</div>
+              <div style={{ padding:"10px 8px", textAlign:"center", borderRight:"1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ fontSize:9, color:"#3a3856", textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:4, fontWeight:600 }}>AI says</div>
+                <div style={{ fontSize:16, fontWeight:800, color:C.green, fontVariantNumeric:"tabular-nums" }}>{aiPct}%</div>
               </div>
-              <div style={{ textAlign:"center", padding:"8px", background:edge!>0?"rgba(46,204,138,0.07)":"rgba(239,79,106,0.07)", borderRadius:8 }}>
-                <div style={{ fontSize:10, color:edge!>0?C.green:C.red, marginBottom:2 }}>AI edge</div>
-                <div style={{ fontSize:15, fontWeight:700, color:edge!>0?C.green:C.red }}>{edge!>0?"+":""}{edge}%</div>
+              <div style={{ padding:"10px 8px", textAlign:"center" }}>
+                <div style={{ fontSize:9, color:"#3a3856", textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:4, fontWeight:600 }}>AI edge</div>
+                <div style={{ fontSize:16, fontWeight:800, color:edge!>0?C.green:C.amber, fontVariantNumeric:"tabular-nums" }}>{edge!>0?"+":""}{edge}%</div>
               </div>
             </div>
           )}
