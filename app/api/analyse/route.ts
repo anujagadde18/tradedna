@@ -74,6 +74,17 @@ const TEAM_DB: Record<string, { strength: number; ctx: string }> = {
   warriors:     { strength: 54, ctx: 'Golden State Warriors: Stephen Curry still an elite shooter.' },
   heat:         { strength: 54, ctx: 'Miami Heat: Jimmy Butler, strong playoff culture under Spoelstra.' },
   timberwolves: { strength: 56, ctx: 'Minnesota Timberwolves: Anthony Edwards, strong defense.' },
+  // World Cup 2026 — additional teams as they show up live
+  'south africa': { strength: 50, ctx: 'South Africa: mid-tier African side, physical and well-organized.' },
+  czechia:      { strength: 57, ctx: 'Czechia: solid European side, organized defensively.' },
+  haiti:        { strength: 35, ctx: 'Haiti: first major tournament appearance in decades, big underdogs.' },
+  qatar:        { strength: 45, ctx: 'Qatar: 2022 hosts, reigning AFC champions, moderate level.' },
+  scotland:     { strength: 62, ctx: 'Scotland: physical, well-drilled European side.' },
+  tunisia:      { strength: 52, ctx: 'Tunisia: regular African qualifier, disciplined defense.' },
+  norway:       { strength: 68, ctx: 'Norway: Haaland leads a dangerous attack, Odegaard creative hub.' },
+  iraq:         { strength: 38, ctx: 'Iraq: first-time qualifier in decades, major underdogs.' },
+  algeria:      { strength: 58, ctx: 'Algeria: talented squad, strong African pedigree.' },
+  'ivory coast':{ strength: 58, ctx: 'Ivory Coast: Africa Cup of Nations holders, athletic and dangerous.' },
 };
 
 // Context-only entries — no calibrated strength model exists for these, so probability defaults to market odds or 50.
@@ -99,12 +110,26 @@ const EXTRA_CONTEXT: Record<string, string> = {
   'manchester city': 'Manchester City: Guardiola system, Haaland scoring, deep UCL pedigree.',
 };
 
+const TEAM_ALIASES: Record<string, string> = {
+  'korea republic': 'south korea',
+  "cote d'ivoire": 'ivory coast',
+  "côte d'ivoire": 'ivory coast',
+  'united states': 'usa',
+};
+
 function findTeamsInQuery(query: string): { name: string; strength: number; ctx: string; idx: number }[] {
   const q = query.toLowerCase();
   const found: { name: string; strength: number; ctx: string; idx: number }[] = [];
   for (const [name, data] of Object.entries(TEAM_DB)) {
     const idx = q.indexOf(name);
     if (idx !== -1) found.push({ name, strength: data.strength, ctx: data.ctx, idx });
+  }
+  for (const [alias, canonical] of Object.entries(TEAM_ALIASES)) {
+    const idx = q.indexOf(alias);
+    if (idx !== -1 && !found.some(f => f.name === canonical)) {
+      const data = TEAM_DB[canonical];
+      if (data) found.push({ name: canonical, strength: data.strength, ctx: data.ctx, idx });
+    }
   }
   found.sort((a, b) => a.idx - b.idx);
   return found;
