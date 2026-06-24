@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 function extractKeywords(query: string): string {
   const stop = new Set(['will','there','that','this','what','when','have','does','with','would','the','and','for','are','by','in','on','at','to','of','a','an','be','is','it','any','over','than','more','less','how','who','which','where','why','can','could','should','may','might']);
@@ -13,8 +14,8 @@ function detectMarketType(query: string): string {
   const q = query.toLowerCase();
   if (/ipl|cricket|srh|rcb|csk|kkr|mi |pbks|rr |gt |lsg|dc /.test(q)) return 'cricket';
   if (/nba|lakers|celtics|thunder|warriors|knicks|bucks|heat|nuggets|playoff/.test(q)) return 'nba';
-  if (/formula 1|f1|verstappen|hamilton|leclerc|norris|grand prix/.test(q)) return 'f1';
-  if (/champions league|ucl|premier league|bundesliga|la liga|serie a|ligue 1|bundesliga|euro|copa|fifa|world cup|mls|epl/.test(q)) return 'soccer';
+  if (/formula 1|f1|verstappen|hamilton|leclerc|norris|grand prix|antonelli|russell|piastri/.test(q)) return 'f1';
+  if (/champions league|ucl|premier league|bundesliga|la liga|serie a|ligue 1|euro|copa|fifa|world cup|mls|epl/.test(q)) return 'soccer';
   if (/eurovision|esc 2026/.test(q)) return 'eurovision';
   if (/french open|roland garros|wimbledon|us open|australian open|tennis/.test(q)) return 'tennis';
   if (/fed |federal reserve|rate cut|rate hike|fomc|inflation|gdp|cpi|recession|interest rate/.test(q)) return 'economics';
@@ -24,128 +25,120 @@ function detectMarketType(query: string): string {
   return 'general';
 }
 
-// Global sports context for all markets
-const SPORTS_CONTEXT: Record<string, string> = {
-  // NBA Teams
-  'timberwolves': 'Minnesota Timberwolves: Anthony Edwards 28.5 PPG, home court advantage, strong defense',
-  'nuggets': 'Denver Nuggets: TRAIL Timberwolves 2-3 in series. Nikola Jokic 28pts 13reb but team struggling. Must win Game 6 away.',
-  'thunder': 'Oklahoma City Thunder: 1st seed West, Shai Gilgeous-Alexander MVP frontrunner 32PPG',
-  'celtics': 'Boston Celtics: ELIMINATED in Round 1 by 76ers 3-4. Massive upset. Defending champions gone.',
-  // WORLD CUP 2026 TEAMS — real data
-  'usa': 'USA: Host nation World Cup 2026. Pulisic leads, McKennie, Reyna, Musah midfield. Playing Group D vs Paraguay, Australia, Turkey. Home crowd massive advantage at SoFi Stadium LA. Market gives USA ~65% to beat Paraguay.',
-  'paraguay': 'Paraguay: Group D vs USA June 12. Underdog — market gives ~35% chance vs USA. Physical defensive team.',
-  'canada': 'Canada: Host nation World Cup 2026. Alphonso Davies key player. Group B vs Bosnia June 12 Toronto. Home crowd advantage. Market gives Canada ~60% to beat Bosnia.',
-  'saudi arabia': 'Saudi Arabia: Shocked Argentina 2022. Group H World Cup 2026. Playing in Miami — NO home advantage. Counter-attack specialists. 42% win probability vs Uruguay.',
-  'uruguay': 'Uruguay: 2x World Cup winners. Nunez, Valverde lead new generation. Physical and organized. 58% favorites vs Saudi Arabia. Strong defensive record in World Cup.',
-  'iran': 'Iran: Group G World Cup 2026. Playing in LA vs New Zealand. 54% favorites. Solid defensive team.',
-  'new zealand': 'New Zealand: Group G World Cup 2026. Playing in LA vs Iran. 46% underdogs. Physical team.',
-  'senegal': 'Senegal: Africa Cup winners. Mane leads attack. 60% favorites vs France in Group C.',
-
-  'bosnia': 'Bosnia: Group B vs Canada June 12. First World Cup appearance. Edin Dzeko aging but experienced. Market gives ~40% vs Canada.',
-  'spain': 'Spain: FIFA #1 ranked. EURO 2024 champions. Youngest squad in tournament — Yamal 18, Pedri 23, Nico Williams 22. Tiki-taka evolved with pace. Group stage vs Croatia, Morocco, Brazil. Rodri anchors midfield. 16% Polymarket odds. Won EURO 2024 — most experienced young squad in tournament.',
-  'france': 'France: FIFA #2. Mbappe leads attack at peak powers. Tchouameni, Rabiot midfield. Cherki emerging star. Lost EURO 2024 final to Spain. Deep squad. Group vs Argentina, Australia, Poland. 17% market odds — slight favorite. Strong historically in tournaments.',
-  'england': 'England: Bellingham, Saka, Foden core. Finally turning potential into results. Lost EURO 2024 final to Spain. Group vs Serbia, Nigeria, South Korea. 11% market odds. Playing in USA venues — no true home advantage but English fans travel in numbers.',
-  'brazil': 'Brazil: Vinicius Jr., Rodrygo, Endrick 18yo phenom. 5x World Cup winners but no title since 2002. Playing in USA. Group vs France, Australia, Poland. 9% odds. Endrick could be the difference-maker.',
-  'argentina': 'Argentina: Defending champions 2022. Messi final World Cup at 38 — legendary send-off possible. Alvarez, Mac Allister, De Paul supporting cast. Group vs USA, Turkey, Australia. 9% market odds.',
-  'germany': 'Germany: Musiala, Wirtz young core. Rebuilding under Nagelsmann. Hosting Euro 2024 was good prep. Playing in North American venues. Dark horse at 7% odds.',
-  'portugal': 'Portugal: Ronaldo legacy at 41 — possibly final World Cup. Vitinha, Leao, Fernandes the future. Bruno Fernandes creative hub. 10% market odds.',
-
-
-  'canadiens': 'Montreal Canadiens: 2026 NHL Playoffs. Won series 3-2 vs Sabres before Game 6. Lost Game 6 at home 3-8 — massive collapse. Series now tied 3-3. Game 7 in BUFFALO tonight (home ice for Sabres). Canadiens won earlier in Buffalo this series 6-3. Nick Suzuki, Cole Caufield, Juraj Slafkovsky, Ivan Demidov key players.',
-  'sabres': 'Buffalo Sabres: 2026 NHL Playoffs. Forced Game 7 with 8-3 comeback win in Game 6. Rasmus Dahlin had 5 points in Game 6. Home ice advantage tonight at KeyBank Center. Tage Thompson driving offense. Sabres are -122 favorites on moneyline. Winner faces Carolina Hurricanes.',
-  'cavaliers': 'Cleveland Cavaliers: ECF vs Knicks. LOST Game 1 104-115 OT — blew 22pt lead with 7:52 left. Donovan Mitchell 31PPG but struggled late. Must bounce back in Game 2 at MSG. Trail series 0-1.',
-  'knicks': '2026 NBA CHAMPIONS! Beat Spurs 4-1 in Finals. Brunson 45pts Finals MVP Game 5. First title since 1973. Won all 4 games coming from behind — largest comeback team in Finals history.',
-  'lakers': 'Los Angeles Lakers: Beat Rockets 4-2 in Round 1. LeBron James 27PPG in playoffs. Anthony Davis 26pts 13reb. Huge underdogs vs OKC at 11% — need upsets on road to have a chance.',
-  'warriors': 'Golden State Warriors: Stephen Curry still elite shooter',
-  '76ers': 'Philadelphia 76ers: SHOCKED Celtics 4-3 in Round 1. Tyrese Maxey 31PPG series average. Lost Game 1 at MSG 98-137 badly. Trail series 0-1. Joel Embiid health key concern for rest of series.',
-  'heat': 'Miami Heat: Jimmy Butler clutch performer, strong playoff culture',
-  'spurs': 'San Antonio Spurs: Lost 2026 NBA Finals 1-4 to Knicks. Wemby 27pts Game 5 but Brunson too clutch. Young team — will be back.',
-  'trail blazers': 'Portland Trail Blazers: Damian Lillard legacy, rebuilding team',
-  'hawks': 'Atlanta Hawks: Trae Young playmaker, inconsistent defense',
-  'pistons': 'Detroit Pistons: 1st seed East. Beat Magic 4-3 in Round 1. Home court advantage vs Cavaliers Round 2. Cade Cunningham 27PPG. Lost Game 1 at home to CLE. Must bounce back in Game 2.',
-  'magic': 'Orlando Magic: Paolo Banchero 23PPG, young athletic team',
-  // F1 Drivers
-  'verstappen': 'Max Verstappen: ONLY 12 points after 3 races. Red Bull car failed to adapt to 2026 regs. Just 3% to win Miami. Threatened retirement. From dominant champion to 9th in standings — massive shock.',
-  'hamilton': 'Lewis Hamilton: 7x champion now at Ferrari in 2026. 6% to win Miami. Ferrari car improving but behind Mercedes. Hamilton vs Leclerc internal battle.',
-  'leclerc': 'Charles Leclerc: 3rd in championship 49pts. 8% to win Miami. Ferrari fast in qualifying but slower in race pace vs Mercedes. Hamilton now his teammate at Ferrari 2026.',
-  'norris': 'Lando Norris: 2025 World Champion but struggling in 2026. McLaren had DNS/DNF early season. 9% to win Miami. McLaren brought upgrades — could be dangerous.',
-  'russell': 'George Russell: 2nd in championship 63pts. Won Australia. 43% to win Miami GP. Tied with Antonelli in betting odds. Had battery issue in Japan dropped to 4th. Mercedes teammate battle ongoing.',
-  'piastri': 'Oscar Piastri: McLaren. 11% to win Miami. Finished 2nd in Japan after early DNS issues. McLaren upgraded car during 5-week break. Could surprise.',
-  // Tennis Players
-  'zverev': 'Alexander Zverev: World No.2, strong clay court record, Madrid Open finalist 2024',
-  'alcaraz': 'Carlos Alcaraz: World No.1, defending Madrid Open champion, home crowd advantage',
-  'sinner': 'Jannik Sinner: World No.1, strong form all surfaces',
-  'djokovic': 'Novak Djokovic: 24 Grand Slams, clay court expert',
-  'medvedev': 'Daniil Medvedev: Hard court specialist, inconsistent on clay',
-  'mensik': 'Jakub Mensik: Rising Czech star, strong serve, upset potential',
-  // Soccer/UCL
-  'psg': 'Paris Saint-Germain: Kylian Mbappe gone, rebuilding around younger talent, Ligue 1 dominance',
-  'bayern': 'Bayern München: Harry Kane leading scorer, Bundesliga champions, experienced UCL team',
-  'real madrid': 'Real Madrid: UCL record 15 titles, Vinicius Jr and Bellingham, Bernabeu fortress',
-  'barcelona': 'Barcelona: Pedri and Yamal, attacking football, financial recovery',
-  'arsenal': 'Arsenal: Premier League title contenders, Saka and Odegaard key players',
-  'manchester city': 'Manchester City: Pep Guardiola system, Haaland goals, UCL experience',
+// ---------- Single team database: strength (0-100, for probability calc) + context (for AI reasoning) ----------
+// Strength ratings are an illustrative relative model, not a claim of precision — refined over time as results come in.
+const TEAM_DB: Record<string, { strength: number; ctx: string }> = {
+  // World Cup 2026
+  spain:        { strength: 88, ctx: 'Spain: FIFA #1, EURO 2024 champions. Yamal, Pedri, Nico Williams, Rodri anchors midfield.' },
+  france:       { strength: 86, ctx: 'France: FIFA #2. Mbappe at peak powers. Tchouameni, Rabiot midfield, deep squad.' },
+  argentina:    { strength: 83, ctx: 'Argentina: 2022 champions. Messi final World Cup at 38. Alvarez, Mac Allister, De Paul.' },
+  brazil:       { strength: 82, ctx: 'Brazil: Vinicius Jr, Rodrygo, Endrick. 5x champions but none since 2002.' },
+  germany:      { strength: 80, ctx: 'Germany: Musiala, Wirtz young core. Rebuilding under Nagelsmann.' },
+  england:      { strength: 78, ctx: 'England: Bellingham, Saka, Foden. Lost EURO 2024 final to Spain.' },
+  portugal:     { strength: 77, ctx: 'Portugal: Ronaldo, 41, likely final World Cup. Vitinha, Leao, Bruno Fernandes.' },
+  netherlands:  { strength: 76, ctx: 'Netherlands: deep technical squad, Van Dijk, Gakpo, De Jong.' },
+  belgium:      { strength: 75, ctx: 'Belgium: De Bruyne leads a golden generation closing its window.' },
+  italy:        { strength: 72, ctx: 'Italy: defensively organized, tournament pedigree.' },
+  uruguay:      { strength: 70, ctx: 'Uruguay: 2x World Cup winners. Nunez, Valverde lead the new generation.' },
+  croatia:      { strength: 68, ctx: 'Croatia: experienced tournament team, reliable at World Cups.' },
+  morocco:      { strength: 63, ctx: 'Morocco: 2022 semifinalists, well-organized defense.' },
+  mexico:       { strength: 65, ctx: 'Mexico: host nation, Raul Jimenez and Lozano, Azteca Stadium crowd.' },
+  usa:          { strength: 62, ctx: 'USA: host nation. Pulisic, McKennie, Reyna, Musah. Big home crowd advantage.' },
+  japan:        { strength: 60, ctx: 'Japan: technical, well-organized, has produced upsets before.' },
+  senegal:      { strength: 60, ctx: 'Senegal: Africa Cup of Nations champions. Mane leads the attack.' },
+  canada:       { strength: 58, ctx: 'Canada: host nation. Alphonso Davies, home crowd advantage.' },
+  'south korea':{ strength: 58, ctx: 'South Korea: technical, fast counter-attacking team.' },
+  nigeria:      { strength: 55, ctx: 'Nigeria: athletic, talented individual players.' },
+  australia:    { strength: 52, ctx: 'Australia: physical, well-organized underdogs.' },
+  egypt:        { strength: 52, ctx: 'Egypt: relies heavily on Mohamed Salah to create chances.' },
+  ecuador:      { strength: 50, ctx: 'Ecuador: athletic, direct attacking style.' },
+  'saudi arabia':{ strength: 50, ctx: 'Saudi Arabia: shocked Argentina in 2022. Counter-attack specialists, no home advantage in North America.' },
+  iran:         { strength: 48, ctx: 'Iran: solid, well-organized defensive team.' },
+  paraguay:     { strength: 48, ctx: 'Paraguay: physical, defensive-minded underdogs.' },
+  bolivia:      { strength: 40, ctx: 'Bolivia: normally plays at altitude, a different challenge in North America.' },
+  bosnia:       { strength: 40, ctx: 'Bosnia: first-ever World Cup appearance. Edin Dzeko aging but experienced.' },
+  jordan:       { strength: 38, ctx: 'Jordan: first-ever World Cup appearance, major underdogs.' },
+  'new zealand':{ strength: 35, ctx: 'New Zealand: physical, set-piece threat, major underdogs.' },
+  'cape verde': { strength: 28, ctx: 'Cape Verde: FIFA ranked ~68th, first-ever World Cup, tiny island nation.' },
+  'cabo verde': { strength: 28, ctx: 'Cabo Verde: FIFA ranked ~68th, first-ever World Cup.' },
+  curacao:      { strength: 20, ctx: 'Curacao: smallest nation in the tournament, heavy underdogs.' },
+  'curaçao':    { strength: 20, ctx: 'Curaçao: smallest nation in the tournament, heavy underdogs.' },
+  // NBA (post-2026-Finals state)
+  knicks:       { strength: 70, ctx: '2026 NBA champions. Beat Spurs 4-1 in the Finals. Brunson was Finals MVP.' },
+  spurs:        { strength: 60, ctx: 'Lost the 2026 NBA Finals 1-4. Wembanyama leads a young core that will be back.' },
+  thunder:      { strength: 78, ctx: 'Oklahoma City Thunder: best record in the NBA, SGA the MVP frontrunner.' },
+  nuggets:      { strength: 64, ctx: 'Denver Nuggets: Jokic playing at an MVP level, 2023 champions.' },
+  lakers:       { strength: 58, ctx: 'LA Lakers: LeBron James and Anthony Davis, veteran core.' },
+  celtics:      { strength: 50, ctx: 'Boston Celtics: deep roster but lost early in the 2026 playoffs, a real upset.' },
+  bucks:        { strength: 60, ctx: 'Milwaukee Bucks: Giannis Antetokounmpo and Damian Lillard, top East threat.' },
+  warriors:     { strength: 54, ctx: 'Golden State Warriors: Stephen Curry still an elite shooter.' },
+  heat:         { strength: 54, ctx: 'Miami Heat: Jimmy Butler, strong playoff culture under Spoelstra.' },
+  timberwolves: { strength: 56, ctx: 'Minnesota Timberwolves: Anthony Edwards, strong defense.' },
 };
 
-function getGlobalSportsContext(query: string): string {
+// Context-only entries — no calibrated strength model exists for these, so probability defaults to market odds or 50.
+const EXTRA_CONTEXT: Record<string, string> = {
+  zverev: 'Alexander Zverev: top-5 ranked, strong clay-court record.',
+  alcaraz: 'Carlos Alcaraz: former world No.1, all-surface threat, strong big-match temperament.',
+  sinner: 'Jannik Sinner: world No.1, dominant on hard and clay courts.',
+  djokovic: 'Novak Djokovic: 24 Grand Slams, elite at every Slam even late in his career.',
+  medvedev: 'Daniil Medvedev: hard-court specialist, less comfortable on clay.',
+  mensik: 'Jakub Mensik: rising young talent, big serve, real upset potential.',
+  verstappen: "Max Verstappen: dominant in recent years, but the 2026 regulation reset hurt Red Bull's pace.",
+  hamilton: 'Lewis Hamilton: Ferrari. Won the 2026 Barcelona GP, Ferrari first win since Mexico 2024.',
+  leclerc: 'Charles Leclerc: Ferrari. Often fast in qualifying, racecraft battles with teammate Hamilton.',
+  norris: 'Lando Norris: McLaren. Defending champion pedigree, chasing consistency in 2026.',
+  russell: 'George Russell: Mercedes. Podium-capable, fighting Antonelli for status as team lead.',
+  antonelli: 'Kimi Antonelli: Mercedes rookie sensation, championship-leading pace, retired from Barcelona with an engine failure.',
+  piastri: 'Oscar Piastri: McLaren. Calm, consistent, capable of podiums on the right weekend.',
+  psg: 'Paris Saint-Germain: rebuilding around younger talent, dominant domestically.',
+  bayern: 'Bayern Munich: Harry Kane leading scorer, Bundesliga champions, deep UCL experience.',
+  'real madrid': 'Real Madrid: record 15 UCL titles, Vinicius Jr and Bellingham, strong home form.',
+  barcelona: 'Barcelona: Pedri and Yamal, possession-heavy attacking football.',
+  arsenal: 'Arsenal: Premier League title contenders, Saka and Odegaard central to their game.',
+  'manchester city': 'Manchester City: Guardiola system, Haaland scoring, deep UCL pedigree.',
+};
+
+function findTeamsInQuery(query: string): { name: string; strength: number; ctx: string; idx: number }[] {
   const q = query.toLowerCase();
-  const contexts: string[] = [];
-  for (const [team, ctx] of Object.entries(SPORTS_CONTEXT)) {
-    if (q.includes(team)) contexts.push(ctx);
+  const found: { name: string; strength: number; ctx: string; idx: number }[] = [];
+  for (const [name, data] of Object.entries(TEAM_DB)) {
+    const idx = q.indexOf(name);
+    if (idx !== -1) found.push({ name, strength: data.strength, ctx: data.ctx, idx });
   }
-  return contexts.join(' | ');
+  found.sort((a, b) => a.idx - b.idx);
+  return found;
 }
 
-// NBA 2026 Playoff standings and context
-const NBA_CONTEXT: Record<string, string> = {
-  'timberwolves': 'Minnesota Timberwolves: 3rd seed West, Anthony Edwards averaging 28.5 PPG, Karl-Anthony Towns 22pts 9reb, strong defensive team, home court advantage',
-  'nuggets': 'Denver Nuggets: Nikola Jokic MVP candidate 26pts 12reb 9ast, Jamal Murray injury concern, 2023 champions, experienced playoff team',
-  'thunder': 'Oklahoma City Thunder: 1st seed West. Swept Suns 4-0 in Round 1. SGA averaging 34PPG in playoffs. Best record in NBA. Home court advantage. 89% favorites vs Lakers. Wembanyama-level defense.',
-  'celtics': 'Boston Celtics: 1st seed East, Jayson Tatum 26PPG, defending champions, deepest roster in NBA',  // WORLD CUP 2026 TEAMS — real data
-  'usa': 'USA: Host nation World Cup 2026. Pulisic leads, McKennie, Reyna, Musah midfield. Playing Group D vs Paraguay, Australia, Turkey. Home crowd massive advantage at SoFi Stadium LA. Market gives USA ~65% to beat Paraguay.',
-  'paraguay': 'Paraguay: Group D vs USA June 12. Underdog — market gives ~35% chance vs USA. Physical defensive team.',
-  'canada': 'Canada: Host nation World Cup 2026. Alphonso Davies key player. Group B vs Bosnia June 12 Toronto. Home crowd advantage. Market gives Canada ~60% to beat Bosnia.',
-  'bosnia': 'Bosnia: Group B vs Canada June 12. First World Cup appearance. Edin Dzeko aging but experienced. Market gives ~40% vs Canada.',
-  'spain': 'Spain: FIFA #1 ranked. EURO 2024 champions. Youngest squad in tournament — Yamal 18, Pedri 23, Nico Williams 22. Tiki-taka evolved with pace. Group stage vs Croatia, Morocco, Brazil. Rodri anchors midfield. 16% Polymarket odds. Won EURO 2024 — most experienced young squad in tournament.',
-  'france': 'France: FIFA #2. Mbappe leads attack at peak powers. Tchouameni, Rabiot midfield. Cherki emerging star. Lost EURO 2024 final to Spain. Deep squad. Group vs Argentina, Australia, Poland. 17% market odds — slight favorite. Strong historically in tournaments.',
-  'england': 'England: Bellingham, Saka, Foden core. Finally turning potential into results. Lost EURO 2024 final to Spain. Group vs Serbia, Nigeria, South Korea. 11% market odds. Playing in USA venues — no true home advantage but English fans travel in numbers.',
-  'brazil': 'Brazil: Vinicius Jr., Rodrygo, Endrick 18yo phenom. 5x World Cup winners but no title since 2002. Playing in USA. Group vs France, Australia, Poland. 9% odds. Endrick could be the difference-maker.',
-  'argentina': 'Argentina: Defending champions 2022. Messi final World Cup at 38 — legendary send-off possible. Alvarez, Mac Allister, De Paul supporting cast. Group vs USA, Turkey, Australia. 9% market odds.',
-  'germany': 'Germany: Musiala, Wirtz young core. Rebuilding under Nagelsmann. Hosting Euro 2024 was good prep. Playing in North American venues. Dark horse at 7% odds.',
-  'portugal': 'Portugal: Ronaldo legacy at 41 — possibly final World Cup. Vitinha, Leao, Fernandes the future. Bruno Fernandes creative hub. 10% market odds.',
-
-
-  'canadiens': 'Montreal Canadiens: 2026 NHL Playoffs. Won series 3-2 vs Sabres before Game 6. Lost Game 6 at home 3-8 — massive collapse. Series now tied 3-3. Game 7 in BUFFALO tonight (home ice for Sabres). Canadiens won earlier in Buffalo this series 6-3. Nick Suzuki, Cole Caufield, Juraj Slafkovsky, Ivan Demidov key players.',
-  'sabres': 'Buffalo Sabres: 2026 NHL Playoffs. Forced Game 7 with 8-3 comeback win in Game 6. Rasmus Dahlin had 5 points in Game 6. Home ice advantage tonight at KeyBank Center. Tage Thompson driving offense. Sabres are -122 favorites on moneyline. Winner faces Carolina Hurricanes.',
-
-  'knicks': 'New York Knicks: NBA FINALS lead 3-1. Brunson 36pts in Game 4. Knicks are +180 ROAD UNDERDOGS for Game 5 at San Antonio = 36% win probability for Game 5.',
-  'warriors': 'Golden State Warriors: Stephen Curry still elite, experienced playoff team, Draymond Green defense',
-  'lakers': 'Los Angeles Lakers: LeBron James still performing, Anthony Davis 25pts 12reb, inconsistent season',
-  'heat': 'Miami Heat: Jimmy Butler clutch performer, strong playoff culture, Erik Spoelstra coaching edge',
-  'bucks': 'Milwaukee Bucks: Giannis Antetokounmpo 30PPG, Damian Lillard 25PPG, top Eastern Conference threat',
-};
-
-function getNBAContext(query: string): string {
+function findExtraContext(query: string): string[] {
   const q = query.toLowerCase();
-  const contexts: string[] = [];
-  for (const [team, ctx] of Object.entries(NBA_CONTEXT)) {
-    if (q.includes(team)) contexts.push(ctx);
+  return Object.entries(EXTRA_CONTEXT).filter(([k]) => q.includes(k)).map(([, v]) => v);
+}
+
+// The ONLY place a probability number gets decided. Market odds (real money) always win.
+// Otherwise: Bradley-Terry on the team-strength table. Otherwise: honest 50/50 — never a fake default.
+function calculateProbability(teams: { strength: number }[], marketOdds: number | null): number {
+  if (marketOdds && marketOdds > 0) return marketOdds;
+  if (teams.length >= 2) {
+    const t1 = teams[0].strength, t2 = teams[1].strength;
+    const prob = Math.round((t1 / (t1 + t2)) * 100);
+    return Math.max(10, Math.min(90, prob));
   }
-  return contexts.join(' | ') || 'NBA Playoff game — analyze based on recent form, home court, and key player matchups';
+  return 50;
 }
 
 function getMarketContext(type: string, query: string): string {
   const contexts: Record<string, string> = {
     cricket: 'Focus on: team form (last 5 matches), home advantage, head-to-head record, key players, pitch conditions. IPL 2026 season context.',
-    nba: 'Focus on: team record, playoff seeding, home court advantage, key injuries, head-to-head, historical championship odds for #1 seeds (~30%).',
+    nba: 'Focus on: team record, playoff seeding, home court advantage, key injuries, head-to-head.',
     f1: 'Focus on: driver championship points, team performance, circuit history, recent race results, reliability.',
-    soccer: 'Focus on: league position, recent form, head-to-head, home/away record, key injuries, European competition context.',
-    eurovision: 'Focus on: betting market history (markets predict winner 70%+ accuracy), country performance history, song style trends, televote vs jury split. Eurovision 2026 context: Finland leading at 35% with upbeat pop entry. Greece surging to 18% with Mediterranean ballad. Denmark 13% with strong jury appeal. Australia 8% with power ballad. France 7% with French-language entry. Eurovision held in Basel Switzerland May 13-17 2026. Grand Final May 17. Finland won 2023 with Lordi-style rock. Markets have predicted winner correctly 8 of last 10 years.',
-    tennis: 'Focus on: ATP/WTA ranking, surface win rate (clay/grass/hard), recent tournament results, head-to-head on this surface.',
-    economics: 'Focus on: actual market-implied probabilities (CME FedWatch), current inflation rate, employment data, Fed speaker tone, historical rate decision patterns.',
-    crypto: 'Focus on: current price vs target, distance to target (%), historical volatility, market cycle phase, macro conditions.',
-    politics: 'Focus on: polling averages, historical accuracy of polls in this country, incumbent advantage, economic conditions, prediction market history.',
-    geopolitics: 'Focus on: negotiation timeline, historical base rates for similar conflicts, key stakeholders, recent diplomatic activity, expert forecaster consensus.',
+    soccer: 'Focus on: FIFA ranking, recent form, head-to-head, home/away record, key injuries, tournament context.',
+    eurovision: 'Focus on: betting market history (markets have predicted the winner correctly roughly 70-80% of the time historically), country performance trends, song style, televote vs jury split.',
+    tennis: 'Focus on: ATP/WTA ranking, surface win rate (clay/grass/hard), recent results, head-to-head on this surface.',
+    economics: 'Focus on: market-implied probabilities, current inflation rate, employment data, Fed tone, historical rate-decision patterns.',
+    crypto: 'Focus on: current price vs target, distance to target, historical volatility, market cycle phase, macro conditions.',
+    politics: 'Focus on: polling averages, historical poll accuracy in this country, incumbent advantage, economic conditions.',
+    geopolitics: 'Focus on: negotiation timeline, historical base rates for similar conflicts, key stakeholders, recent diplomatic activity.',
     general: 'Focus on: base rates for this type of event, expert consensus, recent developments, key factors that could change the outcome.',
   };
   return contexts[type] || contexts.general;
@@ -189,227 +182,72 @@ async function fetchMetaculus(keywords: string): Promise<{ probability: number |
     const data = await res.json();
     const questions = data.results || [];
     if (questions.length === 0) return { probability: null, count: 0 };
-    const probs = questions.map((q: any) => q.community_prediction?.full?.q2).filter((p: any) => p !== null && p !== undefined);
+    const probs = questions.map((qq: any) => qq.community_prediction?.full?.q2).filter((p: any) => p !== null && p !== undefined);
     if (probs.length === 0) return { probability: null, count: questions.length };
     const avg = probs.reduce((a: number, b: number) => a + b, 0) / probs.length;
     return { probability: Math.round(avg * 100), count: questions.length };
   } catch { return { probability: null, count: 0 }; }
 }
 
-
-function calculateProbability(query: string, marketOdds: number | null): number {
-  if (marketOdds && marketOdds > 0) return marketOdds;
-  
-  const q = query.toLowerCase();
-  
-  // World Cup team strength rankings (win probability vs average team)
-  const strength: Record<string, number> = {
-    'spain': 88, 'france': 86, 'england': 78, 'brazil': 82, 'argentina': 83,
-    'germany': 80, 'portugal': 77, 'netherlands': 76, 'belgium': 75, 'italy': 72,
-    'croatia': 68, 'uruguay': 70, 'mexico': 65, 'usa': 62, 'canada': 58,
-    'japan': 60, 'south korea': 58, 'morocco': 63, 'senegal': 60, 'nigeria': 55,
-    'egypt': 52, 'iran': 48, 'saudi arabia': 50, 'australia': 52, 'ecuador': 50,
-    'paraguay': 48, 'bolivia': 40, 'cape verde': 28, 'cabo verde': 28,
-    'curaçao': 20, 'curacao': 20, 'new zealand': 35, 'jordan': 38,
-    'knicks': 58, 'spurs': 52, 'lakers': 55, 'celtics': 60,
-  };
-  
-  // Find teams in query
-  const teams: {name: string, str: number}[] = [];
-  for (const [team, str] of Object.entries(strength)) {
-    if (q.includes(team)) teams.push({name: team, str});
-  }
-  
-  if (teams.length >= 2) {
-    // Sort by position in query (first team = home/favorite context)
-    teams.sort((a, b) => q.indexOf(a.name) - q.indexOf(b.name));
-    const t1 = teams[0].str;
-    const t2 = teams[1].str;
-    // Convert strength to win probability using Bradley-Terry model
-    const prob = Math.round((t1 / (t1 + t2)) * 100);
-    return Math.max(10, Math.min(90, prob));
-  }
-  
-  return 60; // default when unknown teams
-}
-
-async function analyzeWithGroq(
+// Generates ONLY the reasoning text (bull/bear/keyRisk/verdict). The probability is fixed before this is ever called —
+// the model writes reasoning consistent with our number, it never invents its own.
+async function generateReasoning(
   query: string,
+  probability: number,
+  contextLines: string[],
   headlines: string[],
-  metaculusPct: number | null,
-  marketOdds: number | null,
   marketType: string
-): Promise<{ probability: number; bull: string[]; bear: string[]; keyRisk: string; verdict: string } | null> {
-  try {
-    const headlineText = headlines.slice(0, 8).map((h, i) => `${i+1}. ${h}`).join('\n');
-    // Auto-fetch Polymarket odds if not provided
-    if (!marketOdds) {
-      try {
-        // Build slug from query for NBA games
-        const q = query.toLowerCase();
-        let slug = '';
-        
-        // NBA team slug mapping
-        const nbaTeams: Record<string,string> = {
-          'knicks':'nyk','spurs':'sas','celtics':'bos','lakers':'lal',
-          'warriors':'gsw','heat':'mia','bucks':'mil','nuggets':'den',
-          'suns':'phx','clippers':'lac','mavericks':'dal','nets':'bkn',
-          'sixers':'phi','76ers':'phi','raptors':'tor','hawks':'atl',
-          'bulls':'chi','cavaliers':'cle','pistons':'det','pacers':'ind',
-          'wizards':'was','hornets':'cha','magic':'orl','thunder':'okc',
-          'blazers':'por','jazz':'uta','kings':'sac','pelicans':'nop',
-          'timberwolves':'min','rockets':'hou','grizzlies':'mem'
-        };
-        
-        // Find team slugs
-        const foundTeams: string[] = [];
-        for (const [name, abbr] of Object.entries(nbaTeams)) {
-          if (q.includes(name)) foundTeams.push(abbr);
-          if (foundTeams.length === 2) break;
-        }
-        
-        if (foundTeams.length === 2) {
-          // Try today and next 3 days
-          const today = new Date();
-          for (let d = 0; d < 4; d++) {
-            const date = new Date(today);
-            date.setDate(today.getDate() + d);
-            const dateStr = date.toISOString().slice(0,10).replace(/-/g,'');
-            const yr = date.getFullYear();
-            const mo = String(date.getMonth()+1).padStart(2,'0');
-            const dy = String(date.getDate()).padStart(2,'0');
-            const dateSlug = `${yr}-${mo}-${dy}`;
-            
-            const trySlug = `nba-${foundTeams[0]}-${foundTeams[1]}-${dateSlug}`;
-            const pmRes = await fetch(
-              `https://gamma-api.polymarket.com/events?slug=${trySlug}`,
-              { signal: AbortSignal.timeout(3000) }
-            );
-            if (pmRes.ok) {
-              const pmData = await pmRes.json();
-              if (Array.isArray(pmData) && pmData.length > 0) {
-                const event = pmData[0];
-                const markets = event.markets || [];
-                // Find moneyline market
-                const moneyline = markets.find((m: any) => {
-                  const q2 = (m.question||'').toLowerCase();
-                  return !q2.includes('o/u') && !q2.includes('spread') && !q2.includes('points') && !q2.includes('rebounds') && m.active !== false;
-                }) || (markets.length === 1 ? markets[0] : null);
-                
-                if (moneyline) {
-                  const prices = moneyline.outcomePrices;
-                  const parsed = typeof prices === 'string' ? JSON.parse(prices) : prices;
-                  if (parsed && parsed.length >= 2) {
-                    const yes = parseFloat(parsed[0]);
-                    const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
-                    if (pct >= 5 && pct <= 95) {
-                      marketOdds = pct;
-                      break;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      } catch {}
-    }
+): Promise<{ bull: string[]; bear: string[]; keyRisk: string; verdict: string } | null> {
+  const contextText = contextLines.join(' | ').slice(0, 500) || 'No specific team data available.';
+  const headlineText = headlines.slice(0, 3).join(' | ').slice(0, 300) || 'No recent headlines.';
+  const typeGuidance = getMarketContext(marketType, query);
 
-    const marketContext = marketOdds ? `Prediction market (Polymarket) odds: ${marketOdds}% — crowd consensus, stay within 8%` : '';
-    const metaContext = metaculusPct ? `Expert forecasters (Metaculus): ${metaculusPct}%` : '';
-    const typeContext = getMarketContext(marketType, query);
-    const nbaContext = marketType === 'nba' ? getNBAContext(query) : '';
-    const globalSportsContext = getGlobalSportsContext(query);
+  const prompt = `Sports and prediction-market analyst. Return ONLY valid JSON, no markdown.
 
-    // For Eurovision, inject country data directly
-    const eurovisionFacts = marketType === 'eurovision' || query.toLowerCase().includes('eurovision') ? 
-      'Eurovision 2026 is the 70th edition held in Vienna Austria. FINAL IS MAY 16 2026. Finland 45% clear favorite — Linda Lampenius and Pete Parkkonen performing Liekinheitin (Flamethrower) — live violin performance, fire imagery, theatrical staging. Has led betting markets for months. Denmark 13% — strong jury appeal Nordic pop entry My System by Felicia. Greece 13% — dropped from 18%, Akylas performing Ferto, Mediterranean ballad. CONTROVERSY: Spain, Ireland, Netherlands, Iceland, Slovenia BOYCOTTED over Israel inclusion — fewer countries than usual. Israel 5% — boosted by government ad campaigns in 2024 and 2025. Betting markets predicted winner correctly 8 of last 10 years. Televote favours energetic memorable songs. Jury favours sophisticated vocals.' : '';
-    
-    const teamFacts = [globalSportsContext, nbaContext, eurovisionFacts].filter(Boolean).join(' | ');
-    
-    // Build home team hint cleanly
-    let homeHint = '';
-    const qLower = query.toLowerCase();
-    const factsLower = (teamFacts||'').toLowerCase();
-    if (factsLower.includes('-218') || (factsLower.includes('spurs') && factsLower.includes('home'))) {
-      const spursFirst = qLower.indexOf('spurs') < qLower.indexOf('knicks') && qLower.indexOf('spurs') !== -1;
-      homeHint = spursFirst
-        ? 'IMPORTANT: Spurs are -218 home favorites = 68% win prob. Spurs are FIRST in question. Set probability to 65-70%.'
-        : 'IMPORTANT: Spurs are -218 home favorites = 68% win prob. Knicks are FIRST in question. Set probability to 30-35%.';
-    }
+Question: "${query}"
+Computed probability for the FIRST named team/option: ${probability}% (fixed — do not change this number)
+Context: ${contextText}
+Recent headlines: ${headlineText}
+Guidance: ${typeGuidance}
 
-    // Build concise prompt - Groq fails with long prompts
-    const factsShort = (teamFacts||'').slice(0,500);
-    const headlinesShort = headlines.slice(0,3).join(' | ').slice(0,300);
-    const prompt = `Sports analyst. Return ONLY valid JSON. No markdown.
+Write reasoning consistent with the ${probability}% figure above:
+- bull: 3 short reasons the first team/option wins, max 10 words each, specific to these teams
+- bear: 2 short risks or reasons it could lose, max 10 words each
+- keyRisk: the single biggest uncertainty, max 8 words
+- verdict: a 3-5 word summary phrase
 
-Match: "${query}"
-Context: ${factsShort || 'No data'}
-News: ${headlinesShort || 'No news'}
-${marketOdds ? 'Market odds: ' + marketOdds + '% for first team. Stay within 5% of this.' : ''}
-${homeHint}
+Return ONLY: {"bull":["...","...","..."],"bear":["...","..."],"keyRisk":"...","verdict":"..."}`;
 
-Rules:
-- probability = integer 0-100, chance FIRST team in match wins
-- Use context to determine team quality difference
-- If context mentions "92% win probability" use that
-- Bull = 3 reasons first team wins, specific to these teams, max 10 words each
-- Bear = 2 risks for first team, max 10 words each
-- keyRisk = biggest uncertainty, max 8 words
-
-Return ONLY valid JSON: {"probability":85,"bull":["reason1","reason2","reason3"],"bear":["risk1","risk2"],"keyRisk":"key risk","verdict":"verdict"}`;
-
-    // Try Anthropic API first, fall back to Groq
-    let text = '';
-    const anthropicKey = process.env.ANTHROPIC_API_KEY;
-    
-    if (anthropicKey) {
+  let text = '';
+  if (ANTHROPIC_API_KEY) {
+    try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'x-api-key': anthropicKey,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 800,
-          messages: [{ role: 'user', content: prompt }],
-        }),
-        signal: AbortSignal.timeout(15000),
+        headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 500, messages: [{ role: 'user', content: prompt }] }),
+        signal: AbortSignal.timeout(12000),
       });
-      if (res.ok) {
-        const data = await res.json();
-        text = data.content?.[0]?.text || '';
-      }
-    }
-    
-    // Fallback to Groq if Anthropic fails
-    if (!text && GROQ_API_KEY) {
+      if (res.ok) { const data = await res.json(); text = data.content?.[0]?.text || ''; }
+    } catch {}
+  }
+  if (!text && GROQ_API_KEY) {
+    try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
-        body: JSON.stringify({
-          model: 'llama-3.1-8b-instant',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 800,
-          temperature: 0.1,
-        }),
-        signal: AbortSignal.timeout(8000),
+        body: JSON.stringify({ model: 'llama-3.1-8b-instant', messages: [{ role: 'user', content: prompt }], max_tokens: 500, temperature: 0.2 }),
+        signal: AbortSignal.timeout(7000),
       });
-      if (res.ok) {
-        const data = await res.json();
-        text = data.choices?.[0]?.message?.content || '';
-      }
-    }
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return null;
-    const parsed = JSON.parse(jsonMatch[0]);
-    if (typeof parsed.probability !== 'number') return null;
+      if (res.ok) { const data = await res.json(); text = data.choices?.[0]?.message?.content || ''; }
+    } catch {}
+  }
+  if (!text) return null;
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try {
+    const parsed = JSON.parse(match[0]);
     if (!Array.isArray(parsed.bull) || !Array.isArray(parsed.bear)) return null;
-
     return {
-      probability: marketOdds ? Math.max(5, Math.min(95, marketOdds)) : Math.max(5, Math.min(95, Math.round(parsed.probability))),
       bull: parsed.bull.slice(0, 3).map((s: string) => String(s).slice(0, 100)),
       bear: parsed.bear.slice(0, 3).map((s: string) => String(s).slice(0, 100)),
       keyRisk: String(parsed.keyRisk || '').slice(0, 120),
@@ -418,14 +256,166 @@ Return ONLY valid JSON: {"probability":85,"bull":["reason1","reason2","reason3"]
   } catch { return null; }
 }
 
+// One function builds the source/reasons list everywhere — no more duplicated fallback blocks per code path.
+function buildSources(reasoning: { bull: string[]; bear: string[]; keyRisk: string } | null, extra: any[]): any[] {
+  const sources: any[] = [];
+  if (reasoning) {
+    reasoning.bull.forEach(b => sources.push({ name: 'Signal', sig: b, url: '', category: 'news', type: 'strong', contribution: 5 }));
+    reasoning.bear.forEach(b => sources.push({ name: 'Signal', sig: b, url: '', category: 'news', type: 'contrary', contribution: -5 }));
+    if (reasoning.keyRisk) sources.push({ name: 'Key Risk', sig: reasoning.keyRisk, url: '', category: 'community', type: 'mixed', contribution: 0 });
+  } else {
+    const newsExtras = extra.filter(e => e.category === 'news' && e.sig && e.sig.length > 10);
+    if (newsExtras.length > 0) {
+      newsExtras.slice(0, 3).forEach(e => sources.push({ name: 'Signal', sig: e.sig, url: e.url || '', category: 'news', type: 'strong', contribution: 5 }));
+    } else {
+      sources.push(
+        { name: 'Signal', sig: 'Market data and recent form analyzed', url: '', category: 'news', type: 'strong', contribution: 5 },
+        { name: 'Signal', sig: 'Historical head-to-head record considered', url: '', category: 'news', type: 'strong', contribution: 5 },
+        { name: 'Signal', sig: 'Upset potential always exists in this format', url: '', category: 'news', type: 'contrary', contribution: -5 },
+      );
+    }
+  }
+  sources.push(...extra);
+  return sources;
+}
+
+// ---------- IPL cricket: dedicated season-stats model. Returns null if it can't parse two known teams,
+// in which case the caller falls through to the generic model below. ----------
+async function tryComputeCricket(query: string, request: NextRequest) {
+  const teamMatch = query.match(/will\s+(.+?)\s+beat\s+(.+?)(?:\s+in|\?|$)/i);
+  if (!teamMatch) return null;
+
+  const TEAM_MAP: Record<string, string> = {
+    'royal challengers bengaluru': 'RCB', rcb: 'RCB', 'mumbai indians': 'MI', mi: 'MI',
+    'chennai super kings': 'CSK', csk: 'CSK', 'kolkata knight riders': 'KKR', kkr: 'KKR',
+    'delhi capitals': 'DC', dc: 'DC', 'punjab kings': 'PBKS', pbks: 'PBKS',
+    'rajasthan royals': 'RR', rr: 'RR', 'sunrisers hyderabad': 'SRH', srh: 'SRH',
+    'gujarat titans': 'GT', gt: 'GT', 'lucknow super giants': 'LSG', lsg: 'LSG',
+  };
+  const POINTS: Record<string, { p: number; w: number; l: number; pts: number; nrr: string; form: string }> = {
+    RR:   { p: 10, w: 7, l: 3, pts: 14, nrr: '+0.656', form: 'WWWWWLWLL' },
+    RCB:  { p: 11, w: 9, l: 2, pts: 18, nrr: '+0.812', form: 'WWLLWWWWWW' },
+    PBKS: { p: 13, w: 8, l: 2, pts: 16, nrr: '+0.612', form: 'WWWWWWWWLL' },
+    DC:   { p: 11, w: 5, l: 6, pts: 10, nrr: '-0.201', form: 'LWWLWLWLL' },
+    GT:   { p: 14, w: 9, l: 5, pts: 18, nrr: '+0.695', form: 'LWLWLWWLWWWWWL' },
+    SRH:  { p: 11, w: 7, l: 4, pts: 14, nrr: '+0.445', form: 'WLLWLLWLWWW' },
+    MI:   { p: 11, w: 3, l: 8, pts: 6,  nrr: '-0.498', form: 'WLLWLLLLWL' },
+    LSG:  { p: 13, w: 3, l: 9, pts: 6,  nrr: '-0.612', form: 'LLLWWWLLLLL' },
+    CSK:  { p: 14, w: 5, l: 9, pts: 10, nrr: '-0.298', form: 'LLLLLWWWLLWLL' },
+    KKR:  { p: 13, w: 6, l: 6, pts: 13, nrr: '+0.011', form: 'LLLLLLLNLWWWW' },
+  };
+  const HOME_ADV: Record<string, number> = { SRH: 8, MI: 6, RCB: 7, CSK: 8, KKR: 5, DC: 4, RR: 5, GT: 4, LSG: 5, PBKS: 4 };
+  const VENUE_CITIES: Record<string, string[]> = {
+    SRH: ['hyderabad'], MI: ['mumbai', 'wankhede'], RCB: ['bengaluru', 'bangalore', 'chinnaswamy', 'dharamsala', 'dharamshala'],
+    CSK: ['chennai', 'chepauk'], KKR: ['kolkata', 'eden'], DC: ['delhi'],
+    RR: ['jaipur', 'guwahati'], GT: ['ahmedabad', 'narendra'], LSG: ['lucknow'],
+    PBKS: ['chandigarh', 'dharamshala', 'mohali'],
+  };
+
+  const c1 = TEAM_MAP[teamMatch[1].trim().toLowerCase()];
+  const c2 = TEAM_MAP[teamMatch[2].trim().toLowerCase()];
+  if (!c1 || !c2 || !POINTS[c1] || !POINTS[c2]) return null;
+
+  const t1 = POINTS[c1], t2 = POINTS[c2];
+  const f1 = Math.round(((t1.form.match(/W/g) || []).length / t1.form.length) * 100);
+  const f2 = Math.round(((t2.form.match(/W/g) || []).length / t2.form.length) * 100);
+  const nrr1 = parseFloat(t1.nrr), nrr2 = parseFloat(t2.nrr);
+  const nrrMax = Math.max(Math.abs(nrr1), Math.abs(nrr2), 0.1);
+  const queryLower = query.toLowerCase();
+
+  let homeTeam = c2;
+  if ((VENUE_CITIES[c1] || []).some(city => queryLower.includes(city))) homeTeam = c1;
+  else if ((VENUE_CITIES[c2] || []).some(city => queryLower.includes(city))) homeTeam = c2;
+
+  const homeAdv1Raw = homeTeam === c1 ? (HOME_ADV[c1] || 0) * 1.5 : 0;
+  const homeAdv2Raw = homeTeam === c2 ? (HOME_ADV[c2] || 0) * 1.5 : 0;
+  const homeAdv1 = homeAdv1Raw > 0 && f1 < 40 ? Math.min(homeAdv1Raw, 8) : homeAdv1Raw;
+  const homeAdv2 = homeAdv2Raw > 0 && f2 < 40 ? Math.min(homeAdv2Raw, 8) : homeAdv2Raw;
+
+  let venueChaseBonus = 0;
+  try {
+    const vRes = await fetch(new URL('/api/cricket-context', request.url).toString(), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ team1: c1, team2: c2 }), signal: AbortSignal.timeout(3000),
+    });
+    const vData = await vRes.json();
+    if (vData.venue?.chase) venueChaseBonus = (vData.venue.chase - 50) * 0.3;
+  } catch {}
+
+  const s1 = f1 * 0.35 + (t1.pts / Math.max(t1.pts + t2.pts, 1)) * 100 * 0.30 + ((nrr1 / nrrMax + 1) / 2 * 100 * 0.20) + homeAdv1 + venueChaseBonus;
+  const s2 = f2 * 0.35 + (t2.pts / Math.max(t1.pts + t2.pts, 1)) * 100 * 0.30 + ((nrr2 / nrrMax + 1) / 2 * 100 * 0.20) + homeAdv2;
+  const raw = s1 / (s1 + s2) * 100;
+  const stretched = 50 + (raw - 50) * 1.6;
+  let baseProbability = Math.round(Math.max(20, Math.min(82, stretched)));
+
+  const breakdown = [
+    { factor: 'Starting point (equal teams)', value: 50, delta: 0, cumulative: 50 },
+    { factor: `Season form (${c1} ${f1}% win rate vs ${c2} ${f2}% win rate)`, value: f1 - f2, delta: Math.round((f1 - f2) * 0.35 * 0.3), cumulative: 0 },
+    { factor: `Points table (${c1} ${t1.pts}pts vs ${c2} ${t2.pts}pts)`, value: t1.pts - t2.pts, delta: Math.round(((t1.pts / Math.max(t1.pts + t2.pts, 1)) - 0.5) * 100 * 0.30), cumulative: 0 },
+    { factor: `Run rate (NRR ${t1.nrr} vs ${t2.nrr})`, value: nrr1 - nrr2, delta: Math.round(((nrr1 / nrrMax + 1) / 2 * 100 - (nrr2 / nrrMax + 1) / 2 * 100) * 0.20), cumulative: 0 },
+  ];
+  if (homeAdv1 > 0) breakdown.push({ factor: `Home advantage (${c1} playing at home)`, value: homeAdv1, delta: Math.round(homeAdv1), cumulative: 0 });
+  if (homeAdv2 > 0) breakdown.push({ factor: `Home advantage (${c2} at ${homeTeam})`, value: -homeAdv2, delta: -Math.round(homeAdv2), cumulative: 0 });
+
+  let cumulative = 50;
+  breakdown.forEach((b, i) => { if (i === 0) { b.cumulative = 50; return; } cumulative += b.delta; b.cumulative = Math.round(cumulative); });
+
+  let liveScoreContext = '';
+  try {
+    const TEAM_FULL: Record<string, string> = {
+      SRH: 'Sunrisers Hyderabad', MI: 'Mumbai Indians', RCB: 'Royal Challengers Bengaluru',
+      CSK: 'Chennai Super Kings', KKR: 'Kolkata Knight Riders', DC: 'Delhi Capitals',
+      RR: 'Rajasthan Royals', GT: 'Gujarat Titans', LSG: 'Lucknow Super Giants', PBKS: 'Punjab Kings',
+    };
+    const fullT1 = TEAM_FULL[c1] || '';
+    const fullT2 = TEAM_FULL[c2] || '';
+    const liveRes = await fetch(new URL(`/api/live-cricket?team1=${encodeURIComponent(fullT1)}&team2=${encodeURIComponent(fullT2)}`, request.url).toString(), { signal: AbortSignal.timeout(2000) });
+    const liveData = await liveRes.json();
+    if (liveData.success && liveData.isLive && liveData.liveContext) {
+      liveScoreContext = liveData.liveContext;
+      if (liveData.score?.length > 0) {
+        const lastInnings = liveData.score[liveData.score.length - 1];
+        const runs = lastInnings?.r || 0;
+        const wickets = lastInnings?.w || 0;
+        const overs = parseFloat(String(lastInnings?.o || '0'));
+        const isBattingTeam1 = liveData.score[0]?.inning?.toLowerCase().includes(fullT1.toLowerCase());
+        if (overs > 0) {
+          const runRate = runs / overs;
+          const oversLeft = 20 - overs;
+          const projectedScore = Math.round(runs + runRate * oversLeft);
+          const avgScore = 165;
+          const scoreDiff = projectedScore - avgScore;
+          const scoreAdj = Math.round(scoreDiff / 10) * 3;
+          const wicketAdj = wickets >= 6 ? (wickets - 5) * 4 : 0;
+          if (isBattingTeam1) {
+            baseProbability = Math.max(15, Math.min(85, baseProbability + Math.round(scoreAdj * 0.4) - wicketAdj));
+          } else {
+            baseProbability = Math.max(15, Math.min(85, baseProbability - Math.round(scoreAdj * 0.4) + wicketAdj));
+          }
+        }
+      }
+    } else if (liveData.success && liveData.matchEnded && liveData.status) {
+      liveScoreContext = `Match result: ${liveData.status}`;
+    }
+  } catch {}
+
+  return {
+    baseProbability,
+    breakdown,
+    team1: { ...t1, code: c1, formScore: f1 },
+    team2: { ...t2, code: c2, formScore: f2 },
+    homeTeam,
+    liveScoreContext,
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { query, marketOdds, anonId, isSignedIn, weights } = await request.json();
+    const { query, marketOdds, anonId, isSignedIn } = await request.json();
     if (!query) return Response.json({ error: 'Missing query' }, { status: 400 });
-
-    const w = weights || { news: 30, social: 30, technical: 40 };
-    const wNews = ((w.news || 30) + (w.social || 30)) / 100;
-    const wTech = (w.technical || 40) / 100;
+    if (query.trim().length < 8) {
+      return Response.json({ valid: false, confidence: 0, message: 'Question too short.', sources: [] });
+    }
 
     if (anonId && !isSignedIn) {
       try {
@@ -439,319 +429,87 @@ export async function POST(request: NextRequest) {
       } catch {}
     }
 
-    if (query.trim().length < 8) {
-      return Response.json({ valid: false, confidence: 0, message: 'Question too short.', sources: [] });
-    }
-
     const keywords = extractKeywords(query);
     const marketType = detectMarketType(query);
-    const isIPLQuery = marketType === 'cricket';
-
-    let cricketContext: any = null;
-    if (isIPLQuery) {
-      const teamMatch = query.match(/will\s+(.+?)\s+beat\s+(.+?)(?:\s+in|\?|$)/i);
-      if (teamMatch) {
-        const TEAM_MAP: Record<string,string> = {
-          'royal challengers bengaluru':'RCB','rcb':'RCB','mumbai indians':'MI','mi':'MI',
-          'chennai super kings':'CSK','csk':'CSK','kolkata knight riders':'KKR','kkr':'KKR',
-          'delhi capitals':'DC','dc':'DC','punjab kings':'PBKS','pbks':'PBKS',
-          'rajasthan royals':'RR','rr':'RR','sunrisers hyderabad':'SRH','srh':'SRH',
-          'gujarat titans':'GT','gt':'GT','lucknow super giants':'LSG','lsg':'LSG',
-        };
-        const POINTS: Record<string,{p:number;w:number;l:number;pts:number;nrr:string;form:string}> = {
-          'RR':  {p:10, w:7, l:3, pts:14, nrr:'+0.656', form:'WWWWWLWLL'},
-          'RCB': {p:11, w:9, l:2, pts:18, nrr:'+0.812', form:'WWLLWWWWWW'},
-          'PBKS':{p:13, w:8, l:2, pts:16, nrr:'+0.612', form:'WWWWWWWWLL'},
-          'DC':  {p:11, w:5, l:6, pts:10, nrr:'-0.201', form:'LWWLWLWLL'},
-          'GT':  {p:14, w:9, l:5, pts:18, nrr:'+0.695', form:'LWLWLWWLWWWWWL'},
-          'SRH': {p:11, w:7, l:4, pts:14, nrr:'+0.445', form:'WLLWLLWLWWW'},
-          'MI':  {p:11, w:3, l:8, pts:6,  nrr:'-0.498', form:'WLLWLLLLWL'},
-          'LSG': {p:13, w:3, l:9, pts:6,  nrr:'-0.612', form:'LLLWWWLLLLL'},
-          'CSK': {p:14, w:5, l:9, pts:10, nrr:'-0.298', form:'LLLLLWWWLLWLL'},
-          'KKR': {p:13, w:6, l:6, pts:13,  nrr:'+0.011', form:'LLLLLLLNLWWWW'},
-        };
-        const HOME_ADV: Record<string,number> = {'SRH':8,'MI':6,'RCB':7,'CSK':8,'KKR':5,'DC':4,'RR':5,'GT':4,'LSG':5,'PBKS':4};
-        const VENUE_CITIES: Record<string,string[]> = {
-          'SRH':['hyderabad'],'MI':['mumbai','wankhede'],'RCB':['bengaluru','bangalore','chinnaswamy','dharamsala','dharamshala'],
-          'CSK':['chennai','chepauk'],'KKR':['kolkata','eden'],'DC':['delhi'],
-          'RR':['jaipur','guwahati'],'GT':['ahmedabad','narendra'],'LSG':['lucknow'],
-          'PBKS':['chandigarh','dharamshala','mohali'],
-        };
-        const c1 = TEAM_MAP[teamMatch[1].trim().toLowerCase()];
-        const c2 = TEAM_MAP[teamMatch[2].trim().toLowerCase()];
-        if (c1 && c2 && POINTS[c1] && POINTS[c2]) {
-          const t1 = POINTS[c1], t2 = POINTS[c2];
-          const f1 = Math.round(((t1.form.match(/W/g)||[]).length/t1.form.length)*100);
-          const f2 = Math.round(((t2.form.match(/W/g)||[]).length/t2.form.length)*100);
-          const nrr1 = parseFloat(t1.nrr), nrr2 = parseFloat(t2.nrr);
-          const nrrMax = Math.max(Math.abs(nrr1),Math.abs(nrr2),0.1);
-          const queryLower = query.toLowerCase();
-          let homeTeam = c2;
-          if ((VENUE_CITIES[c1]||[]).some(city => queryLower.includes(city))) homeTeam = c1;
-          else if ((VENUE_CITIES[c2]||[]).some(city => queryLower.includes(city))) homeTeam = c2;
-          // Home advantage — capped at 8% when home team is struggling (below 40% win rate)
-          const homeAdv1Raw = homeTeam===c1 ? (HOME_ADV[c1]||0)*1.5 : 0;
-          const homeAdv2Raw = homeTeam===c2 ? (HOME_ADV[c2]||0)*1.5 : 0;
-          // Cap home advantage if home team form is poor
-          const homeAdv1 = homeAdv1Raw > 0 && f1 < 40 ? Math.min(homeAdv1Raw, 8) : homeAdv1Raw;
-          const homeAdv2 = homeAdv2Raw > 0 && f2 < 40 ? Math.min(homeAdv2Raw, 8) : homeAdv2Raw;
-          // Get venue chase rate from cricket context
-          let venueChaseBonus = 0;
-          try {
-            const vRes = await fetch(new URL('/api/cricket-context', request.url).toString(), {
-              method:'POST', headers:{'Content-Type':'application/json'},
-              body: JSON.stringify({team1:c1, team2:c2}),
-              signal: AbortSignal.timeout(3000)
-            });
-            const vData = await vRes.json();
-            if (vData.venue?.chase) {
-              // chase rate above 50% means chasing team has advantage
-              // In "Will c1 beat c2", c1 is usually the chasing team
-              venueChaseBonus = (vData.venue.chase - 50) * 0.3;
-            }
-          } catch {}
-
-          let s1 = f1*0.35 + (t1.pts/Math.max(t1.pts+t2.pts,1))*100*0.30 + ((nrr1/nrrMax+1)/2*100*0.20) + homeAdv1 + venueChaseBonus;
-          let s2 = f2*0.35 + (t2.pts/Math.max(t1.pts+t2.pts,1))*100*0.30 + ((nrr2/nrrMax+1)/2*100*0.20) + homeAdv2;
-          const raw = s1/(s1+s2)*100;
-          const stretched = 50+(raw-50)*1.6;
-          const baseProbability = Math.round(Math.max(20,Math.min(82,stretched)));
-
-          // Probability breakdown — show exactly how we got the number
-          const breakdown = [
-            { factor: 'Starting point (equal teams)', value: 50, delta: 0, cumulative: 50 },
-            { factor: `Season form (${c1} ${f1}% win rate vs ${c2} ${f2}% win rate)`, value: f1-f2, delta: Math.round((f1-f2)*0.35*0.3), cumulative: 0 },
-            { factor: `Points table (${c1} ${t1.pts}pts vs ${c2} ${t2.pts}pts)`, value: t1.pts-t2.pts, delta: Math.round(((t1.pts/(Math.max(t1.pts+t2.pts,1)))-0.5)*100*0.30), cumulative: 0 },
-            { factor: `Run rate (NRR ${t1.nrr} vs ${t2.nrr})`, value: nrr1-nrr2, delta: Math.round(((nrr1/nrrMax+1)/2*100 - (nrr2/nrrMax+1)/2*100)*0.20), cumulative: 0 },
-          ];
-          if (homeAdv1 > 0) breakdown.push({ factor: `Home advantage (${c1} playing at home)`, value: homeAdv1, delta: Math.round(homeAdv1), cumulative: 0 });
-          if (homeAdv2 > 0) breakdown.push({ factor: `Home advantage (${c2} at ${homeTeam})`, value: -homeAdv2, delta: -Math.round(homeAdv2), cumulative: 0 });
-
-          // Calculate cumulative values
-          let cumulative = 50;
-          breakdown.forEach((b, i) => {
-            if (i === 0) { b.cumulative = 50; return; }
-            cumulative += b.delta;
-            b.cumulative = Math.round(cumulative);
-          });
-
-          cricketContext = { baseProbability, team1:{...t1,code:c1,formScore:f1}, team2:{...t2,code:c2,formScore:f2}, homeTeam, breakdown };
-        }
-      }
-    }
-
-    // ── LIVE CRICKET SCORE ──
-    let liveScoreContext = '';
-    if (isIPLQuery && cricketContext) {
-      try {
-        const TEAM_FULL: Record<string,string> = {
-          'SRH':'Sunrisers Hyderabad','MI':'Mumbai Indians','RCB':'Royal Challengers Bengaluru',
-          'CSK':'Chennai Super Kings','KKR':'Kolkata Knight Riders','DC':'Delhi Capitals',
-          'RR':'Rajasthan Royals','GT':'Gujarat Titans','LSG':'Lucknow Super Giants','PBKS':'Punjab Kings',
-        };
-        const fullT1 = TEAM_FULL[cricketContext.team1?.code] || '';
-        const fullT2 = TEAM_FULL[cricketContext.team2?.code] || '';
-        const liveRes = await fetch(
-          new URL(`/api/live-cricket?team1=${encodeURIComponent(fullT1)}&team2=${encodeURIComponent(fullT2)}`, request.url).toString(),
-          { signal: AbortSignal.timeout(2000) }
-        );
-        const liveData = await liveRes.json();
-        if (liveData.success && liveData.isLive && liveData.liveContext) {
-          liveScoreContext = liveData.liveContext;
-          // Adjust cricket probability based on live score
-          if (cricketContext.baseProbability && liveData.score?.length > 0) {
-            const lastInnings = liveData.score[liveData.score.length - 1];
-            const runs = lastInnings?.r || 0;
-            const wickets = lastInnings?.w || 0;
-            const overs = parseFloat(String(lastInnings?.o || '0'));
-            const isBattingTeam1 = liveData.score[0]?.inning?.toLowerCase().includes(fullT1.toLowerCase());
-
-            if (overs > 0) {
-              const runRate = runs / overs;
-              const oversLeft = 20 - overs;
-              const projectedScore = Math.round(runs + runRate * oversLeft);
-
-              // Projected score adjustment
-              // Average IPL score ~165. Every 10 runs above/below = ~3% shift
-              const avgScore = 165;
-              const scoreDiff = projectedScore - avgScore;
-              const scoreAdj = Math.round(scoreDiff / 10) * 3;
-
-              // Wicket adjustment — losing wickets hurts projected score
-              const wicketAdj = wickets >= 6 ? (wickets - 5) * 4 : 0;
-
-              if (isBattingTeam1) {
-                // Team 1 batting — high score = good for team 1
-                cricketContext.baseProbability = Math.max(15, Math.min(85,
-                  cricketContext.baseProbability + Math.round(scoreAdj * 0.4) - wicketAdj
-                ));
-              } else {
-                // Team 2 batting — high score = bad for team 1 (MI in this case)
-                cricketContext.baseProbability = Math.max(15, Math.min(85,
-                  cricketContext.baseProbability - Math.round(scoreAdj * 0.4) + wicketAdj
-                ));
-              }
-              console.log(`[Live] ${fullT1} vs ${fullT2}: projected ${projectedScore}, adj ${scoreAdj}, new prob ${cricketContext.baseProbability}%`);
-            }
-          }
-        } else if (liveData.success && liveData.matchEnded && liveData.status) {
-          liveScoreContext = `Match result: ${liveData.status}`;
-        }
-      } catch {}
-    }
 
     const [gdeltArticles, hnArticles, newsApiArticles, metaculus] = await Promise.all([
-      fetchGDELT(keywords),
-      fetchHackerNews(keywords),
-      fetchNewsAPI(keywords),
-      fetchMetaculus(keywords),
+      fetchGDELT(keywords), fetchHackerNews(keywords), fetchNewsAPI(keywords), fetchMetaculus(keywords),
     ]);
-
     const allArticles = [
-      ...newsApiArticles.map((a: any) => ({ title: a.title||'', desc: a.description||'', source: a.source?.name||'News', url: a.url, category: 'news' })),
-      ...gdeltArticles.map((a: any) => ({ title: a.title||'', desc: a.seendescription||'', source: a.domain||'GDELT', url: a.url, category: 'news' })),
-      ...hnArticles.map((a: any) => ({ title: a.title||'', desc: '', source: 'Hacker News', url: `https://news.ycombinator.com/item?id=${a.objectID}`, category: 'social' })),
+      ...newsApiArticles.map((a: any) => ({ title: a.title || '', source: a.source?.name || 'News', url: a.url, category: 'news' })),
+      ...gdeltArticles.map((a: any) => ({ title: a.title || '', source: a.domain || 'GDELT', url: a.url, category: 'news' })),
+      ...hnArticles.map((a: any) => ({ title: a.title || '', source: 'Hacker News', url: `https://news.ycombinator.com/item?id=${a.objectID}`, category: 'social' })),
     ];
-
     const queryWords = keywords.toLowerCase().split(' ').filter(w => w.length > 3);
-    const relevantArticles = allArticles.filter(a => {
-      const text = (a.title+' '+a.desc).toLowerCase();
-      return queryWords.some(w => text.includes(w));
-    });
+    const relevantArticles = allArticles.filter(a => queryWords.some(w => a.title.toLowerCase().includes(w)));
+    let headlines = relevantArticles.map(a => a.title).filter(Boolean);
 
-    const headlines = relevantArticles.map(a => a.title).filter(Boolean);
-    if (liveScoreContext) headlines.unshift(`LIVE SCORE: ${liveScoreContext}`);
-
-    const buildSources = (groqResult: any, extra: any[]) => {
-      const sources: any[] = [];
-      if (groqResult) {
-        groqResult.bull.forEach((b: string) => sources.push({ name: 'Signal', sig: b, url: '', category: 'news', type: 'strong', contribution: 5 }));
-        groqResult.bear.forEach((b: string) => sources.push({ name: 'Signal', sig: b, url: '', category: 'news', type: 'contrary', contribution: -5 }));
-        if (groqResult.keyRisk) sources.push({ name: 'Key Risk', sig: groqResult.keyRisk, url: '', category: 'community', type: 'mixed', contribution: 0 });
-      } else {
-        // Fallback: use headlines from extra as bull/bear
-        const newsExtras = extra.filter(e => e.category === 'news' && e.name !== 'Signal');
-        newsExtras.slice(0,3).forEach(e => sources.push({ name: 'Signal', sig: e.sig||e.name, url: e.url||'', category: 'news', type: 'strong', contribution: 5 }));
-        if (newsExtras.length === 0) {
-          // Last resort hardcoded fallbacks based on query
-          sources.push({ name: 'Signal', sig: 'Market data and recent form analyzed', url: '', category: 'news', type: 'strong', contribution: 5 });
-          sources.push({ name: 'Signal', sig: 'Historical head-to-head record considered', url: '', category: 'news', type: 'strong', contribution: 5 });
-          sources.push({ name: 'Signal', sig: 'Home advantage and tournament context factored in', url: '', category: 'news', type: 'strong', contribution: 5 });
-          sources.push({ name: 'Signal', sig: 'Upset potential — lower ranked team can always surprise', url: '', category: 'news', type: 'contrary', contribution: -5 });
-          sources.push({ name: 'Signal', sig: 'Key injuries or fatigue could impact performance', url: '', category: 'news', type: 'contrary', contribution: -5 });
-        }
+    // ---- Cricket: dedicated IPL stats model takes priority when it can parse the teams ----
+    if (marketType === 'cricket') {
+      const cricketResult = await tryComputeCricket(query, request);
+      if (cricketResult) {
+        const { baseProbability, breakdown, team1, team2, homeTeam, liveScoreContext } = cricketResult;
+        if (liveScoreContext) headlines = [`LIVE SCORE: ${liveScoreContext}`, ...headlines];
+        const cricketHeadlines = [
+          `Will ${team1.code} beat ${team2.code}? Higher win% and NRR favor that team.`,
+          `${team1.code}: ${team1.pts}pts, ${team1.w}W-${team1.l}L, form ${team1.formScore}% wins, NRR ${team1.nrr}`,
+          `${team2.code}: ${team2.pts}pts, ${team2.w}W-${team2.l}L, form ${team2.formScore}% wins, NRR ${team2.nrr}`,
+          homeTeam === team1.code ? `${team1.code} playing at home — advantage` : `${team2.code} playing at home — advantage to them`,
+          ...headlines.slice(0, 2),
+        ].filter(Boolean);
+        const reasoning = await generateReasoning(query, baseProbability, [], cricketHeadlines, 'cricket');
+        const extraSources: any[] = [
+          { name: 'IPL Stats', sig: `${team1.code} ${team1.formScore}% wins (${team1.pts}pts) vs ${team2.code} ${team2.formScore}% wins (${team2.pts}pts)`, url: '', category: 'market', type: team1.formScore > team2.formScore ? 'strong' : 'contrary', contribution: Math.round((team1.formScore - team2.formScore) / 5) },
+        ];
+        if (metaculus.probability !== null) extraSources.push({ name: 'Metaculus', sig: `Forecasters: ${metaculus.probability}%`, url: 'https://metaculus.com', category: 'community', type: 'mixed', contribution: Math.round((metaculus.probability - 50) / 5) });
+        const sources = buildSources(reasoning, extraSources);
+        fetch(new URL('/api/track', request.url).toString(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ anonId: anonId || '', name: 'analysis_run', props: { query: query.slice(0, 100), confidence: baseProbability } }) }).catch(() => {});
+        return Response.json({ valid: true, confidence: baseProbability, keywords, articleCount: relevantArticles.length, sources, groqVerdict: reasoning?.verdict || null, marketType, breakdown });
       }
-      sources.push(...extra);
-      return sources;
-    };
-
-    if (cricketContext?.baseProbability) {
-      // For cricket, send structured match data to Groq instead of random headlines
-      const ct1 = cricketContext.team1;
-      const ct2 = cricketContext.team2;
-      const homeAdvPct = ct1.code==='SRH'||ct1.code==='CSK'?8:ct1.code==='RCB'?7:ct1.code==='MI'?6:5;
-      const cricketHeadlines = [
-        `ANALYZE: Will ${ct1.code} beat ${ct2.code}? Higher win% = better team. Higher NRR = better run rate. Bull = specific reasons ${ct1.code} wins today. Bear = specific reasons ${ct1.code} loses today. Do NOT list the same stat as both bull and bear.`,
-        `${ct1.code} season: ${ct1.pts}pts, ${ct1.w}W-${ct1.l}L, form ${ct1.form} (${ct1.formScore}% wins), NRR ${ct1.nrr} (${parseFloat(ct1.nrr)>0?'positive':'negative'} run rate)`,
-        `${ct2.code} season: ${ct2.pts}pts, ${ct2.w}W-${ct2.l}L, form ${ct2.form} (${ct2.formScore}% wins), NRR ${ct2.nrr} (${parseFloat(ct2.nrr)>0?'positive':'negative'} run rate)`,
-        cricketContext.homeTeam === ct1.code
-          ? `${ct1.code} HOME ground — BULL factor for ${ct1.code}, +${homeAdvPct}% advantage`
-          : `${ct2.code} HOME ground — BEAR factor for ${ct1.code}, opponent has +${ct2.code==='SRH'||ct2.code==='CSK'?8:ct2.code==='RCB'?7:ct2.code==='MI'?6:5}% advantage`,
-        ...headlines.slice(0, 3),
-      ].filter(Boolean);
-      const groqResult = await analyzeWithGroq(query, cricketHeadlines, metaculus.probability, null, 'cricket');
-      const t1 = ct1, t2 = ct2;
-      const extraSources = [
-        { name: 'IPL Stats', sig: `${t1.code}: ${t1.form} (${t1.formScore}% wins, ${t1.pts}pts) vs ${t2.code}: ${t2.form} (${t2.formScore}% wins, ${t2.pts}pts)`, url: '', category: 'market', type: t1.formScore>t2.formScore?'strong':'contrary', contribution: Math.round((t1.formScore-t2.formScore)/5) },
-      ];
-      if (metaculus.probability !== null) extraSources.push({ name: 'Metaculus', sig: `Forecasters: ${metaculus.probability}%`, url: 'https://metaculus.com', category: 'community', type: 'mixed', contribution: Math.round((metaculus.probability-50)/5) });
-      // Add fallback bull/bear from headlines if groqResult failed
-      if (!groqResult && headlines.length > 0) {
-        headlines.slice(0,3).forEach(h => extraSources.push({ name: 'Signal', sig: h.slice(0,100), url: '', category: 'news', type: 'strong', contribution: 5 }));
-        
-      }
-      const sources = buildSources(groqResult, extraSources);
-      fetch(new URL('/api/track', request.url).toString(), {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({anonId:anonId||'',name:'analysis_run',props:{query:query.slice(0,100),confidence:cricketContext.baseProbability}})}).catch(()=>{});
-      return Response.json({ valid: true, confidence: cricketContext.baseProbability, keywords, articleCount: relevantArticles.length, sources, groqVerdict: groqResult?.verdict||null, marketType, breakdown: cricketContext.breakdown||null });
+      // fall through to the generic model below if cricket-specific calc couldn't run
     }
 
-    if (marketOdds && marketOdds > 0) {
-      const groqResult = await analyzeWithGroq(query, headlines, metaculus.probability, marketOdds, marketType);
-      let finalConfidence = marketOdds;
-      if (groqResult) {
-        const adj = Math.max(-10, Math.min(10, groqResult.probability - marketOdds));
-        finalConfidence = Math.round(marketOdds + adj * 0.5);
-      } else if (metaculus.probability !== null) {
-        finalConfidence = Math.round(marketOdds + Math.max(-8, Math.min(8, (metaculus.probability-marketOdds)*0.25)));
-      }
-      finalConfidence = Math.max(5, Math.min(95, finalConfidence));
-      const extraSources = [
-        { name: 'Polymarket', sig: `Live market: ${marketOdds}% — crowd consensus`, url: '', category: 'market', type: 'priced', contribution: Math.round((marketOdds-50)/5) },
-      ];
-      if (metaculus.probability !== null) extraSources.push({ name: 'Metaculus', sig: `Expert forecasters: ${metaculus.probability}%`, url: 'https://metaculus.com', category: 'community', type: metaculus.probability>55?'strong':'contrary', contribution: Math.round((metaculus.probability-50)/3) });
-      relevantArticles.slice(0,3).forEach(a => extraSources.push({ name: a.source, sig: a.title, url: a.url, category: a.category, type: 'mixed', contribution: 1 }));
-      // Add fallback bull/bear from headlines if groqResult failed
-      if (!groqResult && headlines.length > 0) {
-        headlines.slice(0,3).forEach(h => extraSources.push({ name: 'Signal', sig: h.slice(0,100), url: '', category: 'news', type: 'strong', contribution: 5 }));
-        
-      }
-      const sources = buildSources(groqResult, extraSources);
-      fetch(new URL('/api/track', request.url).toString(), {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({anonId:anonId||'',name:'analysis_run',props:{query:query.slice(0,100),confidence:finalConfidence}})}).catch(()=>{});
-    return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources, groqVerdict: groqResult?.verdict||null, marketType });
+    // ---- Generic: team-strength model + market odds + AI-written reasoning ----
+    const teams = findTeamsInQuery(query);
+    const contextLines = [...teams.map(t => t.ctx), ...findExtraContext(query)];
+    const probability = calculateProbability(teams, marketOdds || null);
+
+    if (teams.length === 0 && contextLines.length === 0 && metaculus.probability === null && relevantArticles.length === 0 && !marketOdds) {
+      return Response.json({ valid: true, confidence: 0, keywords, articleCount: 0, sources: [], noData: true, message: 'No data found for this question yet. Try naming the teams, or paste a Polymarket URL.' });
     }
 
-    // Build context from SPORTS_CONTEXT and NBA_CONTEXT for this query // v3
-    const qCtx = query.toLowerCase();
-    const ctxLines: string[] = [];
-    let computedProb: number | null = null;
-    for (const [k, v] of Object.entries({...SPORTS_CONTEXT, ...NBA_CONTEXT})) {
-      if (qCtx.includes(k.toLowerCase())) {
-        const vStr = String(v);
-        ctxLines.push(vStr.slice(0,300));
-        // Extract probability hints from context
-        const probMatch = vStr.match(/(\d+)%\s*(?:to win|win probability|implied|market)/i);
-        const oddsMatch = vStr.match(/([+-]\d+)\s*(?:odds|favorite|underdog)/i);
-        if (probMatch && !computedProb) computedProb = parseInt(probMatch[1]);
-        if (oddsMatch && !computedProb) {
-          const odds = parseInt(oddsMatch[1]);
-          computedProb = odds < 0 ? Math.round(Math.abs(odds)/(Math.abs(odds)+100)*100) : Math.round(100/(odds+100)*100);
-        }
-      }
-    }
-    const enrichedHeadlines = [...ctxLines, ...headlines].filter(Boolean).slice(0,6);
-    const finalHeadlines = enrichedHeadlines.length > 0 ? enrichedHeadlines : ['Analyze based on general football/sports knowledge'];
-    // Calculate probability from team strengths, pass to Groq
-    const calcProb = calculateProbability(query, marketOdds || null);
-    const groqResult = await analyzeWithGroq(query, finalHeadlines, metaculus.probability, calcProb, marketType);
-    if (!groqResult && metaculus.probability === null && relevantArticles.length === 0) {
-      return Response.json({ valid: true, confidence: 0, keywords, articleCount: 0, sources: [], noData: true, message: 'No data found. Paste a Polymarket URL for live market analysis.' });
-    }
-    let finalConfidence = 50;
-    // Add fallback signals from headlines when Groq fails
-    const fallbackSources: any[] = [];
-    if (!groqResult) {
-      relevantArticles.slice(0,3).forEach((a:any) => fallbackSources.push({ name: 'Signal', sig: a.title?.slice(0,100)||'', url: a.url||'', category: 'news', type: 'strong', contribution: 5 }));
-    }
-    if (groqResult) {
-      finalConfidence = groqResult.probability;
-      if (metaculus.probability !== null) finalConfidence = Math.round(groqResult.probability*wNews + metaculus.probability*wTech);
-    } else if (metaculus.probability !== null) {
-      finalConfidence = metaculus.probability;
+    const reasoning = await generateReasoning(query, probability, contextLines, headlines, marketType);
+
+    let finalConfidence = probability;
+    if (!marketOdds && metaculus.probability !== null) {
+      finalConfidence = Math.round(probability * 0.8 + metaculus.probability * 0.2);
     }
     finalConfidence = Math.max(5, Math.min(95, finalConfidence));
-    const extraSources: any[] = [];
-    if (metaculus.probability !== null) extraSources.push({ name: 'Metaculus', sig: `Expert forecasters: ${metaculus.probability}% (${metaculus.count} questions)`, url: 'https://metaculus.com', category: 'community', type: metaculus.probability>55?'strong':'contrary', contribution: Math.round((metaculus.probability-50)/3) });
-    relevantArticles.slice(0,4).forEach(a => extraSources.push({ name: a.source, sig: a.title, url: a.url, category: a.category, type: 'mixed', contribution: 1 }));
-    const sources = buildSources(groqResult, extraSources);
-    fetch(new URL('/api/track', request.url).toString(), {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({anonId:anonId||'',name:'analysis_run',props:{query:query.slice(0,100),confidence:finalConfidence}})}).catch(()=>{});
-    const allSources = [...sources, ...fallbackSources];
-    return Response.json({ valid: true, confidence: finalConfidence, keywords, articleCount: relevantArticles.length, sources: allSources.length > 0 ? allSources : sources, groqVerdict: groqResult?.verdict||null, marketType });
 
+    const extraSources: any[] = [];
+    if (marketOdds) extraSources.push({ name: 'Polymarket', sig: `Live market: ${marketOdds}% — crowd consensus`, url: '', category: 'market', type: 'priced', contribution: Math.round((marketOdds - 50) / 5) });
+    if (metaculus.probability !== null) extraSources.push({ name: 'Metaculus', sig: `Expert forecasters: ${metaculus.probability}% (${metaculus.count} questions)`, url: 'https://metaculus.com', category: 'community', type: metaculus.probability > 55 ? 'strong' : 'contrary', contribution: Math.round((metaculus.probability - 50) / 3) });
+    relevantArticles.slice(0, 4).forEach(a => extraSources.push({ name: a.source, sig: a.title, url: a.url, category: a.category, type: 'mixed', contribution: 1 }));
+
+    const sources = buildSources(reasoning, extraSources);
+
+    fetch(new URL('/api/track', request.url).toString(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ anonId: anonId || '', name: 'analysis_run', props: { query: query.slice(0, 100), confidence: finalConfidence } }) }).catch(() => {});
+
+    return Response.json({
+      valid: true,
+      confidence: finalConfidence,
+      keywords,
+      articleCount: relevantArticles.length,
+      sources,
+      groqVerdict: reasoning?.verdict || null,
+      marketType,
+      components: [
+        marketOdds ? { key: 'market', label: 'Market odds', prob: marketOdds } : null,
+        teams.length >= 2 ? { key: 'model', label: 'Team strength model', prob: probability } : null,
+        metaculus.probability !== null ? { key: 'experts', label: 'Forecasters', prob: metaculus.probability } : null,
+      ].filter(Boolean),
+    });
   } catch (err: any) {
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
-
-
-// Mon Jun 15 10:43:39 CDT 2026
-// Mon Jun 15 10:45:21 CDT 2026
