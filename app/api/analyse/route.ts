@@ -85,6 +85,9 @@ const TEAM_DB: Record<string, { strength: number; ctx: string }> = {
   iraq:         { strength: 38, ctx: 'Iraq: first-time qualifier in decades, major underdogs.' },
   algeria:      { strength: 58, ctx: 'Algeria: talented squad, strong African pedigree.' },
   'ivory coast':{ strength: 58, ctx: 'Ivory Coast: Africa Cup of Nations holders, athletic and dangerous.' },
+  turkiye:      { strength: 68, ctx: 'Türkiye: talented squad, strong recent European form.' },
+  turkey:       { strength: 68, ctx: 'Turkey: talented squad, strong recent European form.' },
+  sweden:       { strength: 66, ctx: 'Sweden: technical, well-organized Scandinavian side.' },
 };
 
 // Context-only entries — no calibrated strength model exists for these, so probability defaults to market odds or 50.
@@ -117,18 +120,36 @@ const TEAM_ALIASES: Record<string, string> = {
   'united states': 'usa',
 };
 
+function wordBoundaryIndex(haystack: string, needle: string): number {
+  // Escape regex special chars (apostrophes etc.), then require a word boundary on both sides
+  const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp('(?:^|[^a-z0-9])' + escaped + '(?:$|[^a-z0-9])', 'i');
+  const m = haystack.match(re);
+  return m ? m.index! : -1;
+}
+
 function findTeamsInQuery(query: string): { name: string; strength: number; ctx: string; idx: number }[] {
   const q = query.toLowerCase();
   const found: { name: string; strength: number; ctx: string; idx: number }[] = [];
   for (const [name, data] of Object.entries(TEAM_DB)) {
-    const idx = q.indexOf(name);
+    const idx = wordBoundaryIndex(q, name);
     if (idx !== -1) found.push({ name, strength: data.strength, ctx: data.ctx, idx });
   }
   for (const [alias, canonical] of Object.entries(TEAM_ALIASES)) {
-    const idx = q.indexOf(alias);
+    const idx = wordBoundaryIndex(q, alias);
     if (idx !== -1 && !found.some(f => f.name === canonical)) {
       const data = TEAM_DB[canonical];
       if (data) found.push({ name: canonical, strength: data.strength, ctx: data.ctx, idx });
+    }
+  }
+  // "US" as a country reference is only safe to detect in its capitalized form (e.g. "Turkiye vs US").
+  // Lowercase "us" is almost always the pronoun, and a false match here would pollute the AI
+  // reasoning prompt with USA context for an unrelated question, not just the probability number.
+  if (!found.some(f => f.name === 'usa')) {
+    const capUsIdx = query.search(/(?:^|[^a-zA-Z])US(?:$|[^a-zA-Z])/);
+    if (capUsIdx !== -1) {
+      const data = TEAM_DB['usa'];
+      if (data) found.push({ name: 'usa', strength: data.strength, ctx: data.ctx, idx: capUsIdx });
     }
   }
   found.sort((a, b) => a.idx - b.idx);
