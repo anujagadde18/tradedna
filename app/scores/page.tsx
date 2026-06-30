@@ -86,8 +86,8 @@ function SourceAvatar({ name, category }: { name: string; category: string }) {
   );
 }
 
-function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, outcomes, rawEvent, breakdown }: {
-  aiPct: number; marketPct: number; question: string; sources: any[]; hasMarket: boolean; mtype?: string; outcomes?: any[]; rawEvent?: string; breakdown?: any[];
+function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, outcomes, rawEvent, breakdown, components }: {
+  aiPct: number; marketPct: number; question: string; sources: any[]; hasMarket: boolean; mtype?: string; outcomes?: any[]; rawEvent?: string; breakdown?: any[]; components?: {key:string;label:string;prob:number}[];
 }) {
   const [showAll, setShowAll] = useState(false);
   const [spotlight, setSpotlight] = useState<any>(null);
@@ -163,6 +163,39 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
             </div>
             <div style={{ fontSize:11, color:C.t3 }}>AI picks {winner} to win</div>
           </div>
+
+          {/* RECIPE STRIP — shows exactly which ingredients built this number, and the size of any gap */}
+          {components && components.length > 0 && (() => {
+            const ICON: Record<string,{emoji:string;color:string}> = {
+              market:  { emoji:'\ud83d\udcca', color:C.blue },
+              model:   { emoji:'\ud83e\uddee', color:C.purple },
+              experts: { emoji:'\ud83d\udd2e', color:C.amber },
+            };
+            const probs = components.map(c => c.prob);
+            const gap = Math.max(...probs) - Math.min(...probs);
+            return (
+              <div style={{ padding:"12px 20px 14px" }}>
+                <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom: gap >= 12 ? 8 : 0 }}>
+                  {components.map((c, i) => {
+                    const style = ICON[c.key] || { emoji:'\u2022', color:C.t3 };
+                    return (
+                      <div key={i} style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 10px", borderRadius:10, background:"rgba(255,255,255,0.03)", border:"1px solid "+C.border }}>
+                        <span style={{ fontSize:13 }}>{style.emoji}</span>
+                        <span style={{ fontSize:11, color:C.t3, fontWeight:600 }}>{c.label}</span>
+                        <span style={{ fontSize:13, fontWeight:800, color:style.color, fontFamily:"monospace" }}>{c.prob}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {gap >= 12 && (
+                  <div style={{ fontSize:11, color:C.amber, fontWeight:600, display:"flex", alignItems:"center", gap:5 }}>
+                    <span>\u26a1</span>
+                    <span>{gap}pt gap between sources \u2014 worth a second look</span>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Two team boxes */}
           <div style={{ display:"grid", gridTemplateColumns:"1fr 40px 1fr", alignItems:"center", gap:8, padding:"16px 16px 12px" }}>
@@ -483,6 +516,7 @@ function ScoresPageContent() {
   const [intel, setIntel]           = useState<any>(null);
   const [breakdown, setBreakdown]    = useState<any[]>([]);
   const [realSources, setRealSources] = useState<any[]>([]);
+  const [components, setComponents] = useState<{key:string;label:string;prob:number}[]>([]);
   const [invalidQuestion, setInvalidQuestion] = useState<{reason:string;examples:string[]}|null>(null);
   const [odds, setOdds]             = useState<number|null>(null);
   const [marketTitle, setMarketTitle] = useState<string>('');
@@ -514,6 +548,7 @@ function ScoresPageContent() {
     setTradeData(null);
     setRelated([]);
     setRealSources([]);
+    setComponents([]);
     setIntel(null);
     setBreakdown([]);
     setLimitReached(false);
@@ -659,6 +694,7 @@ function ScoresPageContent() {
         } catch {}
         setIntel({ confidence: rawConf, direction: rawConf >= 50 ? 'YES' : 'NO', probabilityLabel: rawConf >= 65 ? 'AI is confident this happens' : rawConf >= 55 ? 'More likely than not' : rawConf >= 45 ? 'Could go either way' : rawConf >= 35 ? 'Probably not' : 'AI thinks this is unlikely', predictionStrength: rawConf >= 70 ? 'Strong' : rawConf >= 55 ? 'Medium' : 'Weak', strengthScore: rawConf, riskLevel: rawConf >= 70 || rawConf <= 30 ? 'Low' : 'Medium', marketEdge: marketOddsForAI ? rawConf - marketOddsForAI : null, edgeContext: '', modelComponents: [], confidenceDrivers: { positive: [], negative: [] }, explanation: '' });
         if (data.sources && data.sources.length > 0) setRealSources(data.sources);
+        if (data.components && data.components.length > 0) setComponents(data.components);
         if (data.breakdown && data.breakdown.length > 0) setBreakdown(data.breakdown);
       } else {
         const seed = analysisQuery.split('').reduce((acc:number, c:string) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0);
@@ -917,7 +953,7 @@ function ScoresPageContent() {
                   </button>
                 </div>
               ) : (
-                <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} mtype={mtype} outcomes={outcomes} rawEvent={event} breakdown={breakdown} />
+                <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} mtype={mtype} outcomes={outcomes} rawEvent={event} breakdown={breakdown} components={components} />
               )}
                 {(invalidQuestion && !intel) || limitReached ? (
                   <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100%', padding:24, gap:12, textAlign:'center', background:C.bg2, border:'1px solid '+C.border, borderRadius:16 }}>
