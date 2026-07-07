@@ -61,7 +61,7 @@ function detectCategory(title: string): string {
   const t = title.toLowerCase();
   if (t.includes('ipl') || t.includes('cricket') || t.includes('nba') || t.includes('f1') ||
       t.includes('champions league') || t.includes('premier league') || t.includes('world cup') ||
-      t.includes('tennis') || t.includes('golf') || t.includes(' vs ')) return 'sports';
+      t.includes('tennis') || t.includes('golf') || /\bvs\.?\s/.test(t)) return 'sports';
   if (t.includes('bitcoin') || t.includes('eth') || t.includes('crypto')) return 'crypto';
   if (t.includes('election') || t.includes('president') || t.includes('trump')) return 'politics';
   if (t.includes('fed') || t.includes('rate') || t.includes('inflation')) return 'economics';
