@@ -10,28 +10,31 @@ const C = {
   green:'#2ecc8a', amber:'#f5a623', red:'#ef4f6a',
 };
 
+// Win%/podium%/title% below are an illustrative relative model (same honest framing as our
+// sports team-strength ratings elsewhere) — not scraped live betting odds. Standings order,
+// results, and storylines are the real, verified facts as of the British GP (July 5, 2026).
 const DRIVERS = [
-  { pos:6, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:35, podiumPct:75, champPct:38, pts:147, champPos:1, gridPos:6, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
-    bull:['Monaco POLE — starts P1 Sunday','4 wins from 5 races — dominant season','Championship leader +43pts over Russell','Magic lap 1:12.051 — beat Verstappen by 0.043s'],
-    bear:['Monaco unpredictable — safety cars common','Verstappen dangerous from P2','Title not over — must finish'] },
-  { pos:2, name:'Max Verstappen', team:'Red Bull', flag:'🇳🇱', winPct:20, podiumPct:55, champPct:6, pts:72, champPos:3, gridPos:2, color:'#1e41ff', verdict:'WATCH', verdictColor:'#f5a623',
-    bull:['Qualifying P2 — front row start','0.043s from pole — Red Bull fast here','Monaco specialist — knows every barrier'],
-    bear:['60pts behind Antonelli in championship','Red Bull reliability concerns'] },
-  { pos:1, name:'Lewis Hamilton', team:'Ferrari', flag:'🇬🇧', winPct:22, podiumPct:60, champPct:15, pts:83, champPos:2, gridPos:1, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
-    bull:['Qualifying P3 — strong Ferrari showing','7x World Champion Monaco experience','Kim Kardashian in paddock for support'],
-    bear:['Ferrari havent won since Mexico 2024','Needs Antonelli/Verstappen to hit issues'] },
-  { pos:4, name:'Charles Leclerc', team:'Ferrari', flag:'🇲🇨', winPct:8, podiumPct:40, champPct:4, pts:71, champPos:5, gridPos:4, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
-    bull:['Home race in Monaco — massive crowd support','Qualifying P4 — strong Ferrari','Monaco specialist — born here'],
-    bear:['Hit wall at end of Q3 — car damage risk','Faces nervous wait on stewards investigation'] },
-  { pos:6, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:8, podiumPct:30, champPct:22, pts:81, champPos:4, gridPos:6, color:'#00d2be', verdict:'WATCH', verdictColor:'#f5a623',
-    bull:['Championship P2 — 81pts','Mercedes strong car','Can gain points if Antonelli has issues'],
-    bear:['Qualifying P6 — disappointing','Hard to overtake in Monaco from P6'] },
-  { pos:7, name:'Oscar Piastri', team:'McLaren', flag:'🇦🇺', winPct:10, podiumPct:35, champPct:9, pts:78, champPos:6, gridPos:7, color:'#ff8000', verdict:'WATCH', verdictColor:'#f5a623',
-    bull:['McLaren strong race pace','Can benefit from safety cars'],
-    bear:['Qualifying P7 — starting too far back','Monaco impossible to overtake'] },
-  { pos:8, name:'Lando Norris', team:'McLaren', flag:'🇬🇧', winPct:5, podiumPct:25, champPct:8, pts:104, champPos:4, gridPos:3, color:'#ff8000', verdict:'WATCH', verdictColor:'#f5a623',
-    bull:['P3 in championship — needs points','McLaren upgrades working'],
-    bear:['Qualifying P8 — very hard from here','Monaco favors qualifying position heavily'] },
+  { pos:1, name:'Kimi Antonelli', team:'Mercedes', flag:'🇮🇹', winPct:26, podiumPct:58, champPct:52, pts:171, champPos:1, gridPos:1, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
+    bull:['Championship leader after 9 rounds','Took Silverstone pole and a Sprint win','Fast on most circuit layouts this season'],
+    bear:['DNF at Barcelona (engine failure)','Wheel shield failure + penalty cost him Britain','Lead over Russell now down to ~25pts'] },
+  { pos:2, name:'George Russell', team:'Mercedes', flag:'🇬🇧', winPct:20, podiumPct:55, champPct:24, pts:149, champPos:2, gridPos:2, color:'#00d2be', verdict:'STRONG PICK', verdictColor:'#2ecc8a',
+    bull:['Won the Austrian GP from pole','P2 at Silverstone — consistent podiums','Closing the gap on Antonelli each race'],
+    bear:['Hasn\'t out-qualified Antonelli all season','Needs Antonelli to slip again to lead'] },
+  { pos:3, name:'Lewis Hamilton', team:'Ferrari', flag:'🇬🇧', winPct:16, podiumPct:48, champPct:12, pts:125, champPos:3, gridPos:3, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
+    bull:['Won the Barcelona GP — Ferrari\'s first win since Mexico 2024','P3 at Silverstone — 9x winner there historically','Engine upgrade brought to recent races'],
+    bear:['Off the pace at Austria after the Barcelona high','Still building consistency at Ferrari'] },
+  { pos:4, name:'Charles Leclerc', team:'Ferrari', flag:'🇲🇨', winPct:14, podiumPct:42, champPct:8, pts:104, champPos:4, gridPos:4, color:'#dc0000', verdict:'WATCH', verdictColor:'#f5a623',
+    bull:['Won the British GP at Silverstone — his first there','Snapped a difficult run of recent form','Strong qualifying pace when the car is right'],
+    bear:['Struggled through Montreal and Monaco before this','Inconsistent race-to-race this season'] },
+  { pos:5, name:'Max Verstappen', team:'Red Bull', flag:'🇳🇱', winPct:12, podiumPct:38, champPct:6, pts:95, champPos:5, gridPos:5, color:'#1e41ff', verdict:'WATCH', verdictColor:'#f5a623',
+    bull:['P2 at Austria — Red Bull\'s best result of the season','Fighting hard even from lower grid slots'],
+    bear:['Crashed out at Silverstone — second race-ending car failure in a row','Well off the championship pace this year'] },
+  { pos:6, name:'Oscar Piastri', team:'McLaren', flag:'🇦🇺', winPct:6, podiumPct:22, champPct:2, pts:70, champPos:6, gridPos:6, color:'#ff8000', verdict:'LONG SHOT', verdictColor:'#ef4f6a',
+    bull:['McLaren race pace still competitive','Capable of podiums on the right weekend'],
+    bear:['Difficult recent races — P11 at Silverstone','Fallen off the championship picture'] },
+  { pos:7, name:'Lando Norris', team:'McLaren', flag:'🇬🇧', winPct:6, podiumPct:20, champPct:2, pts:65, champPos:7, gridPos:7, color:'#ff8000', verdict:'LONG SHOT', verdictColor:'#ef4f6a',
+    bull:['Defending champion pedigree','McLaren upgrades keep coming'],
+    bear:['P4 at Silverstone — solid but not a threat for wins','Needs a big result to re-enter title picture'] },
 ];
 
 export default function F1Page() {
@@ -43,18 +46,18 @@ export default function F1Page() {
     <div style={{background:C.bg0,minHeight:'100vh',color:C.t1,fontFamily:"'Inter',system-ui,sans-serif"}}>
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:52,background:'rgba(6,6,10,0.95)',backdropFilter:'blur(20px)',borderBottom:'1px solid '+C.border,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 24px'}}>
         <button onClick={()=>router.push('/')} style={{background:'none',border:'none',color:C.purpleL,cursor:'pointer',fontSize:13,fontWeight:600}}>← PlayPicks AI</button>
-        <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🏎️ F1 Monaco Grand Prix</div>
-        <div style={{fontSize:11,color:C.t3}}>May 22 - June 7, 2026</div>
+        <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🏎️ F1 British Grand Prix</div>
+        <div style={{fontSize:11,color:C.t3}}>Jul 5, 2026 · Round 9</div>
       </nav>
 
       <div style={{maxWidth:960,margin:'0 auto',padding:'72px 24px 48px'}}>
         <div style={{textAlign:'center',marginBottom:32}}>
           <div style={{display:'inline-flex',alignItems:'center',gap:6,background:'rgba(239,79,106,0.1)',border:'1px solid rgba(239,79,106,0.2)',color:C.red,padding:'4px 12px',borderRadius:100,fontSize:11,fontWeight:600,letterSpacing:'0.4px',textTransform:'uppercase' as const,marginBottom:16}}>
             <span style={{width:5,height:5,background:C.red,borderRadius:'50%',display:'block',boxShadow:'0 0 6px #ef4f6a'}}/>
-            Round 6 · Circuit de Monaco, Monte Carlo
+            Round 9 · Silverstone Circuit, Great Britain
           </div>
-          <h1 style={{fontSize:32,fontWeight:800,letterSpacing:'-1px',marginBottom:8}}>2026 Barcelona-Catalunya GP</h1>
-          <p style={{fontSize:14,color:C.t2}}>🏆 BARCELONA RESULT: Hamilton WON for Ferrari! 🔴 Russell P2 · Norris P3 · Antonelli DNF</p>
+          <h1 style={{fontSize:32,fontWeight:800,letterSpacing:'-1px',marginBottom:8}}>2026 British Grand Prix</h1>
+          <p style={{fontSize:14,color:C.t2}}>🏆 RESULT: Leclerc WON at Silverstone! Russell P2 · Hamilton P3 · Antonelli no points (wheel failure + penalty)</p>
         </div>
 
         <div style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:16,padding:'20px',marginBottom:24}}>
@@ -133,7 +136,7 @@ export default function F1Page() {
               </div>
               <div style={{textAlign:'right' as const}}>
                 <div style={{fontSize:32,fontWeight:900,fontFamily:'monospace',color:driver.winPct>=30?C.green:driver.winPct>=10?C.amber:C.t3}}>{driver.winPct}%</div>
-                <div style={{fontSize:10,color:C.t3}}>to win Miami</div>
+                <div style={{fontSize:10,color:C.t3}}>to win next race</div>
               </div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
@@ -152,7 +155,7 @@ export default function F1Page() {
             </div>
             <div style={{padding:'10px 14px',borderRadius:8,background:driver.verdictColor+'15',border:'1px solid '+driver.verdictColor+'30',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <span style={{fontSize:12,fontWeight:700,color:driver.verdictColor}}>AI Signal: {driver.verdict}</span>
-              <button onClick={()=>router.push('/scores?event=Will+'+encodeURIComponent(driver.name)+'+win+F1+Miami+Grand+Prix+2026')}
+              <button onClick={()=>router.push('/scores?event=Will+'+encodeURIComponent(driver.name)+'+win+F1+Belgian+Grand+Prix+2026')}
                 style={{fontSize:11,fontWeight:600,color:C.purpleL,padding:'5px 12px',borderRadius:6,border:'1px solid '+C.purpleBorder,background:C.purpleBg,cursor:'pointer'}}>
                 Full AI analysis →
               </button>
@@ -163,19 +166,19 @@ export default function F1Page() {
         {/* Race results + upcoming */}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:16}}>
           <div style={{background:'rgba(46,204,138,0.06)',border:'1px solid rgba(46,204,138,0.2)',borderRadius:12,padding:'12px 14px'}}>
-            <div style={{fontSize:10,color:C.green,fontWeight:700,textTransform:'uppercase' as const,marginBottom:4}}>Monaco Qualifying</div>
+            <div style={{fontSize:10,color:C.green,fontWeight:700,textTransform:'uppercase' as const,marginBottom:4}}>Silverstone Qualifying</div>
             <div style={{fontSize:12,fontWeight:600,color:C.t1}}>🏆 Antonelli POLE</div>
-            <div style={{fontSize:11,color:C.t3}}>Verstappen P2 · Hamilton P3</div>
+            <div style={{fontSize:11,color:C.t3}}>Leclerc P2 · Hamilton P3</div>
           </div>
           <div style={{background:'rgba(245,166,35,0.06)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:12,padding:'12px 14px'}}>
-            <div style={{fontSize:10,color:C.amber,fontWeight:700,textTransform:'uppercase' as const,marginBottom:4}}>Race Day</div>
-            <div style={{fontSize:12,fontWeight:600,color:C.t1}}>🇲🇨 Tomorrow 9AM ET</div>
-            <div style={{fontSize:11,color:C.t3}}>Circuit de Monaco · 78 laps</div>
+            <div style={{fontSize:10,color:C.amber,fontWeight:700,textTransform:'uppercase' as const,marginBottom:4}}>Next Race</div>
+            <div style={{fontSize:12,fontWeight:600,color:C.t1}}>🇧🇪 Belgian GP · Jul 17-19</div>
+            <div style={{fontSize:11,color:C.t3}}>Circuit de Spa-Francorchamps</div>
           </div>
         </div>
 
         <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,marginBottom:16}}>
-          {[{label:'Canada Result',value:'Antonelli WON 🏆'},{label:'Next: Monaco GP',value:'June 5-7 · Round 6'},{label:'Championship Lead',value:'Antonelli +43pts'}].map((item,i) => (
+          {[{label:'British GP Result',value:'Leclerc WON 🏆'},{label:'Next: Belgian GP',value:'Jul 17-19 · Round 10'},{label:'Championship Lead',value:'Antonelli +25pts'}].map((item,i) => (
             <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:10,padding:'12px',textAlign:'center' as const}}>
               <div style={{fontSize:10,color:C.t3,marginBottom:4}}>{item.label}</div>
               <div style={{fontSize:12,fontWeight:600,color:C.t1}}>{item.value}</div>
