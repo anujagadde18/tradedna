@@ -545,9 +545,9 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <span style={{fontSize:24}}>🏎️</span>
                 <div>
-                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🏎️ Hamilton WON Barcelona! Ferrari first win!</div>
-                  <div style={{fontSize:12,color:C.amber,fontWeight:600}}>Next: Austrian GP · Jun 26-28 · Round 8</div>
-                  <div style={{fontSize:10,color:C.t3,marginTop:2}}>Antonelli leads championship · Russell P2 · Norris P3</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🏎️ Leclerc WON British GP at Silverstone!</div>
+                  <div style={{fontSize:12,color:C.amber,fontWeight:600}}>Next: Belgian GP · Jul 17-19 · Round 10</div>
+                  <div style={{fontSize:10,color:C.t3,marginTop:2}}>Antonelli leads by 25pts · Russell P2 · Hamilton P3</div>
                 </div>
               </div>
               <span style={{fontSize:11,color:C.purpleL,fontWeight:600}}>Driver odds →</span>
