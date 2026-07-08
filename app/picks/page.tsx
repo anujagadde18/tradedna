@@ -153,7 +153,7 @@ export default function PicksPage() {
                 </div>
 
                 <div style={{padding:'12px 18px',display:'flex',gap:8}}>
-                  <button onClick={()=>router.push('/scores?event='+encodeURIComponent(pick.url))}
+                  <button onClick={()=>router.push('/scores?event='+encodeURIComponent(pick.title))}
                     style={{flex:2,padding:'10px',borderRadius:10,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,cursor:'pointer',fontSize:12,fontWeight:600}}>
                     🤖 Full AI analysis →
                   </button>

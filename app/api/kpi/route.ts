@@ -1,8 +1,13 @@
 import { neon } from '@neondatabase/serverless';
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const validKey = process.env.ADMIN_KEY;
+    const providedKey = req.headers.get('x-admin-key');
+    if (!validKey || providedKey !== validKey) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const sql = neon(process.env.DATABASE_URL!);
 
     // Create tables if needed

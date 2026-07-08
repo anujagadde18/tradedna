@@ -12,13 +12,30 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [updated, setUpdated] = useState('');
   const [error, setError] = useState('');
+  const [adminKey, setAdminKey] = useState('');
+  const [unlocked, setUnlocked] = useState(false);
+  const [keyInput, setKeyInput] = useState('');
 
-  const load = async () => {
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('pp_admin_key');
+      if (saved) { setAdminKey(saved); setUnlocked(true); }
+    } catch {}
+  }, []);
+
+  const load = async (key?: string) => {
+    const useKey = key ?? adminKey;
+    if (!useKey) return;
     try {
       setLoading(true);
-      const res = await fetch('/api/kpi');
+      const res = await fetch('/api/kpi', { headers: { 'x-admin-key': useKey } });
       const json = await res.json();
-      if (json.error) { setError(json.error); setLoading(false); return; }
+      if (json.error) {
+        setError(json.error);
+        setLoading(false);
+        if (res.status === 401) { setUnlocked(false); try { sessionStorage.removeItem('pp_admin_key'); } catch {} }
+        return;
+      }
       setData(json);
       setUpdated(new Date().toLocaleTimeString());
       setError('');
@@ -26,7 +43,42 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); const t = setInterval(load, 30000); return () => clearInterval(t); }, []);
+  const tryUnlock = () => {
+    if (!keyInput.trim()) return;
+    try { sessionStorage.setItem('pp_admin_key', keyInput.trim()); } catch {}
+    setAdminKey(keyInput.trim());
+    setUnlocked(true);
+    load(keyInput.trim());
+  };
+
+  useEffect(() => {
+    if (!unlocked) return;
+    load();
+    const t = setInterval(() => load(), 30000);
+    return () => clearInterval(t);
+  }, [unlocked]);
+
+  if (!unlocked) {
+    return (
+      <div style={{ minHeight:'100vh', background:C.bg0, color:C.t1, fontFamily:'system-ui, sans-serif', display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+        <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:16, padding:32, width:320 }}>
+          <div style={{ fontSize:16, fontWeight:700, marginBottom:16 }}>Admin access</div>
+          <input
+            type="password"
+            value={keyInput}
+            onChange={e => setKeyInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && tryUnlock()}
+            placeholder="Admin key"
+            style={{ width:'100%', padding:'10px 12px', borderRadius:8, background:C.bg3, border:'1px solid '+C.border, color:C.t1, fontSize:13, marginBottom:12, boxSizing:'border-box' as const }}
+          />
+          <button onClick={tryUnlock} style={{ width:'100%', padding:'10px', background:C.purple, border:'none', borderRadius:8, color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+            Unlock
+          </button>
+          {error && <div style={{ fontSize:12, color:C.red, marginTop:10 }}>{error}</div>}
+        </div>
+      </div>
+    );
+  }
 
   const k = data?.kpis;
 
@@ -57,7 +109,7 @@ export default function AdminPage() {
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             {updated && <span style={{ fontSize:12, color:C.t3 }}>Updated {updated}</span>}
-            <button onClick={load} style={{ padding:'8px 16px', background:C.purple, border:'none', borderRadius:8, color:'#fff', fontSize:12, fontWeight:600, cursor:'pointer' }}>
+            <button onClick={() => load()} style={{ padding:'8px 16px', background:C.purple, border:'none', borderRadius:8, color:'#fff', fontSize:12, fontWeight:600, cursor:'pointer' }}>
               Refresh
             </button>
           </div>

@@ -502,7 +502,10 @@ function MagicLinkModalInner({ onClose }: { onClose: () => void }) {
 function ScoresPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const event = searchParams.get('event') || '';
+  const event = (searchParams.get('event') || '')
+    .replace(/\s*-\s*More Markets\s*$/i, '')
+    .replace(/\s*-\s*Exact Score\s*$/i, '')
+    .trim();
 
   // Persistent anonymous user ID — stored in localStorage
   const [anonId] = useState<string>(() => {
