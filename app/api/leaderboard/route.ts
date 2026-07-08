@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { matchId, actualWinner, adminKey } = body;
-    if (adminKey !== 'playpicks2026') return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const validKey = process.env.ADMIN_KEY;
+    if (!validKey || adminKey !== validKey) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const predictions = await sql`SELECT * FROM predictions WHERE match_id = ${matchId} AND actual_winner IS NULL`;
     if (predictions.length === 0) return Response.json({ message: 'No predictions', count: 0 });
     let scored = 0;
