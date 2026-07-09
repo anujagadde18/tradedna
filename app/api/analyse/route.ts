@@ -601,7 +601,7 @@ export async function POST(request: NextRequest) {
       marketType,
       components: [
         effectiveMarketOdds ? { key: 'market', label: 'Market odds', prob: effectiveMarketOdds } : null,
-        teams.length >= 2 ? { key: 'model', label: 'Team strength model', prob: probability } : null,
+        teams.length >= 2 ? { key: 'model', label: 'Team strength model', prob: calculateProbability(teams, null) } : null,
         metaculus.probability !== null ? { key: 'experts', label: 'Forecasters', prob: metaculus.probability } : null,
       ].filter(Boolean),
     });

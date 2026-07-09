@@ -697,7 +697,14 @@ function ScoresPageContent() {
         } catch {}
         setIntel({ confidence: rawConf, direction: rawConf >= 50 ? 'YES' : 'NO', probabilityLabel: rawConf >= 65 ? 'AI is confident this happens' : rawConf >= 55 ? 'More likely than not' : rawConf >= 45 ? 'Could go either way' : rawConf >= 35 ? 'Probably not' : 'AI thinks this is unlikely', predictionStrength: rawConf >= 70 ? 'Strong' : rawConf >= 55 ? 'Medium' : 'Weak', strengthScore: rawConf, riskLevel: rawConf >= 70 || rawConf <= 30 ? 'Low' : 'Medium', marketEdge: marketOddsForAI ? rawConf - marketOddsForAI : null, edgeContext: '', modelComponents: [], confidenceDrivers: { positive: [], negative: [] }, explanation: '' });
         if (data.sources && data.sources.length > 0) setRealSources(data.sources);
-        if (data.components && data.components.length > 0) setComponents(data.components);
+        if (data.components && data.components.length > 0) {
+          setComponents(data.components);
+          const marketComponent = data.components.find((c: any) => c.key === 'market');
+          if (marketComponent && odds === null) {
+            setOdds(marketComponent.prob);
+            setHasUrl(true);
+          }
+        }
         if (data.breakdown && data.breakdown.length > 0) setBreakdown(data.breakdown);
       } else {
         const seed = analysisQuery.split('').reduce((acc:number, c:string) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0);
