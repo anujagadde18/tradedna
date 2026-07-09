@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const preferredRegion = ['fra1', 'lhr1', 'sin1']; // Non-US regions — Polymarket geoblocks US servers, same fix as /api/trending
 
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -171,6 +173,50 @@ function calculateProbability(teams: { strength: number }[], marketOdds: number 
     return Math.max(10, Math.min(90, prob));
   }
   return 50;
+}
+
+async function findLiveMarketOdds(team1Name: string, team2Name: string): Promise<number | null> {
+  try {
+    const res = await fetch(
+      'https://gamma-api.polymarket.com/events?active=true&closed=false&archived=false&limit=150&order=volume24hr&ascending=false',
+      { signal: AbortSignal.timeout(3000) }
+    );
+    if (!res.ok) return null;
+    const events = await res.json();
+    if (!Array.isArray(events)) return null;
+    const t1 = team1Name.toLowerCase();
+    const t2 = team2Name.toLowerCase();
+    const candidates = events.filter((e: any) => {
+      const title = (e.title || '').toLowerCase();
+      if (!title.includes(t1) || !title.includes(t2)) return false;
+      if (title.includes('more markets') || title.includes('exact score')) return false;
+      return true;
+    });
+    if (candidates.length === 0) return null;
+    candidates.sort((a: any, b: any) => parseFloat(b.volume24hr || '0') - parseFloat(a.volume24hr || '0'));
+    const event = candidates[0];
+    const markets = event.markets || [];
+    const moneyline = markets.find((m: any) => {
+      const q = (m.question || m.groupItemTitle || '').toLowerCase();
+      if (q.includes('o/u') || q.includes('over') || q.includes('under') ||
+          q.includes('spread') || q.includes('points') || q.includes('rebounds') ||
+          q.includes('assists') || q.includes('total') || q.includes('quarter') ||
+          q.includes('half') || q.includes('first') || q.includes('hits') ||
+          q.includes('runs') || q.includes('strikeout') || q.includes('exact') ||
+          q.includes('score') || q.includes('nrfi')) return false;
+      const prices = m.outcomePrices ? (typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices) : [];
+      return prices.length === 2;
+    });
+    if (!moneyline) return null;
+    const prices = moneyline.outcomePrices
+      ? (typeof moneyline.outcomePrices === 'string' ? JSON.parse(moneyline.outcomePrices) : moneyline.outcomePrices)
+      : null;
+    if (!prices || prices.length < 2) return null;
+    const yes = parseFloat(prices[0]);
+    const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
+    if (pct >= 5 && pct <= 95) return pct;
+    return null;
+  } catch { return null; }
 }
 
 function getMarketContext(type: string, query: string): string {
@@ -518,22 +564,26 @@ export async function POST(request: NextRequest) {
     // ---- Generic: team-strength model + market odds + AI-written reasoning ----
     const teams = findTeamsInQuery(query);
     const contextLines = [...teams.map(t => t.ctx), ...findExtraContext(query)];
-    const probability = calculateProbability(teams, marketOdds || null);
+    let effectiveMarketOdds = marketOdds || null;
+    if (!effectiveMarketOdds && teams.length >= 2) {
+      effectiveMarketOdds = await findLiveMarketOdds(teams[0].name, teams[1].name);
+    }
+    const probability = calculateProbability(teams, effectiveMarketOdds);
 
-    if (teams.length === 0 && contextLines.length === 0 && metaculus.probability === null && relevantArticles.length === 0 && !marketOdds) {
+    if (teams.length === 0 && contextLines.length === 0 && metaculus.probability === null && relevantArticles.length === 0 && !effectiveMarketOdds) {
       return Response.json({ valid: true, confidence: 0, keywords, articleCount: 0, sources: [], noData: true, message: 'No data found for this question yet. Try naming the teams, or paste a Polymarket URL.' });
     }
 
     const reasoning = await generateReasoning(query, probability, contextLines, headlines, marketType);
 
     let finalConfidence = probability;
-    if (!marketOdds && metaculus.probability !== null) {
+    if (!effectiveMarketOdds && metaculus.probability !== null) {
       finalConfidence = Math.round(probability * 0.8 + metaculus.probability * 0.2);
     }
     finalConfidence = Math.max(5, Math.min(95, finalConfidence));
 
     const extraSources: any[] = [];
-    if (marketOdds) extraSources.push({ name: 'Polymarket', sig: `Live market: ${marketOdds}% — crowd consensus`, url: '', category: 'market', type: 'priced', contribution: Math.round((marketOdds - 50) / 5) });
+    if (effectiveMarketOdds) extraSources.push({ name: 'Polymarket', sig: `Live market: ${effectiveMarketOdds}% — crowd consensus`, url: '', category: 'market', type: 'priced', contribution: Math.round((effectiveMarketOdds - 50) / 5) });
     if (metaculus.probability !== null) extraSources.push({ name: 'Metaculus', sig: `Expert forecasters: ${metaculus.probability}% (${metaculus.count} questions)`, url: 'https://metaculus.com', category: 'community', type: metaculus.probability > 55 ? 'strong' : 'contrary', contribution: Math.round((metaculus.probability - 50) / 3) });
     relevantArticles.slice(0, 4).forEach(a => extraSources.push({ name: a.source, sig: a.title, url: a.url, category: a.category, type: 'mixed', contribution: 1 }));
 
@@ -550,7 +600,7 @@ export async function POST(request: NextRequest) {
       groqVerdict: reasoning?.verdict || null,
       marketType,
       components: [
-        marketOdds ? { key: 'market', label: 'Market odds', prob: marketOdds } : null,
+        effectiveMarketOdds ? { key: 'market', label: 'Market odds', prob: effectiveMarketOdds } : null,
         teams.length >= 2 ? { key: 'model', label: 'Team strength model', prob: probability } : null,
         metaculus.probability !== null ? { key: 'experts', label: 'Forecasters', prob: metaculus.probability } : null,
       ].filter(Boolean),
