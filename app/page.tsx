@@ -398,14 +398,18 @@ export default function HomePage() {
 
           {/* FEATURED 3 — one sport, one world, one crypto */}
           {events.length > 0 && (() => {
-            const sport = events.find(e => e.category === 'sports' && e.yesPrice !== null && e.title.toLowerCase().includes(' vs'))
-              || events.find(e => e.category === 'sports' && e.yesPrice !== null)
-              || events.find(e => e.category === 'sports');
-            const world = events.find(e => e.category === 'economics')
-              || events.find(e => e.category === 'world' && e.volume24h > 1000000);
-            const crypto = events.find(e => e.category === 'crypto' && e.yesPrice !== null && e.yesPrice > 10 && e.yesPrice < 90)
-              || events.find(e => e.category === 'politics' && e.yesPrice !== null)
-              || events.find(e => e.category === 'crypto');
+            const clean = events.filter(e => {
+              const t = (e.title||'').toLowerCase();
+              return !t.includes('more markets') && !t.includes('exact score');
+            });
+            const sport = clean.find(e => e.category === 'sports' && e.yesPrice !== null && e.title.toLowerCase().includes(' vs'))
+              || clean.find(e => e.category === 'sports' && e.yesPrice !== null)
+              || clean.find(e => e.category === 'sports');
+            const world = clean.find(e => e.category === 'economics')
+              || clean.find(e => e.category === 'world' && e.volume24h > 1000000);
+            const crypto = clean.find(e => e.category === 'crypto' && e.yesPrice !== null && e.yesPrice > 10 && e.yesPrice < 90)
+              || clean.find(e => e.category === 'politics' && e.yesPrice !== null)
+              || clean.find(e => e.category === 'crypto');
             const featured = [sport, world, crypto].filter(Boolean) as typeof events;
             if (featured.length === 0) return null;
             return (
