@@ -228,7 +228,7 @@ export default function HomePage() {
             {showResults && results.length > 0 && (
               <div style={{position:'absolute',top:'100%',left:0,right:0,marginTop:4,background:C.bg2,border:'1px solid '+C.border2,borderRadius:12,overflow:'hidden',zIndex:50,boxShadow:'0 16px 40px rgba(0,0,0,0.6)'}}>
                 {results.map((r,i)=>(
-                  <button key={i} onClick={()=>go(r.url)} style={{width:'100%',padding:'10px 16px',background:'none',border:'none',borderBottom:'1px solid rgba(255,255,255,0.04)',cursor:'pointer',textAlign:'left' as const}}
+                  <button key={i} onClick={()=>go(r.title)} style={{width:'100%',padding:'10px 16px',background:'none',border:'none',borderBottom:'1px solid rgba(255,255,255,0.04)',cursor:'pointer',textAlign:'left' as const}}
                     onMouseEnter={e=>(e.currentTarget.style.background=C.bg3)} onMouseLeave={e=>(e.currentTarget.style.background='none')}>
                     <div style={{fontSize:12,color:C.t1,fontWeight:500,marginBottom:1}}>{r.title}</div>
                     <div style={{fontSize:10,color:C.t3}}>{fmtVol(r.volume)} vol</div>
@@ -251,7 +251,7 @@ export default function HomePage() {
               const catC:Record<string,string> = {sports:'#2ecc8a',crypto:'#f5a623',politics:'#ef4f6a',technology:'#7c6ff7',economics:'#4d9de0',world:'#a89cf8',other:'#9996b8'};
               const col = catC[item.category] || '#9996b8';
               return (
-                <button key={i} onClick={()=>go(item.url)}
+                <button key={i} onClick={()=>go(item.title)}
                   style={{display:'flex',alignItems:'center',gap:8,padding:'5px 12px',borderRadius:100,border:'1px solid '+C.border,background:C.bg2,cursor:'pointer',whiteSpace:'nowrap' as const,flexShrink:0,transition:'all 0.15s'}}
                   onMouseEnter={e=>{e.currentTarget.style.borderColor=C.border2;e.currentTarget.style.background=C.bg3;}}
                   onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.background=C.bg2;}}>
@@ -269,6 +269,49 @@ export default function HomePage() {
 
         {/* LIVE MARKETS */}
         <div style={{maxWidth:960,margin:'0 auto',padding:'0 24px 48px'}}>
+
+          {/* TRENDING NOW — real cross-category ranking by 24h volume, not curated by category.
+              Excludes prop-bet variants (More Markets / Exact Score) so one game doesn't eat multiple slots. */}
+          {(() => {
+            const trending = events
+              .filter(e => {
+                const t = (e.title||'').toLowerCase();
+                if (t.includes('more markets') || t.includes('exact score')) return false;
+                return true;
+              })
+              .slice()
+              .sort((a,b) => (b.volume24h||0) - (a.volume24h||0))
+              .slice(0,6);
+            if (trending.length === 0) return null;
+            const catColor: Record<string,string> = {sports:'#2ecc8a',crypto:'#f5a623',politics:'#ef4f6a',technology:'#7c6ff7',economics:'#4d9de0',world:'#a89cf8',other:'#9996b8'};
+            return (
+              <div style={{marginTop:20,marginBottom:20}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+                  <span style={{fontSize:16}}>🔥</span>
+                  <span style={{fontSize:13,fontWeight:700,color:C.t1}}>Trending now</span>
+                  <span style={{fontSize:11,color:C.t3}}>· ranked by 24h volume, every category</span>
+                </div>
+                <div style={{display:'flex',gap:10,overflowX:'auto' as const,paddingBottom:4}}>
+                  {trending.map((e,i) => {
+                    const col = catColor[e.category] || '#9996b8';
+                    return (
+                      <button key={i} onClick={()=>go(e.title)}
+                        style={{flexShrink:0,minWidth:170,maxWidth:200,textAlign:'left' as const,background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'12px 14px',cursor:'pointer'}}>
+                        <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
+                          <span style={{fontSize:9,fontWeight:700,color:col,padding:'2px 6px',borderRadius:4,background:col+'15',textTransform:'uppercase' as const,letterSpacing:'0.3px'}}>{e.category}</span>
+                        </div>
+                        <div style={{fontSize:12,fontWeight:600,color:C.t1,marginBottom:6,overflow:'hidden',textOverflow:'ellipsis',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical' as const,lineHeight:1.3}}>{e.title}</div>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                          <span style={{fontSize:10,color:C.t3}}>{e.volume24hFormatted} today</span>
+                          {e.yesPrice !== null && <span style={{fontSize:12,fontWeight:700,color:e.yesPrice>=50?C.green:C.red,fontFamily:'monospace'}}>{e.yesPrice}%</span>}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* UPCOMING MATCHES — next games across all sports */}
           {(() => {
@@ -292,7 +335,7 @@ export default function HomePage() {
               if (etitle.includes('mumbai indians vs chennai super kings')) return false;
               // Filter out esports and individual sports (tennis, chess, boxing)
               const title = e.title.toLowerCase();
-              const badTerms = ['lol:','league of legends','counter-strike','dota','bo3','bo5','lec','lpl','lck','esport','yi zhou','kotov','chess','busan','boxing','ufc','mma','vs pavel','vs yi','tennis','table tennis'];
+              const badTerms = ['lol:','league of legends','counter-strike','dota','bo3','bo5','lec','lpl','lck','esport','yi zhou','kotov','chess','busan','boxing','ufc','mma','vs pavel','vs yi','tennis','table tennis','more markets','exact score'];
               if (badTerms.some(t => title.includes(t))) return false;
               // Show all major team sports
               const goodSports = ['nba','nhl','mlb','nfl','ipl','cricket','premier league','champions league','la liga','bundesliga','serie a','madrid open','wimbledon','french open','atp','wta','formula','f1','grand prix','ufc 3','bellator'];
@@ -446,7 +489,7 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
           {/* NBA PLAYOFFS — Round 2 */}
           {/* LIVE SPORTS CARDS — auto from Polymarket */}
           {(() => {
-            const bad = ['esport','counter-strike','dota','lol:','valorant','prelim','ufc fight night','indian premier league:','roland garros atp:','roland garros wta:','atp:','wta:'];
+            const bad = ['esport','counter-strike','dota','lol:','valorant','prelim','ufc fight night','indian premier league:','roland garros atp:','roland garros wta:','atp:','wta:','more markets','exact score'];
             const liveCards = events.filter(e => {
               if (e.category !== 'sports') return false;
               const t = (e.title||'').toLowerCase();
