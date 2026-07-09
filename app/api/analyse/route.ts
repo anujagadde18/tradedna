@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const preferredRegion = ['fra1', 'lhr1', 'sin1']; // Non-US regions — Polymarket geoblocks US servers, same fix as /api/trending
+export const runtime = 'nodejs';
+export const preferredRegion = ['fra1', 'lhr1', 'sin1']; // Non-US regions — Polymarket geoblocks US servers, same fix as /api/trending
 
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -173,6 +175,50 @@ function calculateProbability(teams: { strength: number }[], marketOdds: number 
     return Math.max(10, Math.min(90, prob));
   }
   return 50;
+}
+
+async function findLiveMarketOdds(team1Name: string, team2Name: string): Promise<number | null> {
+  try {
+    const res = await fetch(
+      'https://gamma-api.polymarket.com/events?active=true&closed=false&archived=false&limit=150&order=volume24hr&ascending=false',
+      { signal: AbortSignal.timeout(3000) }
+    );
+    if (!res.ok) return null;
+    const events = await res.json();
+    if (!Array.isArray(events)) return null;
+    const t1 = team1Name.toLowerCase();
+    const t2 = team2Name.toLowerCase();
+    const candidates = events.filter((e: any) => {
+      const title = (e.title || '').toLowerCase();
+      if (!title.includes(t1) || !title.includes(t2)) return false;
+      if (title.includes('more markets') || title.includes('exact score')) return false;
+      return true;
+    });
+    if (candidates.length === 0) return null;
+    candidates.sort((a: any, b: any) => parseFloat(b.volume24hr || '0') - parseFloat(a.volume24hr || '0'));
+    const event = candidates[0];
+    const markets = event.markets || [];
+    const moneyline = markets.find((m: any) => {
+      const q = (m.question || m.groupItemTitle || '').toLowerCase();
+      if (q.includes('o/u') || q.includes('over') || q.includes('under') ||
+          q.includes('spread') || q.includes('points') || q.includes('rebounds') ||
+          q.includes('assists') || q.includes('total') || q.includes('quarter') ||
+          q.includes('half') || q.includes('first') || q.includes('hits') ||
+          q.includes('runs') || q.includes('strikeout') || q.includes('exact') ||
+          q.includes('score') || q.includes('nrfi')) return false;
+      const prices = m.outcomePrices ? (typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices) : [];
+      return prices.length === 2;
+    });
+    if (!moneyline) return null;
+    const prices = moneyline.outcomePrices
+      ? (typeof moneyline.outcomePrices === 'string' ? JSON.parse(moneyline.outcomePrices) : moneyline.outcomePrices)
+      : null;
+    if (!prices || prices.length < 2) return null;
+    const yes = parseFloat(prices[0]);
+    const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
+    if (pct >= 5 && pct <= 95) return pct;
+    return null;
+  } catch { return null; }
 }
 
 async function findLiveMarketOdds(team1Name: string, team2Name: string): Promise<number | null> {
