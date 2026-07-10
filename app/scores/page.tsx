@@ -91,6 +91,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
 }) {
   const [showAll, setShowAll] = useState(false);
   const [spotlight, setSpotlight] = useState<any>(null);
+  const [openFactor, setOpenFactor] = useState<number|null>(null);
 
   const isCategorical = mtype === "categorical";
   const topOutcomes = outcomes?.slice(0, 5) || [];
@@ -151,63 +152,42 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
   return (
     <div style={{ background:C.bg2, border:"1px solid "+C.border, borderRadius:16, overflow:"hidden" }}>
 
-      {/* MATCHUP CARD — bold hero redesign */}
+      {/* MATCHUP CARD — narrative headline redesign */}
       {isMatchup && (
-        <div style={{ borderBottom:"1px solid "+C.border }}>
+        <div style={{ padding:"18px 20px 16px", borderBottom:"1px solid "+C.border }}>
 
-          <div style={{ padding:"18px 20px 14px" }}>
-            <div style={{ display:"inline-flex", alignItems:"center", gap:5, background:"rgba(124,111,247,0.15)", border:"1px solid rgba(124,111,247,0.3)", borderRadius:20, padding:"3px 10px", fontSize:11, color:"#a89cf8", fontWeight:600, marginBottom:14 }}>
-              {/world cup|fifa/i.test(question) ? "World Cup 2026" : /nba|finals/i.test(question) ? "NBA 2026" : /ipl|cricket/i.test(question) ? "IPL 2026" : /f1|formula/i.test(question) ? "F1 2026" : "Live Match"}
-            </div>
-
-            <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", alignItems:"center", gap:16 }}>
-              <div>
-                <div style={{ fontSize:14, fontWeight:600, color:C.t1, marginBottom:4, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t1short}</div>
-                <div style={{ fontSize:44, fontWeight:900, lineHeight:1, fontFamily:"monospace", color:aiPct>=50?C.green:"#3a3856" }}>{aiPct}<span style={{ fontSize:20 }}>%</span></div>
-              </div>
-              <div style={{ width:1, height:52, background:C.border2 }} />
-              <div style={{ textAlign:"right" }}>
-                <div style={{ fontSize:14, fontWeight:600, color:C.t1, marginBottom:4, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t2short}</div>
-                <div style={{ fontSize:44, fontWeight:900, lineHeight:1, fontFamily:"monospace", color:aiPct<50?C.green:"#3a3856" }}>{aiTeam2Pct}<span style={{ fontSize:20 }}>%</span></div>
-              </div>
-            </div>
-
-            <div style={{ height:6, borderRadius:3, background:"rgba(255,255,255,0.06)", overflow:"hidden", marginTop:16 }}>
-              <div style={{ height:"100%", width:aiPct+"%", background:C.t1 }} />
-            </div>
-            <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:C.t3, marginTop:6 }}>
-              <span>&larr; {t1short} wins</span>
-              <span>{winner} favored</span>
-              <span>{t2short} wins &rarr;</span>
-            </div>
-          </div>
-
-          {components && components.length > 0 ? (() => {
-            const LABEL: Record<string,string> = { market:"Market", model:"Model", experts:"Experts" };
-            const probs = components.map(c => c.prob);
-            const gap = Math.max(...probs) - Math.min(...probs);
+          {(() => {
+            const gap = components && components.length > 1
+              ? Math.max(...components.map(c => c.prob)) - Math.min(...components.map(c => c.prob))
+              : 0;
+            const marketComp = components?.find(c => c.key === 'market');
+            const modelComp = components?.find(c => c.key === 'model');
+            const headline = aiPct >= 65 ? winner + " strongly favored to beat " + (aiPct >= 50 ? t2short : t1short)
+              : winner + " favored to beat " + (aiPct >= 50 ? t2short : t1short);
+            const subline = (marketComp && modelComp && gap >= 8)
+              ? "The market leans " + (marketComp.prob > modelComp.prob ? "stronger" : "less strongly") + " toward " + winner + " than our own model does - a " + gap + "-point gap worth knowing about."
+              : (marketComp && modelComp)
+              ? "Market and model are closely aligned on this one."
+              : "Based on team strength and recent form - no live market data found for this match.";
             return (
               <>
-                <div style={{ display:"grid", gridTemplateColumns:`repeat(${components.length},1fr)`, borderTop:"1px solid "+C.border }}>
-                  {components.map((c, i) => (
-                    <div key={i} style={{ padding:"12px 16px", textAlign:"center", borderRight: i<components.length-1 ? "1px solid "+C.border : "none" }}>
-                      <div style={{ fontSize:11, color:C.t3, marginBottom:3 }}>{LABEL[c.key]||c.label}</div>
-                      <div style={{ fontSize:18, fontWeight:700, fontFamily:"monospace" }}>{c.prob}%</div>
-                    </div>
-                  ))}
-                </div>
-                {gap >= 12 && (
-                  <div style={{ padding:"8px 20px", background:"rgba(245,166,35,0.06)", borderTop:"1px solid "+C.border, fontSize:11, color:C.amber, fontWeight:600 }}>
-                    {gap}pt gap between sources - worth a second look
+                <div style={{ fontSize:20, fontWeight:700, color:C.t1, lineHeight:1.3, marginBottom:6 }}>{headline}</div>
+                <div style={{ fontSize:13, color:C.t2, lineHeight:1.5, marginBottom:18 }}>{subline}</div>
+                <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+                  <div style={{ flex:1, height:8, borderRadius:4, background:"rgba(255,255,255,0.06)", overflow:"hidden" }}>
+                    <div style={{ height:"100%", width:aiPct+"%", background:C.t1 }} />
                   </div>
-                )}
+                  <div style={{ fontSize:12, color:C.t3, whiteSpace:"nowrap" }}>
+                    {marketComp && modelComp ? marketComp.prob + "% market, " + modelComp.prob + "% model" : aiPct + "% confidence"}
+                  </div>
+                </div>
               </>
             );
-          })() : (
-            <div style={{ padding:"10px 20px", borderTop:"1px solid "+C.border, fontSize:11, color:C.t3 }}>AI confidence from news and forecasters - no live market found</div>
-          )}
+          })()}
         </div>
       )}
+
+      {/* BINARY (YES/NO) CARD */}
 
       {/* BINARY (YES/NO) CARD */}
       {!isMatchup && !isCategorical && (
@@ -270,35 +250,38 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
         </div>
       )}
 
-      {/* REASONS — two-column case for / risk factors */}
-      {(bullSources.length > 0 || bearSources.length > 0) && (
-        <div style={{ display:"grid", gridTemplateColumns: bullSources.length>0 && bearSources.length>0 ? "1fr 1fr" : "1fr", borderBottom:"1px solid "+C.border }}>
-          {bullSources.length > 0 && (
-            <div style={{ padding:"16px 18px", borderRight: bearSources.length>0 ? "1px solid "+C.border : "none" }}>
-              <div style={{ fontSize:11, color:C.green, fontWeight:700, marginBottom:12, display:"flex", alignItems:"center", gap:5 }}>
-                <span>✓</span><span>{isMatchup ? `Case for ${winner}` : "Why it might happen"}</span>
-              </div>
-              {bullSources.slice(0,3).map((s, i) => (
-                <div key={i} style={{ fontSize:13, color:C.t1, lineHeight:1.6, marginBottom: i<bullSources.slice(0,3).length-1 ? 8 : 0 }}>
-                  {s.sig?.slice(0,110)}{(s.sig?.length||0)>110?"…":""}
-                </div>
-              ))}
+      {/* REASONS — tap to expand factors, clear at a glance and deep on demand */}
+      {(bullSources.length > 0 || bearSources.length > 0) && (() => {
+        const factors = [
+          ...bullSources.slice(0,3).map(s => ({ ...s, kind: "bull" as const })),
+          ...bearSources.slice(0,2).map(s => ({ ...s, kind: "bear" as const })),
+        ];
+        return (
+          <div style={{ padding:"14px 20px", borderBottom:"1px solid "+C.border }}>
+            <div style={{ fontSize:11, color:C.t3, fontWeight:600, marginBottom:10 }}>Tap a factor for the full reasoning</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+              {factors.map((f, i) => {
+                const isOpen = openFactor === i;
+                const isBull = f.kind === "bull";
+                const full = f.sig || "";
+                const preview = full.length > 46 ? full.slice(0,46) + "..." : full;
+                return (
+                  <div key={i} style={{ border:"1px solid "+C.border, borderRadius:9, overflow:"hidden" }}>
+                    <div onClick={() => setOpenFactor(isOpen ? null : i)}
+                      style={{ display:"flex", alignItems:"center", gap:9, padding:"9px 11px", cursor:"pointer" }}>
+                      <span style={{ fontSize:12, color:isBull?C.green:C.amber, flexShrink:0 }}>{isBull?"+":"!"}</span>
+                      <span style={{ fontSize:13, color:C.t1, flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{isOpen ? full : preview}</span>
+                      <span style={{ fontSize:11, color:C.t3, flexShrink:0, transform: isOpen ? "rotate(180deg)" : "none", transition:"transform 0.15s" }}>&darr;</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          )}
-          {bearSources.length > 0 && (
-            <div style={{ padding:"16px 18px" }}>
-              <div style={{ fontSize:11, color:C.amber, fontWeight:700, marginBottom:12, display:"flex", alignItems:"center", gap:5 }}>
-                <span>⚠</span><span>Risk factors</span>
-              </div>
-              {bearSources.slice(0,2).map((s, i) => (
-                <div key={i} style={{ fontSize:13, color:C.t2, lineHeight:1.6, marginBottom: i<bearSources.slice(0,2).length-1 ? 8 : 0 }}>
-                  {s.sig?.slice(0,110)}{(s.sig?.length||0)>110?"…":""}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+          </div>
+        );
+      })()}
+
+      {/* KEY WATCH */}
 
       {/* KEY WATCH */}
       {keySources.length > 0 && (
