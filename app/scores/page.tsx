@@ -307,26 +307,33 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
         </div>
       )}
 
-      {/* REASONS */}
+      {/* REASONS — two-column case for / risk factors */}
       {(bullSources.length > 0 || bearSources.length > 0) && (
-        <div style={{ padding:"16px 20px", borderBottom:"1px solid "+C.border }}>
-          <div style={{ fontSize:10, color:C.t3, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:12 }}>Why this prediction</div>
-          {bullSources.slice(0,3).map((s, i) => (
-            <div key={i} style={{ display:"flex", gap:10, alignItems:"flex-start", marginBottom:10 }}>
-              <div style={{ width:20, height:20, borderRadius:10, background:"rgba(46,204,138,0.15)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
-                <span style={{ fontSize:11, color:C.green }}>✓</span>
+        <div style={{ display:"grid", gridTemplateColumns: bullSources.length>0 && bearSources.length>0 ? "1fr 1fr" : "1fr", borderBottom:"1px solid "+C.border }}>
+          {bullSources.length > 0 && (
+            <div style={{ padding:"16px 18px", borderRight: bearSources.length>0 ? "1px solid "+C.border : "none" }}>
+              <div style={{ fontSize:11, color:C.green, fontWeight:700, marginBottom:12, display:"flex", alignItems:"center", gap:5 }}>
+                <span>✓</span><span>{isMatchup ? `Case for ${winner}` : "Why it might happen"}</span>
               </div>
-              <span style={{ fontSize:14, color:C.t1, lineHeight:1.5 }}>{s.sig?.slice(0,110)}{(s.sig?.length||0)>110?"…":""}</span>
+              {bullSources.slice(0,3).map((s, i) => (
+                <div key={i} style={{ fontSize:13, color:C.t1, lineHeight:1.6, marginBottom: i<bullSources.slice(0,3).length-1 ? 8 : 0 }}>
+                  {s.sig?.slice(0,110)}{(s.sig?.length||0)>110?"…":""}
+                </div>
+              ))}
             </div>
-          ))}
-          {bearSources.slice(0,2).map((s, i) => (
-            <div key={i} style={{ display:"flex", gap:10, alignItems:"flex-start", marginBottom: i===1?0:10 }}>
-              <div style={{ width:20, height:20, borderRadius:10, background:"rgba(245,166,35,0.15)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
-                <span style={{ fontSize:11, color:C.amber }}>!</span>
+          )}
+          {bearSources.length > 0 && (
+            <div style={{ padding:"16px 18px" }}>
+              <div style={{ fontSize:11, color:C.amber, fontWeight:700, marginBottom:12, display:"flex", alignItems:"center", gap:5 }}>
+                <span>⚠</span><span>Risk factors</span>
               </div>
-              <span style={{ fontSize:14, color:C.t2, lineHeight:1.5 }}>{s.sig?.slice(0,110)}{(s.sig?.length||0)>110?"…":""}</span>
+              {bearSources.slice(0,2).map((s, i) => (
+                <div key={i} style={{ fontSize:13, color:C.t2, lineHeight:1.6, marginBottom: i<bearSources.slice(0,2).length-1 ? 8 : 0 }}>
+                  {s.sig?.slice(0,110)}{(s.sig?.length||0)>110?"…":""}
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
 
