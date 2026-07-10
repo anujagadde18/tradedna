@@ -151,97 +151,60 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
   return (
     <div style={{ background:C.bg2, border:"1px solid "+C.border, borderRadius:16, overflow:"hidden" }}>
 
-      {/* MATCHUP CARD — new shareable design */}
+      {/* MATCHUP CARD — bold hero redesign */}
       {isMatchup && (
         <div style={{ borderBottom:"1px solid "+C.border }}>
 
-          {/* Header with badge */}
-          <div style={{ padding:"16px 20px 12px", background:"linear-gradient(135deg,rgba(15,26,46,0.8),rgba(10,15,26,0.9))", borderBottom:"1px solid rgba(255,255,255,0.05)", position:"relative", overflow:"hidden" }}>
-            <div style={{ position:"absolute", top:-40, right:-40, width:120, height:120, background:"radial-gradient(circle,rgba(124,111,247,0.25) 0%,transparent 70%)", borderRadius:"50%", pointerEvents:"none" }} />
-            <div style={{ display:"inline-flex", alignItems:"center", gap:5, background:"rgba(124,111,247,0.15)", border:"1px solid rgba(124,111,247,0.3)", borderRadius:20, padding:"3px 10px", fontSize:11, color:"#a89cf8", fontWeight:600, marginBottom:8 }}>
-              {/world cup|fifa/i.test(question) ? "⚽ World Cup 2026" : /nba|finals/i.test(question) ? "🏀 NBA 2026" : /ipl|cricket/i.test(question) ? "🏏 IPL 2026" : /f1|formula/i.test(question) ? "🏎️ F1 2026" : "🏆 Live Match"}
+          <div style={{ padding:"18px 20px 14px" }}>
+            <div style={{ display:"inline-flex", alignItems:"center", gap:5, background:"rgba(124,111,247,0.15)", border:"1px solid rgba(124,111,247,0.3)", borderRadius:20, padding:"3px 10px", fontSize:11, color:"#a89cf8", fontWeight:600, marginBottom:14 }}>
+              {/world cup|fifa/i.test(question) ? "World Cup 2026" : /nba|finals/i.test(question) ? "NBA 2026" : /ipl|cricket/i.test(question) ? "IPL 2026" : /f1|formula/i.test(question) ? "F1 2026" : "Live Match"}
             </div>
-            <div style={{ fontSize:11, color:C.t3 }}>AI picks {winner} to win</div>
+
+            <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", alignItems:"center", gap:16 }}>
+              <div>
+                <div style={{ fontSize:14, fontWeight:600, color:C.t1, marginBottom:4, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t1short}</div>
+                <div style={{ fontSize:44, fontWeight:900, lineHeight:1, fontFamily:"monospace", color:aiPct>=50?C.green:"#3a3856" }}>{aiPct}<span style={{ fontSize:20 }}>%</span></div>
+              </div>
+              <div style={{ width:1, height:52, background:C.border2 }} />
+              <div style={{ textAlign:"right" }}>
+                <div style={{ fontSize:14, fontWeight:600, color:C.t1, marginBottom:4, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t2short}</div>
+                <div style={{ fontSize:44, fontWeight:900, lineHeight:1, fontFamily:"monospace", color:aiPct<50?C.green:"#3a3856" }}>{aiTeam2Pct}<span style={{ fontSize:20 }}>%</span></div>
+              </div>
+            </div>
+
+            <div style={{ height:6, borderRadius:3, background:"rgba(255,255,255,0.06)", overflow:"hidden", marginTop:16 }}>
+              <div style={{ height:"100%", width:aiPct+"%", background:C.t1 }} />
+            </div>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:C.t3, marginTop:6 }}>
+              <span>&larr; {t1short} wins</span>
+              <span>{winner} favored</span>
+              <span>{t2short} wins &rarr;</span>
+            </div>
           </div>
 
-          {/* RECIPE STRIP — shows exactly which ingredients built this number, and the size of any gap */}
-          {components && components.length > 0 && (() => {
-            const ICON: Record<string,{emoji:string;color:string}> = {
-              market:  { emoji:'\ud83d\udcca', color:C.blue },
-              model:   { emoji:'\ud83e\uddee', color:C.purple },
-              experts: { emoji:'\ud83d\udd2e', color:C.amber },
-            };
+          {components && components.length > 0 ? (() => {
+            const LABEL: Record<string,string> = { market:"Market", model:"Model", experts:"Experts" };
             const probs = components.map(c => c.prob);
             const gap = Math.max(...probs) - Math.min(...probs);
             return (
-              <div style={{ padding:"12px 20px 14px" }}>
-                <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom: gap >= 12 ? 8 : 0 }}>
-                  {components.map((c, i) => {
-                    const style = ICON[c.key] || { emoji:'\u2022', color:C.t3 };
-                    return (
-                      <div key={i} style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 10px", borderRadius:10, background:"rgba(255,255,255,0.03)", border:"1px solid "+C.border }}>
-                        <span style={{ fontSize:13 }}>{style.emoji}</span>
-                        <span style={{ fontSize:11, color:C.t3, fontWeight:600 }}>{c.label}</span>
-                        <span style={{ fontSize:13, fontWeight:800, color:style.color, fontFamily:"monospace" }}>{c.prob}%</span>
-                      </div>
-                    );
-                  })}
+              <>
+                <div style={{ display:"grid", gridTemplateColumns:`repeat(${components.length},1fr)`, borderTop:"1px solid "+C.border }}>
+                  {components.map((c, i) => (
+                    <div key={i} style={{ padding:"12px 16px", textAlign:"center", borderRight: i<components.length-1 ? "1px solid "+C.border : "none" }}>
+                      <div style={{ fontSize:11, color:C.t3, marginBottom:3 }}>{LABEL[c.key]||c.label}</div>
+                      <div style={{ fontSize:18, fontWeight:700, fontFamily:"monospace" }}>{c.prob}%</div>
+                    </div>
+                  ))}
                 </div>
                 {gap >= 12 && (
-                  <div style={{ fontSize:11, color:C.amber, fontWeight:600, display:"flex", alignItems:"center", gap:5 }}>
-                    <span>\u26a1</span>
-                    <span>{gap}pt gap between sources \u2014 worth a second look</span>
+                  <div style={{ padding:"8px 20px", background:"rgba(245,166,35,0.06)", borderTop:"1px solid "+C.border, fontSize:11, color:C.amber, fontWeight:600 }}>
+                    {gap}pt gap between sources - worth a second look
                   </div>
                 )}
-              </div>
+              </>
             );
-          })()}
-
-          {/* Two team boxes */}
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 40px 1fr", alignItems:"center", gap:8, padding:"16px 16px 12px" }}>
-            <div style={{ textAlign:"center", padding:"14px 8px", borderRadius:14, background:aiPct>=50?"rgba(46,204,138,0.08)":"rgba(255,255,255,0.02)", border:"1px solid "+(aiPct>=50?"rgba(46,204,138,0.2)":C.border) }}>
-              <div style={{ fontSize:11, fontWeight:700, color:aiPct>=50?C.green:C.t3, marginBottom:8, textTransform:"uppercase", letterSpacing:"0.3px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t1short}</div>
-              <div style={{ fontSize:40, fontWeight:900, color:aiPct>=50?C.green:"#3a3856", fontFamily:"monospace", lineHeight:1 }}>{aiPct}%</div>
-              <div style={{ fontSize:10, marginTop:5, color:aiPct>=50?"rgba(46,204,138,0.6)":"#3a3856", fontWeight:500 }}>{aiPct>=50?"AI pick":"AI odds"}</div>
-              {marketValid && <div style={{ fontSize:10, color:C.t3, marginTop:2 }}>mkt {marketPct}%</div>}
-            </div>
-            <div style={{ textAlign:"center", fontSize:11, fontWeight:700, color:"#2e2c44" }}>VS</div>
-            <div style={{ textAlign:"center", padding:"14px 8px", borderRadius:14, background:aiPct<50?"rgba(46,204,138,0.08)":"rgba(255,255,255,0.02)", border:"1px solid "+(aiPct<50?"rgba(46,204,138,0.2)":C.border) }}>
-              <div style={{ fontSize:11, fontWeight:700, color:aiPct<50?C.green:C.t3, marginBottom:8, textTransform:"uppercase", letterSpacing:"0.3px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t2short}</div>
-              <div style={{ fontSize:40, fontWeight:900, color:aiPct<50?C.green:"#3a3856", fontFamily:"monospace", lineHeight:1 }}>{aiTeam2Pct}%</div>
-              <div style={{ fontSize:10, marginTop:5, color:aiPct<50?"rgba(46,204,138,0.6)":"#3a3856", fontWeight:500 }}>{aiPct<50?"AI pick":"AI odds"}</div>
-              {marketValid && <div style={{ fontSize:10, color:C.t3, marginTop:2 }}>mkt {100-marketPct}%</div>}
-            </div>
-          </div>
-
-          {/* Probability bar */}
-          <div style={{ padding:"0 16px 12px" }}>
-            <div style={{ height:6, borderRadius:3, background:"rgba(255,255,255,0.05)", overflow:"hidden", marginBottom:6 }}>
-              <div style={{ height:"100%", width:aiPct+"%", background:"linear-gradient(90deg,"+C.green+",rgba(46,204,138,0.5))", borderRadius:3 }} />
-            </div>
-            <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#3a3856" }}>
-              <span>← {t1short} wins</span>
-              <span>50/50</span>
-              <span>{t2short} wins →</span>
-            </div>
-          </div>
-
-          {/* Market/AI/Edge strip */}
-          {marketValid && (
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", borderTop:"1px solid rgba(255,255,255,0.05)" }}>
-              <div style={{ padding:"10px 8px", textAlign:"center", borderRight:"1px solid rgba(255,255,255,0.05)" }}>
-                <div style={{ fontSize:9, color:"#3a3856", textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:4, fontWeight:600 }}>Market</div>
-                <div style={{ fontSize:16, fontWeight:800, color:C.t3, fontVariantNumeric:"tabular-nums" }}>{marketPct}%</div>
-              </div>
-              <div style={{ padding:"10px 8px", textAlign:"center", borderRight:"1px solid rgba(255,255,255,0.05)" }}>
-                <div style={{ fontSize:9, color:"#3a3856", textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:4, fontWeight:600 }}>AI says</div>
-                <div style={{ fontSize:16, fontWeight:800, color:C.green, fontVariantNumeric:"tabular-nums" }}>{aiPct}%</div>
-              </div>
-              <div style={{ padding:"10px 8px", textAlign:"center" }}>
-                <div style={{ fontSize:9, color:"#3a3856", textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:4, fontWeight:600 }}>AI edge</div>
-                <div style={{ fontSize:16, fontWeight:800, color:edge!>0?C.green:C.amber, fontVariantNumeric:"tabular-nums" }}>{edge!>0?"+":""}{edge}%</div>
-              </div>
-            </div>
+          })() : (
+            <div style={{ padding:"10px 20px", borderTop:"1px solid "+C.border, fontSize:11, color:C.t3 }}>AI confidence from news and forecasters - no live market found</div>
           )}
         </div>
       )}
