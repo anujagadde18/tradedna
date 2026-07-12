@@ -718,7 +718,10 @@ https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${m.home} be
                   <div key={i} style={{fontSize:9,fontWeight:700,color:C.t4,textTransform:'uppercase' as const,letterSpacing:'0.5px',textAlign:i>=2?'center' as const:'left' as const}}>{h}</div>
                 ))}
               </div>
-              {events.slice(0,20).map((e,i)=>{
+              {events.filter(e => {
+                const t = (e.title||'').toLowerCase();
+                return !t.includes('more markets') && !t.includes('exact score');
+              }).slice(0,20).map((e,i)=>{
                 const cs = CAT_COLORS[e.category]||CAT_COLORS.other;
                 const isYes = e.yesPrice!==null && e.yesPrice>=50;
                 const isStrong = e.yesPrice!==null && (e.yesPrice>=70||e.yesPrice<=30);
