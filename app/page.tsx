@@ -240,6 +240,39 @@ export default function HomePage() {
           <p style={{fontSize:11,color:C.t3}}>Type anything or paste a Polymarket URL</p>
         </div>
 
+        {/* NEW HERE? — plain-language explainer using a real live example, for people who have never seen a prediction market before */}
+        {events.length > 0 && (() => {
+          const example = events.find(e => {
+            const t = (e.title||'').toLowerCase();
+            return e.category === 'sports' && e.yesPrice !== null && e.yesPrice > 5 && e.yesPrice < 95
+              && t.includes(' vs') && !t.includes('more markets') && !t.includes('exact score');
+          });
+          if (!example) return null;
+          const parts = example.title.split(/\s+vs\.?\s+/i);
+          const teamA = (parts[0]||'').trim();
+          const teamB = (parts[1]||'').trim().replace(/\s*-\s*More Markets$/i,'');
+          const pct = example.yesPrice as number;
+          return (
+            <div style={{maxWidth:640,margin:'0 auto',padding:'0 24px 8px'}}>
+              <div style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:16,padding:'20px 22px',marginTop:20,marginBottom:8}}>
+                <div style={{fontSize:11,fontWeight:700,color:C.purpleL,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:10}}>New to prediction markets?</div>
+                <p style={{fontSize:14,color:C.t2,lineHeight:1.7,marginBottom:12}}>
+                  A prediction market is just a place where people bet real money on things that will actually happen -
+                  a game, an election, a Fed decision. The price they are trading at is the crowd's best guess, updated every minute.
+                </p>
+                <p style={{fontSize:14,color:C.t1,lineHeight:1.7,marginBottom:12}}>
+                  Right now, bettors think <b>{teamA}</b> has a <b>{pct}%</b> chance to beat <b>{teamB}</b>.
+                  PlayPicks checks that number against team data, recent news, and expert forecasts - and tells you in
+                  plain English whether the crowd looks right, or whether there is a gap worth knowing about.
+                </p>
+                <p style={{fontSize:13,color:C.t3,lineHeight:1.6}}>
+                  No black box. Every number comes with the sources behind it, so you can see exactly why.
+                </p>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* SCROLLING TICKER - uses live events, no hardcoded bias */}
         {events.length > 0 && (
         <div style={{overflow:'hidden',borderTop:'1px solid '+C.border,borderBottom:'1px solid '+C.border,padding:'10px 0',position:'relative'}}>
