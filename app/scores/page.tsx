@@ -92,6 +92,8 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
   const [showAll, setShowAll] = useState(false);
   const [spotlight, setSpotlight] = useState<any>(null);
   const [openFactor, setOpenFactor] = useState<number|null>(null);
+  const [componentWeights, setComponentWeights] = useState<Record<string, number>>({});
+  const [customSources, setCustomSources] = useState<{id:string; label:string; prob:number; weight:number}[]>([]);
 
   const isCategorical = mtype === "categorical";
   const topOutcomes = outcomes?.slice(0, 5) || [];
@@ -188,8 +190,6 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
       )}
 
       {/* BINARY (YES/NO) CARD */}
-
-      {/* BINARY (YES/NO) CARD */}
       {!isMatchup && !isCategorical && (
         <div style={{ padding:"20px", borderBottom:"1px solid "+C.border }}>
           {/* SVG GAUGE */}
@@ -281,7 +281,79 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
         );
       })()}
 
-      {/* KEY WATCH */}
+      {/* YOUR PREDICTION - weight sources yourself, add your own, works for any kind of question */}
+      <div style={{ padding:"16px 20px", borderBottom:"1px solid "+C.border }}>
+        {(() => {
+          const existingRows = (components||[]).map(c => ({
+            id: c.key,
+            label: c.label,
+            prob: c.prob,
+            weight: componentWeights[c.key] ?? 100,
+          }));
+          const customRows = customSources.map(s => ({ id: s.id, label: s.label, prob: s.prob, weight: s.weight }));
+          const allRows = [...existingRows, ...customRows];
+          const totalWeight = allRows.reduce((sum, r) => sum + r.weight, 0);
+          const blended = totalWeight > 0
+            ? Math.round(allRows.reduce((sum, r) => sum + r.prob * r.weight, 0) / totalWeight)
+            : aiPct;
+          const hasCustomizations = customSources.length > 0 || Object.keys(componentWeights).length > 0;
+
+          return (
+            <>
+              <div style={{ fontSize:11, color:C.t3, fontWeight:600, marginBottom:4 }}>Your prediction</div>
+              <div style={{ fontSize:12, color:C.t3, marginBottom:14 }}>Adjust how much you trust each source, or add your own</div>
+
+              {existingRows.map(row => (
+                <div key={row.id} style={{ marginBottom:12 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:4 }}>
+                    <span style={{ color:C.t1 }}>{row.label}</span>
+                    <span style={{ color:C.t3, fontFamily:"monospace" }}>{row.prob}%</span>
+                  </div>
+                  <input type="range" min={0} max={100} value={row.weight}
+                    onChange={e => setComponentWeights(w => ({ ...w, [row.id]: parseInt(e.target.value) }))}
+                    style={{ width:"100%" }} />
+                </div>
+              ))}
+
+              {customSources.map(s => (
+                <div key={s.id} style={{ marginBottom:14, padding:10, border:"1px solid "+C.border, borderRadius:9 }}>
+                  <div style={{ display:"flex", gap:8, marginBottom:8 }}>
+                    <input type="text" value={s.label} placeholder="What's your source? A person, article, gut feeling..."
+                      onChange={e => setCustomSources(list => list.map(x => x.id===s.id ? {...x, label:e.target.value} : x))}
+                      style={{ flex:1, fontSize:12, padding:"6px 8px", background:C.bg1, border:"1px solid "+C.border, borderRadius:6, color:C.t1 }} />
+                    <button onClick={() => setCustomSources(list => list.filter(x => x.id !== s.id))}
+                      style={{ fontSize:12, color:C.t3, background:"none", border:"none", cursor:"pointer", padding:"0 6px" }}>remove</button>
+                  </div>
+                  <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:C.t3, marginBottom:3 }}>
+                    <span>Their estimate</span><span>{s.prob}%</span>
+                  </div>
+                  <input type="range" min={0} max={100} value={s.prob}
+                    onChange={e => setCustomSources(list => list.map(x => x.id===s.id ? {...x, prob:parseInt(e.target.value)} : x))}
+                    style={{ width:"100%", marginBottom:8 }} />
+                  <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:C.t3, marginBottom:3 }}>
+                    <span>How much you trust it</span><span>{s.weight}%</span>
+                  </div>
+                  <input type="range" min={0} max={100} value={s.weight}
+                    onChange={e => setCustomSources(list => list.map(x => x.id===s.id ? {...x, weight:parseInt(e.target.value)} : x))}
+                    style={{ width:"100%" }} />
+                </div>
+              ))}
+
+              <button onClick={() => setCustomSources(list => [...list, { id: "custom-"+Date.now(), label:"", prob:50, weight:50 }])}
+                style={{ fontSize:12, color:C.purpleL, background:C.purpleBg, border:"1px solid rgba(124,111,247,0.25)", borderRadius:8, padding:"7px 12px", cursor:"pointer", marginBottom:14 }}>
+                + Add your own source
+              </button>
+
+              {hasCustomizations && (
+                <div style={{ padding:"12px 14px", background:"rgba(46,204,138,0.06)", border:"1px solid rgba(46,204,138,0.2)", borderRadius:10, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                  <span style={{ fontSize:13, color:C.t1 }}>Your blended prediction</span>
+                  <span style={{ fontSize:22, fontWeight:800, color:C.green, fontFamily:"monospace" }}>{blended}%</span>
+                </div>
+              )}
+            </>
+          );
+        })()}
+      </div>
 
       {/* KEY WATCH */}
       {keySources.length > 0 && (
