@@ -280,7 +280,13 @@ export default function HomePage() {
           <div style={{display:'flex',gap:8,animation:'tickerScroll 60s linear infinite',width:'max-content'}}
             onMouseEnter={e=>(e.currentTarget.style.animationPlayState='paused')}
             onMouseLeave={e=>(e.currentTarget.style.animationPlayState='running')}>
-            {[...events,...events].map((item,i)=>{
+            {(() => {
+              const clean = events.filter(e => {
+                const t = (e.title||'').toLowerCase();
+                return !t.includes('more markets') && !t.includes('exact score');
+              });
+              return [...clean,...clean];
+            })().map((item,i)=>{
               const catC:Record<string,string> = {sports:'#2ecc8a',crypto:'#f5a623',politics:'#ef4f6a',technology:'#7c6ff7',economics:'#4d9de0',world:'#a89cf8',other:'#9996b8'};
               const col = catC[item.category] || '#9996b8';
               return (
