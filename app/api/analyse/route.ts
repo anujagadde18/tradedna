@@ -90,6 +90,7 @@ const TEAM_DB: Record<string, { strength: number; ctx: string }> = {
   turkiye:      { strength: 68, ctx: 'Türkiye: talented squad, strong recent European form.' },
   turkey:       { strength: 68, ctx: 'Turkey: talented squad, strong recent European form.' },
   sweden:       { strength: 66, ctx: 'Sweden: technical, well-organized Scandinavian side.' },
+  switzerland:  { strength: 70, ctx: 'Switzerland: organized and resilient, beat Colombia on penalties in the Round of 16.' },
 };
 
 // Context-only entries — no calibrated strength model exists for these, so probability defaults to market odds or 50.
@@ -565,8 +566,15 @@ export async function POST(request: NextRequest) {
     const teams = findTeamsInQuery(query);
     const contextLines = [...teams.map(t => t.ctx), ...findExtraContext(query)];
     let effectiveMarketOdds = marketOdds || null;
-    if (!effectiveMarketOdds && teams.length >= 2) {
-      effectiveMarketOdds = await findLiveMarketOdds(teams[0].name, teams[1].name);
+    if (!effectiveMarketOdds) {
+      if (teams.length >= 2) {
+        effectiveMarketOdds = await findLiveMarketOdds(teams[0].name, teams[1].name);
+      } else {
+        const vsMatch = query.match(/^(.+?)\s+vs\.?\s+(.+?)(?:\s+world cup|\s+nba|\s+ipl|\?|$)/i);
+        if (vsMatch) {
+          effectiveMarketOdds = await findLiveMarketOdds(vsMatch[1].trim(), vsMatch[2].trim());
+        }
+      }
     }
     const probability = calculateProbability(teams, effectiveMarketOdds);
 
