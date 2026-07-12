@@ -215,7 +215,7 @@ async function findLiveMarketOdds(team1Name: string, team2Name: string): Promise
     if (!prices || prices.length < 2) return null;
     const yes = parseFloat(prices[0]);
     const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
-    if (pct >= 5 && pct <= 95) return pct;
+    if (pct >= 1 && pct <= 99) return pct;
     return null;
   } catch { return null; }
 }
