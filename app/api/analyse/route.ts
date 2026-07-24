@@ -608,9 +608,9 @@ export async function POST(request: NextRequest) {
       groqVerdict: reasoning?.verdict || null,
       marketType,
       components: [
-        effectiveMarketOdds ? { key: 'market', label: 'Market odds', prob: effectiveMarketOdds } : null,
-        teams.length >= 2 ? { key: 'model', label: 'Team strength model', prob: calculateProbability(teams, null) } : null,
-        metaculus.probability !== null ? { key: 'experts', label: 'Forecasters', prob: metaculus.probability } : null,
+        effectiveMarketOdds ? { key: 'market', label: 'What bettors say', prob: effectiveMarketOdds } : null,
+        teams.length >= 2 ? { key: 'model', label: 'What the stats say', prob: calculateProbability(teams, null) } : null,
+        metaculus.probability !== null ? { key: 'experts', label: 'What forecasters say', prob: metaculus.probability } : null,
       ].filter(Boolean),
     });
   } catch (err: any) {

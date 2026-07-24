@@ -1,4 +1,5 @@
 'use client';
+/* PP-SCORES-PLAIN-V1 - honest sources + plain language */
 import React from 'react';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -26,8 +27,8 @@ const C = {
 
 type Frame = 'verdict'|'signals'|'sources'|'markets'|'trade';
 
-const FRAMES: Frame[] = ['verdict','signals','sources','markets','trade'];
-const FRAME_LABELS = ['Verdict','Signals','Sources','Related markets','Trade'];
+const FRAMES: Frame[] = ['verdict','signals','markets','trade'];
+const FRAME_LABELS = ['Answer','How it was built','Related questions','Trade'];
 
 function SigPill({ type }: { type: 'strong'|'mixed'|'priced'|'contrary' }) {
   const m = {
@@ -167,9 +168,9 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
             const headline = aiPct >= 65 ? winner + " strongly favored to beat " + (aiPct >= 50 ? t2short : t1short)
               : winner + " favored to beat " + (aiPct >= 50 ? t2short : t1short);
             const subline = (marketComp && modelComp && gap >= 8)
-              ? "The market leans " + (marketComp.prob > modelComp.prob ? "stronger" : "less strongly") + " toward " + winner + " than our own model does - a " + gap + "-point gap worth knowing about."
+              ? "People betting real money lean " + (marketComp.prob > modelComp.prob ? "more strongly" : "less strongly") + " toward " + winner + " than the stats do - a " + gap + "-point gap worth knowing about."
               : (marketComp && modelComp)
-              ? "Market and model are closely aligned on this one."
+              ? "The bettors and the stats agree on this one."
               : "Based on team strength and recent form - no live market data found for this match.";
             return (
               <>
@@ -180,7 +181,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
                     <div style={{ height:"100%", width:aiPct+"%", background:C.t1 }} />
                   </div>
                   <div style={{ fontSize:12, color:C.t3, whiteSpace:"nowrap" }}>
-                    {marketComp && modelComp ? marketComp.prob + "% market, " + modelComp.prob + "% model" : aiPct + "% confidence"}
+                    {marketComp && modelComp ? "Bettors: " + marketComp.prob + "% - Stats: " + modelComp.prob + "%" : "Our estimate: " + aiPct + "%"}
                   </div>
                 </div>
               </>
@@ -208,7 +209,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
               <text x="100" y="90" fontSize="32" fontWeight="800" fill={verdictColor} textAnchor="middle" fontFamily="monospace">{aiPct}%</text>
               <text x="100" y="108" fontSize="11" fill="rgba(255,255,255,0.4)" textAnchor="middle">{verdictText}</text>
             </svg>
-            {!marketValid && <div style={{ fontSize:11, color:C.t3, marginTop:-8 }}>AI from news + forecasters</div>}
+            {!marketValid && <div style={{ fontSize:11, color:C.t3, marginTop:-8 }}>Estimated from news and forecasters - no live market found</div>}
           </div>
           {/* Bar */}
           <div style={{ height:6, borderRadius:3, background:"rgba(255,255,255,0.06)", overflow:"hidden", marginBottom:12 }}>
@@ -217,15 +218,15 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
           {marketValid && (
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:6 }}>
               <div style={{ textAlign:"center", padding:"8px", background:"rgba(255,255,255,0.03)", borderRadius:8 }}>
-                <div style={{ fontSize:10, color:C.t3, marginBottom:2 }}>Market</div>
+                <div style={{ fontSize:10, color:C.t3, marginBottom:2 }}>Bettors say</div>
                 <div style={{ fontSize:15, fontWeight:700, color:C.t2 }}>{marketPct}%</div>
               </div>
               <div style={{ textAlign:"center", padding:"8px", background:"rgba(46,204,138,0.07)", borderRadius:8 }}>
-                <div style={{ fontSize:10, color:C.green, marginBottom:2 }}>AI says</div>
+                <div style={{ fontSize:10, color:C.green, marginBottom:2 }}>Our estimate</div>
                 <div style={{ fontSize:15, fontWeight:700, color:C.green }}>{aiPct}%</div>
               </div>
               <div style={{ textAlign:"center", padding:"8px", background:edge!>0?"rgba(46,204,138,0.07)":"rgba(239,79,106,0.07)", borderRadius:8 }}>
-                <div style={{ fontSize:10, color:edge!>0?C.green:C.red, marginBottom:2 }}>Edge</div>
+                <div style={{ fontSize:10, color:edge!>0?C.green:C.red, marginBottom:2 }}>Gap</div>
                 <div style={{ fontSize:15, fontWeight:700, color:edge!>0?C.green:C.red }}>{edge!>0?"+":""}{edge}%</div>
               </div>
             </div>
@@ -394,7 +395,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
         <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
           <span style={{ fontSize:10, color:C.t3, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.4px", marginRight:4 }}>Sources</span>
           {polymarketSource && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:6, background:"rgba(77,157,224,0.1)", color:C.blue, border:"1px solid rgba(77,157,224,0.2)" }}>📊 Polymarket {marketPct}%</span>}
-          {metaculusSource && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:6, background:"rgba(124,111,247,0.1)", color:C.purple, border:"1px solid rgba(124,111,247,0.2)" }}>🎯 Forecasters</span>}
+          {metaculusSource && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:6, background:"rgba(124,111,247,0.1)", color:C.purple, border:"1px solid rgba(124,111,247,0.2)" }}>Expert forecasts</span>}
           {allSources.filter(s => s.category==="news" && s.name!=="Signal" && s.name!=="Key Risk").slice(0,3).map((s,i) => (
             <span key={i} style={{ fontSize:10, padding:"3px 8px", borderRadius:6, background:"rgba(255,255,255,0.04)", color:C.t3, border:"1px solid "+C.border }}>📰 {s.name?.slice(0,18)}</span>
           ))}
@@ -411,7 +412,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
                 <div style={{ fontSize:9, color:C.t3, marginBottom:6, textTransform:"uppercase", letterSpacing:"0.3px" }}>{s.team}</div>
                 <div style={{ fontSize:12, fontWeight:600, color:C.t1 }}>🏏 {s.data.bat?.name}</div>
                 <div style={{ fontSize:11, color:C.t3, marginBottom:6 }}>{s.data.bat?.runs} runs · Avg {s.data.bat?.avg} · SR {s.data.bat?.sr}</div>
-                <div style={{ fontSize:12, fontWeight:600, color:C.t1 }}>🎯 {s.data.bowl?.name}</div>
+                <div style={{ fontSize:12, fontWeight:600, color:C.t1 }}>{s.data.bowl?.name}</div>
                 <div style={{ fontSize:11, color:C.t3 }}>{s.data.bowl?.wkts} wkts · Eco {s.data.bowl?.eco}</div>
               </div>
             ) : null)}
@@ -443,11 +444,11 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
       <div style={{ padding:"14px 20px" }}>
         {edge !== null && Math.abs(edge) >= 5 ? (
           <div style={{ fontSize:13, fontWeight:600, color:edge>0?C.green:C.red, padding:"10px 14px", background:edge>0?"rgba(46,204,138,0.06)":"rgba(239,79,106,0.06)", borderRadius:10, border:"1px solid "+(edge>0?"rgba(46,204,138,0.2)":"rgba(239,79,106,0.2)") }}>
-            {edge>0?"🎯 AI sees +"+edge+"% edge over market":"⚠️ Market "+Math.abs(edge)+"% more confident than AI"}
+            {edge>0?"Our estimate is "+edge+" points higher than what bettors are paying":"Bettors are paying "+Math.abs(edge)+" points more than our estimate"}
           </div>
         ) : (
           <div style={{ fontSize:12, color:C.t3, padding:"10px 14px", background:"rgba(255,255,255,0.02)", borderRadius:10, border:"1px solid "+C.border }}>
-            {aiPct>=65?"✅ AI has high conviction":aiPct>=45?"🔍 Moderate — worth researching":"⚠️ Low conviction — uncertain"}
+            {aiPct>=65?"High confidence in this number":aiPct>=45?"Moderate confidence - worth a closer look":"Genuinely uncertain - a close call"}
           </div>
         )}
       </div>
@@ -785,7 +786,6 @@ function ScoresPageContent() {
   const edgeColor = conv.color;
   const convLabel = conv.label;
   const convBg    = conv.bg;
-  const betAmt    = conv.style === 'high' ? '$75 - $200' : conv.style === 'med' ? '$25 - $75' : '$10 - $25';
 
   const eventTitle = (() => {
     if (marketTitle) return marketTitle;
@@ -845,28 +845,6 @@ function ScoresPageContent() {
     </div>
   );
 
-  const activeSources = [
-    { id:'reuters',    name:'Reuters',         sig:'GDP contraction articles up 40%', type:'strong' as const, contrib:'+22%', contribColor:C.green,  bg:'rgba(77,157,224,0.12)' },
-    { id:'bloomberg',  name:'Bloomberg',       sig:'Cautiously optimistic',            type:'strong' as const, contrib:'+15%', contribColor:C.green,  bg:'rgba(77,157,224,0.12)' },
-    { id:'ft',         name:'Financial Times', sig:'Analysis points to uncertainty',   type:'mixed'  as const, contrib:'+11%', contribColor:C.amber,  bg:'rgba(77,157,224,0.12)' },
-    { id:'reddit',     name:'Reddit',          sig:'r/economics strong consensus',     type:'strong' as const, contrib:'+18%', contribColor:C.green,  bg:'rgba(124,111,247,0.12)' },
-    { id:'twitter',    name:'Twitter/X',       sig:'Noisy political commentary',       type:'contrary' as const, contrib:'-3%', contribColor:C.red,  bg:'rgba(239,79,106,0.12)' },
-    { id:'polymarket', name:'Polymarket',      sig:'95% consensus - mostly priced in', type:'priced' as const, contrib:'+12%', contribColor:C.blue,  bg:'rgba(46,204,138,0.12)' },
-    { id:'kalshi',     name:'Kalshi',          sig:'Confirms Polymarket direction',    type:'priced' as const, contrib:'+8%',  contribColor:C.blue,  bg:'rgba(46,204,138,0.12)' },
-    { id:'metaculus',  name:'Metaculus',       sig:'Community forecasters lean pos',   type:'mixed'  as const, contrib:'+6%',  contribColor:C.amber, bg:'rgba(245,166,35,0.12)' },
-  ];
-
-  const mktSources = [
-    { id:'wsj',       name:'Wall Street Journal', desc:'US finance and markets',      color:'rgba(77,157,224,0.12)' },
-    { id:'economist', name:'The Economist',       desc:'Long-form global analysis',   color:'rgba(77,157,224,0.12)' },
-    { id:'politico',  name:'Politico',            desc:'Policy developments',         color:'rgba(77,157,224,0.12)' },
-    { id:'nyt',       name:'NY Times',            desc:'US news and analysis',        color:'rgba(77,157,224,0.12)' },
-    { id:'linkedin',  name:'LinkedIn',            desc:'Professional opinion',        color:'rgba(124,111,247,0.12)' },
-    { id:'substack',  name:'Substack',            desc:'Analyst newsletters',         color:'rgba(124,111,247,0.12)' },
-    { id:'manifold',  name:'Manifold Markets',    desc:'Community markets',           color:'rgba(46,204,138,0.12)' },
-    { id:'gjopen',    name:'Good Judgment Open',  desc:'Superforecasters',            color:'rgba(245,166,35,0.12)' },
-  ];
-
   const aiPctForDisplay = mainAI || 0;
   const mktPctForDisplay = mainOdds || 0;
 
@@ -917,9 +895,9 @@ function ScoresPageContent() {
           <div style={{ display:'flex', alignItems:'center', gap:6, background:C.bg3, border:'1px solid '+C.border2, borderRadius:8, padding:'4px 10px' }}>
             <span style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:C.purpleL }}>{aiPctForDisplay}%</span>
             <div style={{ width:1, height:12, background:C.border2 }}></div>
-            <span style={{ fontSize:10, fontWeight:700, color:C.amber }}>{hasLiveMarket ? (edgeVal > 0 ? '+' : '') + edgeVal.toFixed(0) + '% edge' : aiPctForDisplay + '% confidence'}</span>
+            <span style={{ fontSize:10, fontWeight:700, color:C.amber }}>{hasLiveMarket ? (edgeVal > 0 ? '+' : '') + edgeVal.toFixed(0) + ' pts vs bettors' : 'our estimate'}</span>
           </div>
-          <button onClick={() => goFrame('sources')} style={{ padding:'4px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', background:C.purple, color:'#fff', border:'none' }}>Tune sources</button>
+          <button onClick={() => goFrame('signals')} style={{ padding:'4px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', background:C.purple, color:'#fff', border:'none' }}>See the sources</button>
           <button onClick={runAnalysis} style={{ padding:'4px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', border:'1px solid '+C.border2, background:'none', color:C.t2 }}>Re-analyze</button>
           <button onClick={() => router.push('/journal')} style={{ padding:'4px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', border:'1px solid '+C.border2, background:'none', color:C.t2 }}>Journal</button>
           {!isSignedIn && (
@@ -938,19 +916,18 @@ function ScoresPageContent() {
         <div style={{ borderRight:'1px solid '+C.border, background:C.bg1, display:'flex', flexDirection:'column', overflowY:'auto', padding:'12px 8px' }}>
           <div style={{ marginBottom:20 }}>
             <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.8px', color:C.t4, padding:'0 8px', marginBottom:6 }}>Analysis</div>
-            {navItem('verdict',  '*', 'Verdict',         aiPctForDisplay+'% - +'+(edgeVal.toFixed(0))+'% edge', 'rgba(124,111,247,0.12)')}
-            {navItem('signals',  '~', 'Signals',         'News - Social - Market', 'rgba(77,157,224,0.12)')}
-            {navItem('sources',  '=', 'Sources',         srcCount+' active', 'rgba(46,204,138,0.12)', srcCount)}
+            {navItem('verdict',  '*', 'Answer',          'The number, in plain English', 'rgba(124,111,247,0.12)')}
+            {navItem('signals',  '~', 'How it was built', 'Every source, shown openly', 'rgba(77,157,224,0.12)')}
           </div>
           <div style={{ height:1, background:C.border, margin:'0 4px 12px' }}></div>
           <div style={{ marginBottom:20 }}>
             <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.8px', color:C.t4, padding:'0 8px', marginBottom:6 }}>Explore</div>
-            {navItem('markets',  '^', 'Related markets',  related.length > 0 ? related.length+' found' : '5 related found', 'rgba(245,166,35,0.12)')}
+            {navItem('markets',  '^', 'Related questions', related.length > 0 ? related.length+' found' : 'Find similar', 'rgba(245,166,35,0.12)')}
           </div>
           <div style={{ height:1, background:C.border, margin:'0 4px 12px' }}></div>
           <div>
             <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.8px', color:C.t4, padding:'0 8px', marginBottom:6 }}>Action</div>
-            {navItem('trade',    '$', 'Trade', 'Sign in to place bet', 'rgba(239,79,106,0.12)')}
+            {navItem('trade',    '$', 'Trade', 'Compare with real bettors', 'rgba(239,79,106,0.12)')}
           </div>
           <div style={{ marginTop:'auto', padding:'12px 8px' }}>
             <div style={{ fontSize:9, color:C.t4, lineHeight:1.6, padding:8, background:C.bg2, border:'1px solid '+C.border, borderRadius:8 }}>
@@ -1022,7 +999,7 @@ function ScoresPageContent() {
                 ) : (
                 <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                   <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:16 }}>
-                    <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:8 }}>Market vs AI</div>
+                    <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:8 }}>Bettors vs PlayPicks</div>
                     <div style={{ background:'rgba(255,255,255,0.03)', borderRadius:9, overflow:'hidden', display:'grid', gridTemplateColumns:'1fr 40px 1fr', marginBottom:10 }}>
                       <div style={{ padding:'12px 8px', textAlign:'center' }}>
                         <div style={{ fontSize:8, textTransform:'uppercase', letterSpacing:'0.4px', color:C.t3, marginBottom:4 }}>Bettors</div>
@@ -1034,7 +1011,7 @@ function ScoresPageContent() {
                         <div style={{ fontSize:9, fontWeight:700, padding:'2px 6px', borderRadius:6, background:C.amberBg, color:C.amber }}>{hasLiveMarket && edgeVal !== 0 ? (edgeVal > 0 ? '+' : '')+edgeVal.toFixed(0)+'%' : '—'}</div>
                       </div>
                       <div style={{ padding:'12px 8px', textAlign:'center', background:'rgba(77,157,224,0.07)', borderRadius:'0 9px 9px 0' }}>
-                        <div style={{ fontSize:8, textTransform:'uppercase', letterSpacing:'0.4px', color:C.blue, marginBottom:4 }}>AI thinks</div>
+                        <div style={{ fontSize:8, textTransform:'uppercase', letterSpacing:'0.4px', color:C.blue, marginBottom:4 }}>Our estimate</div>
                         <div style={{ fontSize:28, fontWeight:700, letterSpacing:'-1.5px', fontFamily:'monospace', lineHeight:1, color:C.blue }}>{aiPctForDisplay}%</div>
                         <div style={{ fontSize:8, color:C.blue, marginTop:2 }}>confidence</div>
                       </div>
@@ -1042,17 +1019,17 @@ function ScoresPageContent() {
                     <span style={{ display:'inline-flex', padding:'3px 9px', borderRadius:20, fontSize:10, fontWeight:700, background:convBg, color:edgeColor, border:'1px solid '+edgeColor+'33' }}>{convLabel}</span>
                     <div style={{ fontSize:10, color:C.t2, lineHeight:1.5, marginTop:8 }}>
                       {hasLiveMarket && mktPctForDisplay > 0
-                        ? 'AI has a slight edge over bettors. Keep position modest.'
-                        : 'No market data. AI confidence from news, forecasters and real-time signals.'}
+                        ? 'Our number and what bettors are paying are close on this question.'
+                        : 'No live betting market found - this estimate comes from news and forecasters.'}
                     </div>
                   </div>
                   <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:14 }}>
-                    <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:8 }}>Conviction score</div>
+                    <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:8 }}>How solid is this number?</div>
                     <div style={{ height:3, background:C.bg4, borderRadius:2, overflow:'hidden', marginBottom:8 }}>
                       <div style={{ height:'100%', borderRadius:2, background:'linear-gradient(90deg,'+C.red+','+C.amber+','+C.green+')', width:Math.min(100,Math.max(0,aiPctForDisplay))+'%', transition:'width .5s' }} />
                     </div>
                     <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:5, marginBottom:8 }}>
-                      {[{v: hasLiveMarket && mktPctForDisplay > 0 ? mktPctForDisplay+'%' : '—', l:'Market',c:C.t2},{v:aiPctForDisplay+'%',l:'AI',c:C.purpleL},{v: hasLiveMarket && edgeVal !== 0 ? (edgeVal>0?'+':'')+edgeVal.toFixed(0)+'%' : '—',l:'Edge',c:edgeColor}].map(x => (
+                      {[{v: hasLiveMarket && mktPctForDisplay > 0 ? mktPctForDisplay+'%' : '—', l:'Market',c:C.t2},{v:aiPctForDisplay+'%',l:'AI',c:C.purpleL},{v: hasLiveMarket && edgeVal !== 0 ? (edgeVal>0?'+':'')+edgeVal.toFixed(0)+'%' : '—',l:'Gap',c:edgeColor}].map(x => (
                         <div key={x.l} style={{ background:'rgba(255,255,255,0.03)', borderRadius:7, padding:'8px 5px', textAlign:'center' }}>
                           <div style={{ fontSize:18, fontWeight:700, fontFamily:'monospace', letterSpacing:'-0.5px', color:x.c }}>{x.v}</div>
                           <div style={{ fontSize:8, color:C.t3, textTransform:'uppercase', letterSpacing:'0.3px', marginTop:2 }}>{x.l}</div>
@@ -1061,8 +1038,8 @@ function ScoresPageContent() {
                     </div>
                     <div style={{ fontSize:10, color:C.t2, lineHeight:1.5, padding:'7px 9px', background:'rgba(255,255,255,0.025)', borderRadius:7 }}>
                       {hasLiveMarket && mktPctForDisplay > 0
-                        ? 'Small edge - keep position modest. Only bet with personal conviction.'
-                        : 'No market data available. AI confidence based on news and cricket stats only.'}
+                        ? 'The AI and the live market mostly agree here - the gap is small.'
+                        : 'No live market found for this question - the number comes from model and news sources only.'}
                     </div>
                   </div>
                   {tradeData ? (
@@ -1092,163 +1069,45 @@ function ScoresPageContent() {
 
             {frame === 'signals' && (
               <div>
-                <div style={{ fontSize:18, fontWeight:700, letterSpacing:'-0.4px', marginBottom:4 }}>Signal breakdown</div>
-                <div style={{ fontSize:13, color:C.t2, marginBottom:22, lineHeight:1.5 }}>What each source category is telling the AI and how much weight it carries.</div>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:20 }}>
-                  {[
-                    { cat:'News', color:C.blue, type:'strong' as const, weight:weights.news, desc:'Reuters, Bloomberg, FT all showing strong signals. Narrative gaining traction in financial press.', bar:73, contrib:Math.round(aiPctForDisplay*(weights.news/100)) },
-                    { cat:'Social', color:C.purpleL, type:'mixed' as const, weight:weights.social, desc:'Reddit broadly agrees. Twitter is noisy and contrary - dragging the social average down slightly.', bar:55, contrib:Math.round(aiPctForDisplay*(weights.social/100)) },
-                    { cat:'Market', color:C.green, type:'priced' as const, weight:weights.technical, desc:'Polymarket and Kalshi both at 95%+ already. Market has priced most of this in - limits edge.', bar:90, contrib:Math.round(aiPctForDisplay*(weights.technical/100)) },
-                  ].map(s => (
-                    <div key={s.cat} style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:18 }}>
-                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-                        <span style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.5px', color:s.color }}>{s.cat}</span>
-                        <SigPill type={s.type} />
-                      </div>
-                      <div style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', marginBottom:4, color:C.t1 }}>{s.weight}% weight</div>
-                      <div style={{ fontSize:11, color:C.t2, lineHeight:1.5, marginBottom:10 }}>{s.desc}</div>
-                      <div style={{ height:5, background:C.bg4, borderRadius:3, overflow:'hidden', marginBottom:6 }}>
-                        <div style={{ height:'100%', borderRadius:3, background:s.color, width:s.bar+'%' }} />
-                      </div>
-                      <div style={{ fontSize:11, fontWeight:600, color:s.color }}>Contributing +{s.contrib}% to AI confidence</div>
+                <div style={{ fontSize:18, fontWeight:700, letterSpacing:'-0.4px', marginBottom:4 }}>How this number was built</div>
+                <div style={{ fontSize:13, color:C.t2, marginBottom:22, lineHeight:1.5 }}>The number on the Answer tab is blended from the sources below. You can change how much each one counts in the "Your prediction" section on the Answer tab.</div>
+                {components.length > 0 ? (
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:14, marginBottom:20 }}>
+                    {components.map(comp => {
+                      const meta: Record<string,{color:string; desc:string}> = {
+                        market:  { color:C.green,   desc:'What people trading real money currently pay for this outcome. Updates every minute.' },
+                        model:   { color:C.blue,    desc:'Calculated from relative team strength data, before looking at the market.' },
+                        experts: { color:C.purpleL, desc:'The average of published forecasts on this kind of question.' },
+                      };
+                      const m = meta[comp.key] || { color:C.t2, desc:'Additional source used for this question.' };
+                      return (
+                        <div key={comp.key} style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:18 }}>
+                          <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.5px', color:m.color, marginBottom:10 }}>{comp.label}</div>
+                          <div style={{ fontSize:24, fontWeight:700, fontFamily:'monospace', marginBottom:8, color:C.t1 }}>{comp.prob}%</div>
+                          <div style={{ height:5, background:C.bg4, borderRadius:3, overflow:'hidden', marginBottom:10 }}>
+                            <div style={{ height:'100%', borderRadius:3, background:m.color, width:Math.min(100,Math.max(0,comp.prob))+'%' }} />
+                          </div>
+                          <div style={{ fontSize:11, color:C.t2, lineHeight:1.5 }}>{m.desc}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:24, marginBottom:20 }}>
+                    <div style={{ fontSize:14, fontWeight:600, color:C.t1, marginBottom:8 }}>No source data found for this question yet</div>
+                    <div style={{ fontSize:12, color:C.t2, lineHeight:1.6 }}>
+                      We could not find a live market price, model data, or expert forecasts for this exact question,
+                      so no blended number is available - we will not invent one. Try a head-to-head question
+                      (for example "Chiefs vs Bills") or paste a Polymarket link to compare against a live market.
                     </div>
-                  ))}
-                </div>
-                <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:18 }}>
-                  <div style={{ fontSize:13, fontWeight:600, marginBottom:14 }}>How AI weights these signals</div>
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
-                    {[
-                      { v:weights.news+'%', c:C.blue, l:'News weight', d:'Strong positive signal across all major outlets this week' },
-                      { v:weights.social+'%', c:C.purpleL, l:'Social weight', d:'Mixed - Reddit positive, Twitter contrary' },
-                      { v:weights.technical+'%', c:C.green, l:'Market weight', d:'Already priced in at '+mktPctForDisplay+'% - edge is minimal here' },
-                    ].map(x => (
-                      <div key={x.l} style={{ textAlign:'center', padding:14, background:'rgba(255,255,255,0.025)', borderRadius:10 }}>
-                        <div style={{ fontSize:26, fontWeight:700, fontFamily:'monospace', color:x.c, marginBottom:4 }}>{x.v}</div>
-                        <div style={{ fontSize:9, color:C.t3, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:6 }}>{x.l}</div>
-                        <div style={{ fontSize:10, color:C.t2, lineHeight:1.4 }}>{x.d}</div>
-                      </div>
-                    ))}
                   </div>
-                </div>
-              </div>
-            )}
-
-            {frame === 'sources' && (
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 260px', gap:16 }}>
-                <div>
-                  <div style={{ fontSize:18, fontWeight:700, letterSpacing:'-0.4px', marginBottom:4 }}>Active sources</div>
-                  <div style={{ fontSize:13, color:C.t2, marginBottom:16, lineHeight:1.5 }}>These sources are feeding your current analysis. Remove any or add from the marketplace below.</div>
-                  {addFormOpen && (
-                    <div style={{ background:C.bg2, border:'1px solid '+C.purple, borderRadius:12, padding:14, marginBottom:8 }}>
-                      <div style={{ fontSize:12, fontWeight:600, marginBottom:3 }}>Add a custom source</div>
-                      <div style={{ fontSize:10, color:C.t2, marginBottom:10, lineHeight:1.5 }}>Paste any news URL, publication, subreddit, or RSS feed. AI will scan the signal and add it.</div>
-                      <input value={customUrl} onChange={e => setCustomUrl(e.target.value)} placeholder="https://example.com or publication name..."
-                        style={{ width:'100%', background:C.bg3, border:'1px solid '+C.border2, borderRadius:7, padding:'8px 10px', color:C.t1, fontSize:11, outline:'none', fontFamily:'inherit', marginBottom:7, boxSizing:'border-box' as const }} />
-                      <div style={{ display:'flex', gap:6 }}>
-                        <button onClick={() => { if(customUrl){ setSrcCount(p=>p+1); showToast('Custom source added - scanning signal...'); setAddForm(false); setCustomUrl(''); }}} style={{ flex:1, padding:8, background:C.purple, color:'#fff', border:'none', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer' }}>Add to analysis</button>
-                        <button onClick={() => setAddForm(false)} style={{ padding:'8px 12px', background:C.bg4, color:C.t2, border:'none', borderRadius:7, fontSize:11, cursor:'pointer' }}>Cancel</button>
-                      </div>
-                    </div>
-                  )}
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:24 }}>
-                    {activeSources.map(s => (
-                      <div key={s.id} style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:12, padding:12 }}>
-                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
-                          <SourceAvatar name={s.name} category={s.type==='contrary'?'contrary':s.id==='reddit'||s.id==='twitter'?'social':s.id==='polymarket'||s.id==='kalshi'?'market':s.id==='metaculus'?'community':'news'} />
-                          <button style={{ width:18, height:18, borderRadius:'50%', background:C.bg4, border:'none', cursor:'pointer', color:C.t3, fontSize:10, display:'flex', alignItems:'center', justifyContent:'center' }}
-                            onClick={() => { setSrcCount(p => p-1); showToast(s.name+' removed from analysis'); }}>x</button>
-                        </div>
-                        <div style={{ fontSize:11, fontWeight:600, marginBottom:2 }}>{s.name}</div>
-                        <div style={{ fontSize:9, color:C.t3, lineHeight:1.35, marginBottom:6 }}>{s.sig}</div>
-                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                          <SigPill type={s.type} />
-                          <span style={{ fontSize:10, fontWeight:700, fontFamily:'monospace', color:s.contribColor }}>{s.contrib}</span>
-                        </div>
-                      </div>
-                    ))}
-                    {!addFormOpen && (
-                      <div onClick={() => setAddForm(true)} style={{ background:C.bg2, border:'1px dashed '+C.border2, borderRadius:12, padding:12, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:6, minHeight:90 }}>
-                        <div style={{ fontSize:18, color:C.t3 }}>+</div>
-                        <div style={{ fontSize:10, color:C.t3, textAlign:'center' }}>Add custom source</div>
-                      </div>
-                    )}
+                )}
+                {realSources.length > 0 && (
+                  <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:18 }}>
+                    <div style={{ fontSize:13, fontWeight:600, marginBottom:4 }}>Supporting sources</div>
+                    <div style={{ fontSize:12, color:C.t2, lineHeight:1.6 }}>{realSources.length} source{realSources.length===1?'':'s'} informed the written analysis. They are listed on the Answer tab under the reasons.</div>
                   </div>
-                  <div style={{ marginTop:4 }}>
-                    <div style={{ fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:14, display:'flex', alignItems:'center', gap:8 }}>
-                      Source marketplace
-                      <span style={{ fontWeight:400, textTransform:'none', letterSpacing:0, color:C.t4, fontSize:10 }}>Browse and add intelligence feeds</span>
-                    </div>
-                    <div style={{ background:C.bg2, border:'1px solid '+C.border2, borderRadius:9, padding:'7px 12px', display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.t3} strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                      <input placeholder="Search sources..." style={{ flex:1, background:'none', border:'none', outline:'none', fontSize:12, color:C.t1, fontFamily:'inherit' }} />
-                    </div>
-                    {[
-                      { label:'News', color:C.blue, desc:'Financial & political press' },
-                      { label:'Social', color:C.purple, desc:'Community discussion' },
-                      { label:'Prediction markets', color:C.green, desc:'Live odds and contracts' },
-                    ].map((cat,ci) => (
-                      <div key={cat.label} style={{ marginBottom:20 }}>
-                        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
-                          <div style={{ width:6, height:6, borderRadius:'50%', background:cat.color }}></div>
-                          <span style={{ fontSize:11, fontWeight:600, color:cat.color }}>{cat.label}</span>
-                          <span style={{ fontSize:10, color:C.t3 }}>{cat.desc}</span>
-                        </div>
-                        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
-                          {mktSources.slice(ci*2, ci*2+2).concat(ci===0?mktSources.slice(2,4):[]).slice(0,2).map(s => (
-                            <div key={s.id} style={{ background:C.bg2, border:'1px solid '+(mktAdded[s.id]?'rgba(46,204,138,0.2)':C.border), borderRadius:10, padding:'10px 12px', display:'flex', alignItems:'center', gap:10, transition:'all .15s' }}>
-                              <SourceAvatar name={s.name} category={(s as any).category||'news'} />
-                              <div style={{ flex:1, minWidth:0 }}>
-                                <div style={{ fontSize:11, fontWeight:600 }}>{s.name}</div>
-                                <div style={{ fontSize:9, color:C.t3, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.desc}</div>
-                              </div>
-                              <button onClick={() => {
-                                if (mktAdded[s.id]) return;
-                                setMktAdding(p => ({...p,[s.id]:true}));
-                                setTimeout(() => { setMktAdded(p => ({...p,[s.id]:true})); setMktAdding(p => ({...p,[s.id]:false})); setSrcCount(p => p+1); showToast(s.name+' added - scanning signal...'); }, 700);
-                              }} style={{ padding:'3px 9px', borderRadius:6, fontSize:9, fontWeight:700, cursor:mktAdded[s.id]?'default':'pointer', border:'1px solid '+(mktAdded[s.id]?'rgba(46,204,138,0.2)':C.border2), background:mktAdded[s.id]?C.greenBg:(mktAdding[s.id]?C.bg3:C.bg3), color:mktAdded[s.id]?C.green:C.t2, flexShrink:0, transition:'all .15s' }}>
-                                {mktAdded[s.id] ? 'Added' : mktAdding[s.id] ? '...' : '+ Add'}
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                  <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:16 }}>
-                    <div style={{ fontSize:12, fontWeight:600, marginBottom:3 }}>Source weights</div>
-                    <div style={{ fontSize:10, color:C.t2, marginBottom:14, lineHeight:1.5 }}>Adjust how much each category influences the verdict. Must total 100%.</div>
-                    {[{key:'news',label:'News',color:C.blue,desc:'Mainstream financial press'},{key:'social',label:'Social',color:C.purple,desc:'Reddit, Twitter, community'},{key:'market',label:'Market',color:C.green,desc:'Polymarket and Kalshi odds'}].map(w => (
-                      <div key={w.key} style={{ marginBottom:12 }}>
-                        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
-                          <span style={{ fontSize:11, fontWeight:500, display:'flex', alignItems:'center', gap:5 }}>
-                            <div style={{ width:5, height:5, borderRadius:'50%', background:w.color }}></div>
-                            {w.label}
-                          </span>
-                          <span style={{ fontSize:11, fontWeight:700, fontFamily:'monospace', color:w.color }}>{weights[w.key as keyof typeof weights]}%</span>
-                        </div>
-                        <div style={{ fontSize:9, color:C.t3, marginBottom:4 }}>{w.desc}</div>
-                        <input type="range" min="0" max="100" step="5" value={weights[w.key as keyof typeof weights]} onChange={e => handleWeight(w.key, parseInt(e.target.value))} style={{ width:'100%', accentColor:w.color }} />
-                      </div>
-                    ))}
-                    <span style={{ fontSize:9, fontWeight:600, padding:'3px 8px', borderRadius:5, display:'inline-block', background:weights.news+weights.social+weights.technical===100?C.greenBg:C.amberBg, color:weights.news+weights.social+weights.technical===100?C.green:C.amber }}>
-                      Total: {weights.news+weights.social+weights.technical}% {weights.news+weights.social+weights.technical===100?'- balanced':'- adjust to 100%'}
-                    </span>
-                    <button onClick={() => showToast('Weights applied - re-analyzing...')} style={{ width:'100%', marginTop:12, padding:9, background:C.purple, color:'#fff', border:'none', borderRadius:8, fontSize:11, fontWeight:600, cursor:'pointer' }}>Apply and re-analyze</button>
-                  </div>
-                  <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:14 }}>
-                    <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:8 }}>Live verdict preview</div>
-                    <div style={{ fontSize:36, fontWeight:700, fontFamily:'monospace', letterSpacing:'-2px', color:C.purpleL, marginBottom:4 }}>{aiPctForDisplay}%</div>
-                    <div style={{ fontSize:10, color:C.t2, marginBottom:10 }}>AI confidence</div>
-                    {[{k:'Market',v:mktPctForDisplay+'%',c:C.t2},{k:'AI thinks',v:aiPctForDisplay+'%',c:C.purpleL},{k:'Edge',v:(edgeVal>0?'+':'')+edgeVal.toFixed(0)+'%',c:edgeColor},{k:'Sources',v:String(srcCount),c:C.t1}].map(r => (
-                      <div key={r.k} style={{ display:'flex', justifyContent:'space-between', fontSize:10, padding:'4px 0', borderBottom:'1px solid '+C.border }}>
-                        <span style={{ color:C.t2 }}>{r.k}</span>
-                        <span style={{ fontWeight:600, fontFamily:'monospace', color:r.c }}>{r.v}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -1286,16 +1145,16 @@ function ScoresPageContent() {
               <div style={{ display:'grid', gridTemplateColumns:'1fr 320px', gap:16 }}>
                 <div>
                   <div style={{ textAlign:'center', padding:32, background:C.bg2, border:'1px solid '+C.border, borderRadius:16, marginBottom:14 }}>
-                    <div style={{ fontSize:10, color:C.t3, textTransform:'uppercase', letterSpacing:'0.7px', marginBottom:6 }}>You have a</div>
-                    <div style={{ fontSize:48, fontWeight:700, fontFamily:'monospace', letterSpacing:'-2px', color:edgeColor, marginBottom:6 }}>{hasLiveMarket ? (edgeVal > 0 ? '+' : '') + edgeVal.toFixed(0) + '% edge' : aiPctForDisplay + '% confidence'}</div>
-                    <div style={{ fontSize:13, color:C.t2, marginBottom:14 }}>{hasLiveMarket ? 'AI sees a ' + (edgeVal >= 5 ? 'strong' : 'small') + ' opportunity over the market consensus' : 'AI confidence score for this question. Paste a Polymarket URL to see real edge.'}</div>
+                    <div style={{ fontSize:10, color:C.t3, textTransform:'uppercase', letterSpacing:'0.7px', marginBottom:6 }}>AI vs market</div>
+                    <div style={{ fontSize:48, fontWeight:700, fontFamily:'monospace', letterSpacing:'-2px', color:edgeColor, marginBottom:6 }}>{hasLiveMarket ? (edgeVal > 0 ? '+' : '') + edgeVal.toFixed(0) + '% vs market' : aiPctForDisplay + '% estimate'}</div>
+                    <div style={{ fontSize:13, color:C.t2, marginBottom:14 }}>{hasLiveMarket ? 'How far the AI number sits from the live market price' : 'AI estimate for this question. Paste a Polymarket link to compare it against a live market.'}</div>
                     <span style={{ display:'inline-flex', padding:'3px 9px', borderRadius:20, fontSize:10, fontWeight:700, background:convBg, color:edgeColor, border:'1px solid '+edgeColor+'33' }}>{convLabel}</span>
                   </div>
                   <div style={{ fontSize:13, fontWeight:600, marginBottom:16, color:C.t2 }}>New to Polymarket?</div>
                   {[
                     { n:1, t:'Create a Polymarket account', d:'Go to polymarket.com - sign up with just your email. Takes 2 minutes. No crypto needed.', link:'Go to Polymarket' },
                     { n:2, t:'Deposit USDC (min $5)', d:'Use a credit card or crypto wallet. Funds go into your Polymarket balance instantly.' },
-                    { n:3, t:'Place your bet', d:'Search for your market on Polymarket. Every trade placed through PlayPicks is logged in your journal with the AI reasoning.' },
+                    { n:3, t:'Trade if you choose', d:'Search for your market on Polymarket. Every trade placed through PlayPicks is logged in your journal with the AI reasoning.' },
                   ].map(s => (
                     <div key={s.n} style={{ display:'flex', gap:12, marginBottom:16, alignItems:'flex-start' }}>
                       <div style={{ width:26, height:26, borderRadius:'50%', background:C.purpleBg, color:C.purpleL, fontSize:11, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2 }}>{s.n}</div>
@@ -1311,7 +1170,7 @@ function ScoresPageContent() {
                   <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:16, padding:20, textAlign:'center' }}>
                     <div style={{ fontSize:13, fontWeight:600, marginBottom:4 }}>Sign in with your email</div>
                     <div style={{ fontSize:11, color:C.t3, marginBottom:14 }}>No wallet or crypto experience needed. Magic Link - just your email.</div>
-                    <div style={{ fontSize:13, fontWeight:700, color:C.amber, marginBottom:14 }}>{hasLiveMarket && edgeVal > 0 ? 'Suggested: ' + betAmt : 'Paste a Polymarket URL to calculate real edge'}</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:C.amber, marginBottom:14 }}>{hasLiveMarket ? 'Decide your own amount - PlayPicks does not size bets' : 'Paste a Polymarket link to compare with a live market'}</div>
                     <button style={{ width:'100%', padding:12, background:C.purple, color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:8 }} onClick={() => window.open(isPolymarketUrl ? event : 'https://polymarket.com', '_blank')}>Trade on Polymarket</button>
                     <a href="https://polymarket.com" target="_blank" rel="noopener noreferrer" style={{ fontSize:11, color:C.t3, textDecoration:"none", display:"block", textAlign:"center", cursor:"pointer" }}>Or trade directly on Polymarket</a>
                     <div style={{ fontSize:9, color:C.t4, marginTop:6 }}>Powered by Polymarket. Not financial advice.</div>
