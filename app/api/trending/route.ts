@@ -4,12 +4,12 @@ export const runtime = 'nodejs';
 export const preferredRegion = ['fra1', 'lhr1', 'sin1']; // Non-US regions to avoid Polymarket geoblock
 
 const CAT_KEYWORDS: Record<string, string[]> = {
-  sports:     ['nba','nfl','ipl','cricket','basketball','football','soccer','tennis','golf','champion','playoff','league','world cup','match','vs','celtics','lakers','warriors','thunder','nuggets','heat','knicks','bucks','suns','mavs','mavericks','grizzlies','pacers','cavaliers','raptors','jazz','nets','bulls','hornets','wizards','pistons','timberwolves','clippers','spurs','hawks','pelicans','rockets','kings','blazers','magic','76ers','sixers','f1','formula','drivers','ufc','fifa','nhl','mlb','premier league','champions league','europa','masters','pga','open championship','wimbledon','us open','french open','olympics'],
+  sports:     ['nba','nfl','ipl','cricket','basketball','football','soccer','tennis','golf','champion','playoff','league','world cup','match','vs','celtics','lakers','warriors','thunder','nuggets','heat','knicks','bucks','suns','mavs','mavericks','grizzlies','pacers','cavaliers','raptors','jazz','nets','bulls','hornets','wizards','pistons','timberwolves','clippers','spurs','hawks','pelicans','rockets','kings','blazers','magic','76ers','sixers','f1','formula','drivers','ufc','fifa','nhl','mlb','premier league','champions league','europa','masters','pga','open championship','wimbledon','us open','french open','olympics','ballon','grand prix','la liga','serie a','bundesliga','ligue 1','mls','wnba','t20','test match'],
   crypto:     ['bitcoin','btc','eth','ethereum','crypto','blockchain','solana','coin','defi','stablecoin','usdc','xrp','bnb','dogecoin'],
-  politics:   ['trump','election','president','congress','senate','vote','tariff','democrat','republican','supreme court','governor','ballot','midterm','nominee','political'],
+  politics:   ['trump','election','president','congress','senate','vote','tariff','democrat','republican','supreme court','governor','ballot','midterm','nominee','political','prime minister','minister','parliament','chancellor','coalition'],
   technology: ['ai','openai','gpt','model','artificial intelligence','microsoft','google','nvidia','anthropic','chatgpt','gemini','tech','software','startup'],
-  economics:  ['fed','federal reserve','rates','inflation','recession','gdp','unemployment','interest','economy','treasury','dollar','market cap','tariff'],
-  world:      ['ukraine','russia','iran','china','nato','war','ceasefire','israel','gaza','military','nuclear','taiwan','north korea','sanctions','geopolit'],
+  economics:  ['fed','federal reserve','rates','inflation','recession','gdp','unemployment','interest','economy','treasury','dollar','market cap','tariff','oil','crude','wti','opec','cpi','payrolls'],
+  world:      ['ukraine','russia','iran','china','nato','war','ceasefire','israel','gaza','military','nuclear','taiwan','north korea','sanctions','geopolit','strait','hormuz','ceasefire','un security'],
 };
 
 const CAT_EMOJI: Record<string, string> = {
@@ -27,9 +27,14 @@ function detectCat(title: string, apiCat?: string): string {
     if (c.includes('world') || c.includes('geopolit')) return 'world';
   }
   const t = title.toLowerCase();
+  // Whole-word matching so 'eth' cannot match 'Ethiopia' and 'ai' cannot match 'Strait'
+  const hasWord = (kw: string) => {
+    const esc = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp('(^|[^a-z0-9])' + esc + '([^a-z0-9]|$)').test(t);
+  };
   let best = 'other'; let bestScore = 0;
   for (const [cat, kws] of Object.entries(CAT_KEYWORDS)) {
-    const score = kws.filter(kw => t.includes(kw)).length;
+    const score = kws.filter(hasWord).length;
     if (score > bestScore) { bestScore = score; best = cat; }
   }
   return best;

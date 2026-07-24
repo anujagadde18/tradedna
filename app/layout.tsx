@@ -14,10 +14,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "PlayPicks AI — Prediction Market Analysis",
-  description: "Paste any prediction question. Get AI confidence scores from news, social, and market signals. Find your edge before you bet.",
+  description: "Ask any question. See one probability built from live market prices, statistical models, and expert forecasts - with every source shown.",
   openGraph: {
-    title: "PlayPicks AI — Find Your Edge in Prediction Markets",
-    description: "AI-powered analysis for Polymarket. Real signals from news, Metaculus forecasts, and live odds. Free to try.",
+    title: "PlayPicks AI — See Every Source Behind the Answer",
+    description: "Transparent probability analysis for any question. Live market prices, models, and expert forecasts - blended in the open. Free to try.",
     url: "https://tradedna.vercel.app",
     siteName: "PlayPicks AI",
     type: "website",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "PlayPicks AI",
-    description: "Find edges in prediction markets with AI signal analysis. Free to try.",
+    description: "Transparent probability analysis for any question. Every source shown. Free to try.",
     site: "@PlayPicksAI",
   },
 };
