@@ -297,6 +297,8 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
             ? Math.round(allRows.reduce((sum, r) => sum + r.prob * r.weight, 0) / totalWeight)
             : aiPct;
           const hasCustomizations = customSources.length > 0 || Object.keys(componentWeights).length > 0;
+          const contrib = (prob:number, weight:number) => totalWeight > 0 ? Math.round((prob - 50) * weight / totalWeight) : 0;
+          const addPreset = (label:string) => setCustomSources(list => [...list, { id: "custom-"+Date.now(), label, prob:50, weight:50 }]);
 
           return (
             <>
@@ -307,7 +309,12 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
                 <div key={row.id} style={{ marginBottom:12 }}>
                   <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:4 }}>
                     <span style={{ color:C.t1 }}>{row.label}</span>
-                    <span style={{ color:C.t3, fontFamily:"monospace" }}>{row.prob}%</span>
+                    <span style={{ display:"flex", gap:8 }}>
+                      <span style={{ color:C.t3, fontFamily:"monospace" }}>{row.prob}%</span>
+                      <span style={{ color: contrib(row.prob,row.weight)>=0 ? C.green : C.amber, fontFamily:"monospace", fontSize:11 }}>
+                        {contrib(row.prob,row.weight)>=0?"+":""}{contrib(row.prob,row.weight)}pt
+                      </span>
+                    </span>
                   </div>
                   <input type="range" min={0} max={100} value={row.weight}
                     onChange={e => setComponentWeights(w => ({ ...w, [row.id]: parseInt(e.target.value) }))}
@@ -321,6 +328,9 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
                     <input type="text" value={s.label} placeholder="What's your source? A person, article, gut feeling..."
                       onChange={e => setCustomSources(list => list.map(x => x.id===s.id ? {...x, label:e.target.value} : x))}
                       style={{ flex:1, fontSize:12, padding:"6px 8px", background:C.bg1, border:"1px solid "+C.border, borderRadius:6, color:C.t1 }} />
+                    <span style={{ color: contrib(s.prob,s.weight)>=0 ? C.green : C.amber, fontFamily:"monospace", fontSize:11, alignSelf:"center", whiteSpace:"nowrap" }}>
+                      {contrib(s.prob,s.weight)>=0?"+":""}{contrib(s.prob,s.weight)}pt
+                    </span>
                     <button onClick={() => setCustomSources(list => list.filter(x => x.id !== s.id))}
                       style={{ fontSize:12, color:C.t3, background:"none", border:"none", cursor:"pointer", padding:"0 6px" }}>remove</button>
                   </div>
@@ -339,10 +349,25 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
                 </div>
               ))}
 
-              <button onClick={() => setCustomSources(list => [...list, { id: "custom-"+Date.now(), label:"", prob:50, weight:50 }])}
-                style={{ fontSize:12, color:C.purpleL, background:C.purpleBg, border:"1px solid rgba(124,111,247,0.25)", borderRadius:8, padding:"7px 12px", cursor:"pointer", marginBottom:14 }}>
-                + Add your own source
-              </button>
+              <div style={{ fontSize:11, color:C.t3, marginBottom:8 }}>Add a source:</div>
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
+                <button onClick={() => addPreset("A news article I read: ")}
+                  style={{ fontSize:12, color:C.purpleL, background:C.purpleBg, border:"1px solid rgba(124,111,247,0.25)", borderRadius:8, padding:"7px 12px", cursor:"pointer" }}>
+                  News or article
+                </button>
+                <button onClick={() => addPreset("An expert forecaster: ")}
+                  style={{ fontSize:12, color:C.purpleL, background:C.purpleBg, border:"1px solid rgba(124,111,247,0.25)", borderRadius:8, padding:"7px 12px", cursor:"pointer" }}>
+                  Expert forecaster
+                </button>
+                <button onClick={() => addPreset("Someone I trust: ")}
+                  style={{ fontSize:12, color:C.purpleL, background:C.purpleBg, border:"1px solid rgba(124,111,247,0.25)", borderRadius:8, padding:"7px 12px", cursor:"pointer" }}>
+                  Someone I trust
+                </button>
+                <button onClick={() => addPreset("My own take: ")}
+                  style={{ fontSize:12, color:C.purpleL, background:C.purpleBg, border:"1px solid rgba(124,111,247,0.25)", borderRadius:8, padding:"7px 12px", cursor:"pointer" }}>
+                  My own take
+                </button>
+              </div>
 
               {hasCustomizations && (
                 <div style={{ padding:"12px 14px", background:"rgba(46,204,138,0.06)", border:"1px solid rgba(46,204,138,0.2)", borderRadius:10, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
