@@ -1,5 +1,6 @@
 'use client';
 /* PP-SCORES-PLAIN-V1 - honest sources + plain language */
+// PP-DATA-V1 - real data for any question: event search, multi-outcome support, no invented numbers
 import React from 'react';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -97,7 +98,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
   const [customSources, setCustomSources] = useState<{id:string; label:string; prob:number; weight:number}[]>([]);
 
   const isCategorical = mtype === "categorical";
-  const topOutcomes = outcomes?.slice(0, 5) || [];
+  const topOutcomes = outcomes?.slice(0, 8) || [];
   const matchup = question.match(/^(.+?)\s+vs\.?\s+(.+)$/i);
   const beatMatch = (rawEvent||question).match(/will\s+(.+?)\s+beat\s+(.+?)(?:\s+in|\?|$)/i);
   const team1 = matchup?.[1]?.trim() || beatMatch?.[1]?.trim() || "";
@@ -234,20 +235,28 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
         </div>
       )}
 
-      {/* CATEGORICAL (World Cup, French Open etc) */}
+      {/* CATEGORICAL - ranked outcomes, Robinhood-style: one big answer, detail below */}
       {isCategorical && topOutcomes.length > 0 && (
-        <div style={{ padding:"20px", borderBottom:"1px solid "+C.border }}>
-          <div style={{ fontSize:12, color:C.t3, marginBottom:12, fontWeight:600, textTransform:"uppercase", letterSpacing:"0.4px" }}>AI picks · market odds</div>
+        <div style={{ padding:"22px 20px", borderBottom:"1px solid "+C.border }}>
+          <div style={{ fontSize:10, fontWeight:700, color:C.t3, textTransform:"uppercase", letterSpacing:"0.6px", marginBottom:10 }}>Most likely right now</div>
+          <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:12, marginBottom:6 }}>
+            <div style={{ fontSize:24, fontWeight:800, color:C.t1, letterSpacing:"-0.6px", lineHeight:1.15 }}>{topOutcomes[0].name}</div>
+            <div style={{ fontSize:40, fontWeight:800, color:C.green, fontFamily:"monospace", lineHeight:1 }}>{topOutcomes[0].odds}%</div>
+          </div>
+          <div style={{ fontSize:12, color:C.t2, marginBottom:18 }}>
+            {topOutcomes[0].odds >= 60 ? "A clear favorite - people betting real money strongly agree." : topOutcomes[0].odds >= 35 ? "The front-runner, but this race is far from decided." : "A slight lead in a wide-open race - nobody really knows yet."}
+          </div>
           {topOutcomes.map((o: any, i: number) => (
-            <div key={i} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10, padding:"10px 12px", borderRadius:10, background:i===0?"rgba(46,204,138,0.06)":"transparent", border:i===0?"1px solid rgba(46,204,138,0.15)":"1px solid transparent" }}>
-              <div style={{ fontSize:13, fontWeight:i===0?700:500, color:i===0?C.green:C.t2, flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{o.name}</div>
-              <div style={{ width:80, height:6, borderRadius:3, background:"rgba(255,255,255,0.06)", overflow:"hidden" }}>
-                <div style={{ height:"100%", borderRadius:3, background:i===0?C.green:C.t4, width:Math.min(o.odds*2,100)+"%" }} />
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8, padding:"9px 12px", borderRadius:10, background:i===0?"rgba(46,204,138,0.06)":"rgba(255,255,255,0.02)", border:i===0?"1px solid rgba(46,204,138,0.18)":"1px solid transparent" }}>
+              <div style={{ fontSize:11, fontWeight:700, color:i===0?C.green:C.t4, fontFamily:"monospace", minWidth:16 }}>{i+1}</div>
+              <div style={{ fontSize:13, fontWeight:i===0?700:500, color:i===0?C.t1:C.t2, flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{o.name}</div>
+              <div style={{ width:90, height:5, borderRadius:3, background:"rgba(255,255,255,0.06)", overflow:"hidden" }}>
+                <div style={{ height:"100%", borderRadius:3, background:i===0?C.green:C.t4, width:Math.min(o.odds,100)+"%" }} />
               </div>
-              <div style={{ fontSize:14, fontWeight:700, color:i===0?C.green:C.t2, fontFamily:"monospace", minWidth:38, textAlign:"right" }}>{o.odds}%</div>
-              {i===0 && <div style={{ fontSize:10, padding:"2px 7px", borderRadius:6, background:"rgba(46,204,138,0.15)", color:C.green, fontWeight:700 }}>AI pick</div>}
+              <div style={{ fontSize:13, fontWeight:700, color:i===0?C.green:C.t2, fontFamily:"monospace", minWidth:40, textAlign:"right" }}>{o.odds}%</div>
             </div>
           ))}
+          <div style={{ fontSize:11, color:C.t3, marginTop:12 }}>Live prices from people betting real money on Polymarket - they update every minute.</div>
         </div>
       )}
 
@@ -572,6 +581,7 @@ function ScoresPageContent() {
   const [realSources, setRealSources] = useState<any[]>([]);
   const [components, setComponents] = useState<{key:string;label:string;prob:number}[]>([]);
   const [invalidQuestion, setInvalidQuestion] = useState<{reason:string;examples:string[]}|null>(null);
+  const [noRealData, setNoRealData]  = useState(false);
   const [odds, setOdds]             = useState<number|null>(null);
   const [marketTitle, setMarketTitle] = useState<string>('');
   const [mtype, setMtype]           = useState<'binary'|'categorical'>('binary');
@@ -607,6 +617,7 @@ function ScoresPageContent() {
     setBreakdown([]);
     setLimitReached(false);
     setInvalidQuestion(null);
+    setNoRealData(false);
     setFrame('verdict');
   }, [event]);
 
@@ -721,6 +732,23 @@ function ScoresPageContent() {
         return;
       }
       setInvalidQuestion(null);
+      setNoRealData(false);
+      if (data.mtype === 'categorical' && Array.isArray(data.outcomes) && data.outcomes.length > 1) {
+        setOutcomes(data.outcomes.map((o: any) => ({ name: o.name, odds: o.prob })));
+        setOdds(data.outcomes[0].prob);
+        if (data.title) setMarketTitle(data.title);
+        if (data.components && data.components.length > 0) setComponents(data.components);
+        if (data.sources && data.sources.length > 0) setRealSources(data.sources);
+        setIntel({ confidence: data.outcomes[0].prob, direction: 'YES', probabilityLabel: 'Most likely outcome', predictionStrength: 'Market', strengthScore: data.outcomes[0].prob, riskLevel: 'Medium', marketEdge: null, edgeContext: '', modelComponents: [], confidenceDrivers: { positive: [], negative: [] }, explanation: '' });
+        setMtype('categorical');
+        return;
+      }
+      if (data.noData) {
+        if (data.sources && data.sources.length > 0) setRealSources(data.sources);
+        setIntel(null);
+        setNoRealData(true);
+        return;
+      }
       if (data.confidence) {
         // Use raw confidence directly — intelligenceEngine flips NO verdicts
         const rawConf = Math.max(5, Math.min(95, data.confidence));
@@ -758,12 +786,12 @@ function ScoresPageContent() {
         }
         if (data.breakdown && data.breakdown.length > 0) setBreakdown(data.breakdown);
       } else {
-        const seed = analysisQuery.split('').reduce((acc:number, c:string) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0);
-        setIntel(calculateIntelligence(45 + ((seed % 35 + 35) % 35), weights, 0, marketOddsForAI, event));
+        setIntel(null);
+        setNoRealData(true);
       }
     } catch {
-      const seed = analysisQuery.split('').reduce((acc:number, c:string) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0);
-      setIntel(calculateIntelligence(45 + ((seed % 35 + 35) % 35), weights, 0, marketOddsForAI, event));
+      setIntel(null);
+      setNoRealData(true);
     }
   };
   useEffect(() => { runAnalysis(); }, [event, odds, mtype, weights]);
@@ -989,10 +1017,24 @@ function ScoresPageContent() {
                     Try a different question
                   </button>
                 </div>
+              ) : noRealData && !intel ? (
+                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:300, textAlign:'center', gap:16, padding:40, background:C.bg2, border:'1px solid '+C.border, borderRadius:16 }}>
+                  <div style={{ fontSize:20, fontWeight:700, color:C.t1, letterSpacing:'-0.4px' }}>We could not find real data for this one</div>
+                  <div style={{ fontSize:13, color:C.t2, maxWidth:400, lineHeight:1.6 }}>No live market, no model data, no forecaster data - so we will not invent a number or reasons. That is the deal with PlayPicks: if we show a number, something real is behind it.</div>
+                  <div style={{ width:'100%', maxWidth:380 }}>
+                    <div style={{ fontSize:10, color:C.t3, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:8 }}>These have real data right now</div>
+                    {['Will the Fed cut rates in September?','Will Bitcoin hit $150k in 2026?','Chiefs vs Bills'].map((s:string) => (
+                      <button key={s} onClick={() => { router.push('/scores?event='+encodeURIComponent(s)); }}
+                        style={{ display:'block', width:'100%', background:C.bg3, border:'1px solid '+C.border2, borderRadius:10, padding:'10px 16px', color:C.t2, fontSize:12, cursor:'pointer', textAlign:'left', marginBottom:6 }}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ) : (
                 <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} mtype={mtype} outcomes={outcomes} rawEvent={event} breakdown={breakdown} components={components} />
               )}
-                {(invalidQuestion && !intel) || limitReached ? (
+                {(invalidQuestion && !intel) || limitReached || noRealData ? (
                   <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100%', padding:24, gap:12, textAlign:'center', background:C.bg2, border:'1px solid '+C.border, borderRadius:16 }}>
                     <div style={{ fontSize:12, color:C.t3, lineHeight:1.6 }}>{limitReached ? 'Sign in to see AI conviction scores and trade recommendations.' : 'Ask a real prediction market question to see the AI verdict, conviction score, and trade recommendation.'}</div>
                   </div>

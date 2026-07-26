@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+// PP-DATA-V1 - real data for any question: event search, multi-outcome support, no invented numbers
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const preferredRegion = ['fra1', 'lhr1', 'sin1']; // Non-US regions — Polymarket geoblocks US servers, same fix as /api/trending
@@ -218,6 +219,66 @@ async function findLiveMarketOdds(team1Name: string, team2Name: string): Promise
     if (pct >= 1 && pct <= 99) return pct;
     return null;
   } catch { return null; }
+}
+
+
+// Finds the best-matching live Polymarket EVENT for any typed question (not just "X vs Y" matchups).
+// Conservative matching: requires strong word overlap between the question and the event title.
+async function findLiveEventForQuery(query: string): Promise<any | null> {
+  try {
+    const res = await fetch(
+      'https://gamma-api.polymarket.com/events?active=true&closed=false&archived=false&limit=150&order=volume24hr&ascending=false',
+      { signal: AbortSignal.timeout(3500) }
+    );
+    if (!res.ok) return null;
+    const events = await res.json();
+    if (!Array.isArray(events)) return null;
+    const stop = new Set(['will','the','and','for','what','who','next','with','this','that','before','after','2025','2026','2027','2028']);
+    const qWords = query.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/)
+      .filter(w => w.length >= 3 && !stop.has(w));
+    if (qWords.length === 0) return null;
+    let best: any = null; let bestScore = 0;
+    for (const e of events) {
+      const title = (e.title || '').toLowerCase();
+      if (title.includes('more markets') || title.includes('exact score')) continue;
+      const score = qWords.filter(w => title.includes(w)).length;
+      if (score < 2 || score / qWords.length < 0.6) continue;
+      const vol = parseFloat(e.volume24hr || '0');
+      if (score > bestScore || (score === bestScore && best && vol > parseFloat(best.volume24hr || '0'))) {
+        best = e; bestScore = score;
+      }
+    }
+    return best;
+  } catch { return null; }
+}
+
+// Parses a gamma event into either a single binary probability or a ranked list of outcomes.
+// Per Polymarket docs: outcomes/outcomePrices arrive as JSON-encoded strings; index 0 = Yes price = implied probability.
+export function parseEventOutcomes(event: any): { type: 'binary' | 'categorical' | 'none'; prob: number | null; outcomes: { name: string; prob: number }[] } {
+  const markets = (event?.markets || []).filter((m: any) => m && m.closed !== true);
+  const readYes = (m: any): number | null => {
+    try {
+      const prices = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices;
+      if (!Array.isArray(prices) || prices.length < 2) return null;
+      const yes = parseFloat(prices[0]);
+      if (isNaN(yes)) return null;
+      const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
+      return pct >= 0 && pct <= 100 ? pct : null;
+    } catch { return null; }
+  };
+  if (markets.length === 1) {
+    const p = readYes(markets[0]);
+    return { type: p !== null && p >= 1 && p <= 99 ? 'binary' : 'none', prob: p, outcomes: [] };
+  }
+  if (markets.length > 1) {
+    const outcomes = markets
+      .map((m: any) => ({ name: String(m.groupItemTitle || m.question || '').slice(0, 60), prob: readYes(m) }))
+      .filter((o: any) => o.name && o.prob !== null && o.prob >= 1)
+      .sort((a: any, b: any) => (b.prob as number) - (a.prob as number))
+      .slice(0, 12) as { name: string; prob: number }[];
+    if (outcomes.length > 1) return { type: 'categorical', prob: outcomes[0].prob, outcomes };
+  }
+  return { type: 'none', prob: null, outcomes: [] };
 }
 
 function getMarketContext(type: string, query: string): string {
@@ -576,10 +637,43 @@ export async function POST(request: NextRequest) {
         }
       }
     }
+    // Event-level search: finds a live market for ANY typed question, including multi-outcome bundles.
+    if (!effectiveMarketOdds) {
+      const liveEvent = await findLiveEventForQuery(query);
+      if (liveEvent) {
+        const parsed = parseEventOutcomes(liveEvent);
+        if (parsed.type === 'binary' && parsed.prob !== null) {
+          effectiveMarketOdds = parsed.prob;
+        } else if (parsed.type === 'categorical' && parsed.outcomes.length > 1) {
+          const top = parsed.outcomes[0];
+          fetch(new URL('/api/track', request.url).toString(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ anonId: anonId || '', name: 'analysis_run', props: { query: query.slice(0, 100), confidence: top.prob } }) }).catch(() => {});
+          return Response.json({
+            valid: true,
+            mtype: 'categorical',
+            confidence: top.prob,
+            keywords,
+            articleCount: relevantArticles.length,
+            title: liveEvent.title || query,
+            outcomes: parsed.outcomes,
+            sources: [{ name: 'Polymarket', sig: 'Live prices across ' + parsed.outcomes.length + ' possible outcomes - ' + top.name + ' leads at ' + top.prob + '%', url: '', category: 'market', type: 'priced', contribution: 0 }],
+            components: [{ key: 'market', label: 'What bettors say', prob: top.prob }],
+            marketType,
+          });
+        }
+      }
+    }
+
     const probability = calculateProbability(teams, effectiveMarketOdds);
 
-    if (teams.length === 0 && contextLines.length === 0 && metaculus.probability === null && relevantArticles.length === 0 && !effectiveMarketOdds) {
-      return Response.json({ valid: true, confidence: 0, keywords, articleCount: 0, sources: [], noData: true, message: 'No data found for this question yet. Try naming the teams, or paste a Polymarket URL.' });
+    // Honesty gate: with no live market, no two-team model match, and no forecaster data,
+    // there is nothing real to reason about - never generate reasoning text around a bare 50%.
+    if (teams.length < 2 && !effectiveMarketOdds && metaculus.probability === null) {
+      return Response.json({
+        valid: true, confidence: 0, keywords, articleCount: relevantArticles.length,
+        sources: relevantArticles.slice(0, 4).map(a => ({ name: a.source, sig: a.title, url: a.url, category: a.category, type: 'mixed', contribution: 0 })),
+        noData: true,
+        message: 'We could not find a live market, model data, or forecaster data for this question, so we will not invent a number.',
+      });
     }
 
     const reasoning = await generateReasoning(query, probability, contextLines, headlines, marketType);
