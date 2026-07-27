@@ -220,7 +220,7 @@ export default function AccuracyPage() {
         {/* Footer */}
         <div style={{ textAlign:'center', marginTop:32, padding:'20px', borderTop:'1px solid '+C.border }}>
           <div style={{ fontSize:12, color:C.t3, marginBottom:12 }}>
-            All predictions made publicly on X before the event. No retroactive changes.
+            Every prediction is logged with a timestamp when it is made. No retroactive changes.
           </div>
           <button onClick={() => router.push('/')}
             style={{ padding:'10px 24px', background:C.purple, border:'none', borderRadius:10, color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer' }}>
