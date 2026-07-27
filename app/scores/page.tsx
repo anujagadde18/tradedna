@@ -1,5 +1,6 @@
 'use client';
 /* PP-SCORES-PLAIN-V1 - honest sources + plain language */
+/* PP-DATA-V1B - multi-outcome display consistency */
 // PP-DATA-V1 - real data for any question: event search, multi-outcome support, no invented numbers
 import React from 'react';
 import { useEffect, useState, Suspense } from 'react';
@@ -808,7 +809,7 @@ function ScoresPageContent() {
   const binEdge  = hasLiveMarket ? (mtype === 'categorical' ? (top.edge||0) : binaryAI - (odds||0)) : 0;
   const edgeVal  = hasLiveMarket ? binEdge : 0;
   const mainOdds = mtype === 'categorical' ? top.odds : (odds||0);
-  const mainAI   = mtype === 'categorical' ? top.aiConfidence : binaryAI;
+  const mainAI   = mtype === 'categorical' ? (top?.aiConfidence ?? top?.odds ?? null) : binaryAI;
 
   const conv      = getConviction(mainAI, mainOdds);
   const edgeColor = conv.color;
@@ -923,7 +924,7 @@ function ScoresPageContent() {
           <div style={{ display:'flex', alignItems:'center', gap:6, background:C.bg3, border:'1px solid '+C.border2, borderRadius:8, padding:'4px 10px' }}>
             <span style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:C.purpleL }}>{aiPctForDisplay}%</span>
             <div style={{ width:1, height:12, background:C.border2 }}></div>
-            <span style={{ fontSize:10, fontWeight:700, color:C.amber }}>{hasLiveMarket ? (edgeVal > 0 ? '+' : '') + edgeVal.toFixed(0) + ' pts vs bettors' : 'our estimate'}</span>
+            <span style={{ fontSize:10, fontWeight:700, color:C.amber }}>{mtype === 'categorical' ? 'most likely' : hasLiveMarket ? (edgeVal > 0 ? '+' : '') + edgeVal.toFixed(0) + ' pts vs bettors' : 'our estimate'}</span>
           </div>
           <button onClick={() => goFrame('signals')} style={{ padding:'4px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', background:C.purple, color:'#fff', border:'none' }}>See the sources</button>
           <button onClick={runAnalysis} style={{ padding:'4px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', border:'1px solid '+C.border2, background:'none', color:C.t2 }}>Re-analyze</button>
