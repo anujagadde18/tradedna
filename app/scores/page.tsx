@@ -246,7 +246,14 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
             <div style={{ fontSize:40, fontWeight:800, color:C.green, fontFamily:"monospace", lineHeight:1 }}>{topOutcomes[0].odds}%</div>
           </div>
           <div style={{ fontSize:12, color:C.t2, marginBottom:18 }}>
-            {topOutcomes[0].odds >= 60 ? "A clear favorite - people betting real money strongly agree." : topOutcomes[0].odds >= 35 ? "The front-runner, but this race is far from decided." : "A slight lead in a wide-open race - nobody really knows yet."}
+            {(() => {
+              const isDateLike = /(january|february|march|april|may|june|july|august|september|october|november|december|\b20\d\d\b|\d{1,2}\/\d{1,2})/i.test(String(topOutcomes[0].name||''));
+              const pct = topOutcomes[0].odds;
+              if (isDateLike) {
+                return "Traders see a " + pct + "% chance this happens by " + topOutcomes[0].name + " - " + (pct >= 60 ? "they think it is likely." : pct >= 35 ? "possible, but far from certain." : "they think it is unlikely.");
+              }
+              return pct >= 60 ? "A clear favorite - people betting real money strongly agree." : pct >= 35 ? "The front-runner, but this race is far from decided." : "A slight lead in a wide-open race - nobody really knows yet.";
+            })()}
           </div>
           {topOutcomes.map((o: any, i: number) => (
             <div key={i} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8, padding:"9px 12px", borderRadius:10, background:i===0?"rgba(46,204,138,0.06)":"rgba(255,255,255,0.02)", border:i===0?"1px solid rgba(46,204,138,0.18)":"1px solid transparent" }}>
@@ -468,7 +475,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
           </div>
         ) : (
           <div style={{ fontSize:12, color:C.t3, padding:"10px 14px", background:"rgba(255,255,255,0.02)", borderRadius:10, border:"1px solid "+C.border }}>
-            {aiPct>=65?"High confidence in this number":aiPct>=45?"Moderate confidence - worth a closer look":"Genuinely uncertain - a close call"}
+            {(() => { const s = Math.max(aiPct, 100 - aiPct); return s>=65?"High confidence in this number":s>=55?"Moderate confidence - worth a closer look":"Genuinely uncertain - a close call"; })()}
           </div>
         )}
       </div>
