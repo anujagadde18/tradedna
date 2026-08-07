@@ -9,6 +9,7 @@ interface TrendingEvent {
   category:string; icon:string; yesPrice:number|null; marketCount:number;
   image:string|null; volume24h:number; volume24hFormatted:string;
   team1:string|null; team2:string|null; endDate:string;
+  topOutcome?: { name: string; prob: number } | null;
 }
 
 const C = {
@@ -280,6 +281,8 @@ export default function HomePage() {
                 <p style={{fontSize:14,color:C.t1,lineHeight:1.7,marginBottom:12}}>
                   {isMatch ? (
                     <>Right now, traders give <b>{parts[0]?.trim()}</b> a <b>{pct}%</b> chance against <b>{parts[1]?.trim()}</b>.</>
+                  ) : example.topOutcome?.name ? (
+                    <>Right now, for "<b>{example.title}</b>", traders give <b>{example.topOutcome.name}</b> a <b>{pct}%</b> chance.</>
                   ) : (
                     <>Right now, traders put a <b>{pct}%</b> chance on: <b>{example.title}</b></>
                   )}
@@ -325,7 +328,7 @@ export default function HomePage() {
                         onMouseLeave={ev=>{ev.currentTarget.style.borderColor=C.border;}}>
                         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
                           <span style={{fontSize:9,fontWeight:700,color:cs.color,padding:'2px 6px',borderRadius:4,background:cs.bg,textTransform:'uppercase' as const,letterSpacing:'0.3px'}}>{e.category}</span>
-                          {e.yesPrice !== null && <span style={{fontSize:13,fontWeight:700,color:e.yesPrice>=50?C.green:C.red,fontFamily:FONT_MONO}}>{e.yesPrice}%</span>}
+                          {e.yesPrice !== null ? <span style={{fontSize:13,fontWeight:700,color:e.yesPrice>=50?C.green:C.red,fontFamily:FONT_MONO}}>{e.yesPrice}%</span> : e.topOutcome ? <span style={{fontSize:12,fontWeight:700,color:C.t2,fontFamily:FONT_MONO}}>{e.topOutcome.prob}%</span> : null}
                         </div>
                         <div style={{fontSize:12,fontWeight:600,color:C.t1,marginBottom:8,overflow:'hidden',textOverflow:'ellipsis',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical' as const,lineHeight:1.35,minHeight:32}}>{e.title}</div>
                         <div style={{fontSize:10,color:C.t3}}>{e.volume24hFormatted} today</div>
@@ -396,12 +399,18 @@ export default function HomePage() {
                       {e.yesPrice!==null?(
                         <div>
                           <div style={{fontSize:13,fontWeight:700,fontFamily:FONT_MONO,color:isStrong?(isYes?C.green:C.red):C.t2}}>{e.yesPrice}%</div>
+                          {e.topOutcome?.name && <div style={{fontSize:8,color:C.t3,maxWidth:88,margin:'2px auto 0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{e.topOutcome.name}</div>}
                           <div style={{width:40,height:3,background:'rgba(255,255,255,0.06)',borderRadius:2,margin:'2px auto 0',overflow:'hidden'}}>
                             <div style={{height:'100%',background:isYes?C.green:C.red,width:e.yesPrice+'%',borderRadius:2}}/>
                           </div>
                         </div>
+                      ): e.topOutcome ? (
+                        <div>
+                          <div style={{fontSize:13,fontWeight:700,fontFamily:FONT_MONO,color:C.t2}}>{e.topOutcome.prob}%</div>
+                          <div style={{fontSize:8,color:C.t3,maxWidth:88,margin:'2px auto 0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{e.topOutcome.name} leads</div>
+                        </div>
                       ): e.marketCount > 1 ? (
-                        <span style={{fontSize:9,fontWeight:600,color:C.t3,padding:'2px 7px',borderRadius:4,background:'rgba(255,255,255,0.04)',whiteSpace:'nowrap' as const}}>{e.marketCount} outcomes</span>
+                        <span style={{fontSize:9,fontWeight:600,color:C.t3,padding:'2px 7px',borderRadius:4,background:'rgba(255,255,255,0.04)',whiteSpace:'nowrap' as const}}>{e.marketCount} possible answers</span>
                       ) : (
                         <span style={{fontSize:10,color:C.t4}}>—</span>
                       )}

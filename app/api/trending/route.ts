@@ -9,7 +9,7 @@ const CAT_KEYWORDS: Record<string, string[]> = {
   politics:   ['trump','election','president','congress','senate','vote','tariff','democrat','republican','supreme court','governor','ballot','midterm','nominee','political','prime minister','minister','parliament','chancellor','coalition'],
   technology: ['ai','openai','gpt','model','artificial intelligence','microsoft','google','nvidia','anthropic','chatgpt','gemini','tech','software','startup'],
   economics:  ['fed','federal reserve','rates','inflation','recession','gdp','unemployment','interest','economy','treasury','dollar','market cap','tariff','oil','crude','wti','opec','cpi','payrolls'],
-  world:      ['ukraine','russia','iran','china','nato','war','ceasefire','israel','gaza','military','nuclear','taiwan','north korea','sanctions','geopolit','strait','hormuz','ceasefire','un security'],
+  world:      ['ukraine','russia','iran','china','nato','war','ceasefire','israel','gaza','military','nuclear','taiwan','north korea','sanctions','geopolit','strait','hormuz','ceasefire','un security','iranian','blockade'],
 };
 
 const CAT_EMOJI: Record<string, string> = {
@@ -110,6 +110,38 @@ function fmtVol(v: number): string {
   if (v >= 1_000_000) return '$' + (v/1_000_000).toFixed(1) + 'M';
   if (v >= 1_000) return '$' + (v/1_000).toFixed(0) + 'K';
   return '$' + Math.round(v);
+}
+
+// For multi-outcome events, find the leading answer and its live price.
+// For single-market events, surface the market's answer name when it differs from the title.
+function getTopOutcome(event: any): { name: string; prob: number } | null {
+  try {
+    const markets = (event.markets || []).filter((m: any) => m && m.closed !== true);
+    const readYes = (m: any): number | null => {
+      try {
+        const prices = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices;
+        if (!Array.isArray(prices) || prices.length < 2) return null;
+        const yes = parseFloat(prices[0]);
+        if (isNaN(yes)) return null;
+        const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
+        return pct >= 1 && pct <= 100 ? pct : null;
+      } catch { return null; }
+    };
+    if (markets.length === 1) {
+      const name = String(markets[0].groupItemTitle || '').trim();
+      const prob = readYes(markets[0]);
+      if (name && prob !== null) return { name: name.slice(0, 40), prob };
+      return null;
+    }
+    let best: { name: string; prob: number } | null = null;
+    for (const m of markets) {
+      const prob = readYes(m);
+      const name = String(m.groupItemTitle || m.question || '').trim();
+      if (prob === null || !name) continue;
+      if (!best || prob > best.prob) best = { name: name.slice(0, 40), prob };
+    }
+    return best;
+  } catch { return null; }
 }
 
 function getYesPrice(event: any): number | null {
@@ -295,6 +327,7 @@ export async function GET(req: NextRequest) {
       team1:              teamNames?.team1 || null,
       team2:              teamNames?.team2 || null,
       marketCount:        (event.markets || []).length,
+      topOutcome:         getTopOutcome(event),
       endDate:            event.endDate || '',
     });
   }
