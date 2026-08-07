@@ -155,7 +155,7 @@ export default function F1Page() {
             </div>
             <div style={{padding:'10px 14px',borderRadius:8,background:driver.verdictColor+'15',border:'1px solid '+driver.verdictColor+'30',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <span style={{fontSize:12,fontWeight:700,color:driver.verdictColor}}>AI Signal: {driver.verdict}</span>
-              <button onClick={()=>router.push('/scores?event=Will+'+encodeURIComponent(driver.name)+'+win+F1+Belgian+Grand+Prix+2026')}
+              <button onClick={()=>router.push('/scores?event=Will+'+encodeURIComponent(driver.name)+'+win+the+F1+Drivers+Championship+2026')}
                 style={{fontSize:11,fontWeight:600,color:C.purpleL,padding:'5px 12px',borderRadius:6,border:'1px solid '+C.purpleBorder,background:C.purpleBg,cursor:'pointer'}}>
                 Full AI analysis →
               </button>
@@ -171,14 +171,14 @@ export default function F1Page() {
             <div style={{fontSize:11,color:C.t3}}>Leclerc P2 · Hamilton P3</div>
           </div>
           <div style={{background:'rgba(245,166,35,0.06)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:12,padding:'12px 14px'}}>
-            <div style={{fontSize:10,color:C.amber,fontWeight:700,textTransform:'uppercase' as const,marginBottom:4}}>Next Race</div>
-            <div style={{fontSize:12,fontWeight:600,color:C.t1}}>🇧🇪 Belgian GP · Jul 17-19</div>
-            <div style={{fontSize:11,color:C.t3}}>Circuit de Spa-Francorchamps</div>
+            <div style={{fontSize:10,color:C.amber,fontWeight:700,textTransform:'uppercase' as const,marginBottom:4}}>Season snapshot</div>
+            <div style={{fontSize:12,fontWeight:600,color:C.t1}}>Data through the British GP - Jul 5</div>
+            <div style={{fontSize:11,color:C.t3}}>Live per-race odds return with the next race weekend</div>
           </div>
         </div>
 
         <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,marginBottom:16}}>
-          {[{label:'British GP Result',value:'Leclerc WON 🏆'},{label:'Next: Belgian GP',value:'Jul 17-19 · Round 10'},{label:'Championship Lead',value:'Antonelli +25pts'}].map((item,i) => (
+          {[{label:'British GP Result',value:'Leclerc WON 🏆'},{label:'Season data through',value:'British GP - Jul 5'},{label:'Championship Lead',value:'Antonelli +25pts'}].map((item,i) => (
             <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:10,padding:'12px',textAlign:'center' as const}}>
               <div style={{fontSize:10,color:C.t3,marginBottom:4}}>{item.label}</div>
               <div style={{fontSize:12,fontWeight:600,color:C.t1}}>{item.value}</div>

@@ -107,7 +107,7 @@ export default function JournalPage() {
           <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:24}}>
             {[
               {val:entries.length,label:'Total predictions',color:S.text},
-              {val:winRate+'%',label:'Win rate',color:winRate>=60?S.green:S.amber},
+              {val:winRate+'%',label:'Win rate (of resolved)',color:winRate>=60?S.green:S.amber},
               {val:correct.length+'/'+resolved.length,label:'Resolved',color:S.blue},
               {val:entries.filter(e=>e.edge&&e.edge>0).length,label:'With market edge',color:S.purple2},
             ].map((s,i)=>(
@@ -146,7 +146,7 @@ export default function JournalPage() {
                 <div onClick={()=>setExpanded(isExpanded?null:e.id)} style={{padding:'16px 20px',cursor:'pointer',display:'flex',alignItems:'center',gap:12}}>
                   <div style={{fontSize:20,flexShrink:0}}>{resultIcon}</div>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:13,fontWeight:600,color:S.text,marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{e.question}</div>
+                    <div style={{fontSize:13,fontWeight:600,color:S.text,marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{e.question.startsWith('http') ? e.question.replace(/^https?:\/\/[^/]+\//,'').replace(/^(event|sports)\//,'').replace(/^nba\//,'').replace(/[#?].*$/,'').replace(/-/g,' ') : e.question}</div>
                     <div style={{display:'flex',gap:12,fontSize:11,color:S.text3}}>
                       <span>{new Date(e.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
                       {e.edge !== null && e.edge > 0 && <span style={{color:S.purple2}}>+{e.edge}% edge</span>}

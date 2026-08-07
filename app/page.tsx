@@ -110,6 +110,22 @@ export default function HomePage() {
     return !t.includes('more markets') && !t.includes('exact score');
   });
 
+  // On the All tab, game days flood the volume ranking with sports.
+  // Interleave so the top of the list stays diverse: two non-sports rows per sports row.
+  const balanced = (() => {
+    if (category !== 'all') return cleanEvents;
+    const sports = cleanEvents.filter(e => e.category === 'sports');
+    const rest   = cleanEvents.filter(e => e.category !== 'sports');
+    const out: TrendingEvent[] = [];
+    let si = 0, ri = 0;
+    while (si < sports.length || ri < rest.length) {
+      if (ri < rest.length) out.push(rest[ri++]);
+      if (ri < rest.length) out.push(rest[ri++]);
+      if (si < sports.length) out.push(sports[si++]);
+    }
+    return out;
+  })();
+
   const navLinks = [
     { label:'Picks',       path:'/picks' },
     { label:'Challenge',   path:'/predict' },
@@ -187,7 +203,7 @@ export default function HomePage() {
           <p style={{fontSize:15,color:C.t2,maxWidth:520,lineHeight:1.7,marginBottom:28}}>
             PlayPicks blends live market prices, statistical models, and expert forecasts
             into one probability — and shows how much each source contributed.
-            Sports, economics, politics, crypto. Nothing hidden.
+            Economics, politics, sports, crypto. Nothing hidden.
           </p>
 
           {/* SEARCH */}
@@ -246,7 +262,8 @@ export default function HomePage() {
 
         {/* EXPLAINER — plain-language intro using a real live number */}
         {cleanEvents.length > 0 && (() => {
-          const example = cleanEvents.find(e => e.yesPrice !== null && e.yesPrice >= 10 && e.yesPrice <= 90);
+          const usable = cleanEvents.filter(e => e.yesPrice !== null && e.yesPrice >= 10 && e.yesPrice <= 90);
+          const example = usable.find(e => e.category !== 'sports') || usable[0];
           if (!example) return null;
           const pct = example.yesPrice as number;
           const isMatch = /\s+vs\.?\s+/i.test(example.title);
@@ -282,7 +299,15 @@ export default function HomePage() {
 
           {/* TRENDING NOW */}
           {(() => {
-            const trending = cleanEvents.slice().sort((a,b) => (b.volume24h||0) - (a.volume24h||0)).slice(0,6);
+            const trending = (() => {
+              const byVol = cleanEvents.slice().sort((a,b) => (b.volume24h||0) - (a.volume24h||0));
+              const t: TrendingEvent[] = []; let s = 0;
+              for (const e of byVol) {
+                if (e.category === 'sports') { if (s >= 2) continue; s++; }
+                t.push(e); if (t.length === 6) break;
+              }
+              return t.length >= 3 ? t : byVol.slice(0,6);
+            })();
             if (trending.length === 0) return null;
             return (
               <div style={{marginBottom:32}}>
@@ -351,13 +376,13 @@ export default function HomePage() {
                 <div style={{fontSize:9,fontWeight:700,color:C.t4,textTransform:'uppercase' as const,letterSpacing:'0.5px',textAlign:'right' as const}}>Traded</div>
                 <div className="ppMktCta"/>
               </div>
-              {cleanEvents.slice(0,20).map((e,i)=>{
+              {balanced.slice(0,20).map((e,i)=>{
                 const cs = CAT_COLORS[e.category]||CAT_COLORS.other;
                 const isYes = e.yesPrice!==null && e.yesPrice>=50;
                 const isStrong = e.yesPrice!==null && (e.yesPrice>=70||e.yesPrice<=30);
                 return (
                   <button key={e.slug} onClick={()=>go(e.title)} className="ppMktRow"
-                    style={{width:'100%',padding:'10px 14px',background:'transparent',border:'none',borderBottom:i<Math.min(cleanEvents.length,20)-1?'1px solid rgba(255,255,255,0.04)':'none',cursor:'pointer',textAlign:'left' as const,transition:'background 0.1s',fontFamily:'inherit'}}
+                    style={{width:'100%',padding:'10px 14px',background:'transparent',border:'none',borderBottom:i<Math.min(balanced.length,20)-1?'1px solid rgba(255,255,255,0.04)':'none',cursor:'pointer',textAlign:'left' as const,transition:'background 0.1s',fontFamily:'inherit'}}
                     onMouseEnter={ev=>{ev.currentTarget.style.background=C.bg3;}}
                     onMouseLeave={ev=>{ev.currentTarget.style.background='transparent';}}>
                     <div style={{fontSize:10,fontWeight:600,color:C.t4,fontFamily:FONT_MONO}}>{i+1}</div>

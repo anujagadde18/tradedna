@@ -76,6 +76,8 @@ export default function PredictPage() {
         .slice(0,4)
         .map((e:any) => {
           const parts = e.title.split(/\s+vs\.?\s+/i);
+          const leftName = ((parts[0]||'').split(': ').pop() || parts[0] || '').trim();
+          const rightName = ((parts[1]||'?').split(': ').pop() || '?').trim();
           const vol = parseFloat(e.volume24hr||'0');
           let conf = 58;
           try {
@@ -95,11 +97,11 @@ export default function PredictPage() {
           return {
             id: e.slug||String(e.id),
             title: e.title.slice(0,55),
-            team1: parts[0].trim().slice(0,28),
-            team2: (parts[1]||'?').trim().slice(0,28),
+            team1: leftName.slice(0,28),
+            team2: rightName.slice(0,28),
             time: 'Today · Polymarket',
             venue: `$${(vol/1000000).toFixed(1)}M traded`,
-            aiPrediction: conf>=50?parts[0].trim().slice(0,28):(parts[1]||'?').trim().slice(0,28),
+            aiPrediction: conf>=50?leftName.slice(0,28):rightName.slice(0,28),
             aiConfidence: conf>=50?conf:100-conf,
             sport: '🏆', date: todayStr, category: 'sports',
           };

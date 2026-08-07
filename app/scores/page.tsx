@@ -892,7 +892,7 @@ function ScoresPageContent() {
     <div style={{ minHeight:'100vh', background:C.bg0, color:C.t1, fontFamily:'system-ui,-apple-system,sans-serif' }}>
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
-        .ppFlowMain{max-width:680px;margin:0 auto;padding:20px 16px 90px}
+        .ppFlowMain{max-width:780px;margin:0 auto;padding:20px 16px 90px}
         .ppHideMobile{display:flex}
         @media (max-width:720px){ .ppHideMobile{display:none} }
       `}</style>
