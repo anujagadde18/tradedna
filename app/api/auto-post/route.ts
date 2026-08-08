@@ -21,7 +21,7 @@ function formatTweet(pick: any): string {
   tweet += `${direction} — ${confidence}% market odds\n`;
   tweet += `${vol} traded today\n\n`;
   tweet += `tradedna.vercel.app/picks\n`;
-  tweet += `#Polymarket #PlayPicks`;
+  tweet += `#Polymarket #Call It`;
 
   return tweet.slice(0, 275);
 }

@@ -26,7 +26,7 @@ export default function SourcesPage() {
       <div style={{ maxWidth:680, margin:'0 auto', padding:'32px 16px 80px' }}>
         <h1 style={{ fontSize:26, fontWeight:800, letterSpacing:'-0.8px', marginBottom:10 }}>Where our numbers come from</h1>
         <p style={{ fontSize:14, color:C.t2, lineHeight:1.7, marginBottom:8 }}>
-          Every probability PlayPicks shows is blended from the sources below - and every analysis
+          Every probability Call It shows is blended from the sources below - and every analysis
           shows you exactly which ones were used and how much each contributed. If none of them
           have real data for your question, we say so instead of inventing a number.
         </p>

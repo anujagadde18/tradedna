@@ -74,7 +74,7 @@ function EventContent() {
             gap: 8
           }}>
             <span style={{ fontSize: 18 }}></span>
-            How to Use PlayPicks
+            How to Use Call It
           </div>
           
           <div style={{ fontSize: 14, color: "#d4d4d8", lineHeight: 1.8 }}>

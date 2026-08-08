@@ -494,8 +494,8 @@ function ShareButtons({ question, aiPct, marketPct, hasMarket, isMatchup, team1,
     question.toLowerCase().includes('soccer') || question.toLowerCase().includes('fc') || question.toLowerCase().includes('united') ? '⚽' : '🏆';
 
   const shareText = isMatchup && team1 && team2
-    ? `${sportEmoji} AI Prediction: ${team1} vs ${team2}\n\n${team1}: ${aiPct}% | ${team2}: ${aiTeam2Pct}%\n\n${hasMarket && marketPct > 0 && marketPct < 98 ? 'Market: ' + marketPct + '% for ' + team1 + '\n\n' : ''}Full AI analysis 👇\ntradedna.vercel.app\n\n#PlayPicks #AIodds`
-    : `🤖 PlayPicks AI: ${aiPct}% chance\n\n"${question}"\n\n${hasMarket && marketPct > 0 ? 'Market: ' + marketPct + '%\n\n' : ''}tradedna.vercel.app\n#PlayPicks`;
+    ? `${sportEmoji} AI Prediction: ${team1} vs ${team2}\n\n${team1}: ${aiPct}% | ${team2}: ${aiTeam2Pct}%\n\n${hasMarket && marketPct > 0 && marketPct < 98 ? 'Market: ' + marketPct + '% for ' + team1 + '\n\n' : ''}Full AI analysis 👇\ntradedna.vercel.app\n\n#Call It #AIodds`
+    : `🤖 Call It: ${aiPct}% chance\n\n"${question}"\n\n${hasMarket && marketPct > 0 ? 'Market: ' + marketPct + '%\n\n' : ''}tradedna.vercel.app\n#Call It`;
 
   function onX() {
     window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(shareText), '_blank', 'width=550,height=420');
@@ -940,7 +940,7 @@ function ScoresPageContent() {
         ) : invalidQuestion && !intel ? (
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:300, textAlign:'center', gap:16, padding:40, background:C.bg2, border:'1px solid '+C.border, borderRadius:16 }}>
             <div style={{ fontSize:20, fontWeight:700, color:C.t1, letterSpacing:'-0.4px' }}>This does not look like a real prediction</div>
-            <div style={{ fontSize:13, color:C.t2, maxWidth:380, lineHeight:1.6 }}>PlayPicks analyzes real, verifiable world events. Try asking about something that could actually happen.</div>
+            <div style={{ fontSize:13, color:C.t2, maxWidth:380, lineHeight:1.6 }}>Call It analyzes real, verifiable world events. Try asking about something that could actually happen.</div>
             <div style={{ width:'100%', maxWidth:380 }}>
               <div style={{ fontSize:10, color:C.t3, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:8 }}>Try one of these instead</div>
               {(invalidQuestion.examples||[]).map((s:string) => (
@@ -952,7 +952,7 @@ function ScoresPageContent() {
         ) : noRealData && !intel ? (
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:300, textAlign:'center', gap:16, padding:40, background:C.bg2, border:'1px solid '+C.border, borderRadius:16 }}>
             <div style={{ fontSize:20, fontWeight:700, color:C.t1, letterSpacing:'-0.4px' }}>We could not find real data for this one</div>
-            <div style={{ fontSize:13, color:C.t2, maxWidth:400, lineHeight:1.6 }}>No live market, no model data, no forecaster data - so we will not invent a number or reasons. That is the deal with PlayPicks: if we show a number, something real is behind it.</div>
+            <div style={{ fontSize:13, color:C.t2, maxWidth:400, lineHeight:1.6 }}>No live market, no model data, no forecaster data - so we will not invent a number or reasons. That is the deal with Call It: if we show a number, something real is behind it.</div>
             <div style={{ width:'100%', maxWidth:380 }}>
               <div style={{ fontSize:10, color:C.t3, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:8 }}>These have real data right now</div>
               {['Will the Fed cut rates in September?','Will Bitcoin hit $150k in 2026?','Chiefs vs Bills'].map((s:string) => (
@@ -1009,7 +1009,7 @@ function ScoresPageContent() {
                 <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:16, display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
                   <div>
                     <div style={{ fontSize:13, fontWeight:700, color:C.t1, marginBottom:3 }}>Want to act on this?</div>
-                    <div style={{ fontSize:11, color:C.t3 }}>This market trades on Polymarket. Decide your own amount - PlayPicks does not size bets.</div>
+                    <div style={{ fontSize:11, color:C.t3 }}>This market trades on Polymarket. Decide your own amount - Call It does not size bets.</div>
                   </div>
                   <a href="https://polymarket.com" target="_blank" rel="noopener noreferrer" style={{ padding:'10px 18px', background:C.purple, color:'#fff', borderRadius:9, fontSize:12, fontWeight:700, textDecoration:'none', whiteSpace:'nowrap' }}>Open Polymarket</a>
                 </div>

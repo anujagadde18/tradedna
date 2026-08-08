@@ -13,20 +13,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PlayPicks AI — Prediction Market Analysis",
+  title: "Call It — What are the chances?",
   description: "Ask any question. See one probability built from live market prices, statistical models, and expert forecasts - with every source shown.",
   openGraph: {
-    title: "PlayPicks AI — See Every Source Behind the Answer",
+    title: "Call It — What are the chances?",
     description: "Transparent probability analysis for any question. Live market prices, models, and expert forecasts - blended in the open. Free to try.",
     url: "https://tradedna.vercel.app",
-    siteName: "PlayPicks AI",
+    siteName: "Call It",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "PlayPicks AI",
+    title: "Call It",
     description: "Transparent probability analysis for any question. Every source shown. Free to try.",
-    site: "@PlayPicksAI",
+    site: "@callit",
   },
 };
 

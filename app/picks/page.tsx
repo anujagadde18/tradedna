@@ -35,7 +35,7 @@ export default function PicksPage() {
   return (
     <div style={{background:C.bg0,minHeight:'100vh',color:C.t1,fontFamily:"'Inter',system-ui,sans-serif"}}>
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:52,background:'rgba(6,6,10,0.95)',backdropFilter:'blur(20px)',borderBottom:'1px solid '+C.border,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 24px'}}>
-        <button onClick={()=>router.push('/')} style={{background:'none',border:'none',color:C.purpleL,cursor:'pointer',fontSize:13,fontWeight:600}}>← PlayPicks</button>
+        <button onClick={()=>router.push('/')} style={{background:'none',border:'none',color:C.purpleL,cursor:'pointer',fontSize:13,fontWeight:600}}>← Call It</button>
         <div style={{fontSize:13,fontWeight:700}}>🎯 Daily Picks</div>
         <button onClick={()=>router.push('/accuracy')} style={{background:'none',border:'none',color:C.t3,cursor:'pointer',fontSize:12}}>Record →</button>
       </nav>
@@ -158,7 +158,7 @@ export default function PicksPage() {
                     🤖 Full AI analysis →
                   </button>
                   <button onClick={()=>{
-                    const text = `🎯 PlayPicks Daily Pick\n\n${pick.icon} ${pick.title}\n${pick.confidence}% market odds\n\n${pick.reasoning[0]}\n\ntradedna.vercel.app/picks\n\n#PlayPicks #Polymarket`;
+                    const text = `🎯 Call It Daily Pick\n\n${pick.icon} ${pick.title}\n${pick.confidence}% market odds\n\n${pick.reasoning[0]}\n\ntradedna.vercel.app/picks\n\n#Call It #Polymarket`;
                     if (navigator.share) navigator.share({text});
                     else navigator.clipboard.writeText(text);
                   }} style={{flex:1,padding:'10px',borderRadius:10,background:C.bg3,border:'1px solid '+C.border,color:C.t2,cursor:'pointer',fontSize:12}}>

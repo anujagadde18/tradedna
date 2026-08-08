@@ -210,7 +210,7 @@ async function fetchLive(limit = 50): Promise<any[]> {
       const res = await fetch(url, { 
         headers: { 
           'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (compatible; PlayPicksAI/1.0)',
+          'User-Agent': 'Mozilla/5.0 (compatible; CallIt/1.0)',
         }, 
         cache: 'no-store',
         signal: AbortSignal.timeout(8000),

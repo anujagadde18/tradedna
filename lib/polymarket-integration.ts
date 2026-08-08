@@ -145,7 +145,7 @@ export function isMultiOutcomeMarket(market: PolymarketMarket): boolean {
 }
 
 /**
- * Compare PlayPicks AI prediction with Polymarket market odds
+ * Compare Call It prediction with Polymarket market odds
  */
 export function compareWithPolymarket(
   aiPrediction: number,

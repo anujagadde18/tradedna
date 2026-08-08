@@ -43,7 +43,7 @@ const CAT_COLORS: Record<string,{color:string;bg:string}> = {
   other:      {color:'#9996b8', bg:'rgba(153,150,184,0.08)'},
 };
 
-// The three signals behind every PlayPicks probability — shown as the hero demo.
+// The three signals behind every Call It probability — shown as the hero demo.
 const SIGNALS = [
   { label:'Market price',      note:'what people trading real money think', pct:55, color:'#7c6ff7' },
   { label:'Statistical model', note:'strength and form data',               pct:30, color:'#4d9de0' },
@@ -161,18 +161,16 @@ export default function HomePage() {
         <div style={{display:'flex',alignItems:'center',gap:10,cursor:'pointer',flexShrink:0}} onClick={()=>router.push('/')}>
           <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
             <rect width="36" height="36" rx="9" fill="#0e0e18"/>
-            <rect x="6" y="24" width="3" height="6" rx="1.5" fill="#2e2c44"/>
-            <rect x="11" y="20" width="3" height="10" rx="1.5" fill="#3a3860"/>
-            <rect x="16" y="16" width="3" height="14" rx="1.5" fill="#564ea0"/>
-            <rect x="21" y="11" width="3" height="19" rx="1.5" fill="#7c6ff7"/>
-            <rect x="26" y="7" width="3" height="23" rx="1.5" fill="#a89cf8"/>
-            <path d="M 7.5 19 Q 14 10 27.5 7.5" fill="none" stroke="#2ecc8a" strokeWidth="1.8" strokeLinecap="round"/>
-            <circle cx="7.5" cy="19" r="3" fill="#ef4f6a"/>
-            <circle cx="27.5" cy="7" r="2.5" fill="#2ecc8a"/>
+            {/* outer C */}
+            <path d="M26 10.5a10 10 0 1 0 0 15" fill="none" stroke="#2ecc8a" strokeWidth="4" strokeLinecap="round"/>
+            {/* inner arc */}
+            <path d="M22.5 14.5a5.5 5.5 0 1 0 0 7" fill="none" stroke="#2ecc8a" strokeWidth="2.6" strokeLinecap="round"/>
+            {/* focus dot */}
+            <circle cx="23.5" cy="18" r="2.6" fill="#2ecc8a"/>
           </svg>
           <div>
-            <div style={{fontSize:15,fontWeight:800,letterSpacing:'-0.4px',lineHeight:1}}>PlayPicks</div>
-            <div style={{fontSize:8,fontWeight:700,color:C.purpleL,letterSpacing:'1.5px',textTransform:'uppercase',lineHeight:1,marginTop:3}}>AI</div>
+            <div style={{fontSize:15,fontWeight:800,letterSpacing:'-0.4px',lineHeight:1}}>Call It</div>
+            <div style={{fontSize:8,fontWeight:700,color:C.purpleL,letterSpacing:'1.2px',textTransform:'uppercase',lineHeight:1,marginTop:3}}>What are the chances?</div>
           </div>
         </div>
         <div className="ppNavLinks">
@@ -202,7 +200,7 @@ export default function HomePage() {
             Ask any question.<br/><span style={{color:C.purpleL}}>See every source behind the answer.</span>
           </h1>
           <p style={{fontSize:15,color:C.t2,maxWidth:520,lineHeight:1.7,marginBottom:28}}>
-            PlayPicks blends live market prices, statistical models, and expert forecasts
+            Call It blends live market prices, statistical models, and expert forecasts
             into one probability — and shows how much each source contributed.
             Economics, politics, sports, crypto. Nothing hidden.
           </p>
@@ -286,7 +284,7 @@ export default function HomePage() {
                   ) : (
                     <>Right now, traders put a <b>{pct}%</b> chance on: <b>{example.title}</b></>
                   )}
-                  {' '}PlayPicks checks numbers like this against models and expert forecasts, then
+                  {' '}Call It checks numbers like this against models and expert forecasts, then
                   tells you in plain English whether the crowd looks right — or whether there is a
                   gap worth knowing about.
                 </p>
@@ -450,7 +448,7 @@ export default function HomePage() {
           <p style={{textAlign:'center',color:C.t2,fontSize:14,marginBottom:36}}>Three steps from question to answer</p>
           <div className="ppHowGrid">
             {[
-              {n:'1',t:'Ask a question',d:'Type any question or paste a Polymarket link. PlayPicks pulls live market prices, model data, and expert forecasts.'},
+              {n:'1',t:'Ask a question',d:'Type any question or paste a Polymarket link. Call It pulls live market prices, model data, and expert forecasts.'},
               {n:'2',t:'See the full breakdown',d:'One probability, with every source behind it listed in plain English. Adjust how much weight each source gets, or add your own.'},
               {n:'3',t:'Check the record',d:'Every analysis is saved to your journal, and our public accuracy page shows how past calls turned out.'},
             ].map(s=>(
@@ -483,7 +481,7 @@ export default function HomePage() {
           <div style={{display:'flex',gap:16}}>
             <button onClick={()=>router.push('/journal')} style={{fontSize:11,color:C.t3,background:'none',border:'none',cursor:'pointer',fontFamily:'inherit'}}>Journal</button>
             <button onClick={()=>router.push('/sources')} style={{fontSize:11,color:C.t3,background:'none',border:'none',cursor:'pointer',fontFamily:'inherit'}}>Sources</button>
-            <span style={{fontSize:11,color:C.t4}}>PlayPicks AI</span>
+            <span style={{fontSize:11,color:C.t4}}>Call It</span>
           </div>
         </div>
 

@@ -154,7 +154,7 @@ export default function PredictPage() {
   return (
     <div style={{background:C.bg0,minHeight:'100vh',color:C.t1,fontFamily:"'Inter',system-ui,sans-serif"}}>
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:52,background:'rgba(6,6,10,0.95)',backdropFilter:'blur(20px)',borderBottom:'1px solid '+C.border,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 24px'}}>
-        <button onClick={()=>router.push('/')} style={{background:'none',border:'none',color:C.purpleL,cursor:'pointer',fontSize:13,fontWeight:600}}>← PlayPicks AI</button>
+        <button onClick={()=>router.push('/')} style={{background:'none',border:'none',color:C.purpleL,cursor:'pointer',fontSize:13,fontWeight:600}}>← Call It</button>
         <div style={{fontSize:13,fontWeight:700}}>🎯 Make Your Picks</div>
         <button onClick={()=>router.push('/leaderboard')} style={{background:'none',border:'none',color:C.amber,cursor:'pointer',fontSize:12,fontWeight:600}}>🏆 Leaderboard</button>
       </nav>

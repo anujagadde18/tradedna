@@ -104,7 +104,7 @@ export default function AdminPage() {
         {/* Header */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:32 }}>
           <div>
-            <div style={{ fontSize:22, fontWeight:700, letterSpacing:'-0.5px' }}>PlayPicks AI — KPIs</div>
+            <div style={{ fontSize:22, fontWeight:700, letterSpacing:'-0.5px' }}>Call It — KPIs</div>
             <div style={{ fontSize:12, color:C.t3, marginTop:4 }}>Live from Neon Postgres · auto-refreshes every 30s</div>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>

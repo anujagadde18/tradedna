@@ -117,7 +117,7 @@ export default function AccuracyPage() {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
             Home
           </button>
-          <span style={{ fontSize:14, fontWeight:800, color:C.t1 }}>PlayPicks AI</span>
+          <span style={{ fontSize:14, fontWeight:800, color:C.t1 }}>Call It</span>
           <span style={{ fontSize:11, color:C.t3 }}>/ Accuracy</span>
         </div>
         <button onClick={() => router.push('/scores?event=Will+Bitcoin+hit+%24100k+before+June%3F')}

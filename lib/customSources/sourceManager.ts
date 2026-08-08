@@ -4,7 +4,7 @@ import { CustomSource, SourceType } from "./types";
 import { DEFAULT_SOURCES } from "./curatedSources";
 import { autoBalanceWeights, normalizeWeights } from "./weightCalculator";
 
-const STORAGE_KEY = "playpicks_custom_sources";
+const STORAGE_KEY = "callit_custom_sources";
 
 /**
  * Load all sources from localStorage
