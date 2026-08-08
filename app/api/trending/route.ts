@@ -116,6 +116,7 @@ function fmtVol(v: number): string {
 // For single-market events, surface the market's answer name when it differs from the title.
 function getTopOutcome(event: any): { name: string; prob: number } | null {
   try {
+    const eventTitle = String(event.title || '').toLowerCase();
     const markets = (event.markets || []).filter((m: any) => m && m.closed !== true);
     const readYes = (m: any): number | null => {
       try {
@@ -124,23 +125,48 @@ function getTopOutcome(event: any): { name: string; prob: number } | null {
         const yes = parseFloat(prices[0]);
         if (isNaN(yes)) return null;
         const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
-        return pct >= 1 && pct <= 100 ? pct : null;
+        return pct >= 0 && pct <= 100 ? pct : null;
       } catch { return null; }
     };
-    if (markets.length === 1) {
-      const name = String(markets[0].groupItemTitle || '').trim();
-      const prob = readYes(markets[0]);
-      if (name && prob !== null) return { name: name.slice(0, 40), prob };
-      return null;
-    }
-    let best: { name: string; prob: number } | null = null;
+    // Reject sub-markets that are prop bets, placeholders, draws, or the event title echoed back.
+    const isJunkOutcome = (name: string): boolean => {
+      const n = name.toLowerCase().trim();
+      if (!n || n.length < 2) return true;
+      if (/^team [a-z]$/.test(n)) return true;                       // "Team A" placeholders
+      if (/\bo\/u\b|over|under|innings|spread|handicap|\+\d|\-\d\.\d/.test(n)) return true; // prop bets
+      if (/rebounds|assists|points|strikeouts|goals scored/.test(n)) return true;
+      if (/^draw\b|^tie\b/.test(n)) return true;                     // draws are never the story
+      if (eventTitle && n.length > 12 && eventTitle.startsWith(n.slice(0, 12))) return true; // echo of title
+      return false;
+    };
+    const clean = (s: string) => {
+      const t = String(s || '').trim();
+      return t.length > 34 ? t.slice(0, 33).trimEnd() + '\u2026' : t;
+    };
+    const candidates: { name: string; prob: number }[] = [];
     for (const m of markets) {
       const prob = readYes(m);
-      const name = String(m.groupItemTitle || m.question || '').trim();
-      if (prob === null || !name) continue;
-      if (!best || prob > best.prob) best = { name: name.slice(0, 40), prob };
+      const raw = String(m.groupItemTitle || m.question || '').trim();
+      if (prob === null || !raw || isJunkOutcome(raw)) continue;
+      candidates.push({ name: raw, prob });
     }
-    return best;
+    if (candidates.length === 0) return null;
+    if (candidates.length === 1) {
+      const only = candidates[0];
+      // A lone near-certain outcome is not informative (e.g. "Bitcoin above $54,000").
+      if (only.prob >= 97 || only.prob <= 2) return null;
+      return { name: clean(only.name), prob: only.prob };
+    }
+    // For threshold ladders (Bitcoin above X), the top price is trivially ~100%.
+    // The informative outcome is the most uncertain one that still leads its neighbours.
+    const nearCertain = candidates.filter(o => o.prob >= 97).length;
+    const useContested = nearCertain >= 2;
+    const sorted = candidates.slice().sort((a, b) => b.prob - a.prob);
+    const pick = useContested
+      ? sorted.filter(o => o.prob < 97).sort((a, b) => b.prob - a.prob)[0] || sorted[0]
+      : sorted[0];
+    if (!pick) return null;
+    return { name: clean(pick.name), prob: pick.prob };
   } catch { return null; }
 }
 

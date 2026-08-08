@@ -405,7 +405,7 @@ export default function HomePage() {
                       ): e.topOutcome ? (
                         <div>
                           <div style={{fontSize:13,fontWeight:700,fontFamily:FONT_MONO,color:C.t2}}>{e.topOutcome.prob}%</div>
-                          <div style={{fontSize:8,color:C.t3,maxWidth:88,margin:'2px auto 0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{e.topOutcome.name} leads</div>
+                          <div style={{fontSize:8,color:C.t3,maxWidth:88,margin:'2px auto 0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{e.topOutcome.name}</div>
                         </div>
                       ): e.marketCount > 1 ? (
                         <span style={{fontSize:9,fontWeight:600,color:C.t3,padding:'2px 7px',borderRadius:4,background:'rgba(255,255,255,0.04)',whiteSpace:'nowrap' as const}}>{e.marketCount} possible answers</span>
