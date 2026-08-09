@@ -252,7 +252,7 @@ function VerdictCard({ aiPct, marketPct, question, sources, hasMarket, mtype, ou
               if (isDateLike) {
                 return "Traders see a " + pct + "% chance this happens by " + topOutcomes[0].name + " - " + (pct >= 60 ? "they think it is likely." : pct >= 35 ? "possible, but far from certain." : "they think it is unlikely.");
               }
-              return pct >= 60 ? "A clear favorite - people betting real money strongly agree." : pct >= 35 ? "The front-runner, but this race is far from decided." : "A slight lead in a wide-open race - nobody really knows yet.";
+              return pct >= 75 ? "A clear favorite - people betting real money strongly agree." : pct >= 45 ? "The front-runner, but this is far from decided." : pct >= 25 ? "A narrow lead - this one is genuinely open." : "A slight lead in a wide-open race - nobody really knows yet.";
             })()}
           </div>
           {topOutcomes.map((o: any, i: number) => (
