@@ -26,19 +26,19 @@ export default function LeaderboardPage() {
     }).catch(()=>setLoading(false));
   }, []);
 
-  const medals = ['🥇','🥈','🥉'];
+  const medals = ['','',''];
 
   return (
     <div style={{background:C.bg0,minHeight:'100vh',color:C.t1,fontFamily:"'Inter',system-ui,sans-serif"}}>
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:52,background:'rgba(6,6,10,0.95)',backdropFilter:'blur(20px)',borderBottom:'1px solid '+C.border,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 24px'}}>
         <button onClick={()=>router.push('/')} style={{background:'none',border:'none',color:C.purpleL,cursor:'pointer',fontSize:13,fontWeight:600}}>← Call It</button>
-        <div style={{fontSize:13,fontWeight:700}}>🏆 Leaderboard</div>
-        <button onClick={()=>router.push('/predict')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:600,color:C.green,border:'1px solid rgba(46,204,138,0.2)',background:'rgba(46,204,138,0.08)',cursor:'pointer'}}>🎯 Make Pick</button>
+        <div style={{fontSize:13,fontWeight:700}}>Leaderboard</div>
+        <button onClick={()=>router.push('/predict')} style={{padding:'5px 14px',borderRadius:8,fontSize:12,fontWeight:600,color:C.green,border:'1px solid rgba(46,204,138,0.2)',background:'rgba(46,204,138,0.08)',cursor:'pointer'}}>Make Pick</button>
       </nav>
 
       <div style={{maxWidth:600,margin:'0 auto',padding:'72px 24px 48px'}}>
         <div style={{textAlign:'center' as const,marginBottom:28}}>
-          <div style={{fontSize:40,marginBottom:8}}>🏆</div>
+          <div style={{fontSize:40,marginBottom:8}}></div>
           <h1 style={{fontSize:26,fontWeight:800,letterSpacing:'-0.8px',marginBottom:6}}>Weekly Leaderboard</h1>
           <p style={{fontSize:13,color:C.t2}}>{total} predictions made · Earn points for correct picks</p>
         </div>
@@ -46,7 +46,7 @@ export default function LeaderboardPage() {
         <div style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:14,padding:'16px',marginBottom:24}}>
           <div style={{fontSize:11,fontWeight:700,color:C.t3,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:12}}>How points work</div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
-            {[{pts:'+10',label:'Correct pick',color:C.green},{pts:'+5',label:'High confidence bonus',color:C.amber},{pts:'🔥',label:'Streak multiplier',color:C.red}].map((p,i)=>(
+            {[{pts:'+10',label:'Correct pick',color:C.green},{pts:'+5',label:'High confidence bonus',color:C.amber},{pts:'',label:'Streak multiplier',color:C.red}].map((p,i)=>(
               <div key={i} style={{background:C.bg3,borderRadius:10,padding:'10px',textAlign:'center' as const}}>
                 <div style={{fontSize:18,fontWeight:800,color:p.color,fontFamily:'monospace',marginBottom:4}}>{p.pts}</div>
                 <div style={{fontSize:10,color:C.t3}}>{p.label}</div>
@@ -61,7 +61,7 @@ export default function LeaderboardPage() {
           </div>
         ) : leaders.length === 0 ? (
           <div style={{textAlign:'center' as const,padding:'48px 0'}}>
-            <div style={{fontSize:40,marginBottom:12}}>🎯</div>
+            <div style={{fontSize:40,marginBottom:12}}></div>
             <div style={{fontSize:16,fontWeight:600,color:C.t2,marginBottom:6}}>No predictions yet</div>
             <div style={{fontSize:13,color:C.t3,marginBottom:20}}>Be the first to make a pick!</div>
             <button onClick={()=>router.push('/predict')} style={{padding:'10px 24px',borderRadius:10,background:C.purple,border:'none',color:'white',fontSize:13,fontWeight:600,cursor:'pointer'}}>Make first prediction →</button>
@@ -74,7 +74,7 @@ export default function LeaderboardPage() {
                 <div style={{flex:1}}>
                   <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
                     <span style={{fontSize:13,fontWeight:700,color:C.t1}}>{leader.username}</span>
-                    {leader.current_streak>2&&<span style={{fontSize:11,color:C.red}}>🔥{leader.current_streak}</span>}
+                    {leader.current_streak>2&&<span style={{fontSize:11,color:C.red}}>{leader.current_streak}</span>}
                     {leader.username===username&&<span style={{fontSize:9,color:C.purpleL,fontWeight:700,padding:'1px 6px',background:C.purpleBg,borderRadius:4}}>YOU</span>}
                   </div>
                   <div style={{display:'flex',alignItems:'center',gap:8}}>
@@ -94,7 +94,7 @@ export default function LeaderboardPage() {
         )}
 
         <div style={{marginTop:24,textAlign:'center' as const}}>
-          <button onClick={()=>router.push('/predict')} style={{padding:'12px 32px',borderRadius:12,background:C.purple,border:'none',color:'white',fontSize:14,fontWeight:600,cursor:'pointer'}}>🎯 Make today's prediction</button>
+          <button onClick={()=>router.push('/predict')} style={{padding:'12px 32px',borderRadius:12,background:C.purple,border:'none',color:'white',fontSize:14,fontWeight:600,cursor:'pointer'}}>Make today's prediction</button>
         </div>
       </div>
     </div>

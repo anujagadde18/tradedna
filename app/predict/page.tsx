@@ -53,7 +53,7 @@ export default function PredictPage() {
           team1: m.home, team2: m.away,
           time: `${m.date===todayStr?'Today':m.date===tomorrowStr?'Tomorrow':m.date} · ${m.time} IST`,
           venue: m.venue, aiPrediction: m.home, aiConfidence: 58,
-          sport: '🏏', date: m.date, category: 'cricket',
+          sport: '', date: m.date, category: 'cricket',
         })))
       .catch(() => []);
 
@@ -103,7 +103,7 @@ export default function PredictPage() {
             venue: `$${(vol/1000000).toFixed(1)}M traded`,
             aiPrediction: conf>=50?leftName.slice(0,28):rightName.slice(0,28),
             aiConfidence: conf>=50?conf:100-conf,
-            sport: '🏆', date: todayStr, category: 'sports',
+            sport: '', date: todayStr, category: 'sports',
           };
         }))
       .catch(() => []);
@@ -155,20 +155,20 @@ export default function PredictPage() {
     <div style={{background:C.bg0,minHeight:'100vh',color:C.t1,fontFamily:"'Inter',system-ui,sans-serif"}}>
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:52,background:'rgba(6,6,10,0.95)',backdropFilter:'blur(20px)',borderBottom:'1px solid '+C.border,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 24px'}}>
         <button onClick={()=>router.push('/')} style={{background:'none',border:'none',color:C.purpleL,cursor:'pointer',fontSize:13,fontWeight:600}}>← Call It</button>
-        <div style={{fontSize:13,fontWeight:700}}>🎯 Make Your Picks</div>
-        <button onClick={()=>router.push('/leaderboard')} style={{background:'none',border:'none',color:C.amber,cursor:'pointer',fontSize:12,fontWeight:600}}>🏆 Leaderboard</button>
+        <div style={{fontSize:13,fontWeight:700}}>Make Your Picks</div>
+        <button onClick={()=>router.push('/leaderboard')} style={{background:'none',border:'none',color:C.amber,cursor:'pointer',fontSize:12,fontWeight:600}}>Leaderboard</button>
       </nav>
 
       <div style={{maxWidth:560,margin:'0 auto',padding:'72px 24px 48px'}}>
         <div style={{textAlign:'center' as const,marginBottom:24}}>
-          <div style={{fontSize:36,marginBottom:8}}>🎯</div>
+          <div style={{fontSize:36,marginBottom:8}}></div>
           <h1 style={{fontSize:24,fontWeight:800,letterSpacing:'-0.6px',marginBottom:6}}>Today's Picks</h1>
           <p style={{fontSize:13,color:C.t2}}>Pick before the match · Earn points · Climb the leaderboard</p>
         </div>
 
         {!usernameSet ? (
           <div style={{background:C.bg2,border:'1px solid '+C.purpleBorder,borderRadius:16,padding:'20px',marginBottom:24}}>
-            <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>👋 Pick a display name</div>
+            <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>Pick a display name</div>
             <div style={{fontSize:12,color:C.t3,marginBottom:14}}>Shows on the leaderboard</div>
             <div style={{display:'flex',gap:8}}>
               <input value={usernameInput} onChange={e=>setUsernameInput(e.target.value)}
@@ -195,7 +195,7 @@ export default function PredictPage() {
           </div>
         ) : matches.length === 0 ? (
           <div style={{textAlign:'center' as const,padding:'48px 0'}}>
-            <div style={{fontSize:40,marginBottom:12}}>🔍</div>
+            <div style={{fontSize:40,marginBottom:12}}></div>
             <div style={{fontSize:15,fontWeight:600,color:C.t2,marginBottom:6}}>No picks today</div>
             <div style={{fontSize:13,color:C.t3}}>Markets too uncertain — check back tomorrow</div>
           </div>
@@ -213,7 +213,7 @@ export default function PredictPage() {
 
                 {submitted[match.id] ? (
                   <div style={{padding:'20px 16px',textAlign:'center' as const}}>
-                    <div style={{fontSize:24,marginBottom:8}}>✅</div>
+                    <div style={{fontSize:24,marginBottom:8}}></div>
                     <div style={{fontSize:14,fontWeight:700,color:C.green,marginBottom:4}}>Pick locked in!</div>
                     <div style={{fontSize:12,color:C.t2}}>You picked <strong>{predictions[match.id]}</strong></div>
                     <div style={{fontSize:11,color:C.t3,marginTop:4}}>Results after market resolves · Check leaderboard</div>
@@ -229,7 +229,7 @@ export default function PredictPage() {
                             background:predictions[match.id]===team?C.purpleBg:C.bg3,
                             color:predictions[match.id]===team?C.t1:C.t2,
                             fontSize:13,fontWeight:600,transition:'all 0.15s',textAlign:'center' as const}}>
-                          {predictions[match.id]===team&&<div style={{fontSize:16,marginBottom:4}}>✓</div>}
+                          {predictions[match.id]===team&&<div style={{fontSize:16,marginBottom:4}}></div>}
                           {team}
                         </button>
                       ))}
@@ -251,7 +251,7 @@ export default function PredictPage() {
                     )}
 
                     <div style={{padding:'8px 12px',background:C.bg3,borderRadius:8,marginBottom:12,display:'flex',alignItems:'center',gap:8}}>
-                      <span style={{fontSize:12}}>🤖</span>
+                      <span style={{fontSize:12}}></span>
                       <span style={{fontSize:11,color:C.t2}}>AI: <strong style={{color:C.purpleL}}>{match.aiPrediction} {match.aiConfidence}%</strong></span>
                       <button onClick={()=>router.push('/scores?event='+encodeURIComponent(match.title))}
                         style={{marginLeft:'auto',fontSize:10,color:C.purpleL,background:'none',border:'none',cursor:'pointer'}}>Full analysis →</button>
@@ -266,7 +266,7 @@ export default function PredictPage() {
                         border:'none',color:'white',fontSize:13,fontWeight:600,
                         cursor:predictions[match.id]?'pointer':'not-allowed',
                         opacity:loading[match.id]?0.7:1}}>
-                      {loading[match.id]?'Saving...':`🎯 Lock in ${predictions[match.id]||'pick'}`}
+                      {loading[match.id]?'Saving...':`Lock in ${predictions[match.id]||'pick'}`}
                     </button>
                   </div>
                 )}
@@ -278,7 +278,7 @@ export default function PredictPage() {
         <div style={{marginTop:24,textAlign:'center' as const}}>
           <button onClick={()=>router.push('/leaderboard')}
             style={{padding:'10px 24px',borderRadius:10,background:'transparent',border:'1px solid '+C.border,color:C.t2,fontSize:13,cursor:'pointer'}}>
-            🏆 View leaderboard
+            View leaderboard
           </button>
         </div>
       </div>

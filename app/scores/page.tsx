@@ -50,9 +50,9 @@ function getConviction(aiPct: number, marketPct: number) {
     if (aiPct >= 60) return { label: 'Medium confidence',  style: 'med',  color: '#f5a623', bg: 'rgba(245,166,35,0.1)',  border: 'rgba(245,166,35,0.2)' };
     return               { label: 'Low confidence',       style: 'low',  color: '#ef4f6a', bg: 'rgba(239,79,106,0.1)', border: 'rgba(239,79,106,0.2)' };
   }
-  if (edge > 8) return   { label: 'High conviction',      style: 'high', color: '#2ecc8a', bg: 'rgba(46,204,138,0.1)',  border: 'rgba(46,204,138,0.2)' };
-  if (edge > 3) return   { label: 'Medium conviction',    style: 'med',  color: '#f5a623', bg: 'rgba(245,166,35,0.1)',  border: 'rgba(245,166,35,0.2)' };
-  return                 { label: 'Low conviction',       style: 'low',  color: '#ef4f6a', bg: 'rgba(239,79,106,0.1)', border: 'rgba(239,79,106,0.2)' };
+  if (edge > 8) return   { label: 'Very clear',      style: 'high', color: '#2ecc8a', bg: 'rgba(46,204,138,0.1)',  border: 'rgba(46,204,138,0.2)' };
+  if (edge > 3) return   { label: 'Fairly clear',    style: 'med',  color: '#f5a623', bg: 'rgba(245,166,35,0.1)',  border: 'rgba(245,166,35,0.2)' };
+  return                 { label: 'Close call',       style: 'low',  color: '#ef4f6a', bg: 'rgba(239,79,106,0.1)', border: 'rgba(239,79,106,0.2)' };
 }
 
 function getVerdictText(aiPct: number): string {

@@ -36,7 +36,7 @@ export default function PicksPage() {
     <div style={{background:C.bg0,minHeight:'100vh',color:C.t1,fontFamily:"'Inter',system-ui,sans-serif"}}>
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:52,background:'rgba(6,6,10,0.95)',backdropFilter:'blur(20px)',borderBottom:'1px solid '+C.border,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 24px'}}>
         <button onClick={()=>router.push('/')} style={{background:'none',border:'none',color:C.purpleL,cursor:'pointer',fontSize:13,fontWeight:600}}>← Call It</button>
-        <div style={{fontSize:13,fontWeight:700}}>🎯 Daily Picks</div>
+        <div style={{fontSize:13,fontWeight:700}}>Daily Picks</div>
         <button onClick={()=>router.push('/accuracy')} style={{background:'none',border:'none',color:C.t3,cursor:'pointer',fontSize:12}}>Record →</button>
       </nav>
 
@@ -48,18 +48,18 @@ export default function PicksPage() {
             Auto-generated · Updates daily
           </div>
           <h1 style={{fontSize:26,fontWeight:800,letterSpacing:'-0.8px',marginBottom:4}}>
-            Today's AI Picks
+            Today's calls
           </h1>
-          <p style={{fontSize:13,color:C.t2}}>{date ? fmt(date) : 'Loading...'} · Only high conviction picks published</p>
+          <p style={{fontSize:13,color:C.t2}}>{date ? fmt(date) : 'Loading...'} · Only published when the market leans clearly one way</p>
         </div>
 
         <div style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'14px 16px',marginBottom:20}}>
           <div style={{fontSize:11,fontWeight:700,color:C.t3,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:10}}>How this works</div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
             {[
-              {icon:'🤖',title:'Auto-generated',desc:'AI scans all Polymarket markets every morning'},
-              {icon:'🎯',title:'High conviction only',desc:'Only published when odds are 65%+ or 35%-'},
-              {icon:'✅',title:'Public record',desc:'Every pick tracked — wins and losses'},
+              {icon:'',title:'Checked every morning',desc:'We scan every live market for the clearest signals'},
+              {icon:'',title:'Only clear cases',desc:'Published when bettors lean strongly one way'},
+              {icon:'',title:'Public record',desc:'Every call tracked in the open - wins and losses'},
             ].map((s,i)=>(
               <div key={i} style={{background:C.bg3,borderRadius:10,padding:'10px',textAlign:'center' as const}}>
                 <div style={{fontSize:20,marginBottom:4}}>{s.icon}</div>
@@ -76,7 +76,7 @@ export default function PicksPage() {
           </div>
         ) : picks.length === 0 ? (
           <div style={{textAlign:'center' as const,padding:'48px 0'}}>
-            <div style={{fontSize:40,marginBottom:12}}>🔍</div>
+            <div style={{fontSize:40,marginBottom:12}}></div>
             <div style={{fontSize:16,fontWeight:600,color:C.t2,marginBottom:6}}>No picks today</div>
             <div style={{fontSize:13,color:C.t3,marginBottom:20}}>Markets are too uncertain today. We only pick when the edge is real.</div>
             <button onClick={()=>router.push('/')} style={{padding:'10px 24px',borderRadius:10,background:C.purple,border:'none',color:'white',fontSize:13,fontWeight:600,cursor:'pointer'}}>
@@ -140,11 +140,11 @@ export default function PicksPage() {
 
                   {expanded===pick.id && (
                     <div style={{marginTop:12}}>
-                      <div style={{fontSize:10,fontWeight:700,color:C.green,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:8}}>✅ Bull case</div>
+                      <div style={{fontSize:10,fontWeight:700,color:C.green,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:8}}>Bull case</div>
                       {pick.reasoning.map((r:string,j:number)=>(
                         <div key={j} style={{fontSize:12,color:C.t2,marginBottom:6,paddingLeft:10,borderLeft:'2px solid '+C.green,lineHeight:1.5}}>{r}</div>
                       ))}
-                      <div style={{fontSize:10,fontWeight:700,color:C.red,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:8,marginTop:12}}>⚠️ Risks</div>
+                      <div style={{fontSize:10,fontWeight:700,color:C.red,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:8,marginTop:12}}>Risks</div>
                       {pick.risks.map((r:string,j:number)=>(
                         <div key={j} style={{fontSize:12,color:C.t2,marginBottom:6,paddingLeft:10,borderLeft:'2px solid '+C.red,lineHeight:1.5}}>{r}</div>
                       ))}
@@ -155,10 +155,10 @@ export default function PicksPage() {
                 <div style={{padding:'12px 18px',display:'flex',gap:8}}>
                   <button onClick={()=>router.push('/scores?event='+encodeURIComponent(pick.title))}
                     style={{flex:2,padding:'10px',borderRadius:10,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,cursor:'pointer',fontSize:12,fontWeight:600}}>
-                    🤖 Full AI analysis →
+                    Full AI analysis →
                   </button>
                   <button onClick={()=>{
-                    const text = `🎯 Call It Daily Pick\n\n${pick.icon} ${pick.title}\n${pick.confidence}% market odds\n\n${pick.reasoning[0]}\n\ntradedna.vercel.app/picks\n\n#Call It #Polymarket`;
+                    const text = `Call It Daily Pick\n\n${pick.icon} ${pick.title}\n${pick.confidence}% market odds\n\n${pick.reasoning[0]}\n\ntradedna.vercel.app/picks\n\n#Call It #Polymarket`;
                     if (navigator.share) navigator.share({text});
                     else navigator.clipboard.writeText(text);
                   }} style={{flex:1,padding:'10px',borderRadius:10,background:C.bg3,border:'1px solid '+C.border,color:C.t2,cursor:'pointer',fontSize:12}}>

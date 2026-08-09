@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Call It",
     description: "Transparent probability analysis for any question. Every source shown. Free to try.",
-    site: "@callit",
+    site: "@trycallit",
   },
 };
 

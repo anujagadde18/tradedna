@@ -46,7 +46,7 @@ export default function F1Page() {
     <div style={{background:C.bg0,minHeight:'100vh',color:C.t1,fontFamily:"'Inter',system-ui,sans-serif"}}>
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:52,background:'rgba(6,6,10,0.95)',backdropFilter:'blur(20px)',borderBottom:'1px solid '+C.border,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 24px'}}>
         <button onClick={()=>router.push('/')} style={{background:'none',border:'none',color:C.purpleL,cursor:'pointer',fontSize:13,fontWeight:600}}>← Call It</button>
-        <div style={{fontSize:13,fontWeight:700,color:C.t1}}>🏎️ F1 British Grand Prix</div>
+        <div style={{fontSize:13,fontWeight:700,color:C.t1}}>F1 British Grand Prix</div>
         <div style={{fontSize:11,color:C.t3}}>Jul 5, 2026 · Round 9</div>
       </nav>
 
@@ -57,11 +57,11 @@ export default function F1Page() {
             Round 9 · Silverstone Circuit, Great Britain
           </div>
           <h1 style={{fontSize:32,fontWeight:800,letterSpacing:'-1px',marginBottom:8}}>2026 British Grand Prix</h1>
-          <p style={{fontSize:14,color:C.t2}}>🏆 RESULT: Leclerc WON at Silverstone! Russell P2 · Hamilton P3 · Antonelli no points (wheel failure + penalty)</p>
+          <p style={{fontSize:14,color:C.t2}}>RESULT: Leclerc WON at Silverstone! Russell P2 · Hamilton P3 · Antonelli no points (wheel failure + penalty)</p>
         </div>
 
         <div style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:16,padding:'20px',marginBottom:24}}>
-          <div style={{fontSize:11,fontWeight:700,color:C.t3,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:16}}>🏆 Championship Leaders</div>
+          <div style={{fontSize:11,fontWeight:700,color:C.t3,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:16}}>Championship Leaders</div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:12}}>
             {DRIVERS.slice(0,2).map((d,i) => (
               <div key={i} style={{background:C.bg3,borderRadius:12,padding:'14px',border:'1px solid rgba(0,210,190,0.15)'}}>
@@ -141,13 +141,13 @@ export default function F1Page() {
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
               <div style={{background:C.bg3,borderRadius:10,padding:'12px'}}>
-                <div style={{fontSize:10,fontWeight:700,color:C.green,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:8}}>✅ Bull factors</div>
+                <div style={{fontSize:10,fontWeight:700,color:C.green,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:8}}>Bull factors</div>
                 {driver.bull.map((b,i) => (
                   <div key={i} style={{fontSize:12,color:C.t2,marginBottom:6,paddingLeft:8,borderLeft:'2px solid '+C.green}}>{b}</div>
                 ))}
               </div>
               <div style={{background:C.bg3,borderRadius:10,padding:'12px'}}>
-                <div style={{fontSize:10,fontWeight:700,color:C.red,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:8}}>⚠️ Bear factors</div>
+                <div style={{fontSize:10,fontWeight:700,color:C.red,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:8}}>Bear factors</div>
                 {driver.bear.map((b,i) => (
                   <div key={i} style={{fontSize:12,color:C.t2,marginBottom:6,paddingLeft:8,borderLeft:'2px solid '+C.red}}>{b}</div>
                 ))}
@@ -167,7 +167,7 @@ export default function F1Page() {
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:16}}>
           <div style={{background:'rgba(46,204,138,0.06)',border:'1px solid rgba(46,204,138,0.2)',borderRadius:12,padding:'12px 14px'}}>
             <div style={{fontSize:10,color:C.green,fontWeight:700,textTransform:'uppercase' as const,marginBottom:4}}>Silverstone Qualifying</div>
-            <div style={{fontSize:12,fontWeight:600,color:C.t1}}>🏆 Antonelli POLE</div>
+            <div style={{fontSize:12,fontWeight:600,color:C.t1}}>Antonelli POLE</div>
             <div style={{fontSize:11,color:C.t3}}>Leclerc P2 · Hamilton P3</div>
           </div>
           <div style={{background:'rgba(245,166,35,0.06)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:12,padding:'12px 14px'}}>
@@ -178,7 +178,7 @@ export default function F1Page() {
         </div>
 
         <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,marginBottom:16}}>
-          {[{label:'British GP Result',value:'Leclerc WON 🏆'},{label:'Season data through',value:'British GP - Jul 5'},{label:'Championship Lead',value:'Antonelli +25pts'}].map((item,i) => (
+          {[{label:'British GP Result',value:'Leclerc WON '},{label:'Season data through',value:'British GP - Jul 5'},{label:'Championship Lead',value:'Antonelli +25pts'}].map((item,i) => (
             <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:10,padding:'12px',textAlign:'center' as const}}>
               <div style={{fontSize:10,color:C.t3,marginBottom:4}}>{item.label}</div>
               <div style={{fontSize:12,fontWeight:600,color:C.t1}}>{item.value}</div>

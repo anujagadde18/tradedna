@@ -140,7 +140,7 @@ export default function AccuracyPage() {
           {[
             { label:'Win rate', value: accuracy+'%', color: accuracy >= 60 ? C.green : C.amber, sub: `${correct.length}/${resolved.length} resolved` },
             { label:'Total predictions', value: PREDICTIONS.length, color: C.purple, sub: `${pending} pending` },
-            { label:'Avg confidence', value: avgConfidence+'%', color: C.blue, sub: 'AI conviction score' },
+            { label:'Avg confidence', value: avgConfidence+'%', color: C.blue, sub: 'average across all calls' },
             { label:'Best streak', value: '4', color: C.green, sub: 'correct in a row' },
           ].map(s => (
             <div key={s.label} style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:12, padding:'16px 18px' }}>
