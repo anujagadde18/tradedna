@@ -17,19 +17,19 @@ export function ShareAnalysisButton({ analysis }: { analysis: AnalysisOutput }) 
     setIsSharing(true);
     
     // Generate shareable text
-    const shareText = ` TradeDNA Analysis: ${analysis.event}
+    const shareText = `${analysis.event}
 
- Prediction: ${direction} (${confidence}%)
- Conviction: ${analysis.directional.convictionTier}
- Reliability: ${reliability.score}% ${reliability.emoji}
+The call: ${direction} - ${confidence}%
 
-Analyzed with explainable AI - see why at tradedna.vercel.app`;
+Every source behind this number is shown, and you can change how much each one counts.
+
+trycallit.vercel.app`;
 
     // Try native share API first (mobile)
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `TradeDNA Analysis: ${analysis.event}`,
+          title: `Call It: ${analysis.event}`,
           text: shareText,
           url: window.location.href,
         });
@@ -56,7 +56,7 @@ Analyzed with explainable AI - see why at tradedna.vercel.app`;
     const direction = analysis.directional.yes > 50 ? "YES" : "NO";
     const confidence = analysis.directional.yes > 50 ? analysis.directional.yes : analysis.directional.no;
     
-    const tweetText = ` TradeDNA Analysis: ${analysis.event}
+    const tweetText = ` Call It analysis: ${analysis.event}
 
  ${direction} (${confidence}%)
  ${analysis.directional.convictionTier} conviction
@@ -145,7 +145,7 @@ Built with explainable AI - not a black box!
       </div>
 
       <div style={{ marginTop: 12, fontSize: 12, color: "#9ca3af", lineHeight: 1.5 }}>
-        Share your analysis to help others make informed decisions. Every share helps grow the TradeDNA community!
+        Share your analysis to help others make informed decisions. Every share helps grow the Call It community!
       </div>
     </div>
   );
@@ -168,7 +168,7 @@ export function SharePreviewCard({ analysis }: { analysis: AnalysisOutput }) {
         <div style={{ fontSize: 32 }}></div>
         <div>
           <div style={{ fontSize: 11, color: "#60a5fa", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-            TradeDNA Analysis
+            Call It analysis
           </div>
           <div style={{ fontSize: 13, color: "#cbd5e1", marginTop: 2 }}>
             Explainable Conviction Modeling
@@ -212,7 +212,7 @@ export function SharePreviewCard({ analysis }: { analysis: AnalysisOutput }) {
         fontSize: 12,
         color: "#9ca3af"
       }}>
-        tradedna.vercel.app
+        trycallit.vercel.app
       </div>
     </div>
   );

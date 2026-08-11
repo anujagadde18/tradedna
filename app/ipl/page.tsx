@@ -132,12 +132,12 @@ export default function IPLPage() {
   async function shareWhatsApp(match: typeof MATCHES[0]) {
     const home = TEAM_COLORS[match.home];
     const away = TEAM_COLORS[match.away];
-    const msg = `🏏 *IPL 2026 Match ${match.no} Prediction*\n\n*${match.home} vs ${match.away}*\n📍 ${match.venue} · ${formatDate(match.date)} ${match.time} IST\n\nGet AI odds for this match 👇\nhttps://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${match.home} beat ${match.away} in IPL 2026?`)}\n\n#IPL2026 #${home?.short}vs${away?.short} #Cricket`;
+    const msg = `🏏 *IPL 2026 Match ${match.no} Prediction*\n\n*${match.home} vs ${match.away}*\n📍 ${match.venue} · ${formatDate(match.date)} ${match.time} IST\n\nGet AI odds for this match 👇\nhttps://trycallit.vercel.app/scores?event=${encodeURIComponent(`Will ${match.home} beat ${match.away} in IPL 2026?`)}\n\n#IPL2026 #${home?.short}vs${away?.short} #Cricket`;
     window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
   }
 
   async function copyLink(match: typeof MATCHES[0], i: number) {
-    const url = `https://tradedna.vercel.app/scores?event=${encodeURIComponent(`Will ${match.home} beat ${match.away} in IPL 2026?`)}`;
+    const url = `https://trycallit.vercel.app/scores?event=${encodeURIComponent(`Will ${match.home} beat ${match.away} in IPL 2026?`)}`;
     await navigator.clipboard.writeText(url);
     setCopied(i);
     setTimeout(() => setCopied(null), 2000);

@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 async function fetchDailyPicks() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://tradedna.vercel.app';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://trycallit.vercel.app';
   const res = await fetch(`${baseUrl}/api/daily-pick`, { signal: AbortSignal.timeout(10000) });
   const data = await res.json();
   return data.picks || [];
@@ -20,8 +20,8 @@ function formatTweet(pick: any): string {
   let tweet = `${icon} ${title}\n\n`;
   tweet += `${direction} — ${confidence}% market odds\n`;
   tweet += `${vol} traded today\n\n`;
-  tweet += `tradedna.vercel.app/picks\n`;
-  tweet += `#Polymarket #Call It`;
+  tweet += `trycallit.vercel.app/picks\n`;
+  tweet += `#Polymarket #CallIt`;
 
   return tweet.slice(0, 275);
 }

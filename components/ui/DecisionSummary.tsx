@@ -84,7 +84,7 @@ export function DecisionSummaryCard({ analysis }: { analysis: AnalysisOutput }) 
         <div style={{ fontSize: 32 }}></div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#60a5fa", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>
-            TradeDNA Decision Summary
+            Call It summary
           </div>
           
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 12 }}>
@@ -162,7 +162,7 @@ function MetricsExplainer({ reliability, analysis }: { reliability: ReturnType<t
       
       <ExplainerRow
         term="Lean (YES/NO)"
-        meaning={`The direction TradeDNA predicts based on weighted signal analysis. ${analysis.directional.yes > 50 ? "YES" : "NO"} has ${analysis.directional.yes > 50 ? analysis.directional.yes : analysis.directional.no}% confidence after volatility adjustment.`}
+        meaning={`The direction Call It predicts based on weighted signal analysis. ${analysis.directional.yes > 50 ? "YES" : "NO"} has ${analysis.directional.yes > 50 ? analysis.directional.yes : analysis.directional.no}% confidence after volatility adjustment.`}
       />
       
       <ExplainerRow
@@ -200,13 +200,13 @@ export function TradeRecommendation({ analysis }: { analysis: AnalysisOutput }) 
   let recommendation = "";
   
   if (reliability.level === "High" && analysis.directional.convictionTier === "High") {
-    recommendation = `Based on high signal alignment and ${reliability.score}% reliability, TradeDNA leans ${direction} with strong conviction. Favorable for execution.`;
+    recommendation = `Based on high signal alignment and ${reliability.score}% reliability, Call It leans ${direction} with strong conviction. Favorable for execution.`;
   } else if (reliability.level === "High" || analysis.directional.convictionTier === "Moderate") {
-    recommendation = `Based on ${analysis.directional.stabilityLabel.toLowerCase()} stability and ${reliability.level.toLowerCase()} reliability, TradeDNA suggests ${direction} with ${analysis.directional.convictionTier.toLowerCase()} conviction. Additional research recommended before trading.`;
+    recommendation = `Based on ${analysis.directional.stabilityLabel.toLowerCase()} stability and ${reliability.level.toLowerCase()} reliability, Call It suggests ${direction} with ${analysis.directional.convictionTier.toLowerCase()} conviction. Additional research recommended before trading.`;
   } else if (reliability.level === "Low" || analysis.directional.convictionTier === "Weak" || analysis.directional.convictionTier === "Uncertain") {
     recommendation = `Signals show ${reliability.level.toLowerCase()} reliability and ${analysis.directional.convictionTier.toLowerCase()} conviction. High uncertainty detected. Wait for clearer indicators before trading.`;
   } else {
-    recommendation = `TradeDNA leans ${direction} (${confidence}%) with ${analysis.directional.convictionTier.toLowerCase()} conviction and ${reliability.level.toLowerCase()} reliability. Validate evidence sources before execution.`;
+    recommendation = `Call It leans ${direction} (${confidence}%) with ${analysis.directional.convictionTier.toLowerCase()} conviction and ${reliability.level.toLowerCase()} reliability. Validate evidence sources before execution.`;
   }
   
   const bgColor = reliability.level === "High" ? "rgba(16, 185, 129, 0.1)" : reliability.level === "Moderate" ? "rgba(245, 158, 11, 0.1)" : "rgba(239, 68, 68, 0.1)";

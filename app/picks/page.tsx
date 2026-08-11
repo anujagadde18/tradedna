@@ -158,7 +158,7 @@ export default function PicksPage() {
                     Full AI analysis →
                   </button>
                   <button onClick={()=>{
-                    const text = `Call It Daily Pick\n\n${pick.icon} ${pick.title}\n${pick.confidence}% market odds\n\n${pick.reasoning[0]}\n\ntradedna.vercel.app/picks\n\n#Call It #Polymarket`;
+                    const text = `Call It Daily Pick\n\n${pick.icon} ${pick.title}\n${pick.confidence}% market odds\n\n${pick.reasoning[0]}\n\ntrycallit.vercel.app/picks\n\n#CallIt #Polymarket`;
                     if (navigator.share) navigator.share({text});
                     else navigator.clipboard.writeText(text);
                   }} style={{flex:1,padding:'10px',borderRadius:10,background:C.bg3,border:'1px solid '+C.border,color:C.t2,cursor:'pointer',fontSize:12}}>

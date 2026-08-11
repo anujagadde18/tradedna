@@ -494,8 +494,8 @@ function ShareButtons({ question, aiPct, marketPct, hasMarket, isMatchup, team1,
     question.toLowerCase().includes('soccer') || question.toLowerCase().includes('fc') || question.toLowerCase().includes('united') ? '⚽' : '🏆';
 
   const shareText = isMatchup && team1 && team2
-    ? `${sportEmoji} AI Prediction: ${team1} vs ${team2}\n\n${team1}: ${aiPct}% | ${team2}: ${aiTeam2Pct}%\n\n${hasMarket && marketPct > 0 && marketPct < 98 ? 'Market: ' + marketPct + '% for ' + team1 + '\n\n' : ''}Full AI analysis 👇\ntradedna.vercel.app\n\n#Call It #AIodds`
-    : `🤖 Call It: ${aiPct}% chance\n\n"${question}"\n\n${hasMarket && marketPct > 0 ? 'Market: ' + marketPct + '%\n\n' : ''}tradedna.vercel.app\n#Call It`;
+    ? `${sportEmoji} AI Prediction: ${team1} vs ${team2}\n\n${team1}: ${aiPct}% | ${team2}: ${aiTeam2Pct}%\n\n${hasMarket && marketPct > 0 && marketPct < 98 ? 'Market: ' + marketPct + '% for ' + team1 + '\n\n' : ''}Full AI analysis 👇\ntrycallit.vercel.app\n\n#CallIt #AIodds`
+    : `🤖 Call It: ${aiPct}% chance\n\n"${question}"\n\n${hasMarket && marketPct > 0 ? 'Market: ' + marketPct + '%\n\n' : ''}trycallit.vercel.app\n#CallIt`;
 
   function onX() {
     window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(shareText), '_blank', 'width=550,height=420');

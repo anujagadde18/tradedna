@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; TradeDNA/1.0)',
+        'User-Agent': 'Mozilla/5.0 (compatible; CallIt/1.0)',
         'Accept': '*/*',
       },
     });
