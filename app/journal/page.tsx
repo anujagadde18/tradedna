@@ -47,6 +47,8 @@ export default function JournalPage() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [filter, setFilter] = useState<'all'|'correct'|'incorrect'|'pending'>('all');
   const [expanded, setExpanded] = useState<string|null>(null);
+  const [checking, setChecking] = useState(false);
+  const [checkMsg, setCheckMsg] = useState<string|null>(null);
 
   useEffect(() => {
     const journal = getJournal();
@@ -64,8 +66,50 @@ export default function JournalPage() {
       setEntries(seed);
     } else {
       setEntries(journal);
+      setTimeout(() => { checkResults(true); }, 600);
     }
   }, []);
+
+  // Checks pending predictions against settled Polymarket markets and updates
+  // them in place. Only applies a verdict when the market has actually settled
+  // and the match is confident - anything else stays pending.
+  async function checkResults(auto = false) {
+    const journal = getJournal();
+    const pending = journal.filter(e => e.result === 'pending');
+    if (pending.length === 0) { if (!auto) setCheckMsg('Nothing pending to check.'); return; }
+    setChecking(true);
+    if (!auto) setCheckMsg(null);
+    try {
+      const res = await fetch('/api/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: pending.slice(0, 60).map(e => ({ id: e.id, question: e.question, confidence: e.aiConfidence })) }),
+      });
+      const data = await res.json();
+      const results: any[] = data.results || [];
+      let updated = 0;
+      for (const r of results) {
+        if (r.status !== 'resolved') continue;
+        const entry = journal.find(e => e.id === r.id);
+        if (!entry) continue;
+        entry.result = r.correct ? 'correct' : 'incorrect';
+        entry.notes = (entry.notes ? entry.notes + ' ' : '') + 'Resolved automatically: ' + r.outcome + '.';
+        saveEntry(entry);
+        updated++;
+      }
+      setEntries(getJournal());
+      const stillOpen = results.filter(r => r.status === 'unsettled').length;
+      const noMatch = results.filter(r => r.status === 'unmatched').length;
+      setCheckMsg(
+        updated > 0
+          ? 'Resolved ' + updated + ' prediction' + (updated === 1 ? '' : 's') + '.' + (stillOpen ? ' ' + stillOpen + ' still open.' : '')
+          : 'Nothing new to resolve.' + (stillOpen ? ' ' + stillOpen + ' still waiting on their market.' : '') + (noMatch ? ' ' + noMatch + ' could not be matched to a market.' : '')
+      );
+    } catch {
+      setCheckMsg('Could not reach the market data right now. Try again in a moment.');
+    }
+    setChecking(false);
+  }
 
   const filtered = entries.filter(e => filter === 'all' || e.result === filter);
   const resolved = entries.filter(e => e.result !== 'pending');
@@ -101,6 +145,17 @@ export default function JournalPage() {
           <div style={{marginBottom:28}}>
             <h1 style={{fontSize:26,fontWeight:800,letterSpacing:'-0.5px',margin:'0 0 6px'}}>Prediction Journal</h1>
             <p style={{fontSize:13,color:S.text2,margin:0}}>Every analysis saved with source breakdown and weights used</p>
+            <div style={{display:'flex',alignItems:'center',gap:12,marginTop:14,flexWrap:'wrap'}}>
+              <button onClick={()=>checkResults(false)} disabled={checking}
+                style={{padding:'8px 16px',borderRadius:9,fontSize:12,fontWeight:700,cursor:checking?'default':'pointer',border:'1px solid '+S.border2,background:checking?S.bg3:'rgba(124,111,247,0.12)',color:checking?S.text3:S.purple2}}>
+                {checking ? 'Checking results...' : 'Check results now'}
+              </button>
+              {checkMsg && <span style={{fontSize:12,color:S.text2}}>{checkMsg}</span>}
+            </div>
+            <p style={{fontSize:11,color:S.text3,margin:'10px 0 0',lineHeight:1.6}}>
+              Pending predictions are checked against settled markets automatically when this page opens.
+              A prediction is only marked right or wrong once its market has actually resolved.
+            </p>
           </div>
 
           {/* Stats */}
