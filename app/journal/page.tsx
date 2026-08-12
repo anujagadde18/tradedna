@@ -66,7 +66,6 @@ export default function JournalPage() {
       setEntries(seed);
     } else {
       setEntries(journal);
-      setTimeout(() => { checkResults(true); }, 600);
     }
   }, []);
 
@@ -110,6 +109,14 @@ export default function JournalPage() {
     }
     setChecking(false);
   }
+
+  // Always check pending results once after the page mounts, whether the
+  // journal was loaded from storage or seeded for the first time.
+  useEffect(() => {
+    const t = setTimeout(() => { checkResults(true); }, 600);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filtered = entries.filter(e => filter === 'all' || e.result === filter);
   const resolved = entries.filter(e => e.result !== 'pending');

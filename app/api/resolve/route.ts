@@ -56,14 +56,30 @@ export async function POST(request: NextRequest) {
       return Response.json({ results: [] });
     }
 
-    // Pull recently closed events once, then match every pending question against them.
-    const res = await fetch(
-      'https://gamma-api.polymarket.com/events?closed=true&limit=400&order=endDate&ascending=false',
-      { signal: AbortSignal.timeout(8000) }
-    );
-    if (!res.ok) return Response.json({ results: [], error: 'upstream' });
-    const events = await res.json();
-    if (!Array.isArray(events)) return Response.json({ results: [] });
+    // Gamma has no free-text search, so we page back through closed events.
+    // Pages are ordered newest-first; we stop early once every question has a
+    // confident match, so recent predictions cost only one request.
+    const PAGE = 250;
+    const MAX_PAGES = 8;   // up to 2000 closed events (~several months of history)
+    const events: any[] = [];
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const res = await fetch(
+        'https://gamma-api.polymarket.com/events?closed=true&limit=' + PAGE +
+        '&offset=' + (page * PAGE) + '&order=endDate&ascending=false',
+        { signal: AbortSignal.timeout(8000) }
+      );
+      if (!res.ok) break;
+      const batch = await res.json();
+      if (!Array.isArray(batch) || batch.length === 0) break;
+      events.push(...batch);
+      // Stop as soon as every question already has a confident match in hand.
+      const allMatched = items.every(it =>
+        events.some(ev => matchScore(it.question, ev.title || '') >= 0.6)
+      );
+      if (allMatched) break;
+      if (batch.length < PAGE) break;   // no more pages
+    }
+    if (events.length === 0) return Response.json({ results: [], error: 'upstream' });
 
     const results: any[] = [];
 
