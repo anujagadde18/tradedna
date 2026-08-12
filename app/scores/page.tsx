@@ -791,6 +791,24 @@ function ScoresPageContent() {
             if (journal.length > 200) journal.splice(200);
             localStorage.setItem('pp_journal', JSON.stringify(journal));
           }
+          // Also save server-side so the journal survives across browsers
+          // and can be resolved without this page being open.
+          try {
+            let anonId = localStorage.getItem('pp_uid');
+            if (!anonId) { anonId = crypto.randomUUID(); localStorage.setItem('pp_uid', anonId); }
+            fetch('/api/journal', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                anonId,
+                id: journalEntry.id,
+                question: event,
+                aiConfidence: rawConf,
+                marketOdds: marketOddsForAI || null,
+                category: data.marketType || 'other',
+              }),
+            }).catch(()=>{});
+          } catch {}
         } catch {}
         setIntel({ confidence: rawConf, direction: rawConf >= 50 ? 'YES' : 'NO', probabilityLabel: rawConf >= 65 ? 'AI is confident this happens' : rawConf >= 55 ? 'More likely than not' : rawConf >= 45 ? 'Could go either way' : rawConf >= 35 ? 'Probably not' : 'AI thinks this is unlikely', predictionStrength: rawConf >= 70 ? 'Strong' : rawConf >= 55 ? 'Medium' : 'Weak', strengthScore: rawConf, riskLevel: rawConf >= 70 || rawConf <= 30 ? 'Low' : 'Medium', marketEdge: marketOddsForAI ? rawConf - marketOddsForAI : null, edgeContext: '', modelComponents: [], confidenceDrivers: { positive: [], negative: [] }, explanation: '' });
         if (data.sources && data.sources.length > 0) setRealSources(data.sources);

@@ -86,6 +86,7 @@ export default function JournalPage() {
       });
       const data = await res.json();
       const results: any[] = data.results || [];
+      const resolvedForServer: any[] = [];
       let updated = 0;
       for (const r of results) {
         if (r.status !== 'resolved') continue;
@@ -94,7 +95,16 @@ export default function JournalPage() {
         entry.result = r.correct ? 'correct' : 'incorrect';
         entry.notes = (entry.notes ? entry.notes + ' ' : '') + 'Resolved automatically: ' + r.outcome + '.';
         saveEntry(entry);
+        resolvedForServer.push({ id: entry.id, result: entry.result, note: 'Resolved automatically: ' + r.outcome + '.' });
         updated++;
+      }
+      // Persist resolutions server-side so they hold across browsers.
+      if (resolvedForServer.length > 0) {
+        fetch('/api/journal', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ updates: resolvedForServer }),
+        }).catch(()=>{});
       }
       setEntries(getJournal());
       const stillOpen = results.filter(r => r.status === 'unsettled').length;
@@ -110,11 +120,44 @@ export default function JournalPage() {
     setChecking(false);
   }
 
-  // Always check pending results once after the page mounts, whether the
-  // journal was loaded from storage or seeded for the first time.
+  // Pull any predictions saved server-side (from other browsers or devices)
+  // and merge them into this browser's journal, then check pending results.
   useEffect(() => {
-    const t = setTimeout(() => { checkResults(true); }, 600);
-    return () => clearTimeout(t);
+    let cancelled = false;
+    (async () => {
+      try {
+        const anonId = localStorage.getItem('pp_uid');
+        if (anonId) {
+          const res = await fetch('/api/journal?anonId=' + encodeURIComponent(anonId));
+          const data = await res.json();
+          const remote: any[] = data.entries || [];
+          if (!cancelled && remote.length > 0) {
+            const local = getJournal();
+            const seen = new Set(local.map(e => (e.question || '').toLowerCase()));
+            let added = 0;
+            for (const r of remote) {
+              if (seen.has((r.question || '').toLowerCase())) continue;
+              saveEntry({
+                id: r.id,
+                question: r.question,
+                aiConfidence: r.aiConfidence ?? 50,
+                marketOdds: r.marketOdds ?? null,
+                edge: r.edge ?? null,
+                weights: {},
+                sources: [],
+                result: r.result || 'pending',
+                notes: r.notes || undefined,
+                timestamp: r.date ? new Date(r.date).getTime() : Date.now(),
+              } as any);
+              added++;
+            }
+            if (added > 0) setEntries(getJournal());
+          }
+        }
+      } catch {}
+      if (!cancelled) setTimeout(() => { checkResults(true); }, 400);
+    })();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
