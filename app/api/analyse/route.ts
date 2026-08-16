@@ -563,6 +563,66 @@ async function tryComputeCricket(query: string, request: NextRequest) {
   };
 }
 
+
+// ---------- ROUTER ----------
+// Classifies a question BEFORE any expensive work happens, so each kind of
+// question takes the shortest path that can actually answer it.
+// Previously every question fired four news APIs even when nothing could answer it.
+
+type Route = 'matchup' | 'cricket' | 'market' | 'unanswerable';
+
+interface RouteDecision {
+  route: Route;
+  marketType: string;
+  reason: string;
+  needsNews: boolean;      // only fetch news when it will actually inform reasoning
+  needsForecasters: boolean;
+}
+
+// Questions no prediction market can settle - personal, private, or unverifiable.
+// Caught up front so the user gets an honest answer in milliseconds instead of
+// waiting on API calls that cannot help.
+function isUnanswerable(query: string): boolean {
+  const q = query.toLowerCase().trim();
+  // First person about private life: "will I get a promotion", "will my neighbor..."
+  // Deliberately narrow: "you" is excluded because real entities are named that
+  // way (you.com), and "we/our" appears in legitimate collective questions.
+  if (/\b(will|should|can|does|did)\s+(i|my|me)\b/.test(q)) return true;
+  if (/\b(my|our)\s+(neighbou?r|friend|boss|mom|mother|dad|father|sister|brother|wife|husband|partner|cat|dog|kid|child|team lead|manager|landlord)\b/.test(q)) return true;
+  // Feelings and opinions rather than events
+  if (/\b(do you think|what do you feel|am i|are we going to be)\b/.test(q)) return true;
+  return false;
+}
+
+function routeQuestion(query: string, marketOdds: number | null): RouteDecision {
+  const marketType = detectMarketType(query);
+
+  if (isUnanswerable(query)) {
+    return { route: 'unanswerable', marketType, reason: 'private or unverifiable question', needsNews: false, needsForecasters: false };
+  }
+
+  // Cricket has its own richer pipeline (form, NRR, venue, live score).
+  if (marketType === 'cricket') {
+    return { route: 'cricket', marketType, reason: 'cricket pipeline', needsNews: true, needsForecasters: false };
+  }
+
+  // Head-to-head questions can use the team-strength model as a cross-check.
+  const isMatchup = /\s+vs\.?\s+|\s+versus\s+/i.test(query) || findTeamsInQuery(query).length >= 2;
+  if (isMatchup) {
+    return { route: 'matchup', marketType, reason: 'two-sided contest', needsNews: true, needsForecasters: false };
+  }
+
+  // Everything else - economics, politics, world events, crypto - is answered by
+  // finding the live market. Forecaster data helps here; team data cannot.
+  return {
+    route: 'market',
+    marketType,
+    reason: 'single-outcome or multi-outcome market question',
+    needsNews: true,
+    needsForecasters: ['economics', 'politics', 'geopolitics', 'general'].includes(marketType),
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { query, marketOdds, anonId, isSignedIn } = await request.json();
@@ -584,10 +644,26 @@ export async function POST(request: NextRequest) {
     }
 
     const keywords = extractKeywords(query);
-    const marketType = detectMarketType(query);
 
+    // Route first: decide what kind of question this is before doing any work.
+    const decision = routeQuestion(query, marketOdds ?? null);
+    const marketType = decision.marketType;
+
+    // Unanswerable questions stop here - no API calls, no waiting, an honest answer.
+    if (decision.route === 'unanswerable') {
+      return Response.json({
+        valid: true, confidence: 0, keywords, articleCount: 0, sources: [], noData: true,
+        route: decision.route,
+        message: 'This looks like a personal question rather than a public event. We can only analyse questions that a real market or forecaster covers.',
+      });
+    }
+
+    // Only fetch what this route can actually use.
     const [gdeltArticles, hnArticles, newsApiArticles, metaculus] = await Promise.all([
-      fetchGDELT(keywords), fetchHackerNews(keywords), fetchNewsAPI(keywords), fetchMetaculus(keywords),
+      decision.needsNews ? fetchGDELT(keywords) : Promise.resolve([]),
+      decision.needsNews ? fetchHackerNews(keywords) : Promise.resolve([]),
+      decision.needsNews ? fetchNewsAPI(keywords) : Promise.resolve([]),
+      decision.needsForecasters ? fetchMetaculus(keywords) : Promise.resolve({ probability: null, count: 0 } as any),
     ]);
     const allArticles = [
       ...newsApiArticles.map((a: any) => ({ title: a.title || '', source: a.source?.name || 'News', url: a.url, category: 'news' })),
@@ -624,7 +700,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ---- Generic: team-strength model + market odds + AI-written reasoning ----
-    const teams = findTeamsInQuery(query);
+    const teams = decision.route === 'matchup' ? findTeamsInQuery(query) : [];
     const contextLines = [...teams.map(t => t.ctx), ...findExtraContext(query)];
     let effectiveMarketOdds = marketOdds || null;
     if (!effectiveMarketOdds) {
