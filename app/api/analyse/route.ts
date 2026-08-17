@@ -606,10 +606,19 @@ function routeQuestion(query: string, marketOdds: number | null): RouteDecision 
     return { route: 'cricket', marketType, reason: 'cricket pipeline', needsNews: true, needsForecasters: false };
   }
 
-  // Head-to-head questions can use the team-strength model as a cross-check.
-  const isMatchup = /\s+vs\.?\s+|\s+versus\s+/i.test(query) || findTeamsInQuery(query).length >= 2;
-  if (isMatchup) {
-    return { route: 'matchup', marketType, reason: 'two-sided contest', needsNews: true, needsForecasters: false };
+  // Head-to-head questions use the team-strength model as a cross-check - but only
+  // when we actually have both teams. A matchup we do not model (NFL, tennis, most
+  // leagues) still has a live market, so it must keep every other data path open.
+  const looksLikeMatchup = /\s+vs\.?\s+|\s+versus\s+/i.test(query);
+  const knownTeams = findTeamsInQuery(query).length >= 2;
+  if (looksLikeMatchup || knownTeams) {
+    return {
+      route: 'matchup',
+      marketType,
+      reason: knownTeams ? 'two-sided contest with model data' : 'two-sided contest, market only',
+      needsNews: true,
+      needsForecasters: true,
+    };
   }
 
   // Everything else - economics, politics, world events, crypto - is answered by
@@ -743,7 +752,8 @@ export async function POST(request: NextRequest) {
 
     // Honesty gate: with no live market, no two-team model match, and no forecaster data,
     // there is nothing real to reason about - never generate reasoning text around a bare 50%.
-    if (teams.length < 2 && !effectiveMarketOdds && metaculus.probability === null) {
+    const hasAnyRealSignal = teams.length >= 2 || effectiveMarketOdds !== null || metaculus.probability !== null;
+    if (!hasAnyRealSignal) {
       return Response.json({
         valid: true, confidence: 0, keywords, articleCount: relevantArticles.length,
         sources: relevantArticles.slice(0, 4).map(a => ({ name: a.source, sig: a.title, url: a.url, category: a.category, type: 'mixed', contribution: 0 })),

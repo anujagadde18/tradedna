@@ -963,19 +963,19 @@ function ScoresPageContent() {
               <div style={{ fontSize:10, color:C.t3, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:8 }}>Try one of these instead</div>
               {(invalidQuestion.examples||[]).map((s:string) => (
                 <button key={s} onClick={() => { router.push('/scores?event='+encodeURIComponent(s)); }}
-                  style={{ display:'block', width:'100%', background:C.bg3, border:'1px solid '+C.border2, borderRadius:10, padding:'10px 16px', color:C.t2, fontSize:12, cursor:'pointer', textAlign:'left', marginBottom:6 }}>{s}</button>
+                  style={{ display:'block', width:'100%', background:'#1c1c28', border:'1px solid rgba(255,255,255,0.16)', borderRadius:10, padding:'12px 16px', color:'#f2f0ff', fontSize:13, fontWeight:500, cursor:'pointer', textAlign:'left', marginBottom:8 }}>{s}</button>
               ))}
             </div>
           </div>
         ) : noRealData && !intel ? (
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:300, textAlign:'center', gap:16, padding:40, background:C.bg2, border:'1px solid '+C.border, borderRadius:16 }}>
             <div style={{ fontSize:20, fontWeight:700, color:C.t1, letterSpacing:'-0.4px' }}>We could not find real data for this one</div>
-            <div style={{ fontSize:13, color:C.t2, maxWidth:400, lineHeight:1.6 }}>No live market, no model data, no forecaster data - so we will not invent a number or reasons. That is the deal with Call It: if we show a number, something real is behind it.</div>
+            <div style={{ fontSize:14, color:'#c9c6e0', maxWidth:440, lineHeight:1.7 }}>No live market, no model data, no forecaster data - so we will not invent a number or reasons. That is the deal with Call It: if we show a number, something real is behind it.</div>
             <div style={{ width:'100%', maxWidth:380 }}>
-              <div style={{ fontSize:10, color:C.t3, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:8 }}>These have real data right now</div>
-              {['Will the Fed cut rates in September?','Will Bitcoin hit $150k in 2026?','Chiefs vs Bills'].map((s:string) => (
+              <div style={{ fontSize:11, color:'#9996b8', textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:10 }}>Try one of these instead</div>
+              {['Will the Fed cut rates in September?','Will Bitcoin hit $150k in 2026?','Next Prime Minister of Ethiopia?'].map((s:string) => (
                 <button key={s} onClick={() => { router.push('/scores?event='+encodeURIComponent(s)); }}
-                  style={{ display:'block', width:'100%', background:C.bg3, border:'1px solid '+C.border2, borderRadius:10, padding:'10px 16px', color:C.t2, fontSize:12, cursor:'pointer', textAlign:'left', marginBottom:6 }}>{s}</button>
+                  style={{ display:'block', width:'100%', background:'#1c1c28', border:'1px solid rgba(255,255,255,0.16)', borderRadius:10, padding:'12px 16px', color:'#f2f0ff', fontSize:13, fontWeight:500, cursor:'pointer', textAlign:'left', marginBottom:8 }}>{s}</button>
               ))}
             </div>
           </div>
