@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const C = {
@@ -93,7 +93,38 @@ export default function AccuracyPage() {
   const [filter, setFilter] = useState<'all'|'correct'|'incorrect'|'pending'>('all');
   const [catFilter, setCatFilter] = useState<string>('all');
 
-  const filtered = PREDICTIONS.filter(p => {
+  // Live predictions resolved automatically from the database, merged with the
+  // historical record above. The hardcoded entries are earlier calls made before
+  // predictions were stored server-side.
+  const [live, setLive] = useState<Prediction[]>([]);
+  const [livePending, setLivePending] = useState(0);
+  const [cats, setCats] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/accuracy-stats')
+      .then(r => r.json())
+      .then(d => {
+        setLivePending(d.pending || 0);
+        setCats(d.categories || []);
+        const mapped: Prediction[] = (d.recent || []).map((r: any, i: number) => ({
+          id: 100000 + i,
+          date: r.date ? new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'2-digit'}) : '',
+          question: r.question,
+          category: (['cricket','politics','sports','crypto','world','other'].includes(r.category) ? r.category : 'other') as Prediction['category'],
+          aiConfidence: r.aiConfidence ?? 50,
+          marketOdds: r.marketOdds ?? null,
+          result: r.result,
+          actualOutcome: r.note || (r.result === 'correct' ? 'Correct' : 'Incorrect'),
+          edge: r.edge ?? null,
+        }));
+        setLive(mapped);
+      })
+      .catch(()=>{});
+  }, []);
+
+  const ALL = [...live, ...PREDICTIONS];
+
+  const filtered = ALL.filter(p => {
     if (filter !== 'all' && p.result !== filter) return false;
     if (catFilter === 'sports') {
       if (p.category !== 'sports' && p.category !== 'cricket') return false;
@@ -101,11 +132,11 @@ export default function AccuracyPage() {
     return true;
   }).sort((a, b) => b.id - a.id);
 
-  const resolved = PREDICTIONS.filter(p => p.result !== 'pending');
+  const resolved = ALL.filter(p => p.result !== 'pending');
   const correct = resolved.filter(p => p.result === 'correct');
   const accuracy = resolved.length > 0 ? Math.round((correct.length / resolved.length) * 100) : 0;
-  const pending = PREDICTIONS.filter(p => p.result === 'pending').length;
-  const avgConfidence = Math.round(PREDICTIONS.reduce((s, p) => s + p.aiConfidence, 0) / PREDICTIONS.length);
+  const pending = ALL.filter(p => p.result === 'pending').length + livePending;
+  const avgConfidence = ALL.length > 0 ? Math.round(ALL.reduce((s, p) => s + p.aiConfidence, 0) / ALL.length) : 0;
 
   return (
     <div style={{ minHeight:'100vh', background:C.bg0, color:C.t1, fontFamily:"'Inter',system-ui,sans-serif" }}>
@@ -135,11 +166,31 @@ export default function AccuracyPage() {
           <p style={{ fontSize:14, color:C.t2, margin:0 }}>Every prediction we've made — right or wrong. No cherry-picking.</p>
         </div>
 
+        {/* Category breakdown - updates automatically as predictions resolve */}
+        {cats.length > 0 && (
+          <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:'18px 20px', marginBottom:24 }}>
+            <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:14 }}>Accuracy by category</div>
+            {cats.map((cat:any) => (
+              <div key={cat.name} style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
+                <div style={{ fontSize:12, color:C.t1, width:90, textTransform:'capitalize' }}>{cat.name}</div>
+                <div style={{ flex:1, height:6, background:C.bg4, borderRadius:3, overflow:'hidden' }}>
+                  <div style={{ height:'100%', width:cat.winRate+'%', borderRadius:3, background: cat.winRate >= 60 ? C.green : cat.winRate >= 45 ? C.amber : C.red }} />
+                </div>
+                <div style={{ fontSize:12, fontWeight:700, color:C.t2, fontFamily:'monospace', width:40, textAlign:'right' }}>{cat.winRate}%</div>
+                <div style={{ fontSize:11, color:C.t3, width:52, textAlign:'right' }}>{cat.correct}/{cat.total}</div>
+              </div>
+            ))}
+            <div style={{ fontSize:11, color:C.t3, marginTop:12, lineHeight:1.6 }}>
+              Updated automatically as markets settle. Categories with few resolved predictions will move a lot.
+            </div>
+          </div>
+        )}
+
         {/* Stats */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:32 }}>
           {[
             { label:'Win rate', value: accuracy+'%', color: accuracy >= 60 ? C.green : C.amber, sub: `${correct.length}/${resolved.length} resolved` },
-            { label:'Total predictions', value: PREDICTIONS.length, color: C.purple, sub: `${pending} pending` },
+            { label:'Total predictions', value: ALL.length, color: C.purple, sub: `${pending} pending` },
             { label:'Avg confidence', value: avgConfidence+'%', color: C.blue, sub: 'average across all calls' },
             { label:'Best streak', value: '4', color: C.green, sub: 'correct in a row' },
           ].map(s => (
