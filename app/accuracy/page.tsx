@@ -99,6 +99,9 @@ export default function AccuracyPage() {
   const [live, setLive] = useState<Prediction[]>([]);
   const [livePending, setLivePending] = useState(0);
   const [cats, setCats] = useState<any[]>([]);
+  const [calib, setCalib] = useState<any[]>([]);
+  const [calibMin, setCalibMin] = useState(5);
+  const [calibGap, setCalibGap] = useState<number|null>(null);
 
   useEffect(() => {
     fetch('/api/accuracy-stats')
@@ -106,6 +109,9 @@ export default function AccuracyPage() {
       .then(d => {
         setLivePending(d.pending || 0);
         setCats(d.categories || []);
+        setCalib(d.calibration || []);
+        setCalibMin(d.calibrationMinSample || 5);
+        setCalibGap(d.calibrationGap ?? null);
         const mapped: Prediction[] = (d.recent || []).map((r: any, i: number) => ({
           id: 100000 + i,
           date: r.date ? new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'2-digit'}) : '',
@@ -165,6 +171,60 @@ export default function AccuracyPage() {
           <h1 style={{ fontSize:32, fontWeight:800, margin:'0 0 8px', letterSpacing:'-0.5px' }}>AI Prediction Accuracy</h1>
           <p style={{ fontSize:14, color:C.t2, margin:0 }}>Every prediction we've made — right or wrong. No cherry-picking.</p>
         </div>
+
+        {/* Calibration - does a stated confidence mean what it claims? */}
+        {calib.length > 0 && calib.some((b:any) => b.n > 0) && (
+          <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:'18px 20px', marginBottom:16 }}>
+            <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:6 }}>Calibration</div>
+            <div style={{ fontSize:13, color:C.t2, lineHeight:1.65, marginBottom:16 }}>
+              A win rate on its own says little. What matters is whether a number means what it claims:
+              when we say 80%, does it happen about 80% of the time? Each row compares what we claimed
+              against what actually happened.
+            </div>
+
+            <div style={{ display:'flex', fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.5px', color:C.t3, marginBottom:8 }}>
+              <div style={{ width:78 }}>We said</div>
+              <div style={{ flex:1 }}>Claimed vs actual</div>
+              <div style={{ width:64, textAlign:'right' }}>Happened</div>
+              <div style={{ width:56, textAlign:'right' }}>Sample</div>
+            </div>
+
+            {calib.map((b:any) => {
+              const thin = b.n > 0 && b.n < calibMin;
+              const gap = b.actual !== null ? b.actual - b.claimed : null;
+              return (
+                <div key={b.band} style={{ display:'flex', alignItems:'center', marginBottom:9, opacity: b.n === 0 ? 0.35 : thin ? 0.7 : 1 }}>
+                  <div style={{ width:78, fontSize:12, color:C.t1, fontFamily:'monospace' }}>{b.band}</div>
+                  <div style={{ flex:1, position:'relative', height:18 }}>
+                    <div style={{ position:'absolute', top:6, left:0, right:0, height:6, background:C.bg4, borderRadius:3 }} />
+                    {b.actual !== null && (
+                      <div style={{ position:'absolute', top:6, left:0, width:Math.min(100,b.actual)+'%', height:6, borderRadius:3,
+                        background: gap === null ? C.t3 : Math.abs(gap) <= 10 ? C.green : Math.abs(gap) <= 20 ? C.amber : C.red }} />
+                    )}
+                    {/* marker showing what we claimed */}
+                    <div style={{ position:'absolute', top:2, left:'calc(' + Math.min(100,b.claimed) + '% - 1px)', width:2, height:14, background:C.t1, opacity:0.75, borderRadius:1 }} />
+                  </div>
+                  <div style={{ width:64, textAlign:'right', fontSize:12, fontWeight:700, fontFamily:'monospace',
+                    color: b.actual === null ? C.t3 : gap !== null && Math.abs(gap) <= 10 ? C.green : C.t2 }}>
+                    {b.actual === null ? '-' : b.actual + '%'}
+                  </div>
+                  <div style={{ width:56, textAlign:'right', fontSize:11, color:C.t3 }}>
+                    {b.n === 0 ? 'none yet' : b.correct + '/' + b.n}
+                  </div>
+                </div>
+              );
+            })}
+
+            <div style={{ fontSize:11, color:C.t3, lineHeight:1.7, marginTop:14, paddingTop:12, borderTop:'1px solid '+C.border }}>
+              The vertical line is what we claimed. The bar is what actually happened.
+              Rows with fewer than {calibMin} resolved predictions are faded, because a couple of results
+              cannot tell you anything, and pretending otherwise would be the same dishonesty this page exists to avoid.
+              {calibGap !== null && (
+                <> Across bands with enough data, our stated confidence is off by an average of <b>{calibGap} points</b>.</>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Category breakdown - updates automatically as predictions resolve */}
         {cats.length > 0 && (
