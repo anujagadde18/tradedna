@@ -102,6 +102,9 @@ export default function AccuracyPage() {
   const [calib, setCalib] = useState<any[]>([]);
   const [calibMin, setCalibMin] = useState(5);
   const [calibGap, setCalibGap] = useState<number|null>(null);
+  const [brier, setBrier] = useState<number|null>(null);
+  const [brierSkill, setBrierSkill] = useState<number|null>(null);
+  const [brierN, setBrierN] = useState(0);
 
   useEffect(() => {
     fetch('/api/accuracy-stats')
@@ -112,6 +115,9 @@ export default function AccuracyPage() {
         setCalib(d.calibration || []);
         setCalibMin(d.calibrationMinSample || 5);
         setCalibGap(d.calibrationGap ?? null);
+        setBrier(d.brier ?? null);
+        setBrierSkill(d.brierSkill ?? null);
+        setBrierN(d.brierSample || 0);
         const mapped: Prediction[] = (d.recent || []).map((r: any, i: number) => ({
           id: 100000 + i,
           date: r.date ? new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'2-digit'}) : '',
@@ -129,6 +135,24 @@ export default function AccuracyPage() {
   }, []);
 
   const ALL = [...live, ...PREDICTIONS];
+
+  // The API scores only what is in the database. The historical record lives in this
+  // file, so score the merged set here - otherwise the headline metric would ignore
+  // most of our actual calls.
+  const scoredAll = ALL.filter(p => p.result !== 'pending' && Number.isFinite(p.aiConfidence));
+  const localBrier = scoredAll.length > 0
+    ? Math.round((scoredAll.reduce((acc, p) => {
+        const stated = p.aiConfidence >= 50 ? p.aiConfidence : 100 - p.aiConfidence;
+        const happened = p.aiConfidence >= 50
+          ? (p.result === 'correct' ? 1 : 0)
+          : (p.result === 'incorrect' ? 1 : 0);
+        return acc + Math.pow((stated / 100) - happened, 2);
+      }, 0) / scoredAll.length) * 10000) / 10000
+    : null;
+
+  // Prefer whichever score covers more predictions.
+  const shownBrier = (brierN >= scoredAll.length ? brier : localBrier) ?? localBrier ?? brier;
+  const shownBrierN = Math.max(brierN, scoredAll.length);
 
   const filtered = ALL.filter(p => {
     if (filter !== 'all' && p.result !== filter) return false;
@@ -171,6 +195,45 @@ export default function AccuracyPage() {
           <h1 style={{ fontSize:32, fontWeight:800, margin:'0 0 8px', letterSpacing:'-0.5px' }}>AI Prediction Accuracy</h1>
           <p style={{ fontSize:14, color:C.t2, margin:0 }}>Every prediction we've made — right or wrong. No cherry-picking.</p>
         </div>
+
+        {/* Brier score - the honest headline metric. Stays meaningful at small samples,
+            unlike a bucketed curve, because it scores every prediction individually. */}
+        {shownBrier !== null && shownBrierN > 0 && (
+          <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:'20px 22px', marginBottom:16 }}>
+            <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:12 }}>Brier score</div>
+            <div style={{ display:'flex', alignItems:'flex-end', gap:16, flexWrap:'wrap', marginBottom:14 }}>
+              <div style={{ fontSize:44, fontWeight:800, fontFamily:'monospace', lineHeight:1,
+                color: shownBrier <= 0.18 ? C.green : shownBrier <= 0.25 ? C.amber : C.red }}>{shownBrier.toFixed(3)}</div>
+              <div style={{ fontSize:13, color:C.t2, paddingBottom:4 }}>
+                {shownBrier <= 0.18 ? 'Better than a coin flip, and meaningfully so.'
+                 : shownBrier <= 0.24 ? 'Slightly better than saying 50% to everything.'
+                 : shownBrier <= 0.26 ? 'About the same as saying 50% to everything.'
+                 : 'Worse than saying 50% to everything.'}
+              </div>
+            </div>
+
+            <div style={{ position:'relative', height:8, background:C.bg4, borderRadius:4, marginBottom:8 }}>
+              <div style={{ position:'absolute', left:0, top:0, height:8, borderRadius:4, width: Math.max(2, Math.min(100, (1 - shownBrier/0.5) * 100)) + '%',
+                background: shownBrier <= 0.18 ? C.green : shownBrier <= 0.25 ? C.amber : C.red }} />
+              <div style={{ position:'absolute', left:'50%', top:-3, width:2, height:14, background:C.t2, opacity:0.6 }} />
+            </div>
+            <div style={{ display:'flex', justifyContent:'space-between', fontSize:10, color:C.t3, marginBottom:14 }}>
+              <span>0.000 perfect</span><span>0.250 coin flip</span><span>worse</span>
+            </div>
+
+            <div style={{ fontSize:12, color:C.t2, lineHeight:1.75, paddingTop:12, borderTop:'1px solid '+C.border }}>
+              A win rate can look good by only predicting near certainties. The Brier score measures
+              something harder: how far each stated probability sat from what actually happened, averaged
+              across every call. Saying 50% to everything scores 0.250, so that is the line worth beating.
+              {shownBrier > 0.24 && (
+                <> Ours is not clearly beating it yet on {shownBrierN} resolved predictions. That is the honest
+                position, and it is the number to watch as the record grows.</>
+              )}
+              {' '}Unlike the curve below, this stays meaningful at small sample sizes because it scores
+              every prediction rather than needing a full bucket.
+            </div>
+          </div>
+        )}
 
         {/* Calibration - does a stated confidence mean what it claims? */}
         {calib.length > 0 && calib.some((b:any) => b.n > 0) && (

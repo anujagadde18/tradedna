@@ -87,6 +87,31 @@ export async function GET(_request: NextRequest) {
       };
     });
 
+    // ---- BRIER SCORE ----
+    // A calibration curve needs density per bucket to say anything. A Brier score
+    // scores every prediction individually, so it stays meaningful at small samples:
+    // mean squared error between the stated probability and what actually happened.
+    // 0 is perfect, 0.25 is what you get by saying 50% to everything, higher is worse.
+    //
+    // Sub-50 predictions are claims about the other side, so both the probability and
+    // the outcome flip - otherwise a confident "no" that came true would score as a miss.
+    const scored = rows.filter((r: any) => Number.isFinite(Number(r.ai_confidence)));
+    let brier: number | null = null;
+    let brierSkill: number | null = null;
+    if (scored.length > 0) {
+      const sum = scored.reduce((acc: number, r: any) => {
+        const conf = Number(r.ai_confidence);
+        const stated = conf >= 50 ? conf : 100 - conf;
+        const happened = conf >= 50
+          ? (r.result === 'correct' ? 1 : 0)
+          : (r.result === 'incorrect' ? 1 : 0);
+        return acc + Math.pow((stated / 100) - happened, 2);
+      }, 0);
+      brier = Math.round((sum / scored.length) * 10000) / 10000;
+      // Skill against always saying 50%: positive means better than a coin flip.
+      brierSkill = Math.round((1 - (brier / 0.25)) * 100);
+    }
+
     // A band needs a handful of results before its number means anything.
     const MIN_FOR_SIGNAL = 5;
     const meaningful = calibration.filter(b => b.n >= MIN_FOR_SIGNAL);
@@ -100,6 +125,9 @@ export async function GET(_request: NextRequest) {
       incorrect: rows.length - correct,
       pending: pendingCount[0]?.n ?? 0,
       winRate: rows.length > 0 ? Math.round((correct / rows.length) * 100) : null,
+      brier,
+      brierSkill,
+      brierSample: scored.length,
       calibration,
       calibrationMinSample: MIN_FOR_SIGNAL,
       calibrationGap: avgGap,
@@ -122,6 +150,6 @@ export async function GET(_request: NextRequest) {
     });
   } catch (err: any) {
     console.error('Accuracy stats:', err.message);
-    return Response.json({ total: 0, correct: 0, incorrect: 0, pending: 0, winRate: null, calibration: [], calibrationMinSample: 5, calibrationGap: null, categories: [], recent: [] }, { status: 200 });
+    return Response.json({ total: 0, correct: 0, incorrect: 0, pending: 0, winRate: null, brier: null, brierSkill: null, brierSample: 0, calibration: [], calibrationMinSample: 5, calibrationGap: null, categories: [], recent: [] }, { status: 200 });
   }
 }
