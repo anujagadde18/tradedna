@@ -345,6 +345,63 @@ async function fetchMetaculus(keywords: string): Promise<{ probability: number |
 
 // Generates ONLY the reasoning text (bull/bear/keyRisk/verdict). The probability is fixed before this is ever called —
 // the model writes reasoning consistent with our number, it never invents its own.
+
+// ---------- EXPLANATION CONSISTENCY CHECK ----------
+// The architecture stops the model inventing the NUMBER, but nothing stopped it
+// narrating a 55% as though it were a near certainty. This checks the language it
+// produced against the probability it was given, and downgrades wording that
+// overstates the number. Raised by a reader who pointed out that "the model cannot
+// change the probability" does not mean "the explanation matches the probability".
+
+const CERTAINTY_TERMS = [
+  'certain','certainly','guaranteed','definitely','undoubtedly','no doubt','lock',
+  'sure thing','inevitable','cannot lose','can not lose','will surely','without question',
+];
+const STRONG_TERMS = [
+  'clearly','dominant','overwhelming','easily','comfortably','heavily favou','decisive',
+  'runaway','walkover','far superior','massive edge',
+];
+
+export function checkExplanationConsistency(
+  probability: number,
+  reasoning: { bull: string[]; bear: string[]; keyRisk: string; verdict: string } | null
+): { ok: boolean; flags: string[]; adjustedVerdict: string | null } {
+  if (!reasoning) return { ok: true, flags: [], adjustedVerdict: null };
+
+  const all = [
+    ...(reasoning.bull || []),
+    ...(reasoning.bear || []),
+    reasoning.keyRisk || '',
+    reasoning.verdict || '',
+  ].join(' ').toLowerCase();
+
+  const flags: string[] = [];
+  const certainty = CERTAINTY_TERMS.filter(t => all.includes(t));
+  const strong = STRONG_TERMS.filter(t => all.includes(t));
+
+  // Certainty language is only defensible when the number is genuinely near-certain.
+  if (certainty.length > 0 && probability < 90 && probability > 10) {
+    flags.push('certainty language at ' + probability + '%: ' + certainty.join(', '));
+  }
+  // Strong-favourite language on what is closer to a coin flip.
+  if (strong.length > 0 && probability < 65 && probability > 35) {
+    flags.push('strong-favourite language at ' + probability + '%: ' + strong.join(', '));
+  }
+
+  // The verdict is the most prominent line, so correct it rather than just flagging.
+  let adjustedVerdict: string | null = null;
+  if (flags.length > 0) {
+    adjustedVerdict =
+      probability >= 65 ? 'Favoured, but not certain'
+      : probability >= 55 ? 'Slight edge, close call'
+      : probability > 45 ? 'Genuinely too close to call'
+      : probability > 35 ? 'Slight edge against'
+      : 'Unlikely, but not impossible';
+  }
+
+  return { ok: flags.length === 0, flags, adjustedVerdict };
+}
+
 async function generateReasoning(
   query: string,
   probability: number,
@@ -697,6 +754,10 @@ export async function POST(request: NextRequest) {
           ...headlines.slice(0, 2),
         ].filter(Boolean);
         const reasoning = await generateReasoning(query, baseProbability, [], cricketHeadlines, 'cricket');
+        const cricketConsistency = checkExplanationConsistency(baseProbability, reasoning);
+        if (reasoning && !cricketConsistency.ok && cricketConsistency.adjustedVerdict) {
+          reasoning.verdict = cricketConsistency.adjustedVerdict;
+        }
         const extraSources: any[] = [
           { name: 'IPL Stats', sig: `${team1.code} ${team1.formScore}% wins (${team1.pts}pts) vs ${team2.code} ${team2.formScore}% wins (${team2.pts}pts)`, url: '', category: 'market', type: team1.formScore > team2.formScore ? 'strong' : 'contrary', contribution: Math.round((team1.formScore - team2.formScore) / 5) },
         ];
@@ -763,6 +824,12 @@ export async function POST(request: NextRequest) {
     }
 
     const reasoning = await generateReasoning(query, probability, contextLines, headlines, marketType);
+
+    // Verify the words match the number before anything is shown to a user.
+    const consistency = checkExplanationConsistency(probability, reasoning);
+    if (reasoning && !consistency.ok && consistency.adjustedVerdict) {
+      reasoning.verdict = consistency.adjustedVerdict;
+    }
 
     let finalConfidence = probability;
     if (!effectiveMarketOdds && metaculus.probability !== null) {
