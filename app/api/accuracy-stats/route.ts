@@ -56,6 +56,23 @@ export async function GET(_request: NextRequest) {
       { lo: 90, hi: 101, label: '90-100%' },
     ];
 
+    // Wilson score interval: the honest range the true rate could sit in, given how
+    // few results a band has. Chosen over the textbook normal approximation because
+    // that one breaks down badly at small n and near 0% or 100% - exactly our situation.
+    // Showing this range is the point: it says how sure we are about how sure we are.
+    function wilsonInterval(hits: number, n: number): { low: number; high: number } | null {
+      if (n === 0) return null;
+      const z = 1.96;                       // 95% confidence
+      const p = hits / n;
+      const denom = 1 + (z * z) / n;
+      const centre = p + (z * z) / (2 * n);
+      const spread = z * Math.sqrt((p * (1 - p) + (z * z) / (4 * n)) / n);
+      return {
+        low: Math.max(0, Math.round(((centre - spread) / denom) * 100)),
+        high: Math.min(100, Math.round(((centre + spread) / denom) * 100)),
+      };
+    }
+
     const calibration = BANDS.map(b => {
       const inBand = rows.filter((r: any) => {
         const conf = Number(r.ai_confidence);
@@ -64,7 +81,7 @@ export async function GET(_request: NextRequest) {
         return stated >= b.lo && stated < b.hi;
       });
       if (inBand.length === 0) {
-        return { band: b.label, claimed: (b.lo + Math.min(b.hi, 100)) / 2, actual: null, n: 0, correct: 0 };
+        return { band: b.label, claimed: (b.lo + Math.min(b.hi, 100)) / 2, actual: null, n: 0, correct: 0, low: null, high: null, claimConsistent: null };
       }
       const hits = inBand.filter((r: any) => {
         const conf = Number(r.ai_confidence);
@@ -78,12 +95,19 @@ export async function GET(_request: NextRequest) {
           return s + (conf >= 50 ? conf : 100 - conf);
         }, 0) / inBand.length
       );
+      const interval = wilsonInterval(hits, inBand.length);
+      const actual = Math.round((hits / inBand.length) * 100);
       return {
         band: b.label,
         claimed: claimedAvg,
-        actual: Math.round((hits / inBand.length) * 100),
+        actual,
         n: inBand.length,
         correct: hits,
+        low: interval ? interval.low : null,
+        high: interval ? interval.high : null,
+        // Does the claimed rate even sit inside the plausible range? If it does, we
+        // cannot yet say the number is wrong - only that we do not have enough data.
+        claimConsistent: interval ? (claimedAvg >= interval.low && claimedAvg <= interval.high) : null,
       };
     });
 

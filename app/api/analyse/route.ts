@@ -831,6 +831,30 @@ export async function POST(request: NextRequest) {
       reasoning.verdict = consistency.adjustedVerdict;
     }
 
+    // Preserve what the model actually received. Without this we can see THAT an
+    // explanation overstated its number but not whether the fault was the source
+    // evidence, the calculation, or the narration. Fire and forget - a failed trace
+    // write must never affect the user's answer.
+    fetch(new URL('/api/trace', request.url).toString(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question: query,
+        route: decision.route,
+        marketType,
+        probability,
+        probabilitySource: effectiveMarketOdds ? 'live market'
+          : teams.length >= 2 ? 'team strength model'
+          : metaculus.probability !== null ? 'forecasters'
+          : 'none',
+        context: contextLines.join(' | '),
+        headlines: headlines.slice(0, 3).join(' | '),
+        explanation: reasoning,
+        consistencyOk: consistency.ok,
+        consistencyFlags: consistency.flags,
+      }),
+    }).catch(() => {});
+
     let finalConfidence = probability;
     if (!effectiveMarketOdds && metaculus.probability !== null) {
       finalConfidence = Math.round(probability * 0.8 + metaculus.probability * 0.2);

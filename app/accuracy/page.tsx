@@ -253,41 +253,72 @@ export default function AccuracyPage() {
             </div>
 
             {calib.map((b:any) => {
-              const thin = b.n > 0 && b.n < calibMin;
               const gap = b.actual !== null ? b.actual - b.claimed : null;
+              const hasRange = b.low !== null && b.high !== null;
+              // If the claimed rate sits inside the plausible range, the data cannot
+              // yet say the number is wrong - it can only say we do not know.
+              const tooEarlyToJudge = b.claimConsistent === true;
               return (
-                <div key={b.band} style={{ display:'flex', alignItems:'center', marginBottom:9, opacity: b.n === 0 ? 0.35 : thin ? 0.7 : 1 }}>
-                  <div style={{ width:78, fontSize:12, color:C.t1, fontFamily:'monospace' }}>{b.band}</div>
-                  <div style={{ flex:1, position:'relative', height:18 }}>
-                    <div style={{ position:'absolute', top:6, left:0, right:0, height:6, background:C.bg4, borderRadius:3 }} />
-                    {b.actual !== null && (
-                      <div style={{ position:'absolute', top:6, left:0, width:Math.min(100,b.actual)+'%', height:6, borderRadius:3,
-                        background: gap === null ? C.t3 : Math.abs(gap) <= 10 ? C.green : Math.abs(gap) <= 20 ? C.amber : C.red }} />
-                    )}
-                    {/* marker showing what we claimed */}
-                    <div style={{ position:'absolute', top:2, left:'calc(' + Math.min(100,b.claimed) + '% - 1px)', width:2, height:14, background:C.t1, opacity:0.75, borderRadius:1 }} />
+                <div key={b.band} style={{ marginBottom:14, opacity: b.n === 0 ? 0.3 : 1 }}>
+                  <div style={{ display:'flex', alignItems:'center' }}>
+                    <div style={{ width:78, fontSize:12, color:C.t1, fontFamily:'monospace' }}>{b.band}</div>
+                    <div style={{ flex:1, position:'relative', height:22 }}>
+                      <div style={{ position:'absolute', top:9, left:0, right:0, height:4, background:C.bg4, borderRadius:2 }} />
+                      {/* plausible range for the true rate, given how little data this band has */}
+                      {hasRange && (
+                        <div style={{ position:'absolute', top:6, left:b.low+'%', width:Math.max(1,(b.high-b.low))+'%', height:10,
+                          background: tooEarlyToJudge ? 'rgba(153,150,184,0.28)' : 'rgba(239,79,106,0.28)',
+                          border:'1px solid ' + (tooEarlyToJudge ? 'rgba(153,150,184,0.5)' : 'rgba(239,79,106,0.5)'),
+                          borderRadius:3 }} />
+                      )}
+                      {/* what actually happened */}
+                      {b.actual !== null && (
+                        <div style={{ position:'absolute', top:4, left:'calc(' + Math.min(100,b.actual) + '% - 3px)', width:6, height:14, borderRadius:3,
+                          background: gap === null ? C.t3 : Math.abs(gap) <= 10 ? C.green : C.amber }} />
+                      )}
+                      {/* what we claimed */}
+                      <div style={{ position:'absolute', top:1, left:'calc(' + Math.min(100,b.claimed) + '% - 1px)', width:2, height:20, background:C.t1, opacity:0.8, borderRadius:1 }} />
+                    </div>
+                    <div style={{ width:64, textAlign:'right', fontSize:12, fontWeight:700, fontFamily:'monospace',
+                      color: b.actual === null ? C.t3 : gap !== null && Math.abs(gap) <= 10 ? C.green : C.t2 }}>
+                      {b.actual === null ? '-' : b.actual + '%'}
+                    </div>
+                    <div style={{ width:56, textAlign:'right', fontSize:11, color:C.t3 }}>
+                      {b.n === 0 ? 'none yet' : b.correct + '/' + b.n}
+                    </div>
                   </div>
-                  <div style={{ width:64, textAlign:'right', fontSize:12, fontWeight:700, fontFamily:'monospace',
-                    color: b.actual === null ? C.t3 : gap !== null && Math.abs(gap) <= 10 ? C.green : C.t2 }}>
-                    {b.actual === null ? '-' : b.actual + '%'}
-                  </div>
-                  <div style={{ width:56, textAlign:'right', fontSize:11, color:C.t3 }}>
-                    {b.n === 0 ? 'none yet' : b.correct + '/' + b.n}
-                  </div>
+                  {hasRange && (
+                    <div style={{ fontSize:10, color:C.t3, marginLeft:78, marginTop:3 }}>
+                      true rate could be anywhere from {b.low}% to {b.high}%
+                      {tooEarlyToJudge && ' - our claim sits inside that range, so this is not enough data to call it wrong'}
+                    </div>
+                  )}
                 </div>
               );
             })}
 
             <div style={{ fontSize:11, color:C.t3, lineHeight:1.7, marginTop:14, paddingTop:12, borderTop:'1px solid '+C.border }}>
-              The vertical line is what we claimed. The bar is what actually happened.
-              Rows with fewer than {calibMin} resolved predictions are faded, because a couple of results
-              cannot tell you anything, and pretending otherwise would be the same dishonesty this page exists to avoid.
+              The vertical line is what we claimed. The dot is what actually happened. The shaded band is
+              the range the true rate could plausibly sit in, given how few results we have. That band is
+              wide right now, and it should be: with a handful of predictions, almost nothing is proven.
+              Most tools draw a clean line and hide this. A forecaster that refuses to guess should show it.
               {calibGap !== null && (
                 <> Across bands with enough data, our stated confidence is off by an average of <b>{calibGap} points</b>.</>
               )}
             </div>
           </div>
         )}
+
+        {/* Why confident losses are expected, not embarrassing */}
+        <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:'16px 20px', marginBottom:16 }}>
+          <div style={{ fontSize:12, color:C.t2, lineHeight:1.75 }}>
+            <b style={{ color:C.t1 }}>On the losses.</b> A forecaster saying 87% is supposed to be wrong about
+            13% of the time. If every 87% call landed, the number would be a lie, it would really have been
+            a 99%. So the two calls on this page that say "we called 87% and were wrong" are not evidence the
+            system is broken. They are part of what makes the number mean something. What would worry us is
+            confident calls that never miss, or a Brier score that stops improving as the record grows.
+          </div>
+        </div>
 
         {/* Category breakdown - updates automatically as predictions resolve */}
         {cats.length > 0 && (
