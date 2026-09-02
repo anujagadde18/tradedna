@@ -105,6 +105,7 @@ export default function AccuracyPage() {
   const [brier, setBrier] = useState<number|null>(null);
   const [brierSkill, setBrierSkill] = useState<number|null>(null);
   const [brierN, setBrierN] = useState(0);
+  const [mkt, setMkt] = useState<any>(null);
 
   useEffect(() => {
     fetch('/api/accuracy-stats')
@@ -118,6 +119,7 @@ export default function AccuracyPage() {
         setBrier(d.brier ?? null);
         setBrierSkill(d.brierSkill ?? null);
         setBrierN(d.brierSample || 0);
+        setMkt(d.market || null);
         const mapped: Prediction[] = (d.recent || []).map((r: any, i: number) => ({
           id: 100000 + i,
           date: r.date ? new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'2-digit'}) : '',
@@ -153,6 +155,32 @@ export default function AccuracyPage() {
   // Prefer whichever score covers more predictions.
   const shownBrier = (brierN >= scoredAll.length ? brier : localBrier) ?? localBrier ?? brier;
   const shownBrierN = Math.max(brierN, scoredAll.length);
+
+  // Score us against the market on every call where we recorded the market price,
+  // including the historical record. This is the question that decides whether the
+  // tool adds anything at all.
+  const vsMkt = ALL.filter(p => p.result !== 'pending' && Number.isFinite(p.aiConfidence) && Number.isFinite(p.marketOdds as any));
+  const mktScore = (pick: (p: any) => number) => vsMkt.length === 0 ? null :
+    Math.round((vsMkt.reduce((acc, p: any) => {
+      const stated = p.aiConfidence >= 50 ? pick(p) : 100 - pick(p);
+      const happened = p.aiConfidence >= 50 ? (p.result === 'correct' ? 1 : 0) : (p.result === 'incorrect' ? 1 : 0);
+      return acc + Math.pow((stated / 100) - happened, 2);
+    }, 0) / vsMkt.length) * 10000) / 10000;
+  const localOur = mktScore((p:any) => p.aiConfidence);
+  const localMkt = mktScore((p:any) => p.marketOdds);
+  const localDevs = vsMkt.map((p:any) => Math.abs(p.aiConfidence - p.marketOdds));
+  const localMeanDev = localDevs.length ? Math.round((localDevs.reduce((a:number,b:number)=>a+b,0)/localDevs.length)*10)/10 : null;
+  const localDisagreed = vsMkt.filter((p:any) => Math.abs(p.aiConfidence - p.marketOdds) >= 10);
+
+  // Use whichever comparison covers more predictions.
+  const useLocal = !mkt || vsMkt.length >= (mkt.n || 0);
+  const mOur = useLocal ? localOur : mkt.ourBrier;
+  const mMkt = useLocal ? localMkt : mkt.marketBrier;
+  const mN = useLocal ? vsMkt.length : mkt.n;
+  const mDev = useLocal ? localMeanDev : mkt.meanDeviation;
+  const mBig = useLocal ? localDisagreed.length : mkt.bigDeviations;
+  const mBigHits = useLocal ? localDisagreed.filter((p:any) => p.result === 'correct').length : mkt.bigDeviationHits;
+  const mEdge = (mOur !== null && mMkt !== null) ? Math.round((mMkt - mOur) * 10000) / 10000 : null;
 
   const filtered = ALL.filter(p => {
     if (filter !== 'all' && p.result !== filter) return false;
@@ -231,6 +259,41 @@ export default function AccuracyPage() {
               )}
               {' '}Unlike the curve below, this stays meaningful at small sample sizes because it scores
               every prediction rather than needing a full bucket.
+            </div>
+          </div>
+        )}
+
+        {/* Does this beat just reading the market? The hardest question about the tool. */}
+        {mOur !== null && mMkt !== null && mN > 0 && (
+          <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:'20px 22px', marginBottom:16 }}>
+            <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.7px', color:C.t3, marginBottom:6 }}>Do we beat the market?</div>
+            <div style={{ fontSize:13, color:C.t2, lineHeight:1.65, marginBottom:16 }}>
+              A tool that reads market prices could just be restating them. On the {mN} calls where we
+              recorded the market price at the time, this compares our number against simply taking the quote.
+            </div>
+
+            <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginBottom:14 }}>
+              <div style={{ flex:1, minWidth:130, background:C.bg3, borderRadius:10, padding:'12px 14px' }}>
+                <div style={{ fontSize:10, color:C.t3, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:6 }}>Call It</div>
+                <div style={{ fontSize:24, fontWeight:800, fontFamily:'monospace', color: mEdge !== null && mEdge > 0 ? C.green : C.t1 }}>{mOur.toFixed(3)}</div>
+              </div>
+              <div style={{ flex:1, minWidth:130, background:C.bg3, borderRadius:10, padding:'12px 14px' }}>
+                <div style={{ fontSize:10, color:C.t3, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:6 }}>Market alone</div>
+                <div style={{ fontSize:24, fontWeight:800, fontFamily:'monospace', color:C.t2 }}>{mMkt.toFixed(3)}</div>
+              </div>
+              <div style={{ flex:1, minWidth:130, background:C.bg3, borderRadius:10, padding:'12px 14px' }}>
+                <div style={{ fontSize:10, color:C.t3, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:6 }}>Difference</div>
+                <div style={{ fontSize:24, fontWeight:800, fontFamily:'monospace', color: mEdge === null ? C.t3 : mEdge > 0 ? C.green : C.red }}>
+                  {mEdge === null ? '-' : (mEdge > 0 ? '+' : '') + mEdge.toFixed(3)}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ fontSize:12, color:C.t2, lineHeight:1.75, paddingTop:12, borderTop:'1px solid '+C.border }}>
+              Lower is better, so a positive difference means we came out ahead.
+              {mDev !== null && <> On average our number sits <b>{mDev} points</b> from the market quote, so most of the time we are close to it.</>}
+              {mBig > 0 && <> We disagreed by 10 points or more on <b>{mBig}</b> calls, and were right on <b>{mBigHits}</b> of those. That handful is doing most of the work in the difference above, which is far too small a sample to call an edge.</>}
+              {' '}This is the number that decides whether the tool is worth anything, so it stays on this page whichever way it goes.
             </div>
           </div>
         )}

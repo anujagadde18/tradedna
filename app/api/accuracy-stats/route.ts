@@ -136,6 +136,43 @@ export async function GET(_request: NextRequest) {
       brierSkill = Math.round((1 - (brier / 0.25)) * 100);
     }
 
+    // ---- MARKET BENCHMARK ----
+    // The hardest question about a tool that reads market prices: does it add anything,
+    // or is it restating the quote? Raised on r/PredictionMarkets, and it is the right
+    // test. Scored only on predictions where we recorded the market price at the time,
+    // otherwise the comparison is meaningless.
+    const vsMarket = rows.filter((r: any) =>
+      Number.isFinite(Number(r.ai_confidence)) && Number.isFinite(Number(r.market_odds)));
+
+    let ourBrier: number | null = null;
+    let marketBrier: number | null = null;
+    let bigDeviations = 0;
+    let bigDeviationHits = 0;
+    let meanDeviation: number | null = null;
+
+    if (vsMarket.length > 0) {
+      const score = (probField: string) => vsMarket.reduce((acc: number, r: any) => {
+        const conf = Number(r.ai_confidence);          // our call decides the direction
+        const p = Number(r[probField]);
+        const stated = conf >= 50 ? p : 100 - p;
+        const happened = conf >= 50
+          ? (r.result === 'correct' ? 1 : 0)
+          : (r.result === 'incorrect' ? 1 : 0);
+        return acc + Math.pow((stated / 100) - happened, 2);
+      }, 0) / vsMarket.length;
+
+      ourBrier = Math.round(score('ai_confidence') * 10000) / 10000;
+      marketBrier = Math.round(score('market_odds') * 10000) / 10000;
+
+      const devs = vsMarket.map((r: any) => Math.abs(Number(r.ai_confidence) - Number(r.market_odds)));
+      meanDeviation = Math.round((devs.reduce((a: number, b: number) => a + b, 0) / devs.length) * 10) / 10;
+
+      // Where we actually disagreed with the market is where we either add value or noise.
+      const disagreed = vsMarket.filter((r: any) => Math.abs(Number(r.ai_confidence) - Number(r.market_odds)) >= 10);
+      bigDeviations = disagreed.length;
+      bigDeviationHits = disagreed.filter((r: any) => r.result === 'correct').length;
+    }
+
     // A band needs a handful of results before its number means anything.
     const MIN_FOR_SIGNAL = 5;
     const meaningful = calibration.filter(b => b.n >= MIN_FOR_SIGNAL);
@@ -151,6 +188,15 @@ export async function GET(_request: NextRequest) {
       winRate: rows.length > 0 ? Math.round((correct / rows.length) * 100) : null,
       brier,
       brierSkill,
+      market: {
+        n: vsMarket.length,
+        ourBrier,
+        marketBrier,
+        edge: (ourBrier !== null && marketBrier !== null) ? Math.round((marketBrier - ourBrier) * 10000) / 10000 : null,
+        meanDeviation,
+        bigDeviations,
+        bigDeviationHits,
+      },
       brierSample: scored.length,
       calibration,
       calibrationMinSample: MIN_FOR_SIGNAL,
@@ -174,6 +220,6 @@ export async function GET(_request: NextRequest) {
     });
   } catch (err: any) {
     console.error('Accuracy stats:', err.message);
-    return Response.json({ total: 0, correct: 0, incorrect: 0, pending: 0, winRate: null, brier: null, brierSkill: null, brierSample: 0, calibration: [], calibrationMinSample: 5, calibrationGap: null, categories: [], recent: [] }, { status: 200 });
+    return Response.json({ total: 0, correct: 0, incorrect: 0, pending: 0, winRate: null, market: { n: 0, ourBrier: null, marketBrier: null, edge: null, meanDeviation: null, bigDeviations: 0, bigDeviationHits: 0 }, brier: null, brierSkill: null, brierSample: 0, calibration: [], calibrationMinSample: 5, calibrationGap: null, categories: [], recent: [] }, { status: 200 });
   }
 }
