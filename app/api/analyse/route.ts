@@ -793,9 +793,15 @@ export async function POST(request: NextRequest) {
         } else if (parsed.type === 'categorical' && parsed.outcomes.length > 1) {
           const top = parsed.outcomes[0];
           fetch(new URL('/api/track', request.url).toString(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ anonId: anonId || '', name: 'analysis_run', props: { query: query.slice(0, 100), confidence: top.prob } }) }).catch(() => {});
+          const eventVolume = parseFloat(liveEvent.volume || liveEvent.volume24hr || '0') || 0;
+          // A market with almost no money in it produces a number that looks precise
+          // and means very little. Say so rather than presenting it like the rest.
+          const thinMarket = eventVolume > 0 && eventVolume < 10000;
           return Response.json({
             valid: true,
             mtype: 'categorical',
+            volume: eventVolume,
+            thinMarket,
             confidence: top.prob,
             keywords,
             articleCount: relevantArticles.length,

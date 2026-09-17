@@ -12,12 +12,14 @@ export const dynamic = 'force-dynamic';
  */
 
 async function ensureTable(sql: any) {
+  // Existing deployments predate top_outcome, so add it if missing.
   await sql`CREATE TABLE IF NOT EXISTS journal (
     id TEXT PRIMARY KEY,
     anon_id UUID,
     question TEXT NOT NULL,
     ai_confidence INT,
     market_odds INT,
+    top_outcome TEXT,
     edge INT,
     category TEXT,
     result TEXT DEFAULT 'pending',
@@ -25,6 +27,7 @@ async function ensureTable(sql: any) {
     resolved_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW()
   )`;
+  await sql`ALTER TABLE journal ADD COLUMN IF NOT EXISTS top_outcome TEXT`;
 }
 
 // Save a prediction
@@ -52,8 +55,8 @@ export async function POST(req: NextRequest) {
     if (dupe.length > 0) return NextResponse.json({ ok: true, id: dupe[0].id, duplicate: true });
 
     await sql`
-      INSERT INTO journal (id, anon_id, question, ai_confidence, market_odds, edge, category)
-      VALUES (${id}, ${anonId}::uuid, ${question}, ${conf}, ${market}, ${edge}, ${String(body.category || 'other')})
+      INSERT INTO journal (id, anon_id, question, ai_confidence, market_odds, edge, category, top_outcome)
+      VALUES (${id}, ${anonId}::uuid, ${question}, ${conf}, ${market}, ${edge}, ${String(body.category || 'other')}, ${body.topOutcome ? String(body.topOutcome).slice(0,120) : null})
       ON CONFLICT (id) DO NOTHING`;
 
     return NextResponse.json({ ok: true, id });

@@ -600,6 +600,7 @@ function ScoresPageContent() {
   const [components, setComponents] = useState<{key:string;label:string;prob:number}[]>([]);
   const [invalidQuestion, setInvalidQuestion] = useState<{reason:string;examples:string[]}|null>(null);
   const [noRealData, setNoRealData]  = useState(false);
+  const [thinMarket, setThinMarket] = useState<{volume:number}|null>(null);
   const [odds, setOdds]             = useState<number|null>(null);
   const [marketTitle, setMarketTitle] = useState<string>('');
   const [mtype, setMtype]           = useState<'binary'|'categorical'>('binary');
@@ -702,6 +703,53 @@ function ScoresPageContent() {
     if (event) go();
   }, [event]);
 
+  // Records a prediction locally AND server-side. Pulled out of the binary branch
+  // because multi-outcome questions returned early and were never being saved -
+  // which is why the September Fed call never appeared on the accuracy record.
+  const recordPrediction = (opts: {
+    question: string; confidence: number; marketOdds: number | null;
+    category: string; sources?: any[]; weights?: any; topOutcome?: string | null;
+  }) => {
+    try {
+      const entry = {
+        id: opts.question.slice(0,50).replace(/[^a-z0-9]/gi,'-').toLowerCase() + '-' + Date.now(),
+        question: opts.question,
+        aiConfidence: opts.confidence,
+        marketOdds: opts.marketOdds,
+        edge: opts.marketOdds !== null ? opts.confidence - opts.marketOdds : null,
+        weights: opts.weights || {},
+        sources: (opts.sources||[]).slice(0,5).map((s:any)=>({name:s.name,type:s.category||'news',contribution:s.contribution||0})),
+        result: 'pending',
+        timestamp: Date.now(),
+        topOutcome: opts.topOutcome || null,
+      };
+      const existing = localStorage.getItem('pp_journal');
+      const journal = existing ? JSON.parse(existing) : [];
+      if (!journal.find((e:any) => e.question === opts.question)) {
+        journal.unshift(entry);
+        if (journal.length > 200) journal.splice(200);
+        localStorage.setItem('pp_journal', JSON.stringify(journal));
+      }
+      let anonId = localStorage.getItem('pp_uid');
+      if (!anonId) { anonId = crypto.randomUUID(); localStorage.setItem('pp_uid', anonId); }
+      fetch('/api/journal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          anonId, id: entry.id, question: opts.question,
+          aiConfidence: opts.confidence,
+          marketOdds: opts.marketOdds,
+          category: opts.category,
+          topOutcome: opts.topOutcome || null,
+        }),
+      }).then(r => r.json()).then(res => {
+        if (!res || res.ok !== true) console.warn('Prediction not recorded server-side', res);
+      }).catch(err => console.warn('Prediction not recorded server-side', err));
+    } catch (err) {
+      console.warn('Prediction not recorded', err);
+    }
+  };
+
   const runAnalysis = async () => {
     if (mtype === 'categorical') return;
     if (!event) return;
@@ -751,6 +799,7 @@ function ScoresPageContent() {
       }
       setInvalidQuestion(null);
       setNoRealData(false);
+      setThinMarket(data.thinMarket ? { volume: data.volume || 0 } : null);
       if (data.mtype === 'categorical' && Array.isArray(data.outcomes) && data.outcomes.length > 1) {
         setOutcomes(data.outcomes.map((o: any) => ({ name: o.name, odds: o.prob })));
         setOdds(data.outcomes[0].prob);
@@ -759,6 +808,15 @@ function ScoresPageContent() {
         if (data.sources && data.sources.length > 0) setRealSources(data.sources);
         setIntel({ confidence: data.outcomes[0].prob, direction: 'YES', probabilityLabel: 'Most likely outcome', predictionStrength: 'Market', strengthScore: data.outcomes[0].prob, riskLevel: 'Medium', marketEdge: null, edgeContext: '', modelComponents: [], confidenceDrivers: { positive: [], negative: [] }, explanation: '' });
         setMtype('categorical');
+        // Multi-outcome questions are predictions too. This is the line that was missing.
+        recordPrediction({
+          question: data.title || event,
+          confidence: data.outcomes[0].prob,
+          marketOdds: data.outcomes[0].prob,   // the market IS our number here
+          category: data.marketType || 'other',
+          sources: data.sources,
+          topOutcome: data.outcomes[0].name,
+        });
         return;
       }
       if (data.noData) {
@@ -770,46 +828,14 @@ function ScoresPageContent() {
       if (data.confidence) {
         // Use raw confidence directly — intelligenceEngine flips NO verdicts
         const rawConf = Math.max(5, Math.min(95, data.confidence));
-        // Auto-save to journal
-        try {
-          const journalEntry = {
-            id: event.slice(0,50).replace(/[^a-z0-9]/gi,'-').toLowerCase() + '-' + Date.now(),
-            question: event,
-            aiConfidence: rawConf,
-            marketOdds: marketOddsForAI || null,
-            edge: marketOddsForAI ? rawConf - marketOddsForAI : null,
-            weights,
-            sources: (data.sources||[]).slice(0,5).map((s:any)=>({name:s.name,type:s.category||'news',contribution:s.contribution||0})),
-            result: 'pending',
-            timestamp: Date.now(),
-          };
-          const existing = localStorage.getItem('pp_journal');
-          const journal = existing ? JSON.parse(existing) : [];
-          // Don't duplicate
-          if (!journal.find((e:any) => e.question === event)) {
-            journal.unshift(journalEntry);
-            if (journal.length > 200) journal.splice(200);
-            localStorage.setItem('pp_journal', JSON.stringify(journal));
-          }
-          // Also save server-side so the journal survives across browsers
-          // and can be resolved without this page being open.
-          try {
-            let anonId = localStorage.getItem('pp_uid');
-            if (!anonId) { anonId = crypto.randomUUID(); localStorage.setItem('pp_uid', anonId); }
-            fetch('/api/journal', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                anonId,
-                id: journalEntry.id,
-                question: event,
-                aiConfidence: rawConf,
-                marketOdds: marketOddsForAI || null,
-                category: data.marketType || 'other',
-              }),
-            }).catch(()=>{});
-          } catch {}
-        } catch {}
+        recordPrediction({
+          question: event,
+          confidence: rawConf,
+          marketOdds: marketOddsForAI || null,
+          category: data.marketType || 'other',
+          sources: data.sources,
+          weights,
+        });
         setIntel({ confidence: rawConf, direction: rawConf >= 50 ? 'YES' : 'NO', probabilityLabel: rawConf >= 65 ? 'AI is confident this happens' : rawConf >= 55 ? 'More likely than not' : rawConf >= 45 ? 'Could go either way' : rawConf >= 35 ? 'Probably not' : 'AI thinks this is unlikely', predictionStrength: rawConf >= 70 ? 'Strong' : rawConf >= 55 ? 'Medium' : 'Weak', strengthScore: rawConf, riskLevel: rawConf >= 70 || rawConf <= 30 ? 'Low' : 'Medium', marketEdge: marketOddsForAI ? rawConf - marketOddsForAI : null, edgeContext: '', modelComponents: [], confidenceDrivers: { positive: [], negative: [] }, explanation: '' });
         if (data.sources && data.sources.length > 0) setRealSources(data.sources);
         if (data.components && data.components.length > 0) {
@@ -981,6 +1007,18 @@ function ScoresPageContent() {
           </div>
         ) : (
           <>
+            {/* Thin markets produce numbers that look precise and are not */}
+            {thinMarket && (
+              <div style={{ background:'rgba(245,166,35,0.10)', border:'1px solid rgba(245,166,35,0.35)', borderRadius:12, padding:'12px 16px', marginBottom:14 }}>
+                <div style={{ fontSize:12, fontWeight:700, color:'#f5a623', marginBottom:4 }}>Low trading volume</div>
+                <div style={{ fontSize:12, color:C.t2, lineHeight:1.6 }}>
+                  Only about ${Math.round(thinMarket.volume).toLocaleString()} has been traded on this question.
+                  With that little money involved the price moves on a handful of trades, so treat the number
+                  below as weak evidence rather than a crowd view.
+                </div>
+              </div>
+            )}
+
             {/* 1. THE ANSWER */}
             <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} mtype={mtype} outcomes={outcomes} rawEvent={event} breakdown={breakdown} components={components} />
 
