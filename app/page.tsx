@@ -262,11 +262,16 @@ export default function HomePage() {
         {/* EXPLAINER — plain-language intro using a real live number */}
         {cleanEvents.length > 0 && (() => {
           const usable = cleanEvents.filter(e => e.yesPrice !== null && e.yesPrice >= 10 && e.yesPrice <= 90);
-          // Prefer a question a first-time reader will recognise. Economics and US
-          // politics explain the concept better than a foreign parliamentary race.
-          const example = usable.find(e => e.category === 'economics')
-            || usable.find(e => e.category === 'crypto')
-            || usable.find(e => e.category !== 'sports')
+          // Prefer a question a first-time reader will actually recognise. A foreign
+          // parliamentary race is a poor way to explain what a prediction market is,
+          // so anything niche is skipped even when it has the biggest volume.
+          const RECOGNISABLE = /fed|rate|inflation|bitcoin|election|president|nominee|senate|congress|supreme court|oil|recession|government shutdown|super bowl|world cup|championship/i;
+          // Exclude foreign national races: "election" alone would match a Russian
+          // parliamentary question, which explains the concept badly to a new reader.
+          const NICHE = /parliament|referendum|russian|german|french|dutch|japanese|canadian|australian|indian general|by-election/i;
+          const example = usable.find(e => RECOGNISABLE.test(e.title) && !NICHE.test(e.title))
+            || usable.find(e => e.category === 'economics' || e.category === 'crypto')
+            || usable.find(e => e.category !== 'sports' && !/parliament|referendum/i.test(e.title))
             || usable[0];
           if (!example) return null;
           const pct = example.yesPrice as number;

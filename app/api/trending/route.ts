@@ -144,7 +144,9 @@ function getTopOutcome(event: any): { name: string; prob: number } | null {
       }
     }
 
-    const PROP_TERMS = /\bo\/u\b|over|under|innings|spread|handicap|moneyline|anytime|touchdown|first half|second half|\b[1-4][hq]\b|quarter|period|rebounds|assists|strikeouts|goals scored|points\b|\+\d|\-\d\.\d/;
+    // Props that NAME a team still are not the story: "Exact Margin: Texans by 21+"
+    // passes a team-name check but answers a different question than "who wins".
+    const PROP_TERMS = /\bo\/u\b|over|under|innings|spread|handicap|moneyline|anytime|touchdown|first half|second half|\b[1-4][hq]\b|quarter|period|rebounds|assists|strikeouts|goals scored|points\b|\+\d|\-\d\.\d|exact margin|margin of|winning margin|\bby \d|\bby \d+-\d|correct score|both teams|clean sheet|\bhalftime\b|\bovertime\b|shutout/;
 
     const isJunkOutcome = (name: string): boolean => {
       const n = name.toLowerCase().trim();
@@ -176,8 +178,23 @@ function getTopOutcome(event: any): { name: string; prob: number } | null {
       candidates.push({ name: raw, prob });
     }
 
-    // Nothing survived the filter. Better to show no leader than a prop bet or a
-    // meaningless "173 possible answers" count.
+    // Nothing survived the strict filter. Before giving up, try the plain two-way
+    // market inside the bundle: a market whose own question is just the event title
+    // is the "who wins" line, not a prop. A dash on every football row is honest but
+    // useless, and the answer is usually sitting right there.
+    if (candidates.length === 0 && vsMatch) {
+      for (const m of markets) {
+        const prob = readYes(m);
+        const q = String(m.question || '').toLowerCase();
+        const gi = String(m.groupItemTitle || '').trim();
+        if (prob === null || prob < 1 || prob > 99) continue;
+        // The main line usually restates the matchup and has no prop vocabulary.
+        if (PROP_TERMS.test(q)) continue;
+        if (!/\bvs\.?\b/.test(q)) continue;
+        const side = gi && !PROP_TERMS.test(gi.toLowerCase()) ? gi : (vsMatch[1] || '').trim();
+        if (side) return { name: clean(side), prob };
+      }
+    }
     if (candidates.length === 0) return null;
 
     if (candidates.length === 1) {
