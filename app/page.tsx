@@ -262,7 +262,12 @@ export default function HomePage() {
         {/* EXPLAINER — plain-language intro using a real live number */}
         {cleanEvents.length > 0 && (() => {
           const usable = cleanEvents.filter(e => e.yesPrice !== null && e.yesPrice >= 10 && e.yesPrice <= 90);
-          const example = usable.find(e => e.category !== 'sports') || usable[0];
+          // Prefer a question a first-time reader will recognise. Economics and US
+          // politics explain the concept better than a foreign parliamentary race.
+          const example = usable.find(e => e.category === 'economics')
+            || usable.find(e => e.category === 'crypto')
+            || usable.find(e => e.category !== 'sports')
+            || usable[0];
           if (!example) return null;
           const pct = example.yesPrice as number;
           const isMatch = /\s+vs\.?\s+/i.test(example.title);
@@ -407,7 +412,7 @@ export default function HomePage() {
                           <div style={{fontSize:13,fontWeight:700,fontFamily:FONT_MONO,color:C.t2}}>{e.topOutcome.prob}%</div>
                           <div style={{fontSize:8,color:C.t3,maxWidth:88,margin:'2px auto 0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{e.topOutcome.name}</div>
                         </div>
-                      ): e.marketCount > 1 ? (
+                      ): e.marketCount > 1 && e.marketCount <= 40 ? (
                         <span style={{fontSize:9,fontWeight:600,color:C.t3,padding:'2px 7px',borderRadius:4,background:'rgba(255,255,255,0.04)',whiteSpace:'nowrap' as const}}>{e.marketCount} possible answers</span>
                       ) : (
                         <span style={{fontSize:10,color:C.t4}}>—</span>

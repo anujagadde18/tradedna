@@ -116,8 +116,10 @@ function fmtVol(v: number): string {
 // For single-market events, surface the market's answer name when it differs from the title.
 function getTopOutcome(event: any): { name: string; prob: number } | null {
   try {
-    const eventTitle = String(event.title || '').toLowerCase();
+    const rawTitle = String(event?.title || '');
+    const eventTitle = rawTitle.toLowerCase();
     const markets = (event.markets || []).filter((m: any) => m && m.closed !== true);
+
     const readYes = (m: any): number | null => {
       try {
         const prices = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices;
@@ -128,21 +130,44 @@ function getTopOutcome(event: any): { name: string; prob: number } | null {
         return pct >= 0 && pct <= 100 ? pct : null;
       } catch { return null; }
     };
-    // Reject sub-markets that are prop bets, placeholders, draws, or the event title echoed back.
+
+    // For "X vs Y" events, the only meaningful outcomes are the two sides. Everything
+    // else in the bundle is a prop bet (1H Moneyline, 2Q Moneyline, Anytime Touchdown,
+    // period totals). A blocklist of prop patterns kept missing new ones, so this
+    // flips to an allowlist: name one of the two competitors or you are not the story.
+    const vsMatch = rawTitle.match(/^(.*?)\s+vs\.?\s+(.*?)$/i);
+    const sideKeywords: string[] = [];
+    if (vsMatch) {
+      for (const side of [vsMatch[1], vsMatch[2]]) {
+        const words = side.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 3);
+        if (words.length > 0) sideKeywords.push(...words);
+      }
+    }
+
+    const PROP_TERMS = /\bo\/u\b|over|under|innings|spread|handicap|moneyline|anytime|touchdown|first half|second half|\b[1-4][hq]\b|quarter|period|rebounds|assists|strikeouts|goals scored|points\b|\+\d|\-\d\.\d/;
+
     const isJunkOutcome = (name: string): boolean => {
       const n = name.toLowerCase().trim();
       if (!n || n.length < 2) return true;
-      if (/^team [a-z]$/.test(n)) return true;                       // "Team A" placeholders
-      if (/\bo\/u\b|over|under|innings|spread|handicap|\+\d|\-\d\.\d/.test(n)) return true; // prop bets
-      if (/rebounds|assists|points|strikeouts|goals scored/.test(n)) return true;
-      if (/^draw\b|^tie\b/.test(n)) return true;                     // draws are never the story
-      if (eventTitle && n.length > 12 && eventTitle.startsWith(n.slice(0, 12))) return true; // echo of title
+      if (/^team [a-z]$/.test(n)) return true;                        // placeholder
+      if (/^(other|others|none|no winner|field|any other)\b/.test(n)) return true;  // catch-all buckets are not answers
+      if (/^draw\b|^tie\b/.test(n)) return true;                      // a draw is never the headline
+      if (PROP_TERMS.test(n)) return true;                            // prop bets
+      if (eventTitle && n.length > 12 && eventTitle.startsWith(n.slice(0, 12))) return true;  // echo of the title
+      // For a head-to-head, require the outcome to name one of the two sides.
+      if (sideKeywords.length > 0) {
+        const mentionsSide = sideKeywords.some(w => n.includes(w));
+        if (!mentionsSide) return true;
+      }
       return false;
     };
+
     const clean = (s: string) => {
-      const t = String(s || '').trim();
+      // Strip arrow glyphs and stray symbols that leak in from threshold markets.
+      const t = String(s || '').replace(/[\u2190-\u21FF\u2B00-\u2BFF]/g, '').replace(/\s+/g, ' ').trim();
       return t.length > 34 ? t.slice(0, 33).trimEnd() + '\u2026' : t;
     };
+
     const candidates: { name: string; prob: number }[] = [];
     for (const m of markets) {
       const prob = readYes(m);
@@ -150,17 +175,23 @@ function getTopOutcome(event: any): { name: string; prob: number } | null {
       if (prob === null || !raw || isJunkOutcome(raw)) continue;
       candidates.push({ name: raw, prob });
     }
+
+    // Nothing survived the filter. Better to show no leader than a prop bet or a
+    // meaningless "173 possible answers" count.
     if (candidates.length === 0) return null;
+
     if (candidates.length === 1) {
       const only = candidates[0];
-      // A lone near-certain outcome is not informative (e.g. "Bitcoin above $54,000").
-      if (only.prob >= 97 || only.prob <= 2) return null;
+      if (only.prob >= 97 || only.prob <= 2) return null;   // trivial outcomes say nothing
       return { name: clean(only.name), prob: only.prob };
     }
-    // For threshold ladders (Bitcoin above X), the top price is trivially ~100%.
-    // The informative outcome is the most uncertain one that still leads its neighbours.
+
+    // Threshold ladders (Bitcoin above X) top out at ~100%, which is not informative.
+    // One near-certain outcome alongside genuinely contested ones is enough to tell us
+    // this is a ladder rather than a real race.
     const nearCertain = candidates.filter(o => o.prob >= 97).length;
-    const useContested = nearCertain >= 2;
+    const contested = candidates.filter(o => o.prob < 97 && o.prob > 5).length;
+    const useContested = nearCertain >= 2 || (nearCertain >= 1 && contested >= 1);
     const sorted = candidates.slice().sort((a, b) => b.prob - a.prob);
     const pick = useContested
       ? sorted.filter(o => o.prob < 97).sort((a, b) => b.prob - a.prob)[0] || sorted[0]
