@@ -118,96 +118,101 @@ function getTopOutcome(event: any): { name: string; prob: number } | null {
   try {
     const rawTitle = String(event?.title || '');
     const eventTitle = rawTitle.toLowerCase();
-    const markets = (event.markets || []).filter((m: any) => m && m.closed !== true);
 
-    const readYes = (m: any): number | null => {
+    // Verified against a live gamma response (Chargers vs. Bills, 27 Sep 2026):
+    //  - the moneyline market has NO groupItemTitle; its question is the matchup title
+    //  - the team names live in outcomes: "[\"Chargers\", \"Bills\"]"
+    //  - outcomePrices lines up with outcomes: ["0","1"] means the second side won
+    //  - a finished game is markets[].closed = true even while event.closed = false
+    // Six earlier attempts guessed at this shape instead of reading it.
+    const parseArr = (v: any): string[] => {
       try {
-        const prices = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices;
-        if (!Array.isArray(prices) || prices.length < 2) return null;
-        const yes = parseFloat(prices[0]);
-        if (isNaN(yes)) return null;
-        const pct = yes <= 1 ? Math.round(yes * 100) : Math.round(yes);
-        return pct >= 0 && pct <= 100 ? pct : null;
-      } catch { return null; }
+        const a = typeof v === 'string' ? JSON.parse(v) : v;
+        return Array.isArray(a) ? a.map((x: any) => String(x)) : [];
+      } catch { return []; }
     };
+
+    const allMarkets = event.markets || [];
+    const openMarkets = allMarkets.filter((m: any) => m && m.closed !== true);
 
     const clean = (s: string) => {
       const t = String(s || '').replace(/[\u2190-\u21FF\u2B00-\u2BFF]/g, '').replace(/\s+/g, ' ').trim();
       return t.length > 34 ? t.slice(0, 33).trimEnd() + '\u2026' : t;
     };
 
-    // Polymarket labels sports markets with sportsMarketType ("moneyline", "spread",
-    // "totals"). Use that instead of guessing from titles - four rounds of regex
-    // patterns kept missing new prop formats because the answer was in the data.
-    const moneylines = markets.filter((m: any) =>
-      String(m.sportsMarketType || '').toLowerCase() === 'moneyline');
-
-    if (moneylines.length > 0) {
-      const sides = moneylines
-        .map((m: any) => ({ name: String(m.groupItemTitle || m.question || '').trim(), prob: readYes(m) }))
-        .filter((o: any) => o.name && o.prob !== null) as { name: string; prob: number }[];
-      if (sides.length > 0) {
-        const top = sides.slice().sort((a, b) => b.prob - a.prob)[0];
-        // A settled or near-settled game tells the reader nothing useful.
-        if (top.prob >= 99 || top.prob <= 1) return null;
-        return { name: clean(top.name), prob: top.prob };
-      }
-    }
-
-    // Non-sports events, or sports without the label. Keep the allowlist approach.
-    const vsMatch = rawTitle.match(/^(.*?)\s+vs\.?\s+(.*?)$/i);
-    const sideKeywords: string[] = [];
-    if (vsMatch) {
-      for (const side of [vsMatch[1], vsMatch[2]]) {
-        const words = side.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 3);
-        if (words.length > 0) sideKeywords.push(...words);
-      }
-    }
-
-    const PROP_TERMS = /\bo\/u\b|over|under|innings|spread|handicap|moneyline|anytime|touchdown|first half|second half|\b[1-4][hq]\b|quarter|period|rebounds|assists|strikeouts|goals scored|points\b|\+\d|\-\d\.\d|exact margin|margin of|winning margin|\bby \d|correct score|both teams|clean sheet|\bhalftime\b|\bovertime\b|shutout/;
-
-    const isJunkOutcome = (name: string, market: any): boolean => {
-      const n = name.toLowerCase().trim();
-      if (!n || n.length < 2) return true;
-      // If the API labelled it as something other than a moneyline, believe it.
-      const smt = String(market?.sportsMarketType || '').toLowerCase();
-      if (smt && smt !== 'moneyline') return true;
-      if (/^team [a-z]$/.test(n)) return true;
-      if (/^(other|others|none|no winner|field|any other)\b/.test(n)) return true;
-      if (/^draw\b|^tie\b/.test(n)) return true;
-      if (PROP_TERMS.test(n)) return true;
-      if (eventTitle && n.length > 12 && eventTitle.startsWith(n.slice(0, 12))) return true;
-      if (sideKeywords.length > 0 && !sideKeywords.some(w => n.includes(w))) return true;
-      return false;
+    // Reads the leading side of a two-way market from its own outcomes array.
+    const readTwoWay = (m: any): { name: string; prob: number } | null => {
+      const names = parseArr(m.outcomes);
+      const prices = parseArr(m.outcomePrices).map(p => parseFloat(p));
+      if (names.length < 2 || prices.length < 2) return null;
+      let bestI = 0;
+      for (let i = 1; i < prices.length; i++) if (prices[i] > prices[bestI]) bestI = i;
+      const pct = Math.round((prices[bestI] <= 1 ? prices[bestI] * 100 : prices[bestI]));
+      if (!Number.isFinite(pct)) return null;
+      const name = String(names[bestI] || '').trim();
+      if (!name || /^(yes|no)$/i.test(name)) return null;   // Yes/No is not a team
+      return { name, prob: pct };
     };
 
+    // 1. Sports: the moneyline market is the who-wins line, labelled by the API.
+    const moneyline = openMarkets.find((m: any) =>
+      String(m.sportsMarketType || '').toLowerCase() === 'moneyline');
+    if (moneyline) {
+      const r = readTwoWay(moneyline);
+      // A game in progress or just finished sits at 99/1 and tells the reader nothing.
+      if (r && r.prob < 99 && r.prob > 1) return { name: clean(r.name), prob: r.prob };
+      return null;
+    }
+
+    // If every moneyline in the bundle has closed, the game is over. Say nothing
+    // rather than reporting a settled price as if it were a live chance.
+    const closedMoneyline = allMarkets.some((m: any) =>
+      String(m.sportsMarketType || '').toLowerCase() === 'moneyline' && m.closed === true);
+    if (closedMoneyline) return null;
+
+    // 2. A single two-way market with real team names (soccer, UFC, tennis).
+    if (openMarkets.length <= 3) {
+      for (const m of openMarkets) {
+        const smt = String(m.sportsMarketType || '').toLowerCase();
+        if (smt && smt !== 'moneyline') continue;
+        const r = readTwoWay(m);
+        if (r && r.prob < 99 && r.prob > 1) return { name: clean(r.name), prob: r.prob };
+      }
+    }
+
+    // 3. Multi-outcome events (elections, championships, price ladders): each market
+    //    is one candidate, named by groupItemTitle.
+    const PROP_TERMS = /\bo\/u\b|over|under|innings|spread|handicap|moneyline|anytime|touchdown|first half|second half|\b[1-4][hq]\b|quarter|period|rebounds|assists|strikeouts|goals scored|points\b|\+\d|\-\d\.\d|exact margin|margin of|winning margin|\bby \d|correct score|both teams|clean sheet|\bhalftime\b|\bovertime\b|shutout/;
+
     const candidates: { name: string; prob: number }[] = [];
-    for (const m of markets) {
-      const prob = readYes(m);
-      const raw = String(m.groupItemTitle || m.question || '').trim();
-      if (prob === null || !raw || isJunkOutcome(raw, m)) continue;
-      candidates.push({ name: raw, prob });
+    for (const m of openMarkets) {
+      const smt = String(m.sportsMarketType || '').toLowerCase();
+      if (smt && smt !== 'moneyline') continue;           // API says it is a prop
+      const name = String(m.groupItemTitle || '').trim();  // real candidates carry this
+      if (!name) continue;
+      const n = name.toLowerCase();
+      if (/^team [a-z]$/.test(n)) continue;
+      if (/^(other|others|none|no winner|field|any other)\b/.test(n)) continue;
+      if (/^draw\b|^tie\b/.test(n)) continue;
+      if (PROP_TERMS.test(n)) continue;
+      if (eventTitle && n.length > 12 && eventTitle.startsWith(n.slice(0, 12))) continue;
+      const prices = parseArr(m.outcomePrices).map(p => parseFloat(p));
+      if (prices.length < 2) continue;
+      const pct = Math.round(prices[0] <= 1 ? prices[0] * 100 : prices[0]);
+      if (!Number.isFinite(pct) || pct < 1 || pct > 99) continue;
+      candidates.push({ name, prob: pct });
     }
 
     if (candidates.length === 0) return null;
+    const sorted = candidates.slice().sort((a, b) => b.prob - a.prob);
 
-    if (candidates.length === 1) {
-      const only = candidates[0];
-      if (only.prob >= 97 || only.prob <= 2) return null;
-      return { name: clean(only.name), prob: only.prob };
-    }
-
-    // Threshold ladders (Bitcoin above X) top out near 100%, which says nothing.
+    // Threshold ladders (Bitcoin above X) top out near certainty, which says nothing.
     const nearCertain = candidates.filter(o => o.prob >= 97).length;
     const contested = candidates.filter(o => o.prob < 97 && o.prob > 5).length;
-    const useContested = nearCertain >= 2 || (nearCertain >= 1 && contested >= 1);
-    const sorted = candidates.slice().sort((a, b) => b.prob - a.prob);
-    const pick = useContested
-      ? sorted.filter(o => o.prob < 97).sort((a, b) => b.prob - a.prob)[0] || sorted[0]
+    const pick = (nearCertain >= 2 || (nearCertain >= 1 && contested >= 1))
+      ? sorted.filter(o => o.prob < 97)[0] || sorted[0]
       : sorted[0];
     if (!pick) return null;
-    // Never headline a settled outcome.
-    if (pick.prob >= 99 || pick.prob <= 1) return null;
     return { name: clean(pick.name), prob: pick.prob };
   } catch { return null; }
 }

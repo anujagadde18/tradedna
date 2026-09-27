@@ -86,7 +86,7 @@ export default function PicksPage() {
         ) : (
           <div style={{display:'flex',flexDirection:'column' as const,gap:14}}>
             {picks.map((pick,i)=>(
-              <div key={i} style={{background:C.bg2,border:'1px solid '+(pick.verdict==='HIGH CONVICTION'?'rgba(46,204,138,0.25)':C.border),borderRadius:16,overflow:'hidden'}}>
+              <div key={i} style={{background:C.bg2,border:'1px solid '+(pick.verdict==='CLEAR LEAN'?'rgba(46,204,138,0.25)':C.border),borderRadius:16,overflow:'hidden'}}>
                 
                 <div style={{padding:'16px 18px',borderBottom:'1px solid '+C.border}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
