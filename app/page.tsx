@@ -10,6 +10,7 @@ interface TrendingEvent {
   image:string|null; volume24h:number; volume24hFormatted:string;
   team1:string|null; team2:string|null; endDate:string;
   topOutcome?: { name: string; prob: number } | null;
+  isFinished?: boolean;
 }
 
 const C = {
@@ -108,7 +109,10 @@ export default function HomePage() {
 
   const cleanEvents = events.filter(e => {
     const t = (e.title||'').toLowerCase();
-    return !t.includes('more markets') && !t.includes('exact score');
+    if (t.includes('more markets') || t.includes('exact score')) return false;
+    // A finished game is not something anyone can predict.
+    if ((e as any).isFinished) return false;
+    return true;
   });
 
   // On the All tab, game days flood the volume ranking with sports.

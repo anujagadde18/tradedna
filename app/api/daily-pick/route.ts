@@ -157,7 +157,7 @@ export async function GET(req: NextRequest) {
         subtitle: `$${(vol24/1000000).toFixed(1)}M traded today · Polymarket`,
         prediction: isLikely ? 'YES — likely to happen' : 'NO — unlikely to happen',
         confidence: yesPrice,
-        verdict: Math.abs(yesPrice-50) >= 20 ? 'HIGH CONVICTION' : 'WATCH',
+        verdict: Math.abs(yesPrice-50) >= 20 ? 'CLEAR LEAN' : 'WORTH WATCHING',
         verdictColor: Math.abs(yesPrice-50) >= 20 ? '#2ecc8a' : '#f5a623',
         reasoning: [
           `Market consensus: ${yesPrice}% probability from $${(vol24/1000000).toFixed(1)}M in trades`,

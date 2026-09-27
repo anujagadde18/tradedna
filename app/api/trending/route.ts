@@ -114,6 +114,29 @@ function fmtVol(v: number): string {
 
 // For multi-outcome events, find the leading answer and its live price.
 // For single-market events, surface the market's answer name when it differs from the title.
+// A game that has already been played is not a prediction. Ranking by 24h volume
+// surfaces exactly these - a match that just ended has the day's highest volume -
+// which is why the homepage filled up with blank rows. Verified against live data:
+// every blank row was a fixture whose endDate had passed.
+function isEventFinished(event: any): boolean {
+  try {
+    const markets = event.markets || [];
+    // The clearest signal: the who-wins market has settled.
+    const ml = markets.filter((m: any) => String(m.sportsMarketType || '').toLowerCase() === 'moneyline');
+    if (ml.length > 0 && ml.every((m: any) => m.closed === true)) return true;
+    // Otherwise fall back to the scheduled end time, with a small grace period so a
+    // game in progress still counts as live.
+    const end = event.endDate ? new Date(event.endDate).getTime() : null;
+    if (end && end < Date.now() - 30 * 60 * 1000) {
+      // Long-dated markets (championships, elections) legitimately sit past a stale
+      // endDate, so only treat short-horizon sports fixtures as finished.
+      const isFixture = /\svs\.?\s/i.test(String(event.title || ''));
+      if (isFixture) return true;
+    }
+    return false;
+  } catch { return false; }
+}
+
 function getTopOutcome(event: any): { name: string; prob: number } | null {
   try {
     const rawTitle = String(event?.title || '');
@@ -170,8 +193,10 @@ function getTopOutcome(event: any): { name: string; prob: number } | null {
       String(m.sportsMarketType || '').toLowerCase() === 'moneyline' && m.closed === true);
     if (closedMoneyline) return null;
 
-    // 2. A single two-way market with real team names (soccer, UFC, tennis).
-    if (openMarkets.length <= 3) {
+    // 2. Two-way market with real team names. Baseball bundles carry 30+ prop markets
+    //    alongside the main line, so the old 3-market limit skipped them entirely.
+    const isFixtureTitle = /\svs\.?\s/i.test(rawTitle);
+    if (openMarkets.length <= 3 || isFixtureTitle) {
       for (const m of openMarkets) {
         const smt = String(m.sportsMarketType || '').toLowerCase();
         if (smt && smt !== 'moneyline') continue;
@@ -400,6 +425,7 @@ export async function GET(req: NextRequest) {
       team1:              teamNames?.team1 || null,
       team2:              teamNames?.team2 || null,
       marketCount:        (event.markets || []).length,
+      isFinished:         isEventFinished(event),
       topOutcome:         getTopOutcome(event),
       endDate:            event.endDate || '',
     });
