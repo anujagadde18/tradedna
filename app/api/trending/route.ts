@@ -121,9 +121,20 @@ function fmtVol(v: number): string {
 function isEventFinished(event: any): boolean {
   try {
     const markets = event.markets || [];
-    // The clearest signal: the who-wins market has settled.
     const ml = markets.filter((m: any) => String(m.sportsMarketType || '').toLowerCase() === 'moneyline');
+    // The clearest signal: the who-wins market has settled.
     if (ml.length > 0 && ml.every((m: any) => m.closed === true)) return true;
+    // Verified against the live API (Houston Astros vs. Athletics, 27 Sep 2026):
+    // MLB leaves its moneyline OPEN with endDate a week out, but prices it at
+    // 0.9995 once the game is decided. So a moneyline pinned to near-certainty is
+    // a finished game regardless of the closed flag or the date.
+    for (const m of ml) {
+      try {
+        const prices = (typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices) || [];
+        const nums = prices.map((x: any) => parseFloat(x)).filter((n: number) => Number.isFinite(n));
+        if (nums.length >= 2 && Math.max(...nums) >= 0.99) return true;
+      } catch { /* unparseable prices tell us nothing */ }
+    }
     // Otherwise fall back to the scheduled end time, with a small grace period so a
     // game in progress still counts as live.
     const end = event.endDate ? new Date(event.endDate).getTime() : null;
