@@ -131,10 +131,30 @@ function getTopOutcome(event: any): { name: string; prob: number } | null {
       } catch { return null; }
     };
 
-    // For "X vs Y" events, the only meaningful outcomes are the two sides. Everything
-    // else in the bundle is a prop bet (1H Moneyline, 2Q Moneyline, Anytime Touchdown,
-    // period totals). A blocklist of prop patterns kept missing new ones, so this
-    // flips to an allowlist: name one of the two competitors or you are not the story.
+    const clean = (s: string) => {
+      const t = String(s || '').replace(/[\u2190-\u21FF\u2B00-\u2BFF]/g, '').replace(/\s+/g, ' ').trim();
+      return t.length > 34 ? t.slice(0, 33).trimEnd() + '\u2026' : t;
+    };
+
+    // Polymarket labels sports markets with sportsMarketType ("moneyline", "spread",
+    // "totals"). Use that instead of guessing from titles - four rounds of regex
+    // patterns kept missing new prop formats because the answer was in the data.
+    const moneylines = markets.filter((m: any) =>
+      String(m.sportsMarketType || '').toLowerCase() === 'moneyline');
+
+    if (moneylines.length > 0) {
+      const sides = moneylines
+        .map((m: any) => ({ name: String(m.groupItemTitle || m.question || '').trim(), prob: readYes(m) }))
+        .filter((o: any) => o.name && o.prob !== null) as { name: string; prob: number }[];
+      if (sides.length > 0) {
+        const top = sides.slice().sort((a, b) => b.prob - a.prob)[0];
+        // A settled or near-settled game tells the reader nothing useful.
+        if (top.prob >= 99 || top.prob <= 1) return null;
+        return { name: clean(top.name), prob: top.prob };
+      }
+    }
+
+    // Non-sports events, or sports without the label. Keep the allowlist approach.
     const vsMatch = rawTitle.match(/^(.*?)\s+vs\.?\s+(.*?)$/i);
     const sideKeywords: string[] = [];
     if (vsMatch) {
@@ -144,68 +164,40 @@ function getTopOutcome(event: any): { name: string; prob: number } | null {
       }
     }
 
-    // Props that NAME a team still are not the story: "Exact Margin: Texans by 21+"
-    // passes a team-name check but answers a different question than "who wins".
-    const PROP_TERMS = /\bo\/u\b|over|under|innings|spread|handicap|moneyline|anytime|touchdown|first half|second half|\b[1-4][hq]\b|quarter|period|rebounds|assists|strikeouts|goals scored|points\b|\+\d|\-\d\.\d|exact margin|margin of|winning margin|\bby \d|\bby \d+-\d|correct score|both teams|clean sheet|\bhalftime\b|\bovertime\b|shutout/;
+    const PROP_TERMS = /\bo\/u\b|over|under|innings|spread|handicap|moneyline|anytime|touchdown|first half|second half|\b[1-4][hq]\b|quarter|period|rebounds|assists|strikeouts|goals scored|points\b|\+\d|\-\d\.\d|exact margin|margin of|winning margin|\bby \d|correct score|both teams|clean sheet|\bhalftime\b|\bovertime\b|shutout/;
 
-    const isJunkOutcome = (name: string): boolean => {
+    const isJunkOutcome = (name: string, market: any): boolean => {
       const n = name.toLowerCase().trim();
       if (!n || n.length < 2) return true;
-      if (/^team [a-z]$/.test(n)) return true;                        // placeholder
-      if (/^(other|others|none|no winner|field|any other)\b/.test(n)) return true;  // catch-all buckets are not answers
-      if (/^draw\b|^tie\b/.test(n)) return true;                      // a draw is never the headline
-      if (PROP_TERMS.test(n)) return true;                            // prop bets
-      if (eventTitle && n.length > 12 && eventTitle.startsWith(n.slice(0, 12))) return true;  // echo of the title
-      // For a head-to-head, require the outcome to name one of the two sides.
-      if (sideKeywords.length > 0) {
-        const mentionsSide = sideKeywords.some(w => n.includes(w));
-        if (!mentionsSide) return true;
-      }
+      // If the API labelled it as something other than a moneyline, believe it.
+      const smt = String(market?.sportsMarketType || '').toLowerCase();
+      if (smt && smt !== 'moneyline') return true;
+      if (/^team [a-z]$/.test(n)) return true;
+      if (/^(other|others|none|no winner|field|any other)\b/.test(n)) return true;
+      if (/^draw\b|^tie\b/.test(n)) return true;
+      if (PROP_TERMS.test(n)) return true;
+      if (eventTitle && n.length > 12 && eventTitle.startsWith(n.slice(0, 12))) return true;
+      if (sideKeywords.length > 0 && !sideKeywords.some(w => n.includes(w))) return true;
       return false;
-    };
-
-    const clean = (s: string) => {
-      // Strip arrow glyphs and stray symbols that leak in from threshold markets.
-      const t = String(s || '').replace(/[\u2190-\u21FF\u2B00-\u2BFF]/g, '').replace(/\s+/g, ' ').trim();
-      return t.length > 34 ? t.slice(0, 33).trimEnd() + '\u2026' : t;
     };
 
     const candidates: { name: string; prob: number }[] = [];
     for (const m of markets) {
       const prob = readYes(m);
       const raw = String(m.groupItemTitle || m.question || '').trim();
-      if (prob === null || !raw || isJunkOutcome(raw)) continue;
+      if (prob === null || !raw || isJunkOutcome(raw, m)) continue;
       candidates.push({ name: raw, prob });
     }
 
-    // Nothing survived the strict filter. Before giving up, try the plain two-way
-    // market inside the bundle: a market whose own question is just the event title
-    // is the "who wins" line, not a prop. A dash on every football row is honest but
-    // useless, and the answer is usually sitting right there.
-    if (candidates.length === 0 && vsMatch) {
-      for (const m of markets) {
-        const prob = readYes(m);
-        const q = String(m.question || '').toLowerCase();
-        const gi = String(m.groupItemTitle || '').trim();
-        if (prob === null || prob < 1 || prob > 99) continue;
-        // The main line usually restates the matchup and has no prop vocabulary.
-        if (PROP_TERMS.test(q)) continue;
-        if (!/\bvs\.?\b/.test(q)) continue;
-        const side = gi && !PROP_TERMS.test(gi.toLowerCase()) ? gi : (vsMatch[1] || '').trim();
-        if (side) return { name: clean(side), prob };
-      }
-    }
     if (candidates.length === 0) return null;
 
     if (candidates.length === 1) {
       const only = candidates[0];
-      if (only.prob >= 97 || only.prob <= 2) return null;   // trivial outcomes say nothing
+      if (only.prob >= 97 || only.prob <= 2) return null;
       return { name: clean(only.name), prob: only.prob };
     }
 
-    // Threshold ladders (Bitcoin above X) top out at ~100%, which is not informative.
-    // One near-certain outcome alongside genuinely contested ones is enough to tell us
-    // this is a ladder rather than a real race.
+    // Threshold ladders (Bitcoin above X) top out near 100%, which says nothing.
     const nearCertain = candidates.filter(o => o.prob >= 97).length;
     const contested = candidates.filter(o => o.prob < 97 && o.prob > 5).length;
     const useContested = nearCertain >= 2 || (nearCertain >= 1 && contested >= 1);
@@ -214,6 +206,8 @@ function getTopOutcome(event: any): { name: string; prob: number } | null {
       ? sorted.filter(o => o.prob < 97).sort((a, b) => b.prob - a.prob)[0] || sorted[0]
       : sorted[0];
     if (!pick) return null;
+    // Never headline a settled outcome.
+    if (pick.prob >= 99 || pick.prob <= 1) return null;
     return { name: clean(pick.name), prob: pick.prob };
   } catch { return null; }
 }
