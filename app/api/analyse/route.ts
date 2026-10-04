@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { analyseNflGame } from '@/lib/sources/nfl';
 // PP-DATA-V1 - real data for any question: event search, multi-outcome support, no invented numbers
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -794,6 +795,10 @@ export async function POST(request: NextRequest) {
           const top = parsed.outcomes[0];
           fetch(new URL('/api/track', request.url).toString(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ anonId: anonId || '', name: 'analysis_run', props: { query: query.slice(0, 100), confidence: top.prob } }) }).catch(() => {});
           const eventVolume = parseFloat(liveEvent.volume || liveEvent.volume24hr || '0') || 0;
+          // Independent NFL analysis. Deliberately computed WITHOUT the market so the
+          // two numbers can be compared - a figure derived from the market would just
+          // be the market again.
+          const nflOwn = await analyseNflGame(liveEvent.title || query);
           // A market with almost no money in it produces a number that looks precise
           // and means very little. Say so rather than presenting it like the rest.
           const thinMarket = eventVolume > 0 && eventVolume < 10000;
@@ -802,6 +807,13 @@ export async function POST(request: NextRequest) {
             mtype: 'categorical',
             volume: eventVolume,
             thinMarket,
+            ownAnalysis: nflOwn ? {
+              number: nflOwn.blended,
+              forTeam: nflOwn.homeTeam,
+              againstTeam: nflOwn.awayTeam,
+              signals: nflOwn.signals,
+              basis: 'NFL season records and venue form from ESPN, independent of the market',
+            } : null,
             confidence: top.prob,
             keywords,
             articleCount: relevantArticles.length,

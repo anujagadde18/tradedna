@@ -601,6 +601,9 @@ function ScoresPageContent() {
   const [invalidQuestion, setInvalidQuestion] = useState<{reason:string;examples:string[]}|null>(null);
   const [noRealData, setNoRealData]  = useState(false);
   const [thinMarket, setThinMarket] = useState<{volume:number}|null>(null);
+  const [ownAnalysis, setOwnAnalysis] = useState<any>(null);
+  const [signalWeights, setSignalWeights] = useState<Record<string,number>>({});
+  const [showMaths, setShowMaths] = useState(false);
   const [odds, setOdds]             = useState<number|null>(null);
   const [marketTitle, setMarketTitle] = useState<string>('');
   const [mtype, setMtype]           = useState<'binary'|'categorical'>('binary');
@@ -800,6 +803,8 @@ function ScoresPageContent() {
       setInvalidQuestion(null);
       setNoRealData(false);
       setThinMarket(data.thinMarket ? { volume: data.volume || 0 } : null);
+      setOwnAnalysis(data.ownAnalysis || null);
+      setSignalWeights({});
       if (data.mtype === 'categorical' && Array.isArray(data.outcomes) && data.outcomes.length > 1) {
         setOutcomes(data.outcomes.map((o: any) => ({ name: o.name, odds: o.prob })));
         setOdds(data.outcomes[0].prob);
@@ -1018,6 +1023,121 @@ function ScoresPageContent() {
                 </div>
               </div>
             )}
+
+            {/* Two independent views, side by side. The Call It number is built from
+                team data only - putting the market inside it would just echo the market. */}
+            {ownAnalysis && (() => {
+              const sigs = ownAnalysis.signals || [];
+              const w = (k: string, d: number) => signalWeights[k] ?? d;
+              const total = sigs.reduce((s: number, x: any) => s + w(x.key, x.defaultWeight), 0);
+              const mine = total > 0
+                ? Math.round(sigs.reduce((s: number, x: any) => s + x.pct * w(x.key, x.defaultWeight), 0) / total)
+                : null;
+              const mkt = mktPctForDisplay;
+              const gap = (mine !== null && mkt) ? mine - mkt : null;
+              return (
+                <div style={{ marginBottom:18 }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
+                    <div style={{ background:C.bg2, border:'2px solid '+C.purpleBg, borderRadius:14, padding:'16px 18px' }}>
+                      <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.6px', color:C.purpleL, marginBottom:10 }}>CALL IT</div>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:4 }}>
+                        <span style={{ fontSize:13, color:C.t1 }}>{ownAnalysis.forTeam}</span>
+                        <span style={{ fontSize:28, fontWeight:800, color:C.green, fontFamily:'monospace' }}>{mine !== null ? mine + '%' : '-'}</span>
+                      </div>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline' }}>
+                        <span style={{ fontSize:12, color:C.t3 }}>{ownAnalysis.againstTeam}</span>
+                        <span style={{ fontSize:16, color:C.t2, fontFamily:'monospace' }}>{mine !== null ? (100 - mine) + '%' : '-'}</span>
+                      </div>
+                      <div style={{ fontSize:10, color:C.t3, marginTop:10, paddingTop:10, borderTop:'1px solid '+C.border, lineHeight:1.5 }}>
+                        From team data only. Not the market.
+                      </div>
+                    </div>
+                    <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:'16px 18px' }}>
+                      <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.6px', color:C.t3, marginBottom:10 }}>POLYMARKET</div>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:4 }}>
+                        <span style={{ fontSize:13, color:C.t1 }}>{ownAnalysis.forTeam}</span>
+                        <span style={{ fontSize:28, fontWeight:800, color:C.t1, fontFamily:'monospace' }}>{mkt ? mkt + '%' : '-'}</span>
+                      </div>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline' }}>
+                        <span style={{ fontSize:12, color:C.t3 }}>{ownAnalysis.againstTeam}</span>
+                        <span style={{ fontSize:16, color:C.t2, fontFamily:'monospace' }}>{mkt ? (100 - mkt) + '%' : '-'}</span>
+                      </div>
+                      <div style={{ fontSize:10, color:C.t3, marginTop:10, paddingTop:10, borderTop:'1px solid '+C.border, lineHeight:1.5 }}>
+                        What people betting real money pay.
+                      </div>
+                    </div>
+                  </div>
+
+                  {gap !== null && (
+                    <div style={{ background:'rgba(124,111,247,0.08)', border:'1px solid '+C.purpleBg, borderRadius:10, padding:'11px 14px', fontSize:12.5, color:C.t1, lineHeight:1.6, marginBottom:14 }}>
+                      {Math.abs(gap) <= 2
+                        ? 'Our read and the market agree on this one.'
+                        : 'We are ' + Math.abs(gap) + ' points ' + (gap > 0 ? 'higher' : 'lower') + ' on ' + ownAnalysis.forTeam + ' than the market. ' + (gap > 0 ? 'The team data looks better than the price suggests.' : 'The price looks more optimistic than the team data.')}
+                    </div>
+                  )}
+
+                  <div style={{ fontSize:14, fontWeight:700, marginBottom:3 }}>What our number is built from</div>
+                  <div style={{ fontSize:12, color:C.t2, marginBottom:12, lineHeight:1.55 }}>
+                    Each one is real team data. Slide to change how much it counts.
+                  </div>
+
+                  {sigs.map((s: any) => {
+                    const weight = w(s.key, s.defaultWeight);
+                    const share = total > 0 ? Math.round(weight / total * 100) : 0;
+                    return (
+                      <div key={s.key} style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:12, padding:'13px 15px', marginBottom:9 }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:10 }}>
+                          <div style={{ minWidth:0 }}>
+                            <div style={{ fontSize:13, fontWeight:600, color:C.t1 }}>{s.name}</div>
+                            <div style={{ fontSize:11.5, color:C.t2, marginTop:2, lineHeight:1.5 }}>{s.evidence}</div>
+                            <div style={{ fontSize:11, color:C.t3, marginTop:3, lineHeight:1.5 }}>{s.interpretation}</div>
+                            {s.overlapsWith && (
+                              <div style={{ fontSize:10.5, color:C.amber, marginTop:4 }}>Shares information with season records, so it is not fully separate evidence.</div>
+                            )}
+                          </div>
+                          <div style={{ textAlign:'right', flexShrink:0 }}>
+                            <div style={{ fontSize:16, fontWeight:700, color:C.t1, fontFamily:'monospace' }}>{s.pct}%</div>
+                            <div style={{ fontSize:10, color:C.t3 }}>for {ownAnalysis.forTeam.split(' ').pop()}</div>
+                          </div>
+                        </div>
+                        <div style={{ display:'flex', alignItems:'center', gap:10, marginTop:11 }}>
+                          <span style={{ fontSize:11, color:C.t3, whiteSpace:'nowrap' }}>How much it counts</span>
+                          <input type="range" min={0} max={100} value={weight}
+                            onChange={e => setSignalWeights(prev => ({ ...prev, [s.key]: parseInt(e.target.value, 10) }))}
+                            style={{ flex:1, accentColor:C.purple }} />
+                          <span style={{ fontSize:12, color:C.t2, fontFamily:'monospace', width:34, textAlign:'right' }}>{share}%</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <button onClick={() => setShowMaths(v => !v)}
+                    style={{ width:'100%', padding:'10px', borderRadius:10, border:'1px solid '+C.border2, background:'none', color:C.t2, fontSize:12, cursor:'pointer', marginTop:4 }}>
+                    {showMaths ? 'Hide the maths' : 'See the maths'}
+                  </button>
+
+                  {showMaths && total > 0 && (
+                    <div style={{ background:C.bg3, border:'1px solid '+C.border, borderRadius:10, padding:'13px 15px', marginTop:9 }}>
+                      {sigs.filter((s: any) => w(s.key, s.defaultWeight) > 0).map((s: any) => {
+                        const share = w(s.key, s.defaultWeight) / total;
+                        return (
+                          <div key={s.key} style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:C.t2, fontFamily:'monospace', marginBottom:4 }}>
+                            <span>{s.pct}% x {Math.round(share * 100)}%</span>
+                            <span>{(s.pct * share).toFixed(1)}</span>
+                          </div>
+                        );
+                      })}
+                      <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, fontWeight:700, color:C.t1, fontFamily:'monospace', marginTop:8, paddingTop:8, borderTop:'1px solid '+C.border }}>
+                        <span>Total</span><span>{mine}%</span>
+                      </div>
+                      <div style={{ fontSize:10.5, color:C.t3, marginTop:9, lineHeight:1.55 }}>
+                        Records are pulled toward an even split when few games have been played, so a 3-0 start does not read as certainty.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* 1. THE ANSWER */}
             <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} mtype={mtype} outcomes={outcomes} rawEvent={event} breakdown={breakdown} components={components} />
