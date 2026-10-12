@@ -168,20 +168,26 @@ export function PolymarketComparison({
         }
 
       } else if (data.type === 'categorical') {
-        const analyzed: MarketOutcome[] = data.outcomes.map((o: any, idx: number) => {
+        const analyzed: MarketOutcome[] = data.outcomes.map((o: any) => {
           const mktOdds = Math.round(parseFloat(o.price) * 100);
-          let aiModifier = 0;
-          if (idx === 0)      aiModifier = Math.floor(Math.random() * 5) + 3;
-          else if (idx === 1) aiModifier = Math.floor(Math.random() * 3) + 1;
-          else if (idx === 2) aiModifier = Math.floor(Math.random() * 3) - 1;
-          else if (idx <= 4)  aiModifier = Math.floor(Math.random() * 5) - 2;
-          else                aiModifier = Math.floor(Math.random() * 3) - 3;
-          const aiConf = Math.min(99, Math.max(1, mktOdds + aiModifier));
+          // These used to be invented:
+          //
+          //   if (idx === 0) aiModifier = Math.floor(Math.random() * 5) + 3;
+          //   const aiConf = mktOdds + aiModifier;
+          //   edge: aiConf - mktOdds
+          //
+          // A random integer was added to the market price, called the AI's
+          // confidence, and the difference was called the edge - which then
+          // rendered as "AI thinks X is 7% more likely than market believes"
+          // and was handed to the trade panel next to a Buy button. There is no
+          // independent estimate for this market, so the honest edge is none.
+          // When a real independent number exists it comes from ownAnalysis in
+          // /api/analyse, not from here.
           return {
             name:          o.name,
             odds:          mktOdds,
-            aiConfidence:  aiConf,
-            edge:          aiConf - mktOdds,
+            aiConfidence:  mktOdds,
+            edge:          0,
             weekChange:    Math.round((o.oneWeekPriceChange || 0) * 100),
             dayChange:     Math.round((o.oneDayPriceChange  || 0) * 100),
             tokenId:       o.clobTokenId || (o.clobTokenIds
