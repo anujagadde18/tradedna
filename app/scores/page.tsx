@@ -814,13 +814,36 @@ function ScoresPageContent() {
         setIntel({ confidence: data.outcomes[0].prob, direction: 'YES', probabilityLabel: 'Most likely outcome', predictionStrength: 'Market', strengthScore: data.outcomes[0].prob, riskLevel: 'Medium', marketEdge: null, edgeContext: '', modelComponents: [], confidenceDrivers: { positive: [], negative: [] }, explanation: '' });
         setMtype('categorical');
         // Multi-outcome questions are predictions too. This is the line that was missing.
+        //
+        // When we have an independent number, record THAT as the prediction and the
+        // market price only as the comparison. Logging the market price in the
+        // confidence field is why the accuracy page has been scoring Polymarket
+        // rather than Call It - and why the Brier score sat at coin-flip level.
+        const own = data.ownAnalysis;
+        let ourConfidence = data.outcomes[0].prob;
+        let ourMarketOdds = data.outcomes[0].prob;
+        let ourOutcome = data.outcomes[0].name;
+        if (own && typeof own.number === 'number' && own.forTeam) {
+          const norm = (s: string) => String(s || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+          const target = norm(own.forTeam);
+          const nick = target.split(' ').pop() || '';
+          const matched = data.outcomes.find((o: any) => norm(o.name) === target)
+            || (nick.length >= 3 ? data.outcomes.find((o: any) => norm(o.name).split(' ').includes(nick)) : undefined)
+            || (nick.length >= 3 ? data.outcomes.find((o: any) => norm(o.name).includes(nick)) : undefined);
+          // Both numbers must describe the same team or the recorded edge is meaningless.
+          if (matched && typeof matched.prob === 'number') {
+            ourConfidence = own.number;
+            ourMarketOdds = matched.prob;
+            ourOutcome = matched.name;
+          }
+        }
         recordPrediction({
           question: data.title || event,
-          confidence: data.outcomes[0].prob,
-          marketOdds: data.outcomes[0].prob,   // the market IS our number here
+          confidence: ourConfidence,
+          marketOdds: ourMarketOdds,
           category: data.marketType || 'other',
           sources: data.sources,
-          topOutcome: data.outcomes[0].name,
+          topOutcome: ourOutcome,
         });
         return;
       }
@@ -943,6 +966,23 @@ function ScoresPageContent() {
   const aiPctForDisplay = mainAI || 0;
   const mktPctForDisplay = mainOdds || 0;
 
+  // The market's outcome list is ordered by price, so outcomes[0] is the favourite -
+  // which can be either side. Our own number is always stated for the home team, so
+  // the market number has to be looked up by team name. Taking the top outcome means
+  // that in every game where the away team is favoured, the two cards compare
+  // different teams and the market card shows a number that is simply wrong.
+  const marketPctForTeam = (teamName: string): number | null => {
+    if (!teamName || !Array.isArray(outcomes) || outcomes.length === 0) return null;
+    const norm = (s: string) => String(s || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+    const target = norm(teamName);
+    if (!target) return null;
+    const nick = target.split(' ').pop() || '';
+    let hit = outcomes.find((o: any) => norm(o.name) === target);
+    if (!hit && nick.length >= 3) hit = outcomes.find((o: any) => norm(o.name).split(' ').includes(nick));
+    if (!hit && nick.length >= 3) hit = outcomes.find((o: any) => norm(o.name).includes(nick));
+    return hit && typeof hit.odds === 'number' ? hit.odds : null;
+  };
+
   /* PP-FLOW-V1 - single-scroll, answer-first, phone-first layout */
   return (
     <div style={{ minHeight:'100vh', background:C.bg0, color:C.t1, fontFamily:'system-ui,-apple-system,sans-serif' }}>
@@ -1033,8 +1073,12 @@ function ScoresPageContent() {
               const mine = total > 0
                 ? Math.round(sigs.reduce((s: number, x: any) => s + x.pct * w(x.key, x.defaultWeight), 0) / total)
                 : null;
-              const mkt = mktPctForDisplay;
-              const gap = (mine !== null && mkt) ? mine - mkt : null;
+              // Looked up by team name, not taken from the top of the list - see
+              // marketPctForTeam. Shows a dash rather than a wrong number if no match.
+              const mkt = marketPctForTeam(ownAnalysis.forTeam);
+              const gap = (mine !== null && mkt !== null) ? mine - mkt : null;
+              const usedSigs = sigs.filter((x: any) => w(x.key, x.defaultWeight) > 0);
+              const touched = Object.keys(signalWeights).length > 0;
               return (
                 <div style={{ marginBottom:18 }}>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
@@ -1056,11 +1100,11 @@ function ScoresPageContent() {
                       <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.6px', color:C.t3, marginBottom:10 }}>POLYMARKET</div>
                       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:4 }}>
                         <span style={{ fontSize:13, color:C.t1 }}>{ownAnalysis.forTeam}</span>
-                        <span style={{ fontSize:28, fontWeight:800, color:C.t1, fontFamily:'monospace' }}>{mkt ? mkt + '%' : '-'}</span>
+                        <span style={{ fontSize:28, fontWeight:800, color:C.t1, fontFamily:'monospace' }}>{mkt !== null ? mkt + '%' : '-'}</span>
                       </div>
                       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline' }}>
                         <span style={{ fontSize:12, color:C.t3 }}>{ownAnalysis.againstTeam}</span>
-                        <span style={{ fontSize:16, color:C.t2, fontFamily:'monospace' }}>{mkt ? (100 - mkt) + '%' : '-'}</span>
+                        <span style={{ fontSize:16, color:C.t2, fontFamily:'monospace' }}>{mkt !== null ? (100 - mkt) + '%' : '-'}</span>
                       </div>
                       <div style={{ fontSize:10, color:C.t3, marginTop:10, paddingTop:10, borderTop:'1px solid '+C.border, lineHeight:1.5 }}>
                         What people betting real money pay.
@@ -1069,16 +1113,69 @@ function ScoresPageContent() {
                   </div>
 
                   {gap !== null && (
-                    <div style={{ background:'rgba(124,111,247,0.08)', border:'1px solid '+C.purpleBg, borderRadius:10, padding:'11px 14px', fontSize:12.5, color:C.t1, lineHeight:1.6, marginBottom:14 }}>
+                    <div style={{ background: Math.abs(gap) > 15 ? 'rgba(245,158,11,0.08)' : 'rgba(124,111,247,0.08)', border:'1px solid '+(Math.abs(gap) > 15 ? C.amber : C.purpleBg), borderRadius:10, padding:'11px 14px', fontSize:12.5, color:C.t1, lineHeight:1.6, marginBottom:14 }}>
                       {Math.abs(gap) <= 2
                         ? 'Our read and the market agree on this one.'
-                        : 'We are ' + Math.abs(gap) + ' points ' + (gap > 0 ? 'higher' : 'lower') + ' on ' + ownAnalysis.forTeam + ' than the market. ' + (gap > 0 ? 'The team data looks better than the price suggests.' : 'The price looks more optimistic than the team data.')}
+                        : Math.abs(gap) > 15
+                        // A large gap is far more likely to mean our model is blind to
+                        // something than that the market is wrong. Saying "the data looks
+                        // better than the price" here would point a beginner at a bet.
+                        ? 'We are ' + Math.abs(gap) + ' points ' + (gap > 0 ? 'higher' : 'lower') + ' on ' + ownAnalysis.forTeam + ' than the market, which is a big gap. Our number only knows win-loss records. The market also knows who is injured, who is starting at quarterback and what the weather will be. When the gap is this wide it usually means we are missing something, not that the market is wrong.'
+                        : 'We are ' + Math.abs(gap) + ' points ' + (gap > 0 ? 'higher' : 'lower') + ' on ' + ownAnalysis.forTeam + ' than the market. ' + (gap > 0 ? 'The records look a little better than the price suggests.' : 'The price looks a little more optimistic than the records do.')}
                     </div>
                   )}
 
-                  <div style={{ fontSize:14, fontWeight:700, marginBottom:3 }}>What our number is built from</div>
+                  {/* Every slider at zero leaves nothing to average, so the cards show
+                      dashes. Say why instead of leaving a beginner staring at them. */}
+                  {mine === null && (
+                    <div style={{ background:'rgba(245,158,11,0.08)', border:'1px solid '+C.amber, borderRadius:10, padding:'11px 14px', fontSize:12.5, color:C.t1, lineHeight:1.6, marginBottom:14 }}>
+                      Every slider is at zero, so there is nothing left to build a number from.
+                      Turn at least one back up, or press Reset.
+                    </div>
+                  )}
+
+                  {/* The calculation in words, visible without clicking anything, and
+                      rewritten live as the sliders move. A number nobody can see the
+                      working for is a number nobody trusts. */}
+                  {mine !== null && usedSigs.length > 0 && (
+                    <div style={{ background:C.bg3, border:'1px solid '+C.border, borderRadius:12, padding:'14px 16px', marginBottom:14 }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:C.t1, marginBottom:8 }}>
+                        How we got {mine}%
+                      </div>
+                      <div style={{ fontSize:12.5, color:C.t2, lineHeight:1.75 }}>
+                        {usedSigs.map((s: any, i: number) => {
+                          const share = Math.round(w(s.key, s.defaultWeight) / total * 100);
+                          return (
+                            <span key={s.key}>
+                              {i === 0 ? '' : i === usedSigs.length - 1 ? ' and ' : ', '}
+                              <span style={{ color:C.t1 }}>{s.name.toLowerCase()}</span>
+                              {' '}
+                              <span style={{ color:C.t1, fontFamily:'monospace' }}>{s.pct}%</span>
+                              {' (counting '}
+                              <span style={{ color:C.t1, fontFamily:'monospace' }}>{share}%</span>
+                              {')'}
+                            </span>
+                          );
+                        })}
+                        {usedSigs.length === 1 ? '. That alone gives ' : '. Weighted together that is '}
+                        <span style={{ color:C.green, fontWeight:700, fontFamily:'monospace' }}>{mine}%</span>
+                        {' for the '}{ownAnalysis.forTeam.split(' ').pop()}
+                        {usedSigs.length < sigs.length ? ' — the rest are switched off.' : '.'}
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', gap:10, marginBottom:3 }}>
+                    <div style={{ fontSize:14, fontWeight:700 }}>What our number is built from</div>
+                    {touched && (
+                      <button onClick={() => setSignalWeights({})}
+                        style={{ background:'none', border:'none', color:C.purpleL, fontSize:11.5, cursor:'pointer', padding:0, textDecoration:'underline' }}>
+                        Reset
+                      </button>
+                    )}
+                  </div>
                   <div style={{ fontSize:12, color:C.t2, marginBottom:12, lineHeight:1.55 }}>
-                    Each one is real team data. Slide to change how much it counts.
+                    Each one is real team data. Drag a slider and the number above changes with it.
                   </div>
 
                   {sigs.map((s: any) => {
@@ -1113,7 +1210,7 @@ function ScoresPageContent() {
 
                   <button onClick={() => setShowMaths(v => !v)}
                     style={{ width:'100%', padding:'10px', borderRadius:10, border:'1px solid '+C.border2, background:'none', color:C.t2, fontSize:12, cursor:'pointer', marginTop:4 }}>
-                    {showMaths ? 'Hide the maths' : 'See the maths'}
+                    {showMaths ? 'Hide the arithmetic' : 'See the arithmetic line by line'}
                   </button>
 
                   {showMaths && total > 0 && (
@@ -1139,11 +1236,19 @@ function ScoresPageContent() {
               );
             })()}
 
-            {/* 1. THE ANSWER */}
-            <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} mtype={mtype} outcomes={outcomes} rawEvent={event} breakdown={breakdown} components={components} />
+            {/* 1. THE ANSWER
+                Suppressed when we have an independent number of our own. VerdictCard
+                falls back to the market price when it has no model of its own, so on
+                these questions it restated Polymarket's number as ours - a third and
+                fourth figure on a page that is supposed to show exactly two. */}
+            {!ownAnalysis && (
+              <VerdictCard aiPct={aiPctForDisplay} marketPct={mktPctForDisplay} question={eventTitle} sources={realSources} hasMarket={hasLiveMarket} mtype={mtype} outcomes={outcomes} rawEvent={event} breakdown={breakdown} components={components} />
+            )}
 
-            {/* 2. HOW THIS NUMBER WAS BUILT */}
-            {components.length > 0 && (
+            {/* 2. HOW THIS NUMBER WAS BUILT
+                Also suppressed above: for these questions the only component is the
+                market itself, so this section claimed the market built our number. */}
+            {!ownAnalysis && components.length > 0 && (
               <div style={{ marginTop:22 }}>
                 <div style={{ fontSize:16, fontWeight:700, letterSpacing:'-0.3px', marginBottom:4 }}>How this number was built</div>
                 <div style={{ fontSize:12, color:C.t2, marginBottom:14, lineHeight:1.5 }}>Blended from the sources below. Use "Adjust this yourself" above to change how much each one counts.</div>
