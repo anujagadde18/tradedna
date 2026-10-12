@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { analyseNflGame } from '@/lib/sources/nfl';
+import { readMoneylineSides } from '@/lib/sources/moneyline';
 // PP-DATA-V1 - real data for any question: event search, multi-outcome support, no invented numbers
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -770,6 +771,47 @@ export async function POST(request: NextRequest) {
       // fall through to the generic model below if cricket-specific calc couldn't run
     }
 
+    // ---- NFL: independent team-data model takes priority when it can parse the teams ----
+    // This has to run BEFORE the market lookups below. It used to sit inside the
+    // multi-outcome branch further down, which is only reached while
+    // effectiveMarketOdds is still null - and any "X vs Y" query fills that in
+    // first. So for exactly the matchup questions this model was built for it
+    // never ran at all, and the two-card comparison never appeared on the page.
+    // Gated on a matchup phrasing so ordinary questions do not pay for an ESPN call.
+    let nflOwn: Awaited<ReturnType<typeof analyseNflGame>> = null;
+    if (/\s+vs\.?\s+|\bbeat\b/i.test(query)) {
+      nflOwn = await analyseNflGame(query);
+    }
+    if (nflOwn) {
+      const nflEvent = await findLiveEventForQuery(query);
+      const sides = nflEvent ? readMoneylineSides(nflEvent) : [];
+      if (sides.length >= 2) {
+        const eventVolume = parseFloat(nflEvent.volume || nflEvent.volume24hr || '0') || 0;
+        fetch(new URL('/api/track', request.url).toString(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ anonId: anonId || '', name: 'analysis_run', props: { query: query.slice(0, 100), confidence: nflOwn.blended } }) }).catch(() => {});
+        return Response.json({
+          valid: true,
+          mtype: 'categorical',
+          volume: eventVolume,
+          thinMarket: eventVolume > 0 && eventVolume < 10000,
+          ownAnalysis: {
+            number: nflOwn.blended,
+            forTeam: nflOwn.homeTeam,
+            againstTeam: nflOwn.awayTeam,
+            signals: nflOwn.signals,
+            basis: 'NFL season records and venue form from ESPN, independent of the market',
+          },
+          confidence: sides[0].prob,
+          keywords,
+          articleCount: relevantArticles.length,
+          title: nflEvent.title || query,
+          outcomes: sides,
+          sources: [{ name: 'Polymarket', sig: 'Live price - ' + sides[0].name + ' at ' + sides[0].prob + '%', url: '', category: 'market', type: 'priced', contribution: 0 }],
+          components: [],
+          marketType,
+        });
+      }
+    }
+
     // ---- Generic: team-strength model + market odds + AI-written reasoning ----
     const teams = decision.route === 'matchup' ? findTeamsInQuery(query) : [];
     const contextLines = [...teams.map(t => t.ctx), ...findExtraContext(query)];
@@ -797,8 +839,8 @@ export async function POST(request: NextRequest) {
           const eventVolume = parseFloat(liveEvent.volume || liveEvent.volume24hr || '0') || 0;
           // Independent NFL analysis. Deliberately computed WITHOUT the market so the
           // two numbers can be compared - a figure derived from the market would just
-          // be the market again.
-          const nflOwn = await analyseNflGame(liveEvent.title || query);
+          // be the market again. Computed once above; reused here rather than
+          // calling ESPN a second time.
           // A market with almost no money in it produces a number that looks precise
           // and means very little. Say so rather than presenting it like the rest.
           const thinMarket = eventVolume > 0 && eventVolume < 10000;
