@@ -74,6 +74,78 @@ export async function GET(request: NextRequest) {
     record('multi-outcome analysis', false, 'analyse failed: ' + e.message);
   }
 
+  // 2b. Does the INDEPENDENT NFL number actually come back?
+  //
+  //     The model shipped and ran for nobody: analyseNflGame was only called from
+  //     a branch that any "X vs Y" query skips, so ownAnalysis was always absent
+  //     and the two-card comparison never rendered. A green build said nothing
+  //     about it. This step checks the field that proves the code ran, and says
+  //     WHICH part gave up when it does not, so the next failure is diagnosable
+  //     without reading the source.
+  try {
+    const t = Date.now();
+    const res = await fetch(
+      'https://gamma-api.polymarket.com/events?active=true&closed=false&archived=false&limit=150&order=volume24hr&ascending=false',
+      { signal: AbortSignal.timeout(8000) }
+    );
+    const events = await res.json();
+    // Polymarket slugs are league-prefixed (nfl-buf-lar-...), which is the
+    // reliable NFL marker; the title suffix "(NFL)" is the fallback.
+    const nflEvents = (Array.isArray(events) ? events : []).filter((e: any) => {
+      const slug = String(e?.slug || '').toLowerCase();
+      const title = String(e?.title || '');
+      if (!/\svs\.?\s/i.test(title)) return false;
+      if (/more markets/i.test(title)) return false;
+      return slug.startsWith('nfl-') || /\(nfl\)/i.test(title);
+    });
+
+    if (nflEvents.length === 0) {
+      record('independent NFL analysis', true,
+        'skipped - no live NFL matchup in the market feed right now', Date.now() - t);
+    } else {
+      const title = String(nflEvents[0].title || '').replace(/\s*\(NFL\)\s*$/i, '').trim();
+      const r = await fetch(origin + '/api/analyse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: title, anonId: testAnon }),
+        signal: AbortSignal.timeout(30000),
+      });
+      const a = await r.json();
+      const own = a?.ownAnalysis;
+      const hasOwn = !!(own && typeof own.number === 'number' && own.forTeam && Array.isArray(own.signals) && own.signals.length > 0);
+
+      if (!hasOwn) {
+        // Distinguish "ESPN had no such game" from "the branch never ran".
+        const usedFiller = Array.isArray(a?.sources) && a.sources.some((s: any) => s?.name === 'Signal');
+        record('independent NFL analysis', false,
+          '"' + title + '" returned no independent number. '
+          + (usedFiller
+              ? 'The generic path answered instead, so the NFL branch did not run.'
+              : 'The NFL branch ran but produced nothing - most likely ESPN has no game matching both team names in the week it returns.'),
+          Date.now() - t);
+      } else {
+        // The market price must be matched to OUR team, not taken from the top of
+        // the list. Taking the favourite showed the wrong team's number on roughly
+        // half of all games.
+        const norm = (s: string) => String(s || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+        const target = norm(own.forTeam);
+        const nick = target.split(' ').pop() || '';
+        const outs = Array.isArray(a.outcomes) ? a.outcomes : [];
+        const matched = outs.find((o: any) => norm(o.name) === target)
+          || (nick.length >= 3 ? outs.find((o: any) => norm(o.name).split(' ').includes(nick)) : undefined)
+          || (nick.length >= 3 ? outs.find((o: any) => norm(o.name).includes(nick)) : undefined);
+        const sigText = own.signals.map((s: any) => s.key + ' ' + s.pct + '%@' + s.defaultWeight).join(' | ');
+        record('independent NFL analysis', !!matched,
+          title + ' - ours ' + own.number + '% for ' + own.forTeam
+          + (matched ? ', market ' + matched.prob + '% for the same team' : ', but NO market outcome matched that team')
+          + ' [' + sigText + ']',
+          Date.now() - t);
+      }
+    }
+  } catch (e: any) {
+    record('independent NFL analysis', false, 'check failed: ' + e.message);
+  }
+
   // 3. Can a prediction actually be WRITTEN? This is the step that was broken.
   let wrote = false;
   try {
