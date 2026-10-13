@@ -1112,16 +1112,58 @@ function ScoresPageContent() {
                     </div>
                   </div>
 
+                  {/* What the market's number actually MEANS.
+                      A beginner's problem is not that they suspect 62% is wrong - it is
+                      that the number is opaque to them. Reading it as a frequency and as
+                      money is what unlocks it, so this comes before any talk of who is
+                      right. */}
+                  {mkt !== null && (() => {
+                    const nick = String(ownAnalysis.forTeam).split(' ').pop();
+                    const other = String(ownAnalysis.againstTeam).split(' ').pop();
+                    // A share paying $1 if the outcome happens costs the probability, so a
+                    // $10 stake comes back as 10 / (mkt/100).
+                    const back = 1000 / mkt;
+                    const profit = back - 10;
+                    return (
+                      <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:12, padding:'14px 16px', marginBottom:12 }}>
+                        <div style={{ fontSize:13, fontWeight:700, color:C.t1, marginBottom:9 }}>
+                          What {mkt}% actually means
+                        </div>
+                        <div style={{ fontSize:12.5, color:C.t2, lineHeight:1.7 }}>
+                          <div style={{ marginBottom:7 }}>
+                            Out of 100 games like this one, the market expects the{' '}
+                            <span style={{ color:C.t1 }}>{nick}</span> to win about{' '}
+                            <span style={{ color:C.t1, fontFamily:'monospace' }}>{mkt}</span>
+                            {' '}and the <span style={{ color:C.t1 }}>{other}</span> to win about{' '}
+                            <span style={{ color:C.t1, fontFamily:'monospace' }}>{100 - mkt}</span>.
+                          </div>
+                          <div>
+                            In money, that price means $10 on the {nick} comes back as about{' '}
+                            <span style={{ color:C.t1, fontFamily:'monospace' }}>${back.toFixed(2)}</span>
+                            {' '}if they win, so you keep ${profit.toFixed(2)}. If they lose, the $10 is gone.
+                            The less likely an outcome, the more it pays - that is all a price like this says.
+                          </div>
+                        </div>
+                        <div style={{ fontSize:11, color:C.t3, marginTop:10, paddingTop:10, borderTop:'1px solid '+C.border, lineHeight:1.55 }}>
+                          Whether prices like this one turn out to be accurate is something we track rather than
+                          assert. The running record is on the accuracy page.
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* The disagreement, framed as the lesson rather than as a tip. A simple
+                      model losing to a liquid market is the expected result, and saying so
+                      teaches a beginner what actually moves a probability. */}
                   {gap !== null && (
-                    <div style={{ background: Math.abs(gap) > 15 ? 'rgba(245,158,11,0.08)' : 'rgba(124,111,247,0.08)', border:'1px solid '+(Math.abs(gap) > 15 ? C.amber : C.purpleBg), borderRadius:10, padding:'11px 14px', fontSize:12.5, color:C.t1, lineHeight:1.6, marginBottom:14 }}>
+                    <div style={{ background:'rgba(124,111,247,0.08)', border:'1px solid '+C.purpleBg, borderRadius:10, padding:'12px 14px', fontSize:12.5, color:C.t1, lineHeight:1.65, marginBottom:14 }}>
                       {Math.abs(gap) <= 2
-                        ? 'Our read and the market agree on this one.'
-                        : Math.abs(gap) > 15
-                        // A large gap is far more likely to mean our model is blind to
-                        // something than that the market is wrong. Saying "the data looks
-                        // better than the price" here would point a beginner at a bet.
-                        ? 'We are ' + Math.abs(gap) + ' points ' + (gap > 0 ? 'higher' : 'lower') + ' on ' + ownAnalysis.forTeam + ' than the market, which is a big gap. Our number only knows win-loss records. The market also knows who is injured, who is starting at quarterback and what the weather will be. When the gap is this wide it usually means we are missing something, not that the market is wrong.'
-                        : 'We are ' + Math.abs(gap) + ' points ' + (gap > 0 ? 'higher' : 'lower') + ' on ' + ownAnalysis.forTeam + ' than the market. ' + (gap > 0 ? 'The records look a little better than the price suggests.' : 'The price looks a little more optimistic than the records do.')}
+                        ? 'Win-loss records alone land in almost the same place as the market here. That is worth noticing: it means this matchup is mostly explained by how the two teams have done so far.'
+                        : 'Records alone say ' + mine + '%. The market says ' + mkt + '%. That '
+                          + Math.abs(gap) + '-point difference is the interesting part - it is roughly what the market '
+                          + 'knows that a win-loss record cannot see: who is injured, who is starting at quarterback, '
+                          + 'the weather, and what thousands of dollars of other people\u2019s opinions have settled on. '
+                          + 'Read the gap as how much the simple view is missing, not as a tip.'}
                     </div>
                   )}
 
