@@ -36,6 +36,12 @@ export interface NflAnalysis {
   blended: number;          // for the home team
   gameTime: string;
   status: string;
+  /** ESPN's own lifecycle state: 'pre' before kickoff, 'in' while playing,
+   *  'post' once it is over. Season records only describe a game that has NOT
+   *  started: once it has, the market price is reacting to the score, and
+   *  comparing a record-based number against it is meaningless. Captured here so
+   *  the page can say so instead of presenting the comparison anyway. */
+  gameState: 'pre' | 'in' | 'post';
 }
 
 const BASELINE = 0.5;
@@ -90,6 +96,18 @@ async function fetchEvents(dates?: string): Promise<any[]> {
     const data = await res.json();
     return Array.isArray(data?.events) ? data.events : [];
   } catch { return []; }
+}
+
+/** ESPN exposes status.type.state as 'pre' | 'in' | 'post'. Falls back to the
+ *  status name when state is absent, and treats anything unrecognised as 'pre'
+ *  so a missing field does not hide a game that has not started. */
+function readState(comp: any): 'pre' | 'in' | 'post' {
+  const raw = String(comp?.status?.type?.state || '').toLowerCase();
+  if (raw === 'in' || raw === 'post' || raw === 'pre') return raw;
+  const name = String(comp?.status?.type?.name || '').toUpperCase();
+  if (name.includes('FINAL') || name.includes('POSTPONED') || name.includes('CANCELED')) return 'post';
+  if (name.includes('IN_PROGRESS') || name.includes('HALFTIME') || name.includes('END_PERIOD')) return 'in';
+  return 'pre';
 }
 
 /** Picks the event whose two team names both appear in the question. Returns
@@ -222,6 +240,7 @@ export async function analyseNflGame(query: string): Promise<NflAnalysis | null>
       blended,
       gameTime: best.date || '',
       status: comp.status?.type?.name || '',
+      gameState: readState(comp),
     };
   } catch {
     return null;

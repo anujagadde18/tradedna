@@ -1079,6 +1079,11 @@ function ScoresPageContent() {
               const gap = (mine !== null && mkt !== null) ? mine - mkt : null;
               const usedSigs = sigs.filter((x: any) => w(x.key, x.defaultWeight) > 0);
               const touched = Object.keys(signalWeights).length > 0;
+              // Season records describe a game that has not started. Once it has,
+              // the price is reacting to the score and our number is stale by
+              // definition, so the comparison and the sliders are withdrawn
+              // rather than shown as though they still meant something.
+              const started = ownAnalysis.gameState === 'in' || ownAnalysis.gameState === 'post';
               return (
                 <div style={{ marginBottom:18 }}>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
@@ -1086,14 +1091,16 @@ function ScoresPageContent() {
                       <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.6px', color:C.purpleL, marginBottom:10 }}>CALL IT</div>
                       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:4 }}>
                         <span style={{ fontSize:13, color:C.t1 }}>{ownAnalysis.forTeam}</span>
-                        <span style={{ fontSize:28, fontWeight:800, color:C.green, fontFamily:'monospace' }}>{mine !== null ? mine + '%' : '-'}</span>
+                        <span style={{ fontSize:28, fontWeight:800, color: started ? C.t3 : C.green, fontFamily:'monospace' }}>{started ? '\u2014' : (mine !== null ? mine + '%' : '-')}</span>
                       </div>
                       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline' }}>
                         <span style={{ fontSize:12, color:C.t3 }}>{ownAnalysis.againstTeam}</span>
-                        <span style={{ fontSize:16, color:C.t2, fontFamily:'monospace' }}>{mine !== null ? (100 - mine) + '%' : '-'}</span>
+                        <span style={{ fontSize:16, color:C.t2, fontFamily:'monospace' }}>{started ? '\u2014' : (mine !== null ? (100 - mine) + '%' : '-')}</span>
                       </div>
                       <div style={{ fontSize:10, color:C.t3, marginTop:10, paddingTop:10, borderTop:'1px solid '+C.border, lineHeight:1.5 }}>
-                        From team data only. Not the market.
+                        {started
+                          ? 'Withdrawn: this game has started, so season records no longer describe it.'
+                          : 'From team data only. Not the market.'}
                       </div>
                     </div>
                     <div style={{ background:C.bg2, border:'1px solid '+C.border, borderRadius:14, padding:'16px 18px' }}>
@@ -1155,7 +1162,15 @@ function ScoresPageContent() {
                   {/* The disagreement, framed as the lesson rather than as a tip. A simple
                       model losing to a liquid market is the expected result, and saying so
                       teaches a beginner what actually moves a probability. */}
-                  {gap !== null && (
+                  {started && (
+                    <div style={{ background:'rgba(245,158,11,0.08)', border:'1px solid '+C.amber, borderRadius:10, padding:'12px 14px', fontSize:12.5, color:C.t1, lineHeight:1.65, marginBottom:14 }}>
+                      This game is under way, so the price above is moving with the score. A number built from
+                      season records cannot describe a game in progress, so we are not showing one or comparing
+                      against it. Come back to the comparison before the next kickoff.
+                    </div>
+                  )}
+
+                  {!started && gap !== null && (
                     <div style={{ background:'rgba(124,111,247,0.08)', border:'1px solid '+C.purpleBg, borderRadius:10, padding:'12px 14px', fontSize:12.5, color:C.t1, lineHeight:1.65, marginBottom:14 }}>
                       {Math.abs(gap) <= 2
                         ? 'Win-loss records alone land in almost the same place as the market here. That is worth noticing: it means this matchup is mostly explained by how the two teams have done so far.'
@@ -1169,7 +1184,7 @@ function ScoresPageContent() {
 
                   {/* Every slider at zero leaves nothing to average, so the cards show
                       dashes. Say why instead of leaving a beginner staring at them. */}
-                  {mine === null && (
+                  {!started && mine === null && (
                     <div style={{ background:'rgba(245,158,11,0.08)', border:'1px solid '+C.amber, borderRadius:10, padding:'11px 14px', fontSize:12.5, color:C.t1, lineHeight:1.6, marginBottom:14 }}>
                       Every slider is at zero, so there is nothing left to build a number from.
                       Turn at least one back up, or press Reset.
@@ -1179,7 +1194,7 @@ function ScoresPageContent() {
                   {/* The calculation in words, visible without clicking anything, and
                       rewritten live as the sliders move. A number nobody can see the
                       working for is a number nobody trusts. */}
-                  {mine !== null && usedSigs.length > 0 && (
+                  {!started && mine !== null && usedSigs.length > 0 && (
                     <div style={{ background:C.bg3, border:'1px solid '+C.border, borderRadius:12, padding:'14px 16px', marginBottom:14 }}>
                       <div style={{ fontSize:12, fontWeight:700, color:C.t1, marginBottom:8 }}>
                         How we got {mine}%
@@ -1207,6 +1222,7 @@ function ScoresPageContent() {
                     </div>
                   )}
 
+                  {!started && (<>
                   <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', gap:10, marginBottom:3 }}>
                     <div style={{ fontSize:14, fontWeight:700 }}>What our number is built from</div>
                     {touched && (
@@ -1274,6 +1290,7 @@ function ScoresPageContent() {
                       </div>
                     </div>
                   )}
+                  </>)}
                 </div>
               );
             })()}

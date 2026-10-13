@@ -799,6 +799,10 @@ export async function POST(request: NextRequest) {
             againstTeam: nflOwn.awayTeam,
             signals: nflOwn.signals,
             basis: 'NFL season records and venue form from ESPN, independent of the market',
+            // Once a game is under way the market price is reacting to the score,
+            // so the page must not present a record-based number beside it as
+            // though the two were comparable.
+            gameState: nflOwn.gameState,
           },
           confidence: sides[0].prob,
           keywords,
