@@ -69,35 +69,87 @@ function recordOf(competitor: any, name: string): string {
   return r?.summary || '';
 }
 
-/** Finds today's NFL game matching a question like "Rams vs. Broncos". */
+const SCOREBOARD = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
+
+/** YYYYMMDD, today plus an offset. Off-by-one around midnight does not matter
+ *  because the caller probes a run of consecutive days. */
+function ymd(offsetDays: number): string {
+  const d = new Date(Date.now() + offsetDays * 86400000);
+  return String(d.getUTCFullYear())
+    + String(d.getUTCMonth() + 1).padStart(2, '0')
+    + String(d.getUTCDate()).padStart(2, '0');
+}
+
+/** One scoreboard read. Returns [] rather than throwing, so a failed probe just
+ *  contributes nothing. */
+async function fetchEvents(dates?: string): Promise<any[]> {
+  try {
+    const res = await fetch(dates ? SCOREBOARD + '?dates=' + dates : SCOREBOARD,
+      { signal: AbortSignal.timeout(4000) });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data?.events) ? data.events : [];
+  } catch { return []; }
+}
+
+/** Picks the event whose two team names both appear in the question. Returns
+ *  null unless BOTH are present, otherwise we are guessing at which game. */
+function pickGame(events: any[], query: string): any | null {
+  const q = query.toLowerCase();
+  let best: any = null, bestHits = 0;
+  for (const e of events) {
+    const comp = e?.competitions?.[0];
+    if (!comp) continue;
+    const teams = (comp.competitors || []).map((t: any) => t?.team || {});
+    let hits = 0;
+    for (const t of teams) {
+      const names = [t.displayName, t.shortDisplayName, t.name, t.abbreviation]
+        .filter(Boolean).map((n: string) => String(n).toLowerCase());
+      if (names.some((n: string) => n.length >= 3 && q.includes(n))) hits++;
+    }
+    if (hits > bestHits) { bestHits = hits; best = e; }
+  }
+  return bestHits >= 2 ? best : null;
+}
+
+/** Finds the NFL game matching a question like "Rams vs. Broncos". */
 export async function analyseNflGame(query: string): Promise<NflAnalysis | null> {
   try {
-    const res = await fetch(
-      'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',
-      { signal: AbortSignal.timeout(5000) }
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    const events = data?.events || [];
-    if (events.length === 0) return null;
+    // The bare scoreboard returns only the CURRENT week. Polymarket prices games
+    // a week or two early, so a game outside this week was invisible here: this
+    // function returned null and the two cards vanished from the page with no
+    // error logged anywhere.
+    //
+    // Verified against the live API rather than assumed:
+    //   no parameter        -> week 5 (9-11 Oct)
+    //   ?dates=20261019     -> week 6 (19 Oct)
+    //   ?dates=2026101-...  -> a dash range errors, so it is not used
+    //   ?dates=202610       -> a month form returns an incomplete set
+    // Only the single-day form is relied on.
+    let best = pickGame(await fetchEvents(), query);
 
-    // Match on team names appearing in the question.
-    const q = query.toLowerCase();
-    let best: any = null, bestHits = 0;
-    for (const e of events) {
-      const comp = e?.competitions?.[0];
-      if (!comp) continue;
-      const teams = (comp.competitors || []).map((t: any) => t?.team || {});
-      let hits = 0;
-      for (const t of teams) {
-        const names = [t.displayName, t.shortDisplayName, t.name, t.abbreviation]
-          .filter(Boolean).map((n: string) => String(n).toLowerCase());
-        if (names.some((n: string) => n.length >= 3 && q.includes(n))) hits++;
+    if (!best) {
+      // Probe the next nine days in parallel, so this costs one round trip and
+      // only happens when the current week came up empty.
+      const probes = await Promise.all(
+        [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => fetchEvents(ymd(n)))
+      );
+      const seen = new Set<string>();
+      const merged: any[] = [];
+      for (const batch of probes) {
+        for (const e of batch) {
+          const id = String(e?.id || '');
+          if (id) {
+            if (seen.has(id)) continue;
+            seen.add(id);
+          }
+          merged.push(e);
+        }
       }
-      if (hits > bestHits) { bestHits = hits; best = e; }
+      best = pickGame(merged, query);
     }
-    // Require BOTH teams to appear, otherwise we are guessing at which game.
-    if (!best || bestHits < 2) return null;
+
+    if (!best || !best.competitions?.[0]) return null;
 
     const comp = best.competitions[0];
     const bySide: Record<string, any> = {};
