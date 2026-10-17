@@ -374,10 +374,15 @@ export async function GET(req: NextRequest) {
   const now = new Date();
   const tomorrow = new Date(now.getTime() + 48 * 60 * 60 * 1000); // next 48 hours
 
-  const events = await fetchLive(50);
+  // 150 rather than 50: NFL games rank well below college football, baseball and
+  // politics by 24-hour volume until kickoff is close. At 50 they were missing
+  // entirely on a Friday, so an NFL-first homepage had nothing to show.
+  const events = await fetchLive(150);
 
   const seen = new Set<string>();
   const results: any[] = [];
+  // Collected separately so the 20-item volume cut cannot drop them.
+  const nflGames: any[] = [];
 
   for (const event of events) {
     if (!event.slug || !event.title || seen.has(event.slug)) continue;
@@ -394,7 +399,9 @@ export async function GET(req: NextRequest) {
     if (vol24 <= 0 && vol <= 0) continue;
 
     const cat = detectCat(event.title, event.category || event.subcategory);
-    if (category !== 'all' && cat !== category) continue;
+    // Not a `continue`: the NFL list below must survive whichever category the
+    // homepage asked for, or picking a filter empties the games band.
+    const inCategory = category === 'all' || cat === category;
 
     const teamNames = teamsFromSlug(event.slug);
     const yesPrice = getYesPrice(event) ?? getMoneylineOdds(event);
@@ -421,7 +428,7 @@ export async function GET(req: NextRequest) {
         .trim();
     };
 
-    results.push({
+    const row = {
       slug:               event.slug,
       title:              cleanTitle(event.title),
       url:                'https://polymarket.com/event/' + event.slug,
@@ -439,11 +446,14 @@ export async function GET(req: NextRequest) {
       isFinished:         isEventFinished(event),
       topOutcome:         getTopOutcome(event),
       endDate:            event.endDate || '',
-    });
+    };
+    if (inCategory) results.push(row);
+    if (/^nfl-/.test(slug) && !row.isFinished && row.topOutcome) nflGames.push(row);
   }
 
   results.sort((a, b) => b.volume24h - a.volume24h);
-  return Response.json({ results: results.slice(0, 20) });
+  nflGames.sort((a, b) => b.volume24h - a.volume24h);
+  return Response.json({ results: results.slice(0, 20), nflGames: nflGames.slice(0, 6) });
 }
 // cache bust Mon Jun 15 20:22:21 CDT 2026
 // cache bust Mon Jun 15 20:45:30 CDT 2026

@@ -52,6 +52,9 @@ export default function HomePage() {
   const [results, setResults]   = useState<SearchResult[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [category, setCategory] = useState('all');
+  // Served separately from the trending list so NFL cannot be pushed out of it
+  // by volume or hidden by a category filter.
+  const [nflGames, setNflGames] = useState<TrendingEvent[]>([]);
   const [events, setEvents]     = useState<TrendingEvent[]>([]);
   const [loading, setLoading]   = useState(true);
   const timer = useRef<NodeJS.Timeout|null>(null);
@@ -93,9 +96,10 @@ export default function HomePage() {
   useEffect(() => {
     setLoading(true);
     setEvents([]);
+    setNflGames([]);
     fetch('/api/trending?category=' + category)
       .then(r => r.json())
-      .then(d => { setEvents(d.results || []); setLoading(false); })
+      .then(d => { setEvents(d.results || []); setNflGames(d.nflGames || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, [category]);
 
@@ -242,13 +246,22 @@ export default function HomePage() {
             // empty on quiet days and must say so rather than disappear.
             const isNfl = (e: TrendingEvent) =>
               String(e.slug||'').toLowerCase().startsWith('nfl-') || /\bnfl\b/i.test(String(e.title||''));
-            const nflGames = cleanEvents.filter(e =>
+            const fromApi = nflGames.filter(e =>
+              !e.isFinished && e.topOutcome && e.topOutcome.prob > 1 && e.topOutcome.prob < 99);
+            const fromList = cleanEvents.filter(e =>
               isNfl(e)
               && !e.isFinished
               && e.topOutcome && e.topOutcome.prob > 1 && e.topOutcome.prob < 99
-            ).slice(0, 6);
+            );
+            const seenSlugs = new Set<string>();
+            const games = [...fromApi, ...fromList].filter(g => {
+              const k = String(g.slug||'');
+              if (seenSlugs.has(k)) return false;
+              seenSlugs.add(k);
+              return true;
+            }).slice(0, 6);
 
-            if (nflGames.length === 0) {
+            if (games.length === 0) {
               return (
                 <div style={{width:'100%',maxWidth:620,textAlign:'left' as const,
                              border:'1px solid '+C.border,borderRadius:14,background:C.bg2,padding:'18px 20px'}}>
@@ -274,7 +287,7 @@ export default function HomePage() {
                   Pick a game to see what its price means.
                 </div>
                 <div style={{border:'1px solid '+C.border,borderRadius:14,overflow:'hidden',background:C.bg2}}>
-                  {nflGames.map((g, i) => {
+                  {games.map((g, i) => {
                     const title = String(g.title||'').replace(/\s*\(NFL\)\s*$/i,'').trim();
                     const parts = title.split(/\s+vs\.?\s+/i).map(x => x.trim()).filter(Boolean);
                     const lead  = String(g.topOutcome!.name||'').trim();

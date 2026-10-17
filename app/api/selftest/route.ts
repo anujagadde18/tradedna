@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { readMoneylineSides } from '@/lib/sources/moneyline';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -99,11 +100,23 @@ export async function GET(request: NextRequest) {
       return slug.startsWith('nfl-') || /\(nfl\)/i.test(title);
     });
 
-    if (nflEvents.length === 0) {
+    // A FINISHED game legitimately returns no independent number: season records
+    // cannot describe a game that is over, and the app is right to decline. Testing
+    // the first NFL event in the feed meant the newest one was usually a game that
+    // had just been played, so this step went red for correct behaviour - and a
+    // health check that cries wolf stops being read. Only games whose two-way price
+    // is still live are sampled, using the same parser production uses.
+    const playable = nflEvents.filter((e: any) => readMoneylineSides(e).length >= 2);
+
+    if (playable.length === 0) {
       record('independent NFL analysis', true,
-        'skipped - no live NFL matchup in the market feed right now', Date.now() - t);
+        nflEvents.length > 0
+          ? 'skipped - the ' + nflEvents.length + ' NFL game(s) in the feed are finished or not priced two ways yet'
+          : 'skipped - no NFL matchup in the market feed right now',
+        Date.now() - t);
     } else {
-      const title = String(nflEvents[0].title || '').replace(/\s*\(NFL\)\s*$/i, '').trim();
+      const nflEventsPlayable = playable;
+      const title = String(nflEventsPlayable[0].title || '').replace(/\s*\(NFL\)\s*$/i, '').trim();
       const r = await fetch(origin + '/api/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -116,12 +129,19 @@ export async function GET(request: NextRequest) {
 
       if (!hasOwn) {
         // Distinguish "ESPN had no such game" from "the branch never ran".
+        // Two different failures used to print the same sentence. The generic path
+        // answers BOTH when the NFL branch never ran AND when it ran, found the
+        // game, and then could not read a two-way price - so filler alone does not
+        // tell them apart.
         const usedFiller = Array.isArray(a?.sources) && a.sources.some((s: any) => s?.name === 'Signal');
+        const sides = readMoneylineSides(nflEventsPlayable[0]);
         record('independent NFL analysis', false,
           '"' + title + '" returned no independent number. '
-          + (usedFiller
-              ? 'The generic path answered instead, so the NFL branch did not run.'
-              : 'The NFL branch ran but produced nothing - most likely ESPN has no game matching both team names in the week it returns.'),
+          + (sides.length < 2
+              ? 'The market no longer prices it two ways, so the game is over or suspended.'
+              : usedFiller
+              ? 'The market still prices it two ways, so either ESPN has no game matching both team names, or the NFL branch did not run.'
+              : 'The NFL branch ran but produced nothing.'),
           Date.now() - t);
       } else {
         // The market price must be matched to OUR team, not taken from the top of
