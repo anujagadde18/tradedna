@@ -335,30 +335,49 @@ export default function HomePage() {
           // Exclude foreign national races: "election" alone would match a Russian
           // parliamentary question, which explains the concept badly to a new reader.
           const NICHE = /parliament|referendum|russian|german|french|dutch|japanese|canadian|australian|indian general|by-election/i;
-          const example = usable.find(e => RECOGNISABLE.test(e.title) && !NICHE.test(e.title))
-            || usable.find(e => e.category === 'economics' || e.category === 'crypto')
-            || usable.find(e => e.category !== 'sports' && !/parliament|referendum/i.test(e.title))
-            || usable[0];
-          if (!example) return null;
-          const pct = example.yesPrice as number;
-          const isMatch = /\s+vs\.?\s+/i.test(example.title);
-          const parts = isMatch ? example.title.split(/\s+vs\.?\s+/i) : [];
+          // This page is about NFL, so the worked example should be a game. A French
+          // presidential race was reaching it instead, through the last fallback -
+          // which only excluded parliaments, not the rest of the NICHE list. NICHE
+          // now applies to every fallback.
+          const notNiche = (e: TrendingEvent) => !NICHE.test(e.title);
+          const gameEg = nflGames.find(e => e.topOutcome && e.topOutcome.prob > 10 && e.topOutcome.prob < 90);
+          const example = gameEg
+            || usable.find(e => RECOGNISABLE.test(e.title) && notNiche(e))
+            || usable.find(e => notNiche(e) && (e.category === 'economics' || e.category === 'crypto'))
+            || usable.find(e => notNiche(e) && e.category !== 'sports')
+            || usable.find(notNiche)
+            || null;
+
+          // The figure must come from topOutcome, which pairs a name with ITS OWN
+          // price. yesPrice is not guaranteed to belong to the first team in the
+          // title, so stating it against parts[0] was the same wrong-team error
+          // already fixed on the analysis page - just hidden in prose here.
+          const norm2 = (x: string) => String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+          const exTitle = String(example?.title||'').replace(/\s*\(NFL\)\s*$/i,'').trim();
+          const isMatch = /\s+vs\.?\s+/i.test(exTitle);
+          const lead = example?.topOutcome?.name ? String(example.topOutcome.name).trim() : '';
+          const leadShort = lead ? (lead.split(' ').pop() as string) : '';
+          const parts = isMatch ? exTitle.split(/\s+vs\.?\s+/i).map(x => x.trim()).filter(Boolean) : [];
+          const other = isMatch ? (parts.find(x => !norm2(x).includes(norm2(leadShort))) || '') : '';
+          const pct = typeof example?.topOutcome?.prob === 'number'
+            ? example.topOutcome.prob
+            : (example?.yesPrice as number);
           return (
             <div style={{maxWidth:640,margin:'0 auto',padding:'0 24px'}}>
               <div style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:16,padding:'20px 22px',marginBottom:28}}>
-                <div style={{fontSize:11,fontWeight:700,color:C.purpleL,textTransform:'uppercase' as const,letterSpacing:'0.5px',marginBottom:10}}>New to prediction markets?</div>
+                <div style={{fontSize:14,fontWeight:700,color:C.t1,marginBottom:10}}>New to prediction markets?</div>
                 <p style={{fontSize:14,color:C.t2,lineHeight:1.7,marginBottom:12}}>
                   A prediction market is a place where people put real money on things that will
                   actually happen — a game, an election, a Fed decision. The trading price is the
                   crowd's live estimate, updated every minute.
                 </p>
                 <p style={{fontSize:14,color:C.t1,lineHeight:1.7,marginBottom:12}}>
-                  {isMatch ? (
-                    <>Right now, traders give <b>{parts[0]?.trim()}</b> a <b>{pct}%</b> chance against <b>{parts[1]?.trim()}</b>.</>
-                  ) : example.topOutcome?.name ? (
-                    <>Right now, for "<b>{example.title}</b>", traders give <b>{example.topOutcome.name}</b> a <b>{pct}%</b> chance.</>
+                  {!example ? null : isMatch && lead && other ? (
+                    <>Right now, traders give <b>{leadShort}</b> a <b>{pct}%</b> chance to beat <b>{other}</b>.</>
+                  ) : lead ? (
+                    <>Right now, for &quot;<b>{exTitle}</b>&quot;, traders give <b>{lead}</b> a <b>{pct}%</b> chance.</>
                   ) : (
-                    <>Right now, traders put a <b>{pct}%</b> chance on: <b>{example.title}</b></>
+                    <>Right now, traders put a <b>{pct}%</b> chance on: <b>{exTitle}</b></>
                   )}
                   {' '}Call It takes a number like that apart: what it means out of 100 games,
                   what $10 on it would do, and what the teams&apos; records alone would say. Not to
