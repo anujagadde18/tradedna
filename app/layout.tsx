@@ -15,10 +15,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://trycallit.vercel.app"),
   title: "Call It — What are the chances?",
-  description: "Ask any question. See one probability built from live market prices, statistical models, and expert forecasts - with every source shown.",
+  description: "What does 62% next to your team actually mean? Call It reads NFL betting prices in plain English - as a chance, as money, and beside what the teams' records alone would say.",
   openGraph: {
     title: "Call It — What are the chances?",
-    description: "Transparent probability analysis for any question. Live market prices, models, and expert forecasts - blended in the open. Free to try.",
+    description: "NFL betting prices, explained for people who have never bet. What the percentage means, what it pays, and what team records alone would say. Free.",
     url: "https://trycallit.vercel.app",
     siteName: "Call It",
     type: "website",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Call It",
-    description: "Transparent probability analysis for any question. Every source shown. Free to try.",
+    description: "NFL betting prices in plain English. What the percentage means, what it pays, and what the records alone would say.",
     site: "@trycallit",
   },
 };

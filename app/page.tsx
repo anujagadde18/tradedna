@@ -44,12 +44,6 @@ const CAT_COLORS: Record<string,{color:string;bg:string}> = {
   other:      {color:'#9996b8', bg:'rgba(153,150,184,0.08)'},
 };
 
-// The three signals behind every Call It probability — shown as the hero demo.
-const SIGNALS = [
-  { label:'Market price',      note:'what people trading real money think', pct:55, color:'#7c6ff7' },
-  { label:'Statistical model', note:'strength and form data',               pct:30, color:'#4d9de0' },
-  { label:'Expert forecasts',  note:'published predictions',                pct:15, color:'#2ecc8a' },
-];
 
 export default function HomePage() {
   const router = useRouter();
@@ -147,7 +141,7 @@ export default function HomePage() {
       <style>{`
         .ppNavLinks{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
         .ppNavLinks::-webkit-scrollbar{display:none}
-        .ppHowGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:900px;margin:0 auto 32px}
+        .ppHowGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin:0 0 8px}
         .ppFeatGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:900px;margin:0 auto}
         .ppTrendRow{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
         .ppTrendRow::-webkit-scrollbar{display:none}
@@ -195,18 +189,17 @@ export default function HomePage() {
         <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'56px 24px 36px',textAlign:'center',position:'relative',overflow:'hidden'}}>
           <div style={{position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',width:900,height:600,background:'radial-gradient(ellipse,rgba(124,111,247,0.07) 0%,transparent 65%)',pointerEvents:'none'}}/>
 
-          <div style={{display:'inline-flex',alignItems:'center',gap:6,background:C.purpleBg,border:'1px solid '+C.purpleBorder,color:C.purpleL,padding:'5px 14px',borderRadius:100,fontSize:11,fontWeight:600,letterSpacing:'0.4px',textTransform:'uppercase' as const,marginBottom:22}}>
-            <span style={{width:6,height:6,background:C.red,borderRadius:'50%',display:'block',boxShadow:'0 0 8px #ef4f6a'}}/>
-            Live analysis · {new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+          <div style={{fontSize:12,color:C.t3,marginBottom:18,fontFamily:FONT_MONO,letterSpacing:'0.5px'}}>
+            NFL, this week
           </div>
 
-          <h1 style={{fontSize:'clamp(36px,5.5vw,64px)',fontWeight:800,letterSpacing:'-2.5px',lineHeight:1.05,marginBottom:16,maxWidth:720}}>
-            Ask any question.<br/><span style={{color:C.purpleL}}>See every source behind the answer.</span>
+          <h1 style={{fontSize:'clamp(32px,5vw,56px)',fontWeight:800,letterSpacing:'-2px',lineHeight:1.08,marginBottom:18,maxWidth:760}}>
+            The number next to your team, in plain English
           </h1>
-          <p style={{fontSize:15,color:C.t2,maxWidth:520,lineHeight:1.7,marginBottom:28}}>
-            Call It blends live market prices, statistical models, and expert forecasts
-            into one probability — and shows how much each source contributed.
-            Economics, politics, sports, crypto. Nothing hidden.
+          <p style={{fontSize:16,color:C.t2,maxWidth:600,lineHeight:1.65,marginBottom:34}}>
+            Betting markets price every NFL game as a percentage. Call It shows you what that
+            percentage means: as a chance, as money, and beside what the two teams&apos; records
+            alone would say.
           </p>
 
           {/* SEARCH */}
@@ -234,33 +227,89 @@ export default function HomePage() {
               </div>
             )}
           </div>
-          <p style={{fontSize:11,color:C.t3,marginBottom:34}}>Type a question or paste a Polymarket link</p>
+          <p style={{fontSize:11,color:C.t3,marginBottom:34}}>Or type a question, or paste a Polymarket link</p>
 
-          {/* SIGNATURE — how every probability is built */}
-          <div style={{width:'100%',maxWidth:560,textAlign:'left' as const}}>
-            <div style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase' as const,letterSpacing:'1px',marginBottom:10,textAlign:'center' as const}}>
-              What builds every number
-            </div>
-            <div style={{display:'flex',height:8,borderRadius:100,overflow:'hidden',gap:2,marginBottom:12}}>
-              {SIGNALS.map(s=>(
-                <div key={s.label} style={{width:s.pct+'%',background:s.color,opacity:0.85}}/>
-              ))}
-            </div>
-            <div style={{display:'flex',justifyContent:'space-between',gap:8,flexWrap:'wrap' as const}}>
-              {SIGNALS.map(s=>(
-                <div key={s.label} style={{display:'flex',alignItems:'flex-start',gap:7,flex:1,minWidth:140}}>
-                  <span style={{width:8,height:8,borderRadius:2,background:s.color,marginTop:3,flexShrink:0}}/>
-                  <div>
-                    <div style={{fontSize:12,fontWeight:600,color:C.t1,lineHeight:1.3}}>{s.label}</div>
-                    <div style={{fontSize:10,color:C.t3,lineHeight:1.4}}>{s.note}</div>
+          {/* THIS WEEK — the entry point. A beginner facing an empty search box has
+              nowhere to start, so the games themselves are the first thing to touch.
+              The split is drawn as one bar because that is how a broadcast already
+              shows a win probability: length carries the number. */}
+          {(() => {
+            const norm = (x: string) => String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+            // Polymarket slugs are league-prefixed (nfl-buf-lar-2026-10-12), which is
+            // the reliable marker; the title is the fallback. Checked against the live
+            // feed: on a Wednesday there were no nfl- slugs at all, only mlb-, cfb- and
+            // mls-, and every two-team game had a null topOutcome. So this band WILL be
+            // empty on quiet days and must say so rather than disappear.
+            const isNfl = (e: TrendingEvent) =>
+              String(e.slug||'').toLowerCase().startsWith('nfl-') || /\bnfl\b/i.test(String(e.title||''));
+            const nflGames = cleanEvents.filter(e =>
+              isNfl(e)
+              && !e.isFinished
+              && e.topOutcome && e.topOutcome.prob > 1 && e.topOutcome.prob < 99
+            ).slice(0, 6);
+
+            if (nflGames.length === 0) {
+              return (
+                <div style={{width:'100%',maxWidth:620,textAlign:'left' as const,
+                             border:'1px solid '+C.border,borderRadius:14,background:C.bg2,padding:'18px 20px'}}>
+                  <div style={{fontSize:14,color:C.t1,fontWeight:600,marginBottom:7}}>
+                    No NFL games are priced right now
                   </div>
+                  <div style={{fontSize:13,color:C.t2,lineHeight:1.7}}>
+                    Games show up here as kickoff gets closer, which in practice means Thursday,
+                    Sunday and Monday. Until then you can paste any Polymarket link into the box
+                    above, or look at how past calls turned out.
+                  </div>
+                  <button onClick={()=>router.push('/accuracy')}
+                    style={{marginTop:14,background:'none',border:'1px solid '+C.border2,borderRadius:9,
+                            padding:'9px 15px',color:C.t1,fontSize:12.5,cursor:'pointer',fontFamily:'inherit'}}>
+                    See the accuracy record
+                  </button>
                 </div>
-              ))}
-            </div>
-            <div style={{fontSize:11,color:C.t3,textAlign:'center' as const,marginTop:12}}>
-              You can change how much weight each source gets — or add your own.
-            </div>
-          </div>
+              );
+            }
+            return (
+              <div style={{width:'100%',maxWidth:620,textAlign:'left' as const}}>
+                <div style={{fontSize:13,color:C.t2,marginBottom:14}}>
+                  Pick a game to see what its price means.
+                </div>
+                <div style={{border:'1px solid '+C.border,borderRadius:14,overflow:'hidden',background:C.bg2}}>
+                  {nflGames.map((g, i) => {
+                    const title = String(g.title||'').replace(/\s*\(NFL\)\s*$/i,'').trim();
+                    const parts = title.split(/\s+vs\.?\s+/i).map(x => x.trim()).filter(Boolean);
+                    const lead  = String(g.topOutcome!.name||'').trim();
+                    const leadShort = lead.split(' ').pop() || lead;
+                    const other = parts.find(x => !norm(x).includes(norm(leadShort))) || '';
+                    const pct = g.topOutcome!.prob;
+                    return (
+                      <button key={g.slug||i} onClick={() => go(title)}
+                        style={{display:'block',width:'100%',textAlign:'left' as const,background:'none',
+                                border:'none',borderTop: i===0 ? 'none' : '1px solid '+C.border,
+                                padding:'15px 17px',cursor:'pointer',fontFamily:'inherit'}}
+                        onMouseEnter={e=>(e.currentTarget.style.background=C.bg3)}
+                        onMouseLeave={e=>(e.currentTarget.style.background='none')}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',gap:12,marginBottom:9}}>
+                          <span style={{fontSize:13.5,color:C.t2}}>{other || 'Other side'}</span>
+                          <span style={{fontSize:13.5,color:C.t1,fontWeight:600}}>{leadShort}</span>
+                        </div>
+                        <div style={{display:'flex',height:7,borderRadius:100,overflow:'hidden',background:C.bg4}}>
+                          <div style={{width:(100-pct)+'%',background:C.t4}}/>
+                          <div style={{width:pct+'%',background:C.purple}}/>
+                        </div>
+                        <div style={{display:'flex',justifyContent:'space-between',marginTop:7}}>
+                          <span style={{fontSize:12,color:C.t3,fontFamily:FONT_MONO}}>{100-pct}%</span>
+                          <span style={{fontSize:14,color:C.purpleL,fontFamily:FONT_MONO,fontWeight:700}}>{pct}%</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{fontSize:11,color:C.t3,marginTop:10}}>
+                  Prices come from Polymarket and move as people trade.
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* EXPLAINER — plain-language intro using a real live number */}
@@ -298,12 +347,13 @@ export default function HomePage() {
                   ) : (
                     <>Right now, traders put a <b>{pct}%</b> chance on: <b>{example.title}</b></>
                   )}
-                  {' '}Call It checks numbers like this against models and expert forecasts, then
-                  tells you in plain English whether the crowd looks right — or whether there is a
-                  gap worth knowing about.
+                  {' '}Call It takes a number like that apart: what it means out of 100 games,
+                  what $10 on it would do, and what the teams&apos; records alone would say. Not to
+                  tell you the crowd is wrong — so the number stops being a mystery.
                 </p>
                 <p style={{fontSize:13,color:C.t3,lineHeight:1.6}}>
-                  Every answer shows the sources behind it, so you can see exactly why.
+                  Every figure traces back to a named source: Polymarket for the price, ESPN for
+                  the records. Nothing is estimated and nothing is invented.
                 </p>
               </div>
             </div>
@@ -454,36 +504,65 @@ export default function HomePage() {
 
         </div>
 
-        {/* HOW IT WORKS */}
+        {/* WHAT YOU GET — the three concrete things, using the real numbers the app
+            produces rather than a description of them. This IS a sequence, so it is
+            numbered; the bands above are not. */}
         <div style={{borderTop:'1px solid '+C.border,padding:'56px 24px'}}>
-          <h2 style={{fontSize:22,fontWeight:700,letterSpacing:'-0.5px',textAlign:'center',marginBottom:6}}>How it works</h2>
-          <p style={{textAlign:'center',color:C.t2,fontSize:14,marginBottom:36}}>Three steps from question to answer</p>
+          <div style={{maxWidth:900,margin:'0 auto'}}>
+          <h2 style={{fontSize:24,fontWeight:700,letterSpacing:'-0.6px',marginBottom:8,maxWidth:620}}>
+            What you get on one game
+          </h2>
+          <p style={{color:C.t2,fontSize:14,marginBottom:32,maxWidth:560,lineHeight:1.65}}>
+            Taking a real price of 62% on the home team, this is the whole of it.
+          </p>
           <div className="ppHowGrid">
             {[
-              {n:'1',t:'Ask a question',d:'Type any question or paste a Polymarket link. Call It pulls live market prices, model data, and expert forecasts.'},
-              {n:'2',t:'See the full breakdown',d:'One probability, with every source behind it listed in plain English. Adjust how much weight each source gets, or add your own.'},
-              {n:'3',t:'Check the record',d:'Every analysis is saved to your journal, and our public accuracy page shows how past calls turned out.'},
-            ].map(s=>(
-              <div key={s.n} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'22px'}}>
-                <div style={{width:30,height:30,background:C.purpleBg,border:'1px solid '+C.purpleBorder,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:C.purple,marginBottom:14,fontFamily:FONT_MONO}}>{s.n}</div>
-                <div style={{fontSize:14,fontWeight:600,marginBottom:6}}>{s.t}</div>
-                <div style={{fontSize:12,color:C.t2,lineHeight:1.65}}>{s.d}</div>
+              { n:'1', t:'What the percentage means',
+                d:'Out of 100 games like this one, the market expects them to win about 62 and lose about 38. That is the whole claim.' },
+              { n:'2', t:'What it means in money',
+                d:'$10 on them comes back as about $16.13 if they win, so you keep $6.13. If they lose, the $10 is gone. The less likely a side, the more it pays.' },
+              { n:'3', t:'What the records alone say',
+                d:'Season records and home form put the same team at 43%. The gap between 43 and 62 is roughly what the price knows that a win-loss record cannot see.' },
+            ].map(st => (
+              <div key={st.n} style={{borderLeft:'2px solid '+C.purpleBorder,paddingLeft:16}}>
+                <div style={{fontSize:12,color:C.purpleL,fontFamily:FONT_MONO,marginBottom:8}}>{st.n}</div>
+                <div style={{fontSize:15,fontWeight:600,marginBottom:7,letterSpacing:'-0.2px'}}>{st.t}</div>
+                <div style={{fontSize:13,color:C.t2,lineHeight:1.7}}>{st.d}</div>
               </div>
             ))}
           </div>
-          <div className="ppFeatGrid">
+          </div>
+        </div>
+
+        {/* WHAT THIS ISN'T — stating the limits plainly is the point, not a disclaimer.
+            An app in this category that does not say these things should not be trusted,
+            and the one that does is the one worth sharing. */}
+        <div style={{borderTop:'1px solid '+C.border,padding:'48px 24px'}}>
+          <div style={{maxWidth:900,margin:'0 auto'}}>
+          <h2 style={{fontSize:20,fontWeight:700,letterSpacing:'-0.4px',marginBottom:20,maxWidth:620}}>
+            What this isn&apos;t
+          </h2>
+          <div style={{display:'grid',gap:14,maxWidth:620}}>
             {[
-              {t:'Real sources',d:'News, expert forecasts, and live Polymarket prices — every input named, nothing invented.'},
-              {t:'Your weights',d:'Trust the market more than the model? Move a slider and watch the number change.'},
-              {t:'Any question',d:'Sports, economics, politics, crypto — if people are predicting it, you can analyze it.'},
-              {t:'Public record',d:'Every call is logged and scored in the open, so you can judge us on results.',link:true},
-            ].map((f,i)=>(
-              <div key={i} style={{background:C.bg2,border:'1px solid '+C.border,borderRadius:12,padding:'14px'}}>
-                <div style={{fontSize:12,fontWeight:600,marginBottom:5,color:C.t1}}>{f.t}</div>
-                <div style={{fontSize:11,color:C.t2,lineHeight:1.6}}>{f.d}</div>
-                {f.link && <button onClick={()=>router.push('/accuracy')} style={{marginTop:8,fontSize:11,color:C.purpleL,background:'none',border:'none',cursor:'pointer',padding:0,fontFamily:'inherit'}}>See the accuracy record</button>}
+              ['No tips.','Call It explains a price. It never tells you what to bet, and there is no pick to follow.'],
+              ['It does not beat the market.','Our number is built from win-loss records only. It usually disagrees with the price, and when it does the market is the one more likely to be right.'],
+              ['NFL for now.','One sport, done properly, rather than every sport done badly.'],
+              ['Every call is scored in public.','Predictions are logged and settled automatically, wins and losses alike.'],
+            ].map(([t,d],i)=>(
+              <div key={i} style={{display:'flex',gap:12,alignItems:'baseline'}}>
+                <span style={{width:5,height:5,borderRadius:'50%',background:C.t4,flexShrink:0,marginTop:7}}/>
+                <div>
+                  <span style={{fontSize:13.5,color:C.t1,fontWeight:600}}>{t}</span>{' '}
+                  <span style={{fontSize:13.5,color:C.t2,lineHeight:1.7}}>{d}</span>
+                </div>
               </div>
             ))}
+          </div>
+          <button onClick={()=>router.push('/accuracy')}
+            style={{marginTop:24,background:'none',border:'1px solid '+C.border2,borderRadius:10,
+                    padding:'11px 18px',color:C.t1,fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>
+            See the accuracy record
+          </button>
           </div>
         </div>
 
