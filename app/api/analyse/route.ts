@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { analyseNflGame } from '@/lib/sources/nfl';
 import { readMoneylineSides } from '@/lib/sources/moneyline';
+import { randomUUID } from 'crypto';
 // PP-DATA-V1 - real data for any question: event search, multi-outcome support, no invented numbers
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -788,6 +789,29 @@ export async function POST(request: NextRequest) {
       if (sides.length >= 2) {
         const eventVolume = parseFloat(nflEvent.volume || nflEvent.volume24hr || '0') || 0;
         fetch(new URL('/api/track', request.url).toString(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ anonId: anonId || '', name: 'analysis_run', props: { query: query.slice(0, 100), confidence: nflOwn.blended } }) }).catch(() => {});
+        // Recorded here, not in the browser: an analysis could render perfectly
+        // and save nothing. Awaited, because a serverless function can be torn
+        // down as soon as it responds. /api/journal de-duplicates within an hour.
+        try {
+          const nrm = (x: string) => String(x||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+          const tgt = nrm(nflOwn.homeTeam);
+          const nk = tgt.split(' ').pop() || '';
+          const mine = sides.find(o => nrm(o.name) === tgt)
+            || (nk.length >= 3 ? sides.find(o => nrm(o.name).split(' ').includes(nk)) : undefined)
+            || (nk.length >= 3 ? sides.find(o => nrm(o.name).includes(nk)) : undefined);
+          if (mine) {
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            const who = isUuid.test(String(anonId || '')) ? String(anonId) : randomUUID();
+            await fetch(new URL('/api/journal', request.url).toString(), {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ anonId: who, question: nflEvent.title || query,
+                aiConfidence: nflOwn.blended, marketOdds: mine.prob,
+                category: marketType, topOutcome: nflOwn.homeTeam }),
+              signal: AbortSignal.timeout(4000),
+            });
+          }
+        } catch { /* a failed write must never break the analysis */ }
+
         return Response.json({
           valid: true,
           mtype: 'categorical',

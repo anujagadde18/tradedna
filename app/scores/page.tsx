@@ -641,6 +641,10 @@ function ScoresPageContent() {
     setInvalidQuestion(null);
     setNoRealData(false);
     setFrame('verdict');
+    // Was missing: runAnalysis opens with `if (mtype === 'categorical') return;`
+    // so moving between games left it set and nothing was ever recorded.
+    setMtype('binary');
+    setOwnAnalysis(null);
   }, [event]);
 
   useEffect(() => {
